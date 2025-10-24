@@ -74,10 +74,14 @@ export async function POST(request: Request) {
     const { data: authData, error: authError } = await createUserAuthEntry(email, "test123456", 'principal', full_name)
     if (authError) {
       console.error('❌ Error creating user auth entry:', authError)
-      return NextResponse.json({ error: authError.message }, { status: 500 })
+      const errorMessage = (authError as any)?.message || 'Failed to create user auth entry'
+      return NextResponse.json({ error: errorMessage }, { status: 500 })
     }
     
     // Generate UUID if not provided
+    if (!authData?.user?.id) {
+      return NextResponse.json({ error: 'Failed to create user - no user data returned' }, { status: 500 })
+    }
     const principalId = authData.user.id
     
     // Prepare metadata with role and creation info

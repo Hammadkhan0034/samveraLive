@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 import { sendStaffInvitationEmail } from '@/lib/send-invitation-email'
+import { createUserAuthEntry } from '@/app/core/createAuthEntry'
 
 // Staff/Teacher role ID
 const STAFF_ROLE_ID = 20
@@ -112,7 +113,12 @@ export async function POST(request: Request) {
         const { data: authData, error: authError } = await createUserAuthEntry(email, "test123456", 'teacher', name || email.split('@')[0])
         if (authError) {
           console.error('❌ Error creating user auth entry:', authError)
-          return NextResponse.json({ error: authError.message }, { status: 500 })
+          const errorMessage = (authError as any)?.message || 'Failed to create user auth entry'
+          return NextResponse.json({ error: errorMessage }, { status: 500 })
+        }
+
+        if (!authData?.user?.id) {
+          return NextResponse.json({ error: 'Failed to create user - no user data returned' }, { status: 500 })
         }
 
         const teacherData = {
@@ -299,7 +305,8 @@ export async function POST(request: Request) {
 
       if (authError) {
         console.error('❌ Failed to create user:', authError)
-        return NextResponse.json({ error: `Failed to create user: ${authError.message}` }, { status: 500 })
+        const errorMessage = (authError as any)?.message || 'Failed to create user'
+        return NextResponse.json({ error: `Failed to create user: ${errorMessage}` }, { status: 500 })
       }
 
       authUser = newAuthUser
