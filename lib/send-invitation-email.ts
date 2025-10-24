@@ -17,7 +17,8 @@ export async function sendStaffInvitationEmail(params: {
       throw new Error('Supabase admin client not configured');
     }
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    // const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://samvera-live-ni3k.vercel.app';
     const callbackUrl = `${siteUrl}/auth/callback-staff?token=${params.invitationToken}&org_id=${params.orgId}&user_id=${params.userId}`;
 
     // Generate the HTML and text versions
