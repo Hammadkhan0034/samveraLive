@@ -247,7 +247,7 @@ export async function POST(request: Request) {
 
     // Check if user already exists
     const defaultPassword = 'ahmad123456';
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://samvera-live.vercel.app'
     
     console.log('👤 Checking if user exists...');
     
