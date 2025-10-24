@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 import { createUserAuthEntry } from 'app/core/createAuthEntry'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+
 // principals are domain users with role_id = 30 (example); adjust to your roles table value
 const PRINCIPAL_ROLE_ID = 30
 

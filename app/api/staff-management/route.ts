@@ -6,6 +6,9 @@ import { createUserAuthEntry } from '@/app/core/createAuthEntry'
 // Staff/Teacher role ID
 const STAFF_ROLE_ID = 20
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: Request) {
   try {
     if (!supabaseAdmin) {

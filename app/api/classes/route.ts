@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+
 // Teacher role ID
 const TEACHER_ROLE_ID = 20
 

@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 import { createUserAuthEntry } from 'app/core/createAuthEntry'
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
+
 // Guardian role ID
 const GUARDIAN_ROLE_ID = 10
 

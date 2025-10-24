@@ -5,6 +5,9 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabaseAdmin = createClient(supabaseUrl, supabaseKey);
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 // GET - Fetch student requests for a class or organization
 export async function GET(request: NextRequest) {
   try {
