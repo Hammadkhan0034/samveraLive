@@ -69,7 +69,7 @@ export default function ProfileSwitcher({ className = '', labelIs, labelEn }: Pr
       >
         {roles.map((r) => (
           <option key={r} value={r}>
-            {r === 'teacher' ? 'Teacher' : r === 'principal' ? 'Principal' : 'Parent'}
+            {r === 'teacher' ? 'Teacher' : r === 'principal' ? 'Principal' : r === 'admin' ? 'Admin' : 'Parent'}
           </option>
         ))}
       </select>

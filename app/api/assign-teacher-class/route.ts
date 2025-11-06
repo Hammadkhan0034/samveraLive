@@ -15,11 +15,26 @@ export async function POST(request: NextRequest) {
 
     console.log('🔧 Assigning teacher to class:', { userId, classId });
 
-    // First, remove any existing memberships for this user
+    // Get org_id from the class
+    const { data: classData, error: classError } = await supabaseAdmin
+      .from('classes')
+      .select('org_id')
+      .eq('id', classId)
+      .single();
+
+    if (classError || !classData) {
+      console.error('❌ Error fetching class:', classError);
+      return NextResponse.json({ error: 'Class not found' }, { status: 404 });
+    }
+
+    const orgId = classData.org_id;
+
+    // First, remove any existing memberships for this user and class
     const { error: deleteError } = await supabaseAdmin
       .from('class_memberships')
       .delete()
-      .eq('user_id', userId);
+      .eq('user_id', userId)
+      .eq('class_id', classId);
 
     if (deleteError) {
       console.error('❌ Error removing existing memberships:', deleteError);
@@ -29,6 +44,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await supabaseAdmin
       .from('class_memberships')
       .insert({
+        org_id: orgId,
         user_id: userId,
         class_id: classId,
         membership_role: 'teacher'

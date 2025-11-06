@@ -10,11 +10,14 @@ interface GuardianFormProps {
   initialData?: GuardianFormData;
   loading: boolean;
   error: string | null;
+  successMessage?: string | null;
   orgs: Array<{ id: string; name: string }>;
+  asPage?: boolean;
   translations: {
     create_guardian: string;
     edit_guardian: string;
-    full_name: string;
+    first_name: string;
+    last_name: string;
     email: string;
     phone: string;
     organization: string;
@@ -26,18 +29,26 @@ interface GuardianFormProps {
     cancel: string;
     creating: string;
     updating: string;
-    full_name_placeholder: string;
+    first_name_placeholder: string;
+    last_name_placeholder: string;
     email_placeholder: string;
     phone_placeholder: string;
     status_placeholder: string;
+    ssn?: string;
+    ssn_placeholder?: string;
+    address?: string;
+    address_placeholder?: string;
   };
 }
 
 export interface GuardianFormData {
   id?: string;
-  full_name: string;
+  first_name: string;
+  last_name: string;
   email: string;
   phone: string;
+  ssn?: string;
+  address?: string;
   org_id: string;
   is_active?: boolean;
 }
@@ -49,13 +60,18 @@ export function GuardianForm({
   initialData,
   loading,
   error,
+  successMessage,
   orgs,
+  asPage,
   translations: t
 }: GuardianFormProps) {
   const [formData, setFormData] = useState<GuardianFormData>({
-    full_name: '',
+    first_name: '',
+    last_name: '',
     email: '',
     phone: '',
+    ssn: '',
+    address: '',
     org_id: '',
     is_active: true
   });
@@ -66,9 +82,12 @@ export function GuardianForm({
       setFormData(initialData);
     } else {
       setFormData({
-        full_name: '',
+        first_name: '',
+        last_name: '',
         email: '',
         phone: '',
+        ssn: '',
+        address: '',
         org_id: orgs.length > 0 ? orgs[0].id : '',
         is_active: true
       });
@@ -82,45 +101,65 @@ export function GuardianForm({
 
   const handleClose = () => {
     setFormData({
-      full_name: '',
+      first_name: '',
+      last_name: '',
       email: '',
       phone: '',
+      ssn: '',
+      address: '',
       org_id: orgs.length > 0 ? orgs[0].id : '',
       is_active: true
     });
     onClose();
   };
 
-  if (!isOpen) return null;
+  if (!asPage && !isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-800 p-6 shadow-xl">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-            {formData.id ? t.edit_guardian : t.create_guardian}
-          </h3>
-          <button
-            onClick={handleClose}
-            className="rounded-lg p-1 hover:bg-slate-100 dark:hover:bg-slate-700"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+    <div className={asPage ? "w-full" : "fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"}>
+      <div className={asPage ? "w-[70%] ml-20  bg-white dark:bg-slate-800 p-6 shadow-sm" : "w-full max-w-md rounded-2xl bg-white dark:bg-slate-800 p-6 shadow-xl"}>
+        {!asPage && (
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+              {formData.id ? t.edit_guardian : t.create_guardian}
+            </h3>
+            <button
+              onClick={handleClose}
+              className="rounded-lg p-1 hover:bg-slate-100 dark:hover:bg-slate-700"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-              {t.full_name}
-            </label>
-            <input
-              type="text"
-              value={formData.full_name}
-              onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:text-white"
-              required
-              placeholder={t.full_name_placeholder}
-            />
+        <form onSubmit={handleSubmit} className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                {t.first_name || 'First Name'}
+              </label>
+              <input
+                type="text"
+                value={formData.first_name}
+                onChange={(e) => setFormData(prev => ({ ...prev, first_name: e.target.value }))}
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:text-white"
+                required
+                placeholder={t.first_name_placeholder || 'Enter first name'}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                {t.last_name || 'Last Name'}
+              </label>
+              <input
+                type="text"
+                value={formData.last_name}
+                onChange={(e) => setFormData(prev => ({ ...prev, last_name: e.target.value }))}
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:text-white"
+                required
+                placeholder={t.last_name_placeholder || 'Enter last name'}
+              />
+            </div>
           </div>
 
           <div>
@@ -150,6 +189,32 @@ export function GuardianForm({
             />
           </div>
 
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              {t.ssn || 'Social Security Number'}
+            </label>
+            <input
+              type="text"
+              value={formData.ssn || ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, ssn: e.target.value }))}
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 placeholder-slate-500 dark:placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:text-white"
+              placeholder={t.ssn_placeholder || '000000-0000'}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              {t.address || 'Address'}
+            </label>
+            <input
+              type="text"
+              value={formData.address || ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 placeholder-slate-500 dark:placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:text-white"
+              placeholder={t.address_placeholder || 'Enter address'}
+            />
+          </div>
+
           {/* Organization is automatically assigned - no user input needed */}
           <input
             type="hidden"
@@ -172,6 +237,10 @@ export function GuardianForm({
 
           {error && (
             <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
+          )}
+
+          {successMessage && (
+            <div className="text-sm text-emerald-600 dark:text-emerald-400">{successMessage}</div>
           )}
 
           <div className="flex gap-3 pt-4">

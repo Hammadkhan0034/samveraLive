@@ -8,11 +8,12 @@ interface StudentFormProps {
   onClose: () => void;
   onSubmit: (data: StudentFormData) => Promise<void>;
   initialData?: StudentFormData;
-  loading: boolean;
+  loading?: boolean;
   error: string | null;
-  guardians: Array<{ id: string; full_name: string }>;
+  guardians: Array<{ id: string; full_name?: string; first_name?: string; last_name?: string; email?: string | null }>;
   classes: Array<{ id: string; name: string }>;
   orgId: string;
+  asPage?: boolean;
   translations: {
     create_student: string;
     edit_student: string;
@@ -21,10 +22,26 @@ interface StudentFormProps {
     student_dob: string;
     student_gender: string;
     student_class: string;
+    student_status?: string;
+    status_pending?: string;
+    status_approved?: string;
+    status_rejected?: string;
     student_guardians: string;
     student_medical_notes: string;
     student_allergies: string;
     student_emergency_contact: string;
+    student_phone: string;
+    student_registration_time: string;
+    student_address: string;
+    student_start_date: string;
+    student_child_value: string;
+    student_language: string;
+    student_social_security_number: string;
+    student_registration_time_placeholder: string;
+    student_social_security_number_placeholder: string;
+    student_phone_placeholder: string;
+    student_child_value_placeholder: string;
+    student_address_placeholder: string;
     student_first_name_placeholder: string;
     student_last_name_placeholder: string;
     student_medical_notes_placeholder: string;
@@ -52,11 +69,21 @@ export interface StudentFormData {
   dob: string;
   gender: string;
   class_id: string;
+  status?: 'pending' | 'approved' | 'rejected' | string;
   medical_notes: string;
   allergies: string;
   emergency_contact: string;
   org_id: string;
   guardian_ids: string[];
+
+  // add these so setStudentForm accepts them
+  phone: string;
+  address: string;
+  registration_time: string;
+  start_date: string;
+  barngildi: number;
+  student_language: string;
+  social_security_number: string;
 }
 
 export function StudentForm({
@@ -69,6 +96,7 @@ export function StudentForm({
   guardians,
   classes,
   orgId,
+  asPage,
   translations: t
 }: StudentFormProps) {
   const [formData, setFormData] = useState<StudentFormData>({
@@ -77,6 +105,14 @@ export function StudentForm({
     dob: '',
     gender: 'unknown',
     class_id: '',
+    status: 'pending',
+    phone: '',
+    address: '',
+    registration_time: '',
+    start_date: '',
+    barngildi: 0,
+    student_language: 'english',
+    social_security_number: '',
     medical_notes: '',
     allergies: '',
     org_id: orgId,
@@ -95,6 +131,14 @@ export function StudentForm({
         dob: '',
         gender: 'unknown',
         class_id: '',
+        status: 'pending',
+        phone: '',
+        address: '',
+        registration_time: '',
+        start_date: '',
+        barngildi: 0,
+        student_language: 'english',
+        social_security_number: '',
         medical_notes: '',
         allergies: '',
         org_id: orgId,
@@ -139,6 +183,14 @@ export function StudentForm({
       dob: '',
       gender: 'unknown',
       class_id: '',
+      status: 'pending',
+      phone: '',
+      address: '',
+      registration_time: '',
+      start_date: '',
+      barngildi: 0,
+      student_language: 'english',
+      social_security_number: '',
       medical_notes: '',
       allergies: '',
       org_id: orgId,
@@ -148,22 +200,24 @@ export function StudentForm({
     onClose();
   };
 
-  if (!isOpen) return null;
+  if (!asPage && !isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-800 p-6 shadow-xl max-h-[90vh] overflow-y-auto">
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-            {formData.id ? t.edit_student : t.create_student}
-          </h3>
-          <button
-            onClick={handleClose}
-            className="rounded-lg p-1 hover:bg-slate-100 dark:hover:bg-slate-700"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+    <div className={asPage ? "w-full" : "fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"}>
+      <div className={asPage ? "w-[70%] ml-20 bg-white dark:bg-slate-800 p-6 shadow-sm" : "w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-800 p-6 shadow-xl max-h-[90vh] overflow-y-auto"}>
+        {!asPage && (
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+              {formData.id ? t.edit_student : t.create_student}
+            </h3>
+            <button
+              onClick={handleClose}
+              className="rounded-lg p-1 hover:bg-slate-100 dark:hover:bg-slate-700"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -239,6 +293,133 @@ export function StudentForm({
             </div>
           </div>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                {t.student_phone}
+              </label>
+              <input
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                placeholder={t.student_phone_placeholder}
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                {t.student_registration_time}
+              </label>
+              <input
+                type="text"
+                value={formData.registration_time}
+                onChange={(e) => setFormData(prev => ({ ...prev, registration_time: e.target.value }))}
+                // placeholder={t.student_registration_time_placeholder}
+                placeholder='YYYY-MM-DD HH:MM'
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              {t.student_address}
+            </label>
+            <textarea
+              value={formData.address}
+              onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
+              placeholder={t.student_address_placeholder}
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+              rows={2}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              {t.student_status || 'Status'}
+            </label>
+            <select
+              value={formData.status || 'pending'}
+              onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
+              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-slate-700 dark:text-slate-200"
+            >
+              <option value="pending">{t.status_pending || 'Pending'}</option>
+              <option value="approved">{t.status_approved || 'Approved'}</option>
+              <option value="rejected">{t.status_rejected || 'Rejected'}</option>
+            </select>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                {t.student_start_date}
+              </label>
+              <input
+                type="date"
+                value={formData.start_date}
+                onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
+                placeholder='YYYY-MM-DD'
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-slate-700 dark:text-slate-200"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                {t.student_child_value}
+              </label>
+              <input
+                type="number"
+                inputMode="decimal"
+                min={0.5}
+                max={1.9}
+                step={0.1}
+                value={formData.barngildi ?? 0}
+                onChange={(e) => {
+                  const num = Number(e.target.value);
+                  if (isNaN(num)) {
+                    setFormData(prev => ({ ...prev, barngildi: 0 }));
+                  } else {
+                    const clamped = Math.min(1.9, Math.max(0.5, num));
+                    setFormData(prev => ({ ...prev, barngildi: Number(clamped.toFixed(1)) }));
+                  }
+                }}
+                placeholder={t.student_child_value_placeholder || '1.0 or 1.7'}
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                {t.student_language}
+              </label>
+              <select
+                value={formData.student_language}
+                onChange={(e) => setFormData(prev => ({ ...prev, student_language: e.target.value }))}
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-slate-700 dark:text-slate-200"
+              >
+                <option value="english">English</option>
+                <option value="icelandic">Íslenska</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                {t.student_social_security_number}
+              </label>
+              <input
+                type="text"
+                value={formData.social_security_number}
+                onChange={(e) => setFormData(prev => ({ ...prev, social_security_number: e.target.value }))}
+                // placeholder={t.student_social_security_number_placeholder}
+                placeholder='000000-0000'
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+              />
+            </div>
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
               {t.student_class}
@@ -257,34 +438,7 @@ export function StudentForm({
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-              {t.student_guardians}
-            </label>
-            <select
-              multiple
-              value={formData.guardian_ids}
-              onChange={(e) => {
-                const selectedIds = Array.from(e.target.selectedOptions, option => option.value);
-                setFormData(prev => ({
-                  ...prev,
-                  guardian_ids: selectedIds
-                }));
-              }}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-slate-700 dark:text-slate-200"
-              size={4}
-            >
-              {guardians.length === 0 ? (
-                <option value="" disabled>{t.no_guardians_available}</option>
-              ) : (
-                guardians.map((guardian) => (
-                  <option key={guardian.id} value={guardian.id}>
-                    {guardian.full_name}
-                  </option>
-                ))
-              )}
-            </select>
-          </div>
+          {/* Guardians removed from UI */}
 
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">

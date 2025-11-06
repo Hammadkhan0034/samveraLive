@@ -1,5 +1,5 @@
 import { supabaseAdmin } from './supabaseClient';
-import { getStaffInvitationEmailHTML, getStaffInvitationEmailText } from './email-templates';
+import { getStaffInvitationEmailHTML, getStaffInvitationEmailText, getGuardianInvitationEmailHTML, getGuardianInvitationEmailText } from './email-templates';
 import { Resend } from 'resend';
 
 export async function sendStaffInvitationEmail(params: {
@@ -17,7 +17,7 @@ export async function sendStaffInvitationEmail(params: {
       throw new Error('Supabase admin client not configured');
     }
 
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://samvera-live.vercel.app';
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
     const callbackUrl = `${siteUrl}/auth/callback-staff?token=${params.invitationToken}&org_id=${params.orgId}&user_id=${params.userId}`;
 
     // Generate the HTML and text versions
@@ -38,11 +38,6 @@ export async function sendStaffInvitationEmail(params: {
       magicLink: callbackUrl,
       expiresAt: params.expiresAt
     });
-
-    console.log('📧 Sending custom invitation email with password...');
-    console.log('   To:', params.email);
-    console.log('   Password:', params.password);
-    console.log('   Callback:', callbackUrl);
 
     // Try to send via Resend if API key is configured
     const resendApiKey = process.env.RESEND_API_KEY;
@@ -125,6 +120,58 @@ export async function sendStaffInvitationEmail(params: {
   } catch (error: any) {
     console.error('❌ Error sending invitation email:', error);
     return { success: false, error: error.message };
+  }
+}
+
+export async function sendGuardianInvitationEmail(params: {
+  email: string;
+  guardianName: string;
+  organizationName: string;
+  password: string;
+  signInUrl: string;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    const resendApiKey = process.env.RESEND_API_KEY;
+    const fromEmail = process.env.EMAIL_FROM || 'onboarding@resend.dev';
+
+    const htmlContent = getGuardianInvitationEmailHTML({
+      guardianName: params.guardianName,
+      organizationName: params.organizationName,
+      email: params.email,
+      password: params.password,
+      signInUrl: params.signInUrl,
+    });
+
+    const textContent = getGuardianInvitationEmailText({
+      guardianName: params.guardianName,
+      organizationName: params.organizationName,
+      email: params.email,
+      password: params.password,
+      signInUrl: params.signInUrl,
+    });
+
+    if (!resendApiKey) {
+      console.log('RESEND_API_KEY not configured; skipping guardian custom email');
+      return { success: true };
+    }
+
+    const resend = new Resend(resendApiKey);
+    const { error } = await resend.emails.send({
+      from: fromEmail,
+      to: [params.email],
+      subject: 'Samvera Guardian Access Instructions',
+      html: htmlContent,
+      text: textContent,
+    });
+
+    if (error) {
+      console.error('Failed to send guardian email via Resend:', error);
+      return { success: false, error: String(error) };
+    }
+
+    return { success: true };
+  } catch (e: any) {
+    return { success: false, error: e?.message || 'Unknown error' };
   }
 }
 

@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic'
-
 export async function GET(request: Request) {
   try {
     if (!supabaseAdmin) {
@@ -17,6 +14,8 @@ export async function GET(request: Request) {
     const studentId = searchParams.get('studentId')
     const guardianId = searchParams.get('guardianId')
     
+    // Simplified query - just get the relationships without user join
+    // The join can fail if the foreign key doesn't exist or if full_name column doesn't exist
     let query = supabaseAdmin
       .from('guardian_students')
       .select(`
@@ -24,17 +23,7 @@ export async function GET(request: Request) {
         guardian_id,
         student_id,
         relation,
-        created_at,
-        users!guardian_students_guardian_id_fkey (
-          id,
-          full_name,
-          email
-        ),
-        students!guardian_students_student_id_fkey (
-          id,
-          first_name,
-          last_name
-        )
+        created_at
       `)
 
     if (studentId) {
@@ -49,7 +38,12 @@ export async function GET(request: Request) {
 
     if (error) {
       console.error('❌ Error fetching guardian-student relationships:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      console.error('❌ Query details:', { studentId, guardianId })
+      console.error('❌ Full error:', JSON.stringify(error, null, 2))
+      return NextResponse.json({ 
+        error: error.message || 'Failed to fetch guardian-student relationships',
+        details: error.details || null
+      }, { status: 500 })
     }
 
     return NextResponse.json({ 
@@ -81,14 +75,26 @@ export async function POST(request: Request) {
       }, { status: 400 })
     }
     
-    console.log('📋 Creating guardian-student relationship:', { guardian_id, student_id, relation });
+    // Fetch org_id from student row
+    const { data: studentRow, error: studentErr } = await supabaseAdmin
+      .from('students')
+      .select('org_id')
+      .eq('id', student_id)
+      .maybeSingle()
 
-    const { data: relationship, error } = await supabaseAdmin
+    if (studentErr || !studentRow?.org_id) {
+      console.error('❌ Could not resolve org_id for student', studentErr)
+      return NextResponse.json({ error: 'Could not resolve org for student' }, { status: 400 })
+    }
+
+    // Insert relationship with org_id, ignore duplicates
+    const { data: upserted, error } = await supabaseAdmin
       .from('guardian_students')
       .insert({
         guardian_id,
         student_id,
-        relation
+        relation,
+        org_id: studentRow.org_id,
       })
       .select('id,guardian_id,student_id,relation,created_at')
       .single()
@@ -98,7 +104,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: `Failed to create relationship: ${error.message}` }, { status: 500 })
     }
 
-    console.log('✅ Guardian-student relationship created successfully:', relationship.id)
+    const relationship = upserted
 
     return NextResponse.json({ 
       relationship,
@@ -145,8 +151,6 @@ export async function DELETE(request: Request) {
       console.error('❌ Failed to delete guardian-student relationship:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
-
-    console.log('✅ Guardian-student relationship deleted successfully')
 
     return NextResponse.json({ 
       message: 'Guardian-student relationship deleted successfully!'

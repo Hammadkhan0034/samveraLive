@@ -1,60 +1,19 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
-import { Globe, ChevronDown } from 'lucide-react';
 import PrincipalDashboard from '../../../components/PrincipalDashboard';
 import { useRequireAuth, useAuth } from '../../../../lib/hooks/useAuth';
-import ThemeProvider from '../../../components/ThemeProvider';
-import ThemeToggle from '../../../components/ThemeToggle';
+import LinkStudentGuardian from '../../../components/LinkStudentGuardian';
 
 export default function PrincipalDashboardPage() {
   const router = useRouter();
   const { user, loading, isSigningIn } = useRequireAuth('principal');
-  const { signOut } = useAuth();
-  const [lang, setLang] = useState<'is' | 'en'>('en');
-  const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
+  const { lang } = useLanguage();
 
-  // Set email from user data
-  const email = user?.email || '';
-
-
-  // Language management
-  useEffect(() => {
-    const saved = typeof window !== 'undefined'
-      ? (localStorage.getItem('samvera_lang') as 'is' | 'en' | null)
-      : null;
-    if (saved === 'is' || saved === 'en') setLang(saved);
-  }, []);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') localStorage.setItem('samvera_lang', lang);
-  }, [lang]);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (isLangDropdownOpen) {
-        const target = event.target as Element;
-        if (!target.closest('.language-dropdown')) {
-          setIsLangDropdownOpen(false);
-        }
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isLangDropdownOpen]);
-
-  async function handleSignOut() {
-    await signOut();
-    router.replace('/signin');
-  }
-
-  // Only show loading if we're actually loading and don't have a user yet
-  if (loading && !user && isSigningIn) {
+  // Show loading ONLY if we have no user yet (avoid flicker after sign-in)
+  if (loading && !user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
         <div className="flex items-center justify-center min-h-screen">
@@ -72,67 +31,12 @@ export default function PrincipalDashboardPage() {
   if (!user) return null;
 
   return (
-    <ThemeProvider>
-      <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-        {/* Header */}
-        <header className="sticky top-0 z-40 w-full border-b border-sand-200 bg-sand-50/75 backdrop-blur dark:border-slate-700 dark:bg-slate-900/75">
-          <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-6">
-            <a href="/" className="flex items-center gap-2">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-black text-white dark:bg-white dark:text-black">S</span>
-              <span className="font-medium text-slate-900 dark:text-slate-100">Samvera</span>
-            </a>
-            <div className="flex items-center gap-2">
-              {/* Theme Toggle */}
-              <ThemeToggle />
-              
-              {/* Language Dropdown */}
-              <div className="relative language-dropdown">
-                <button
-                  onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
-                  className="flex items-center gap-2 rounded-md bg-transparent border border-gray-300 text-sm px-3 py-1.5 text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
-                >
-                  <Globe className="h-4 w-4" />
-                  <span className="hidden sm:inline">{lang === 'is' ? 'Íslenska' : 'English'}</span>
-                  <ChevronDown className={`h-4 w-4 transition-transform ${isLangDropdownOpen ? 'rotate-180' : ''}`} />
-                </button>
-                
-                {isLangDropdownOpen && (
-                  <div className="absolute right-0 top-full mt-1 w-40 rounded-lg border border-sand-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg z-50">
-                    <button
-                      onClick={() => {
-                        setLang('en');
-                        setIsLangDropdownOpen(false);
-                      }}
-                      className={`w-full px-3 py-2 text-sm text-left hover:bg-sand-100 dark:hover:bg-slate-700 first:rounded-t-lg ${lang === 'en' ? 'bg-sand-100 dark:bg-slate-700 text-gray-700 dark:text-slate-100' : 'text-gray-700 dark:text-slate-300'}`}
-                    >
-                      English
-                    </button>
-                    <button
-                      onClick={() => {
-                        setLang('is');
-                        setIsLangDropdownOpen(false);
-                      }}
-                      className={`w-full px-3 py-2 text-sm text-left hover:bg-sand-100 dark:hover:bg-slate-700 last:rounded-b-lg ${lang === 'is' ? 'bg-sand-100 dark:bg-slate-700 text-gray-700 dark:text-slate-100' : 'text-gray-700 dark:text-slate-300'}`}
-                    >
-                      Íslenska
-                    </button>
-                  </div>
-                )}
-              </div>
-              
-              {/* <div className="text-sm text-sand-600 dark:text-slate-400">{email}</div> */}
-              <button
-                onClick={handleSignOut}
-                className="rounded-md bg-transparent text-sm border border-gray-300 px-3 py-1.5 text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
-              >
-                {lang === 'is' ? 'Útskrá' : 'Sign out'}
-              </button>
-            </div>
-          </div>
-        </header>
-
-        <PrincipalDashboard lang={lang} />
+    <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      <PrincipalDashboard lang={lang} />
+      <div className="mx-auto max-w-7xl px-4 md:px-6 mt-6">
+        {/* Link Guardian ↔ Student widget */}
+        <LinkStudentGuardian lang={lang} />
       </div>
-    </ThemeProvider>
+    </div>
   );
 }

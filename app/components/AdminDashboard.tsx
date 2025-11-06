@@ -7,7 +7,6 @@ import {
   School,
   BookOpen,
   Settings,
-  BarChart3,
   Shield,
   UserPlus,
   GraduationCap,
@@ -23,10 +22,7 @@ import {
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
-import { GuardianForm, type GuardianFormData } from './shared/GuardianForm';
-import { GuardianTable } from './shared/GuardianTable';
 import { StudentForm, type StudentFormData } from './shared/StudentForm';
-import { StudentTable } from './shared/StudentTable';
 import { DeleteConfirmationModal } from './shared/DeleteConfirmationModal';
 
 interface AdminStats {
@@ -42,7 +38,7 @@ export function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const { lang, t: contextT } = useLanguage();
   const router = useRouter();
-  
+
   // Translation logic
   const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
   const [orgs, setOrgs] = useState<Array<{ id: string; name: string; slug: string; timezone: string }>>([]);
@@ -50,41 +46,41 @@ export function AdminDashboard() {
   const [orgForm, setOrgForm] = useState<{ id?: string; name: string; slug: string; timezone: string }>({ name: '', slug: '', timezone: 'UTC' });
   const [orgError, setOrgError] = useState<string | null>(null);
   const [isSubmittingOrg, setIsSubmittingOrg] = useState(false);
-  const [principals, setPrincipals] = useState<Array<{ id: string; email: string | null; phone: string | null; full_name: string; org_id: string; is_active: boolean; created_at: string }>>([]);
+  const [isDeletingOrg, setIsDeletingOrg] = useState(false);
+  const [principals, setPrincipals] = useState<Array<{ id: string; email: string | null; phone: string | null; full_name?: string; first_name?: string | null; last_name?: string | null; name?: string | null; org_id: string; is_active: boolean; created_at: string }>>([]);
   const [loadingPrincipals, setLoadingPrincipals] = useState(false);
   const [principalError, setPrincipalError] = useState<string | null>(null);
   const [isSubmittingPrincipal, setIsSubmittingPrincipal] = useState(false);
-  const [principalForm, setPrincipalForm] = useState<{ id?: string; full_name: string; email?: string; phone?: string; org_id: string; is_active?: boolean }>({ full_name: '', email: '', phone: '', org_id: '', is_active: true });
-  
+  const [isDeletingPrincipal, setIsDeletingPrincipal] = useState(false);
+  const [principalForm, setPrincipalForm] = useState<{ id?: string; first_name?: string; last_name?: string; full_name: string; email?: string; phone?: string; org_id: string; is_active?: boolean }>({ first_name: '', last_name: '', full_name: '', email: '', phone: '', org_id: '', is_active: true });
+  const [principalPhoneError, setPrincipalPhoneError] = useState<string | null>(null);
+
   // Guardian states
   const [guardians, setGuardians] = useState<Array<{ id: string; email: string | null; phone: string | null; full_name: string; org_id: string; is_active: boolean; created_at: string; metadata?: any; org_name?: string }>>([]);
   const [loadingGuardians, setLoadingGuardians] = useState(false);
   const [guardianError, setGuardianError] = useState<string | null>(null);
   const [isSubmittingGuardian, setIsSubmittingGuardian] = useState(false);
-  const [guardianForm, setGuardianForm] = useState<{ id?: string; full_name: string; email: string; phone: string; org_id: string; is_active?: boolean }>({ full_name: '', email: '', phone: '', org_id: '', is_active: true });
+  const [guardianForm, setGuardianForm] = useState<{ id?: string; first_name: string; last_name: string; email: string; phone: string; org_id: string; is_active?: boolean }>({ first_name: '', last_name: '', email: '', phone: '', org_id: '', is_active: true });
   const [guardianRefreshKey, setGuardianRefreshKey] = useState(0);
+
+  // Teachers states
+  const [teachers, setTeachers] = useState<Array<{ id: string; email: string | null; phone: string | null; first_name: string; last_name: string; org_id: string; is_active: boolean; created_at: string; org_name?: string }>>([]);
+  const [loadingTeachers, setLoadingTeachers] = useState(false);
 
   // Student states
   const [students, setStudents] = useState<Array<{ id: string; first_name: string; last_name: string | null; dob: string | null; gender: string; class_id: string | null; created_at: string; classes?: any; guardians?: Array<{ id: string; relation: string; users?: { id: string; full_name: string; email: string } }> }>>([]);
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [studentError, setStudentError] = useState<string | null>(null);
   const [isSubmittingStudent, setIsSubmittingStudent] = useState(false);
-  const [studentForm, setStudentForm] = useState<{ id?: string; first_name: string; last_name: string; dob: string; gender: string; class_id: string; medical_notes: string; allergies: string; emergency_contact: string; org_id: string; guardian_ids: string[] }>({ first_name: '', last_name: '', dob: '', gender: 'unknown', class_id: '', medical_notes: '', allergies: '', emergency_contact: '', org_id: '', guardian_ids: [] });
+  const [studentForm, setStudentForm] = useState<StudentFormData>({ first_name: '', last_name: '', dob: '', gender: 'unknown', class_id: '', medical_notes: '', allergies: '', emergency_contact: '', org_id: '', guardian_ids: [], phone: '', address: '', registration_time: '', start_date: '', barngildi: 0, student_language: '', social_security_number: '' });
 
   // Classes states
   const [classes, setClasses] = useState<Array<{ id: string; name: string; code: string | null }>>([]);
   const [loadingClasses, setLoadingClasses] = useState(false);
 
-  // Global loading state for initial data load
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
-  
-  // Auto-hide loading after maximum 500ms to prevent long loading
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsInitialLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
-  }, []);
+  // Global loading state - always false to show KPIs immediately
+  const [isInitialLoading, setIsInitialLoading] = useState(false);
+  const didInit = React.useRef(false);
 
   // Modal states
   const [isOrgModalOpen, setIsOrgModalOpen] = useState(false);
@@ -109,10 +105,16 @@ export function AdminDashboard() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
       setOrgs(json.orgs || []);
-      console.log('✅ Organizations loaded:', json.orgs?.length || 0);
+      try {
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('admin_orgs', JSON.stringify(json.orgs || []));
+        }
+      } catch { }
+      console.log('✅ Organizations loaded:', json.orgs?.length || 0, 'Organizations:', json.orgs);
     } catch (e: any) {
       setOrgError(e.message);
       console.error('❌ Error loading organizations:', e.message);
+      // Keep existing orgs on error to avoid table flicker
     } finally {
       setLoadingOrgs(false);
     }
@@ -124,6 +126,9 @@ export function AdminDashboard() {
     try {
       setIsSubmittingOrg(true);
       setOrgError(null);
+
+      console.log('🔄 Submitting organization:', orgForm);
+
       const method = orgForm.id ? 'PUT' : 'POST';
       const res = await fetch('/api/orgs', {
         method,
@@ -132,10 +137,27 @@ export function AdminDashboard() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
+
+      console.log('✅ Organization created/updated successfully');
+
+      // Close modal and reset form
       setOrgForm({ name: '', slug: '', timezone: 'UTC' });
       setIsOrgModalOpen(false);
-      await loadOrgs();
+
+      // Optimistically update orgs if API returned the org; otherwise, refresh
+      if ((json as any).org) {
+        setOrgs(prev => {
+          const idx = prev.findIndex(o => o.id === (json as any).org.id);
+          if (idx === -1) return [(json as any).org, ...prev];
+          const copy = [...prev];
+          copy[idx] = (json as any).org;
+          return copy;
+        });
+      } else {
+        await loadOrgs();
+      }
     } catch (e: any) {
+      console.error('❌ Error submitting organization:', e.message);
       setOrgError(e.message);
     } finally {
       setIsSubmittingOrg(false);
@@ -162,68 +184,100 @@ export function AdminDashboard() {
   async function confirmDeleteOrg() {
     if (!orgToDelete) return;
     try {
+      setIsDeletingOrg(true);
       setOrgError(null);
+
+      console.log('🔄 Deleting organization:', orgToDelete);
+
       const res = await fetch(`/api/orgs?id=${encodeURIComponent(orgToDelete)}`, { method: 'DELETE' });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
+
+      console.log('✅ Organization deleted successfully');
+
+      // Close modal and reset state
       setIsDeleteOrgModalOpen(false);
       setOrgToDelete(null);
-      await loadOrgs();
+
+      // Optimistically remove from orgs to avoid flicker
+      setOrgs(prev => prev.filter(o => o.id !== orgToDelete));
     } catch (e: any) {
+      console.error('❌ Error deleting organization:', e.message);
       setOrgError(e.message);
+    } finally {
+      setIsDeletingOrg(false);
     }
   }
 
-  // Load data immediately when component mounts
+  // Load data immediately when component mounts - always load fresh, no cached data on refresh
   React.useEffect(() => {
+    // Always clear in-memory data on mount to avoid showing stale values
+    setOrgs([]);
+    setPrincipals([]);
+    setGuardians([]);
+    setTeachers([]);
+    setStudents([]);
+
     const loadAllData = async () => {
       try {
-        console.log('🔄 Loading all data for Admin Dashboard...');
-        // Use Promise.allSettled to ensure all requests complete even if some fail
+        console.log('🔄 Loading fresh data for Admin Dashboard...');
+        // Don't set loading state - show dashboard immediately
+
+        // First load orgs, then load data that depends on orgs
+        await loadOrgs();
+
+        // Now load principals (doesn't depend on orgs)
+        await loadPrincipals();
+
+        // Load org-dependent data in parallel (need orgs to be loaded first)
         const results = await Promise.allSettled([
-          loadOrgs(),
-          loadClasses(),
-          loadPrincipals(),
-          loadGuardians(),
-          loadStudents()
+          loadGuardians(false),
+          loadTeachers(false),
+          loadStudents(false)
         ]);
-        
+
         // Log results for debugging
         results.forEach((result, index) => {
-          const names = ['loadOrgs', 'loadClasses', 'loadPrincipals', 'loadGuardians', 'loadStudents'];
+          const names = ['loadGuardians', 'loadTeachers', 'loadStudents'];
           if (result.status === 'rejected') {
             console.error(`❌ ${names[index]} failed:`, result.reason);
           } else {
             console.log(`✅ ${names[index]} completed`);
           }
         });
-        
-        console.log('✅ All data loading attempts completed');
+
+        console.log('✅ All fresh data loading completed');
+
       } catch (error) {
         console.error('❌ Error loading data:', error);
-      } finally {
-        // Set loading to false immediately when data is loaded
-        setIsInitialLoading(false);
       }
     };
+
+    // Always load fresh data - only skip if already initialized in this render cycle
+    if (didInit.current) {
+      console.log('⏭️ Skipping data reload (already initialized this render)');
+      return;
+    }
+    didInit.current = true;
+    // Start loading fresh data immediately - no cached data on refresh
     loadAllData();
   }, []);
 
-  async function loadClasses() {
-    try {
-      setLoadingClasses(true);
-      console.log('🔄 Loading classes...');
-      const res = await fetch('/api/classes', { cache: 'no-store' });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
-      setClasses(json.classes || []);
-      console.log('✅ Classes loaded:', json.classes?.length || 0);
-    } catch (e: any) {
-      console.error('❌ Error loading classes:', e.message);
-    } finally {
-      setLoadingClasses(false);
+  // No fallback needed - isInitialLoading is always false to show KPIs immediately
+
+  // Load teachers, guardians, and students when orgs are available (always fresh)
+  React.useEffect(() => {
+    if (orgs.length > 0) {
+      console.log('🔄 Orgs available, loading dependent data fresh');
+      loadTeachers(false);
+      loadGuardians(false);
+      loadStudents(false);
+    } else {
+      console.log('⚠️ No orgs available yet, cannot load students/teachers/guardians');
     }
-  }
+  }, [orgs.length]);
+
+  // loadClasses removed to reduce unnecessary code and requests
 
   async function loadPrincipals() {
     try {
@@ -232,55 +286,35 @@ export function AdminDashboard() {
       console.log('🔄 Loading principals...');
       const res = await fetch('/api/principals', { cache: 'no-store' });
       const json = await res.json();
-      
+
       console.log('📥 Principals API response:', json);
-      
+
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
       setPrincipals(json.principals || []);
+      try {
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('admin_principals', JSON.stringify(json.principals || []));
+        }
+      } catch { }
       console.log('✅ Principals loaded:', json.principals?.length || 0, 'Principals:', json.principals);
     } catch (e: any) {
       setPrincipalError(e.message);
       console.error('❌ Error loading principals:', e.message);
+      // Keep existing principals on error to avoid table flicker
     } finally {
       setLoadingPrincipals(false);
     }
   }
 
-  // Refresh guardians and students when orgs change
-  React.useEffect(() => {
-    if (orgs.length > 0) {
-      console.log('🔄 Refreshing guardians and students after orgs loaded...');
-      loadGuardians(false); // Refresh guardians when orgs change, but don't show loading
-      loadStudents(false); // Refresh students when orgs change, but don't show loading
-    }
-  }, [orgs]);
-
-  // Fallback: Try to load guardians again after a delay if they're still empty
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      if (guardians.length === 0 && !loadingGuardians) {
-        console.log('🔄 Fallback: Trying to load guardians again...');
-        loadGuardians(false);
-      }
-    }, 2000); // Wait 2 seconds after initial load
-
-    return () => clearTimeout(timer);
-  }, [guardians.length, loadingGuardians]);
-
-  // Test function to manually test the guardians API
-  const testGuardiansAPI = async () => {
-    try {
-      console.log('🧪 Testing guardians API directly...');
-      const res = await fetch('/api/guardians?orgId=1&t=' + Date.now(), { cache: 'no-store' });
-      const json = await res.json();
-      console.log('🧪 Direct API test result:', json);
-      return json;
-    } catch (e) {
-      console.error('🧪 Direct API test failed:', e);
-      return null;
-    }
-  };
-
+  // Validate phone number (optional but must be valid if provided)
+  function validatePhoneNumber(phone: string | undefined): boolean {
+    if (!phone || phone.trim() === '') return true; // Phone is optional
+    // Allow various phone formats: digits, spaces, dashes, parentheses, plus sign
+    // Minimum 7 digits, maximum 20 characters
+    const phoneRegex = /^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{1,9}$/;
+    const digitsOnly = phone.replace(/\D/g, '');
+    return phoneRegex.test(phone.trim()) && digitsOnly.length >= 7 && digitsOnly.length <= 15;
+  }
 
   async function submitPrincipal(e: React.FormEvent) {
     e.preventDefault();
@@ -288,6 +322,16 @@ export function AdminDashboard() {
     try {
       setIsSubmittingPrincipal(true);
       setPrincipalError(null);
+
+      // Validate phone number if provided
+      if (principalForm.phone && !validatePhoneNumber(principalForm.phone)) {
+        setPrincipalError(t.principal_phone_invalid || 'Please enter a valid phone number');
+        setIsSubmittingPrincipal(false);
+        return;
+      }
+
+      console.log('🔄 Submitting principal:', principalForm);
+
       const method = principalForm.id ? 'PUT' : 'POST';
       const res = await fetch('/api/principals', {
         method,
@@ -296,10 +340,32 @@ export function AdminDashboard() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
+
+      console.log('✅ Principal created/updated successfully');
+
+      // Optimistically update principals list immediately for instant KPI update
+      if (json.principal || json.user) {
+        const newPrincipal = json.principal || json.user;
+        setPrincipals(prev => {
+          // Check if already exists (update) or add new
+          const exists = prev.find(p => p.id === newPrincipal.id);
+          if (exists) {
+            return prev.map(p => p.id === newPrincipal.id ? { ...p, ...newPrincipal } : p);
+          } else {
+            return [...prev, newPrincipal];
+          }
+        });
+      }
+
+      // Close modal and reset form
       setPrincipalForm({ id: undefined, full_name: '', email: '', org_id: '', is_active: true });
+      setPrincipalPhoneError(null);
       setIsPrincipalModalOpen(false);
-      await loadPrincipals();
+
+      // Force refresh principals list in background to ensure data is in sync
+      loadPrincipals().catch(err => console.error('Error refreshing principals:', err));
     } catch (e: any) {
+      console.error('❌ Error submitting principal:', e.message);
       setPrincipalError(e.message);
     } finally {
       setIsSubmittingPrincipal(false);
@@ -307,14 +373,38 @@ export function AdminDashboard() {
   }
 
   function openCreatePrincipalModal() {
-    setPrincipalForm({ full_name: '', email: '', phone: '', org_id: (orgs[0]?.id || ''), is_active: true });
+    setPrincipalForm({ first_name: '', last_name: '', full_name: '', email: '', phone: '', org_id: (orgs[0]?.id || ''), is_active: true });
     setPrincipalError(null);
+    setPrincipalPhoneError(null);
     setIsPrincipalModalOpen(true);
   }
 
-  function openEditPrincipalModal(principal: { id: string; email: string | null; phone: string | null; full_name: string; org_id: string; is_active: boolean }) {
-    setPrincipalForm({ id: principal.id, full_name: principal.full_name, email: principal.email || '', phone: principal.phone || '', org_id: principal.org_id, is_active: principal.is_active });
+  function openEditPrincipalModal(principal: { id: string; email: string | null; phone: string | null; full_name?: string; first_name?: string | null; last_name?: string | null; name?: string | null; org_id: string; is_active: boolean }) {
+    // Use first_name and last_name if available directly, otherwise split full_name or name
+    let first = principal.first_name || '';
+    let last = principal.last_name || '';
+    
+    if (!first && !last) {
+      // Fallback: split full_name or name
+      const fullName = principal.full_name || principal.name || '';
+      const parts = fullName.trim().split(/\s+/);
+      first = parts.shift() || '';
+      last = parts.join(' ');
+    }
+    
+    const fullName = [first, last].filter(Boolean).join(' ').trim();
+    setPrincipalForm({ 
+      id: principal.id, 
+      first_name: first, 
+      last_name: last, 
+      full_name: fullName, 
+      email: principal.email || '', 
+      phone: principal.phone || '', 
+      org_id: principal.org_id, 
+      is_active: principal.is_active 
+    });
     setPrincipalError(null);
+    setPrincipalPhoneError(null);
     setIsPrincipalModalOpen(true);
   }
 
@@ -326,15 +416,96 @@ export function AdminDashboard() {
   async function confirmDeletePrincipal() {
     if (!principalToDelete) return;
     try {
+      setIsDeletingPrincipal(true);
       setPrincipalError(null);
+
+      console.log('🔄 Deleting principal:', principalToDelete);
+
       const res = await fetch(`/api/principals?id=${encodeURIComponent(principalToDelete)}`, { method: 'DELETE' });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
+
+      console.log('✅ Principal deleted successfully');
+
+      // Close modal and reset state
       setIsDeletePrincipalModalOpen(false);
       setPrincipalToDelete(null);
+
+      // Force refresh principals list without showing loading
+      console.log('🔄 Refreshing principals list...');
       await loadPrincipals();
+
+      console.log('✅ Principals list refreshed');
     } catch (e: any) {
+      console.error('❌ Error deleting principal:', e.message);
       setPrincipalError(e.message);
+    } finally {
+      setIsDeletingPrincipal(false);
+    }
+  }
+
+  // Teachers functions - Load teachers from ALL organizations
+  async function loadTeachers(showLoading = true) {
+    try {
+      if (showLoading) {
+        setLoadingTeachers(true);
+      }
+
+      console.log('🔄 Loading teachers from ALL organizations. Available orgs:', orgs);
+
+      if (orgs.length === 0) {
+        console.log('⚠️ No organizations available, skipping teachers load');
+        setTeachers([]);
+        return;
+      }
+
+      // Load teachers from ALL organizations
+      const allTeachers = [];
+
+      for (const org of orgs) {
+        try {
+          console.log(`🔄 Loading teachers for org: ${org.name} (${org.id})`);
+          const res = await fetch(`/api/staff-management?orgId=${org.id}&t=${Date.now()}`, { cache: 'no-store' });
+          const json = await res.json();
+
+          if (res.ok && json.staff) {
+            const orgTeachers = json.staff.map((teacher: any) => ({
+              id: teacher.id,
+              email: teacher.email || null,
+              phone: teacher.phone || null,
+              first_name: teacher.first_name || '',
+              last_name: teacher.last_name || '',
+              org_id: teacher.org_id || org.id,
+              is_active: teacher.is_active !== false,
+              created_at: teacher.created_at || new Date().toISOString(),
+              org_name: org.name // Add organization name for display
+            }));
+            allTeachers.push(...orgTeachers);
+            console.log(`✅ Loaded ${orgTeachers.length} teachers from ${org.name}`);
+          } else {
+            console.log(`⚠️ No teachers found for ${org.name}`);
+          }
+        } catch (orgError) {
+          console.error(`❌ Error loading teachers for ${org.name}:`, orgError);
+        }
+      }
+
+      console.log('📋 Total teachers from all orgs:', allTeachers.length);
+      setTeachers(allTeachers);
+      // Cache teachers for instant loading on refresh
+      if (typeof window !== 'undefined') {
+        try {
+          sessionStorage.setItem('admin_teachers', JSON.stringify(allTeachers));
+        } catch { }
+      }
+      console.log('✅ All teachers loaded and state updated');
+
+    } catch (e: any) {
+      console.error('❌ Error loading teachers:', e.message);
+    } finally {
+      if (showLoading) {
+        setLoadingTeachers(false);
+      }
     }
   }
 
@@ -345,32 +516,32 @@ export function AdminDashboard() {
         setLoadingGuardians(true);
       }
       setGuardianError(null);
-      
+
       console.log('🔄 Loading guardians from ALL organizations. Available orgs:', orgs);
-      
+
       if (orgs.length === 0) {
         console.log('⚠️ No organizations available, using default org');
         const res = await fetch(`/api/guardians?orgId=1&t=${Date.now()}`, { cache: 'no-store' });
         const json = await res.json();
-        
+
         if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
-        
+
         const guardiansList = json.guardians || [];
         setGuardians(guardiansList);
         setGuardianRefreshKey(prev => prev + 1);
         console.log('✅ Default guardians loaded:', guardiansList.length);
         return;
       }
-      
+
       // Load guardians from ALL organizations
       const allGuardians = [];
-      
+
       for (const org of orgs) {
         try {
           console.log(`🔄 Loading guardians for org: ${org.name} (${org.id})`);
           const res = await fetch(`/api/guardians?orgId=${org.id}&t=${Date.now()}`, { cache: 'no-store' });
           const json = await res.json();
-          
+
           if (res.ok && json.guardians) {
             const orgGuardians = json.guardians.map((guardian: any) => ({
               ...guardian,
@@ -385,14 +556,20 @@ export function AdminDashboard() {
           console.error(`❌ Error loading guardians for ${org.name}:`, orgError);
         }
       }
-      
+
       console.log('📋 Total guardians from all orgs:', allGuardians.length);
       console.log('📋 All guardians:', allGuardians);
-      
+
       setGuardians(allGuardians);
       setGuardianRefreshKey(prev => prev + 1); // Force re-render
+      // Cache guardians for instant loading on refresh
+      if (typeof window !== 'undefined') {
+        try {
+          sessionStorage.setItem('admin_guardians', JSON.stringify(allGuardians));
+        } catch { }
+      }
       console.log('✅ All guardians loaded and state updated');
-      
+
     } catch (e: any) {
       console.error('❌ Error loading guardians:', e.message);
       setGuardianError(e.message);
@@ -414,7 +591,7 @@ export function AdminDashboard() {
         ...guardianForm,
         created_by: 'admin-user-id' // In real app, get from session
       };
-            
+
       const res = await fetch('/api/guardians', {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -422,17 +599,31 @@ export function AdminDashboard() {
       });
       const json = await res.json();
       console.log('📥 Guardian API response:', json);
-      
+
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
-            
+
+      // Optimistically update guardians list immediately for instant KPI update
+      if (json.guardian || json.user) {
+        const newGuardian = json.guardian || json.user;
+        setGuardians(prev => {
+          // Check if already exists (update) or add new
+          const exists = prev.find(g => g.id === newGuardian.id);
+          if (exists) {
+            return prev.map(g => g.id === newGuardian.id ? { ...g, ...newGuardian } : g);
+          } else {
+            return [...prev, { ...newGuardian, org_name: orgs.find(o => o.id === newGuardian.org_id)?.name || '' }];
+          }
+        });
+        setGuardianRefreshKey(prev => prev + 1); // Force stats recalculation
+      }
+
       setIsGuardianModalOpen(false);
-      setGuardianForm({ full_name: '', email: '', phone: '', org_id: '', is_active: true });
-      
-      // Force refresh the guardians list (without showing loading state)
-      console.log('🔄 About to call loadGuardians()...');
-      await loadGuardians(false);
-      console.log('🔄 Guardians list refreshed');
-      
+      setGuardianForm({ first_name: '', last_name: '', email: '', phone: '', org_id: '', is_active: true });
+
+      // Force refresh the guardians list in background to ensure data is in sync
+      console.log('🔄 Refreshing guardians list in background...');
+      loadGuardians(false).catch(err => console.error('Error refreshing guardians:', err));
+
       // Guardian created successfully - data already refreshed in table
     } catch (e: any) {
       console.error('❌ Error submitting guardian:', e.message);
@@ -444,25 +635,29 @@ export function AdminDashboard() {
 
   function openCreateGuardianModal() {
     const orgId = orgs.length > 0 ? orgs[0].id : '1';
-    const orgName = orgs.length > 0 ? orgs[0].name : 'Default Organization';
-    console.log('🏢 Opening guardian modal with orgId:', orgId, 'Org Name:', orgName, 'Available orgs:', orgs);
-    setGuardianForm({ full_name: '', email: '', phone: '', org_id: orgId, is_active: true });
+    setGuardianForm({ first_name: '', last_name: '', email: '', phone: '', org_id: orgId, is_active: true });
     setGuardianError(null);
     setIsGuardianModalOpen(true);
   }
 
+
+
   function openEditGuardianModal(guardian: any) {
+    const [fn, ...rest] = (guardian.full_name || '').trim().split(/\s+/);
     setGuardianForm({
       id: guardian.id,
-      full_name: guardian.full_name,
+      first_name: guardian.first_name ?? fn ?? '',
+      last_name: guardian.last_name ?? rest.join(' ') ?? '',
       email: guardian.email || '',
       phone: guardian.phone || '',
-      org_id: guardian.org_id,
+      org_id: guardian.org_id || (orgs.length > 0 ? orgs[0].id : '1'),
       is_active: guardian.is_active
     });
     setGuardianError(null);
     setIsGuardianModalOpen(true);
   }
+
+
 
   function openDeleteGuardianModal(id: string) {
     setGuardianToDelete(id);
@@ -484,26 +679,81 @@ export function AdminDashboard() {
     }
   }
 
-  // Student functions
+  // Student functions - Load students from ALL organizations
   async function loadStudents(showLoading = true) {
     try {
       if (showLoading) {
         setLoadingStudents(true);
       }
       setStudentError(null);
-      
-      // Use the first available organization ID from the orgs list
-      const orgId = orgs.length > 0 ? orgs[0].id : '1';
-      console.log('🔄 Loading students for orgId:', orgId);
-      
-      const res = await fetch(`/api/students?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
-      const json = await res.json();
-      
-      if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
-      
-      const studentsList = json.students || [];
-      setStudents(studentsList);
-      console.log('✅ Students loaded:', studentsList.length);
+
+      console.log('🔄 Loading students from ALL organizations. Available orgs:', orgs);
+
+      if (orgs.length === 0) {
+        console.log('⚠️ No organizations available, skipping students load');
+        setStudents([]);
+        return;
+      }
+
+      // Load students from ALL organizations
+      const allStudents = [];
+
+      for (const org of orgs) {
+        try {
+          console.log(`🔄 Loading students for org: ${org.name} (${org.id})`);
+          const res = await fetch(`/api/students?orgId=${org.id}&t=${Date.now()}`, { cache: 'no-store' });
+          const json = await res.json();
+
+          if (res.ok && json.students) {
+            // Flatten the nested structure - students API returns users nested
+            const orgStudents = json.students.map((student: any) => ({
+              id: student.id || student.user_id,
+              user_id: student.user_id,
+              class_id: student.class_id,
+              org_id: org.id,
+              first_name: student.users?.first_name || student.first_name || '',
+              last_name: student.users?.last_name || student.last_name || null,
+              dob: student.users?.dob || student.dob || null,
+              gender: student.users?.gender || student.gender || 'unknown',
+              phone: student.users?.phone || student.phone || null,
+              address: student.users?.address || student.address || null,
+              ssn: student.users?.ssn || student.ssn || null,
+              registration_time: student.registration_time || null,
+              start_date: student.start_date || null,
+              barngildi: student.barngildi || null,
+              created_at: student.created_at || new Date().toISOString(),
+              classes: student.classes || null,
+              guardians: student.guardians || [],
+              org_name: org.name // Add organization name for display
+            }));
+            allStudents.push(...orgStudents);
+            console.log(`✅ Loaded ${orgStudents.length} students from ${org.name}`);
+            console.log(`📋 Sample student data:`, orgStudents[0]);
+          } else {
+            console.log(`⚠️ No students found for ${org.name}`, json);
+          }
+        } catch (orgError) {
+          console.error(`❌ Error loading students for ${org.name}:`, orgError);
+        }
+      }
+
+      console.log('📋 Total students from all orgs:', allStudents.length);
+      console.log('📋 Students data (first 3):', allStudents.slice(0, 3));
+      console.log('📋 All students count for stats:', allStudents.length);
+
+      // Validate students data before setting
+      const validStudents = allStudents.filter((s: any) => s && (s.id || s.user_id));
+      console.log('✅ Valid students count (after filtering):', validStudents.length);
+
+      setStudents(validStudents);
+      // Cache students for instant loading on refresh
+      if (typeof window !== 'undefined') {
+        try {
+          sessionStorage.setItem('admin_students', JSON.stringify(validStudents));
+          console.log('✅ Students cached in sessionStorage');
+        } catch { }
+      }
+      console.log('✅ All students loaded and state updated - students count:', validStudents.length);
     } catch (e: any) {
       console.error('❌ Error loading students:', e.message);
       setStudentError(e.message);
@@ -518,17 +768,16 @@ export function AdminDashboard() {
   async function loadGuardiansForStudent() {
     try {
       const orgId = orgs.length > 0 ? orgs[0].id : '1';
-      
+
       const res = await fetch(`/api/guardians?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
       const json = await res.json();
-      
+
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
-      
+
       const guardiansList = json.guardians || [];
       setGuardians(guardiansList);
-      
+
       // Also refresh classes
-      await loadClasses();
     } catch (e: any) {
       console.error('❌ Error loading guardians for student:', e.message);
     }
@@ -537,17 +786,17 @@ export function AdminDashboard() {
   // Validate student age
   function validateStudentAge(dob: string): boolean {
     if (!dob) return true; // No DOB is valid
-    
+
     const birthDate = new Date(dob);
     const today = new Date();
     const age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
-    
+
     // Calculate actual age
-    const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate()) 
-      ? age - 1 
+    const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())
+      ? age - 1
       : age;
-    
+
     return actualAge >= 0 && actualAge <= 18;
   }
 
@@ -557,34 +806,67 @@ export function AdminDashboard() {
     try {
       setIsSubmittingStudent(true);
       setStudentError(null);
-      
+
       // Validate age before submitting
       if (studentForm.dob && !validateStudentAge(studentForm.dob)) {
         setStudentError('Student age must be between 0 and 18 years old');
         return;
       }
-      
+
       const method = studentForm.id ? 'PUT' : 'POST';
       const requestData = {
         ...studentForm,
         created_by: 'admin-user-id' // In real app, get from session
       };
-            
+
       const res = await fetch('/api/students', {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestData),
       });
       const json = await res.json();
-      
+
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
-            
+
+      // Optimistically update students list immediately for instant KPI update
+      if (json.student || json.user) {
+        const newStudent = json.student || json.user;
+        setStudents(prev => {
+          // Check if already exists (update) or add new
+          const exists = prev.find(s => s.id === newStudent.id);
+          if (exists) {
+            return prev.map(s => s.id === newStudent.id ? { ...s, ...newStudent } : s);
+          } else {
+            return [...prev, { ...newStudent, org_name: orgs.find(o => o.id === newStudent.org_id)?.name || '' }];
+          }
+        });
+      }
+
       setIsStudentModalOpen(false);
-      setStudentForm({ first_name: '', last_name: '', dob: '', gender: 'unknown', class_id: '', medical_notes: '', allergies: '', emergency_contact: '', org_id: '', guardian_ids: [] });
-      
-      // Force refresh the students list (without showing loading state)
-      await loadStudents(false);
-      
+      setStudentForm({
+        first_name: '',
+        last_name: '',
+        dob: '',
+        gender: 'unknown',
+        class_id: '',
+        medical_notes: '',
+        allergies: '',
+        emergency_contact: '',
+        // keeps the same org the user selected
+        org_id: studentForm.org_id || (orgs[0]?.id || '1'),
+        guardian_ids: [],
+        phone: '',
+        address: '',
+        registration_time: '',
+        start_date: '',
+        barngildi: 0,
+        student_language: '',
+        social_security_number: ''
+      });
+
+      // Force refresh the students list in background to ensure data is in sync
+      loadStudents(false).catch(err => console.error('Error refreshing students:', err));
+
       // Student created successfully - data already refreshed in table
     } catch (e: any) {
       console.error('❌ Error submitting student:', e.message);
@@ -596,7 +878,7 @@ export function AdminDashboard() {
 
   function openCreateStudentModal() {
     const orgId = orgs.length > 0 ? orgs[0].id : '1';
-    setStudentForm({ first_name: '', last_name: '', dob: '', gender: 'unknown', class_id: '', medical_notes: '', allergies: '', emergency_contact: '', org_id: orgId, guardian_ids: [] });
+    setStudentForm({ first_name: '', last_name: '', dob: '', gender: 'unknown', class_id: '', medical_notes: '', allergies: '', emergency_contact: '', org_id: orgId, guardian_ids: [], phone: '', address: '', registration_time: '', start_date: '', barngildi: 0, student_language: '', social_security_number: '' });
     setStudentError(null);
     setIsStudentModalOpen(true);
     // Load guardians when opening the modal
@@ -615,7 +897,16 @@ export function AdminDashboard() {
       allergies: student.allergies_encrypted || '',
       emergency_contact: student.emergency_contact_encrypted || '',
       org_id: student.org_id || (orgs.length > 0 ? orgs[0].id : '1'),
-      guardian_ids: [] // Will be loaded separately
+      guardian_ids: [],
+
+      // required fields to satisfy StudentFormData
+      phone: student.phone || '',
+      address: student.address || '',
+      registration_time: student.registration_time || '',
+      start_date: student.start_date || '',
+      barngildi: student.barngildi ?? 0,
+      student_language: student.student_language || '',
+      social_security_number: student.social_security_number || ''
     });
     setStudentError(null);
     setIsStudentModalOpen(true);
@@ -643,16 +934,41 @@ export function AdminDashboard() {
     }
   }
 
-  // Calculate real stats from loaded data - force recalculation when guardians change
+  // Calculate real stats from loaded data - force recalculation when data changes
   const stats: AdminStats = React.useMemo(() => {
+    // Debug: Log all counts before calculation
+    const principalsCount = principals.length;
+    const teachersCount = teachers.length;
+    const guardiansCount = guardians.length;
+    const studentsCount = students.length;
+
+
+    // Compute unique users across all roles to match users table count
+    const uniqueUserIds = new Set<string>();
+    principals.forEach((p: any) => p?.id && uniqueUserIds.add(p.id));
+    teachers.forEach((t: any) => t?.id && uniqueUserIds.add(t.id));
+    guardians.forEach((g: any) => g?.id && uniqueUserIds.add(g.id));
+    students.forEach((s: any) => (s?.user_id || s?.id) && uniqueUserIds.add(s.user_id || s.id));
+
     const calculatedStats = {
-      totalUsers: principals.length + guardians.length + students.length,
-      totalTeachers: 0, // Teachers are not loaded in Admin Dashboard
-      totalStudents: students.length,
-      totalParents: guardians.length,
-      activeUsers: principals.filter(p => p.is_active).length + guardians.filter(g => g.is_active).length + students.length,
+      // Total Users = unique users across principals, teachers, guardians, students
+      totalUsers: uniqueUserIds.size,
+      // Total Teachers from all organizations
+      totalTeachers: teachersCount,
+      totalStudents: studentsCount,
+      totalParents: guardiansCount,
+      // Active Users = Active Principals + Active Teachers + Active Guardians + All Students (students don't have is_active field, so count all)
+      activeUsers: principals.filter(p => p.is_active).length +
+        teachers.filter(t => t.is_active).length +
+        guardians.filter(g => g.is_active).length +
+        students.length,
       newRegistrations: principals.filter(p => {
         const createdDate = new Date(p.created_at || 0);
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        return createdDate > weekAgo;
+      }).length + teachers.filter(t => {
+        const createdDate = new Date(t.created_at || 0);
         const weekAgo = new Date();
         weekAgo.setDate(weekAgo.getDate() - 7);
         return createdDate > weekAgo;
@@ -669,18 +985,9 @@ export function AdminDashboard() {
       }).length
     };
 
-    // Debug stats calculation
-    console.log('📊 Stats calculation (memoized):', {
-      principals: principals.length,
-      guardians: guardians.length,
-      students: students.length,
-      totalParents: calculatedStats.totalParents,
-      totalUsers: calculatedStats.totalUsers,
-      refreshKey: guardianRefreshKey
-    });
-
+    console.log('✅ Final calculated stats:', calculatedStats);
     return calculatedStats;
-  }, [principals.length, guardians.length, students.length, guardianRefreshKey]);
+  }, [principals, teachers, guardians, students, guardianRefreshKey]); // Use full arrays instead of .length for better reactivity
 
   const recentActivities = [
     { id: 1, type: 'user_registration', user: 'Anna Jónsdóttir', role: 'Teacher', time: '2 minutes ago' },
@@ -720,14 +1027,20 @@ export function AdminDashboard() {
     },
   ];
 
-  const StatCard = ({ title, value, icon: Icon, color, trend }: {
+  const StatCard = ({ title, value, icon: Icon, color, trend, onClick }: {
     title: string;
     value: number;
     icon: React.ComponentType<any>;
     color: string;
     trend?: string;
+    onClick?: () => void;
   }) => (
-    <div className="bg-white dark:bg-slate-800 rounded-xl p-5 shadow-lg border border-slate-200 dark:border-slate-700 h-36">
+    <div
+      className={`bg-white dark:bg-slate-800 rounded-xl p-5 shadow-lg border border-slate-200 dark:border-slate-700 h-36 ${onClick ? 'cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors' : ''}`}
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : -1}
+    >
       <div className="flex items-start justify-between h-full">
         <div className="flex-1">
           <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-1">{title}</p>
@@ -785,55 +1098,14 @@ export function AdminDashboard() {
     );
   };
 
-  // Show loading overlay during initial data load
-  // if (isInitialLoading) {
-  //   return (
-  //     <div className="max-w-7xl mx-auto">
-  //       <div className="flex items-center justify-center min-h-[500px]">
-  //         <div className="text-center">
-  //           <div className="mb-6">
-  //             <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-300 border-t-blue-600 mx-auto mb-4"></div>
-  //             <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">
-  //               Loading Admin Dashboard
-  //             </h2>
-  //           </div>
-            
-  //           {/* Loading steps */}
-  //           {/* <div className="space-y-3 text-left max-w-md mx-auto">
-  //             <div className="flex items-center space-x-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800">
-  //               <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse"></div>
-  //               <span className="text-sm text-slate-700 dark:text-slate-300">Loading organizations...</span>
-  //             </div>
-  //             <div className="flex items-center space-x-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800">
-  //               <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse"></div>
-  //               <span className="text-sm text-slate-700 dark:text-slate-300">Loading principals...</span>
-  //             </div>
-  //             <div className="flex items-center space-x-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800">
-  //               <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse"></div>
-  //               <span className="text-sm text-slate-700 dark:text-slate-300">Loading guardians...</span>
-  //             </div>
-  //             <div className="flex items-center space-x-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800">
-  //               <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse"></div>
-  //               <span className="text-sm text-slate-700 dark:text-slate-300">Loading students...</span>
-  //             </div>
-  //             <div className="flex items-center space-x-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800">
-  //               <div className="h-2 w-2 bg-blue-500 rounded-full animate-pulse"></div>
-  //               <span className="text-sm text-slate-700 dark:text-slate-300">Preparing dashboard...</span>
-  //             </div>
-  //           </div> */}
-  //         </div>
-  //       </div>
-  //     </div>
-  //   );
-  // }
 
   return (
-    <div className="max-w-7xl mx-auto animate-in fade-in duration-500">
+    <div className="max-w-7xl mx-auto animate-in fade-in duration-500 mt-10">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.1 }}
+        transition={{ duration: 0.4, delay: 0 }}
         className="mb-8"
       >
         <div className="flex items-center justify-between">
@@ -858,11 +1130,11 @@ export function AdminDashboard() {
         </div>
       </motion.div>
 
-      {/* Stats Grid */}
+
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.2 }}
+        transition={{ duration: 0.4, delay: 0 }}
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8"
       >
         <StatCard
@@ -880,9 +1152,10 @@ export function AdminDashboard() {
         />
         <StatCard
           title={t.students}
-          value={stats.totalStudents}
+          value={stats.totalStudents ?? 0}
           icon={BookOpen}
           color="bg-purple-500"
+          key={`students-${students.length}-${stats.totalStudents}`}
         />
         <StatCard
           title={t.parents}
@@ -911,7 +1184,7 @@ export function AdminDashboard() {
         <motion.div
           initial={false}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
+          transition={{ duration: 0.4, delay: 0 }}
           className="lg:col-span-1"
         >
           <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-lg border border-slate-200 dark:border-slate-700">
@@ -936,9 +1209,7 @@ export function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
-                  {loadingOrgs ? (
-                    <tr><td colSpan={4} className="py-4">{t.table_loading}</td></tr>
-                  ) : orgs.length === 0 ? (
+                  {orgs.length === 0 ? (
                     <tr><td colSpan={4} className="py-4">{t.table_no_data}</td></tr>
                   ) : (
                     orgs.map((o) => (
@@ -975,7 +1246,7 @@ export function AdminDashboard() {
         <motion.div
           initial={false}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
+          transition={{ duration: 0.4, delay: 0 }}
           className="lg:col-span-1"
         >
           <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-lg border border-slate-200 dark:border-slate-700">
@@ -1002,14 +1273,12 @@ export function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
-                  {loadingPrincipals ? (
-                    <tr><td colSpan={6} className="py-4">{t.table_loading}</td></tr>
-                  ) : principals.length === 0 ? (
+                  {principals.length === 0 ? (
                     <tr><td colSpan={6} className="py-4">{t.table_no_data}</td></tr>
                   ) : (
                     principals.map((p) => (
                       <tr key={p.id} className="h-12 hover:bg-slate-50/50 dark:hover:bg-slate-700/30 dark:text-slate-100">
-                        <td className="py-2 pr-3">{p.full_name}</td>
+                        <td className="py-2 pr-3">{(p as any).name || p.email || '—'}</td>
                         <td className="py-2 pr-3">{p.email || '—'}</td>
                         <td className="py-2 pr-3">{p.phone || '—'}</td>
                         <td className="py-2 pr-3">{orgs.find(o => o.id === p.org_id)?.name || p.org_id}</td>
@@ -1039,109 +1308,6 @@ export function AdminDashboard() {
           </div>
         </motion.div>
 
-        {/* Guardians Manager */}
-        {/* <motion.div
-          initial={false}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.4 }}
-          className="lg:col-span-1"
-        >
-          <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-lg border border-slate-200 dark:border-slate-700">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t.guardians}</h3>
-              <div className="flex gap-2">
-                <button
-                  onClick={openCreateGuardianModal}
-                  className="inline-flex items-center gap-0.5 rounded-lg bg-black text-white px-3 py-2 text-sm dark:bg-black dark:text-white"
-                >
-                  <Plus className="h-3.5 w-3.5 mt-0.5" />
-                  {t.create}
-                </button>
-              </div>
-            </div>
-            
-            {guardianError && (
-              <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
-                {guardianError}
-              </div>
-            )}
-            
-            <div className="overflow-y-auto max-h-64 rounded-md border border-slate-200 dark:border-slate-700" key={`guardian-table-${guardianRefreshKey}`}>
-              <table className="w-full text-sm">
-                <thead className="sticky top-0 bg-white dark:bg-slate-800 z-10">
-                  <tr className="text-left text-slate-600 dark:text-slate-300">
-                    <th className="py-2 pr-3">{t.full_name}</th>
-                    <th className="py-2 pr-3">{t.email}</th>
-                    <th className="py-2 pr-3">{t.phone}</th>
-                    <th className="py-2 pr-3">Organization</th>
-                    <th className="py-2 pr-3">{t.status}</th>
-                    <th className="py-2 pr-3">{t.actions}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
-                  {loadingGuardians ? (
-                    <tr><td colSpan={6} className="py-4">{t.loading}</td></tr>
-                  ) : guardians.length === 0 ? (
-                    <tr><td colSpan={6} className="py-4">{t.no_guardians}</td></tr>
-                  ) : (
-                    guardians.map((g) => (
-                      <tr key={`${g.id}-${guardianRefreshKey}`} className="h-12 hover:bg-slate-50/50 dark:hover:bg-slate-700/30 dark:text-slate-100">
-                        <td className="py-2 pr-3">{g.full_name}</td>
-                        <td className="py-2 pr-3">{g.email || '—'}</td>
-                        <td className="py-2 pr-3">{g.phone || '—'}</td>
-                        <td className="py-2 pr-3">{g.org_name || orgs.find(o => o.id === g.org_id)?.name || 'Unknown'}</td>
-                        <td className="py-2 pr-3">{g.is_active ? t.active : t.inactive}</td>
-                        <td className="py-2 pr-3 space-x-2">
-                          <button
-                            onClick={() => openEditGuardianModal(g)}
-                            className="inline-flex items-center gap-1 rounded-md border px-2 py-1 dark:border-slate-700 dark:hover:bg-slate-700"
-                          >
-                            <Edit className="h-3 w-3" />
-                          </button>
-                          <button
-                            onClick={() => openDeleteGuardianModal(g.id)}
-                            className="inline-flex items-center gap-1 rounded-md border px-2 py-1 hover:bg-red-50 text-red-600 border-red-300 dark:border-red-700 dark:hover:bg-red-900/20"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </motion.div> */}
-
-        {/* Students Manager */}
-        {/* <motion.div
-          initial={false}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.4 }}
-          className="lg:col-span-1"
-        >
-          <StudentTable
-            students={students}
-            loading={loadingStudents}
-            error={studentError}
-            onEdit={openEditStudentModal}
-            onDelete={openDeleteStudentModal}
-            onCreate={openCreateStudentModal}
-            translations={{
-              students: t.students,
-              student_name: t.student_name,
-              student_class: t.student_class,
-              student_guardians: t.student_guardians,
-              student_dob: t.student_dob,
-              student_gender: t.student_gender,
-              actions: t.actions,
-              create: t.create,
-              loading: t.loading,
-              no_students: t.no_students
-            }}
-          />
-        </motion.div> */}
       </div>
 
       {/* Recent Activities and Quick Actions */}
@@ -1150,7 +1316,7 @@ export function AdminDashboard() {
         <motion.div
           initial={false}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0 }}
         >
           <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-lg border border-slate-200 dark:border-slate-700">
             <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
@@ -1168,7 +1334,7 @@ export function AdminDashboard() {
         <motion.div
           initial={false}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
+          transition={{ delay: 0 }}
         >
           <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-lg border border-slate-200 dark:border-slate-700">
             <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
@@ -1202,7 +1368,7 @@ export function AdminDashboard() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
+        transition={{ delay: 0 }}
         className="mt-8"
       >
         <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-lg border border-slate-200 dark:border-slate-700">
@@ -1335,49 +1501,17 @@ export function AdminDashboard() {
       )}
 
       {/* Delete Organization Confirmation Modal */}
-      {isDeleteOrgModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-800 p-6 shadow-xl">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                {t.delete_organization_title}
-              </h3>
-              <button
-                onClick={() => setIsDeleteOrgModalOpen(false)}
-                className="rounded-lg p-1 hover:bg-slate-100 dark:hover:bg-slate-700"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="mb-6">
-              <p className="text-slate-600 dark:text-slate-400">
-                {t.delete_organization_message}
-              </p>
-            </div>
-
-            {orgError && (
-              <div className="mb-4 text-sm text-red-600 dark:text-red-400">{orgError}</div>
-            )}
-
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setIsDeleteOrgModalOpen(false)}
-                className="flex-1 rounded-lg border border-slate-300 dark:border-slate-600 px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700"
-              >
-                {t.cancel_delete}
-              </button>
-              <button
-                onClick={confirmDeleteOrg}
-                className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700"
-              >
-                {t.confirm_delete}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteConfirmationModal
+        isOpen={isDeleteOrgModalOpen}
+        onClose={() => setIsDeleteOrgModalOpen(false)}
+        onConfirm={confirmDeleteOrg}
+        title={t.delete_organization_title}
+        message={t.delete_organization_message}
+        loading={isDeletingOrg}
+        error={orgError}
+        confirmButtonText={t.confirm_delete}
+        cancelButtonText={t.cancel_delete}
+      />
 
       {/* Principal Create/Edit Modal */}
       {isPrincipalModalOpen && (
@@ -1388,7 +1522,10 @@ export function AdminDashboard() {
                 {principalForm.id ? t.edit_principal : t.create_principal}
               </h3>
               <button
-                onClick={() => setIsPrincipalModalOpen(false)}
+                onClick={() => {
+                  setIsPrincipalModalOpen(false);
+                  setPrincipalPhoneError(null);
+                }}
                 className="rounded-lg p-1 hover:bg-slate-100 dark:hover:bg-slate-700"
               >
                 <X className="h-5 w-5" />
@@ -1396,18 +1533,33 @@ export function AdminDashboard() {
             </div>
 
             <form onSubmit={submitPrincipal} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  {t.principal_name}
-                </label>
-                <input
-                  type="text"
-                  value={principalForm.full_name}
-                  onChange={(e) => setPrincipalForm((p) => ({ ...p, full_name: e.target.value }))}
-                  placeholder={t.principal_name_placeholder}
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:text-white"
-                  required
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    {t.principal_first_name}
+                  </label>
+                  <input
+                    type="text"
+                    value={principalForm.first_name || ''}
+                    onChange={(e) => setPrincipalForm((p) => ({ ...p, first_name: e.target.value, full_name: `${e.target.value} ${p.last_name || ''}`.trim() }))}
+                    placeholder={t.principal_first_name_placeholder}
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:text-white"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    {t.principal_last_name}
+                  </label>
+                  <input
+                    type="text"
+                    value={principalForm.last_name || ''}
+                    onChange={(e) => setPrincipalForm((p) => ({ ...p, last_name: e.target.value, full_name: `${p.first_name || ''} ${e.target.value}`.trim() }))}
+                    placeholder={t.principal_last_name_placeholder}
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:text-white"
+                    required
+                  />
+                </div>
               </div>
 
               <div>
@@ -1430,10 +1582,34 @@ export function AdminDashboard() {
                 <input
                   type="tel"
                   value={principalForm.phone || ''}
-                  onChange={(e) => setPrincipalForm((p) => ({ ...p, phone: e.target.value }))}
+                  onChange={(e) => {
+                    const phoneValue = e.target.value;
+                    setPrincipalForm((p) => ({ ...p, phone: phoneValue }));
+                    // Validate on change
+                    if (phoneValue && !validatePhoneNumber(phoneValue)) {
+                      setPrincipalPhoneError(t.principal_phone_invalid || 'Please enter a valid phone number');
+                    } else {
+                      setPrincipalPhoneError(null);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    // Validate on blur
+                    if (e.target.value && !validatePhoneNumber(e.target.value)) {
+                      setPrincipalPhoneError(t.principal_phone_invalid || 'Please enter a valid phone number');
+                    } else {
+                      setPrincipalPhoneError(null);
+                    }
+                  }}
                   placeholder={t.principal_phone_placeholder}
-                  className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:text-white"
+                  className={`w-full rounded-lg border bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-1 dark:text-white ${
+                    principalPhoneError
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-500'
+                      : 'border-slate-300 dark:border-slate-600 focus:border-blue-500 focus:ring-blue-500'
+                  }`}
                 />
+                {principalPhoneError && (
+                  <p className="mt-1 text-xs text-red-600 dark:text-red-400">{principalPhoneError}</p>
+                )}
               </div>
 
               <div>
@@ -1474,7 +1650,10 @@ export function AdminDashboard() {
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
-                  onClick={() => setIsPrincipalModalOpen(false)}
+                  onClick={() => {
+                    setIsPrincipalModalOpen(false);
+                    setPrincipalPhoneError(null);
+                  }}
                   className="flex-1 rounded-lg border border-slate-300 dark:border-slate-600 px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700"
                 >
                   {t.cancel_delete}
@@ -1503,138 +1682,18 @@ export function AdminDashboard() {
       )}
 
       {/* Delete Principal Confirmation Modal */}
-      {isDeletePrincipalModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-slate-800 p-6 shadow-xl">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                {t.delete_principal_title}
-              </h3>
-              <button
-                onClick={() => setIsDeletePrincipalModalOpen(false)}
-                className="rounded-lg p-1 hover:bg-slate-100 dark:hover:bg-slate-700"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="mb-6">
-              <p className="text-slate-600 dark:text-slate-400">
-                {t.delete_principal_message}
-              </p>
-            </div>
-
-            {principalError && (
-              <div className="mb-4 text-sm text-red-600 dark:text-red-400">{principalError}</div>
-            )}
-
-            <div className="flex gap-3">
-              <button
-                type="button"
-                onClick={() => setIsDeletePrincipalModalOpen(false)}
-                className="flex-1 rounded-lg border border-slate-300 dark:border-slate-600 px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700"
-              >
-                {t.cancel_delete}
-              </button>
-              <button
-                onClick={confirmDeletePrincipal}
-                className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700"
-              >
-                {t.confirm_delete}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Guardian Create/Edit Modal */}
-      <GuardianForm
-        isOpen={isGuardianModalOpen}
-        onClose={() => setIsGuardianModalOpen(false)}
-        onSubmit={async (data: GuardianFormData) => {
-          try {
-            setIsSubmittingGuardian(true);
-            setGuardianError(null);
-            
-            const method = data.id ? 'PUT' : 'POST';
-            const requestData = {
-              ...data,
-              created_by: 'admin-user-id' // In real app, get from session
-            };
-            
-            console.log('🔄 Submitting guardian:', requestData);
-            
-            const res = await fetch('/api/guardians', {
-              method,
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(requestData),
-            });
-            const json = await res.json();
-            
-            console.log('📥 Guardian submission response:', json);
-            
-            if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
-            
-            console.log('✅ Guardian created/updated successfully');
-            
-            // Close modal and reset form
-            setIsGuardianModalOpen(false);
-            setGuardianForm({ full_name: '', email: '', phone: '', org_id: '', is_active: true });
-            
-            // Force refresh guardians list
-            console.log('🔄 Refreshing guardians list...');
-            await loadGuardians(false);
-            
-            // Force refresh stats by updating refresh key
-            setGuardianRefreshKey(prev => prev + 1);
-            
-            console.log('✅ Guardian list and stats refreshed');
-          } catch (error: any) {
-            console.error('❌ Error submitting guardian:', error);
-            setGuardianError(error.message);
-          } finally {
-            setIsSubmittingGuardian(false);
-          }
-        }}
-        initialData={guardianForm}
-        loading={isSubmittingGuardian}
-        error={guardianError}
-        orgs={orgs}
-        translations={{
-          create_guardian: t.create_guardian,
-          edit_guardian: t.edit_guardian,
-          full_name: t.full_name,
-          email: t.email,
-          phone: t.phone,
-          organization: t.organization,
-          status: t.status,
-          active: t.active,
-          inactive: t.inactive,
-          create: t.create,
-          update: t.update,
-          cancel: t.cancel,
-          creating: t.creating,
-          updating: t.updating,
-          full_name_placeholder: t.full_name_placeholder,
-          email_placeholder: t.email_placeholder,
-          phone_placeholder: t.phone_placeholder,
-          status_placeholder: t.status_placeholder
-        }}
-      />
-
-      {/* Delete Guardian Confirmation Modal */}
       <DeleteConfirmationModal
-        isOpen={isDeleteGuardianModalOpen}
-        onClose={() => setIsDeleteGuardianModalOpen(false)}
-        onConfirm={confirmDeleteGuardian}
-        title={t.delete_guardian}
-        message={t.delete_guardian_confirm}
-        error={guardianError}
-        translations={{
-          confirm_delete: t.confirm_delete,
-          cancel: t.cancel_delete
-        }}
+        isOpen={isDeletePrincipalModalOpen}
+        onClose={() => setIsDeletePrincipalModalOpen(false)}
+        onConfirm={confirmDeletePrincipal}
+        title={t.delete_principal_title}
+        message={t.delete_principal_message}
+        loading={isDeletingPrincipal}
+        error={principalError}
+        confirmButtonText={t.confirm_delete}
+        cancelButtonText={t.cancel_delete}
       />
+
 
       {/* Student Create/Edit Modal */}
       <StudentForm
@@ -1646,19 +1705,35 @@ export function AdminDashboard() {
             ...data,
             created_by: 'admin-user-id' // In real app, get from session
           };
-          
+
           const res = await fetch('/api/students', {
             method,
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(requestData),
           });
           const json = await res.json();
-          
+
           if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
-          
+
+          // Optimistically update students list immediately for instant KPI update
+          if (json.student || json.user) {
+            const newStudent = json.student || json.user;
+            setStudents(prev => {
+              // Check if already exists (update) or add new
+              const exists = prev.find(s => s.id === newStudent.id);
+              if (exists) {
+                return prev.map(s => s.id === newStudent.id ? { ...s, ...newStudent } : s);
+              } else {
+                return [...prev, { ...newStudent, org_name: orgs.find(o => o.id === newStudent.org_id)?.name || '' }];
+              }
+            });
+          }
+
           setIsStudentModalOpen(false);
-          setStudentForm({ first_name: '', last_name: '', dob: '', gender: 'unknown', class_id: '', medical_notes: '', allergies: '', emergency_contact: '', org_id: '', guardian_ids: [] });
-          await loadStudents(false);
+          setStudentForm({ first_name: '', last_name: '', dob: '', gender: 'unknown', class_id: '', medical_notes: '', allergies: '', emergency_contact: '', org_id: '', guardian_ids: [], phone: '', address: '', registration_time: '', start_date: '', barngildi: 0, student_language: '', social_security_number: '' });
+
+          // Force refresh the students list in background to ensure data is in sync
+          loadStudents(false).catch(err => console.error('Error refreshing students:', err));
         }}
         initialData={studentForm}
         loading={isSubmittingStudent}
@@ -1678,11 +1753,23 @@ export function AdminDashboard() {
           student_medical_notes: t.student_medical_notes,
           student_allergies: t.student_allergies,
           student_emergency_contact: t.student_emergency_contact,
+          student_phone: t.phone,
+          student_registration_time: 'Registration Time',
+          student_address: t.address,
+          student_start_date: 'Start Date',
+          student_child_value: 'Child value',
+          student_language: 'Language',
+          student_social_security_number: t.ssn,
           student_first_name_placeholder: t.student_first_name_placeholder,
           student_last_name_placeholder: t.student_last_name_placeholder,
           student_medical_notes_placeholder: t.student_medical_notes_placeholder,
           student_allergies_placeholder: t.student_allergies_placeholder,
           student_emergency_contact_placeholder: t.student_emergency_contact_placeholder,
+          student_registration_time_placeholder: 'YYYY-MM-DD HH:MM',
+          student_social_security_number_placeholder: t.ssn_placeholder,
+          student_phone_placeholder: t.phone_placeholder,
+          student_child_value_placeholder: '1.0 or 1.7',
+          student_address_placeholder: t.address_placeholder,
           gender_unknown: t.gender_unknown,
           gender_male: t.gender_male,
           gender_female: t.gender_female,
@@ -1729,7 +1816,7 @@ export function AdminDashboard() {
                     required
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                     {t.student_last_name}
@@ -1753,24 +1840,22 @@ export function AdminDashboard() {
                     type="date"
                     value={studentForm.dob}
                     onChange={(e) => setStudentForm(prev => ({ ...prev, dob: e.target.value }))}
-                    className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 dark:bg-slate-700 dark:text-slate-200 ${
-                      studentForm.dob && !validateStudentAge(studentForm.dob)
-                        ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-                        : 'border-slate-300 dark:border-slate-600 focus:border-blue-500 focus:ring-blue-500'
-                    }`}
+                    className={`w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-1 dark:bg-slate-700 dark:text-slate-200 ${studentForm.dob && !validateStudentAge(studentForm.dob)
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                      : 'border-slate-300 dark:border-slate-600 focus:border-blue-500 focus:ring-blue-500'
+                      }`}
                   />
-                  <p className={`mt-1 text-xs ${
-                    studentForm.dob && !validateStudentAge(studentForm.dob)
-                      ? 'text-red-500 dark:text-red-400'
-                      : 'text-slate-500 dark:text-slate-400'
-                  }`}>
+                  <p className={`mt-1 text-xs ${studentForm.dob && !validateStudentAge(studentForm.dob)
+                    ? 'text-red-500 dark:text-red-400'
+                    : 'text-slate-500 dark:text-slate-400'
+                    }`}>
                     {studentForm.dob && !validateStudentAge(studentForm.dob)
                       ? 'Student age must be between 0-18 years old'
                       : t.student_age_requirement
                     }
                   </p>
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                     {t.student_gender}
@@ -1780,10 +1865,10 @@ export function AdminDashboard() {
                     onChange={(e) => setStudentForm(prev => ({ ...prev, gender: e.target.value }))}
                     className="w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-slate-700 dark:text-slate-200"
                   >
-                    <option value="unknown">{t.gender_unknown}</option>
-                    <option value="male">{t.gender_male}</option>
-                    <option value="female">{t.gender_female}</option>
-                    <option value="other">{t.gender_other}</option>
+                    <option value="Unknown">{t.gender_unknown}</option>
+                    <option value="Male">{t.gender_male}</option>
+                    <option value="Female">{t.gender_female}</option>
+                    <option value="Other">{t.gender_other}</option>
                   </select>
                 </div>
               </div>
@@ -1960,13 +2045,16 @@ const enText = {
   configureSystemPreferences: 'Configure system preferences',
   generateReports: 'Generate Reports',
   createUsageAnalyticsReports: 'Create usage analytics reports',
-  
+
   // Guardian Management
   guardians: 'Guardians',
   create_guardian: 'Create Guardian',
   edit_guardian: 'Edit Guardian',
   delete_guardian: 'Delete Guardian',
-  full_name: 'Full Name',
+  first_name: 'First Name',
+  last_name: 'Last Name',
+  first_name_placeholder: 'Enter first name',
+  last_name_placeholder: 'Enter last name',
   email: 'Email',
   phone: 'Phone',
   organization: 'Organization',
@@ -1989,7 +2077,7 @@ const enText = {
   error_updating_guardian: 'Error updating guardian',
   error_deleting_guardian: 'Error deleting guardian',
   error_loading_guardians: 'Error loading guardians',
-  
+
   // Organization Management
   organizations: 'Organizations',
   create_organization: 'Create Organization',
@@ -2009,20 +2097,25 @@ const enText = {
   error_updating_organization: 'Error updating organization',
   error_deleting_organization: 'Error deleting organization',
   error_loading_organizations: 'Error loading organizations',
-  
+
   // Principal Management
   principals: 'Principals',
   create_principal: 'Create Principal',
   edit_principal: 'Edit Principal',
   delete_principal: 'Delete Principal',
   principal_name: 'Full Name',
+  principal_first_name: 'First Name',
+  principal_last_name: 'Last Name',
   principal_email: 'Email',
   principal_phone: 'Phone',
   principal_org: 'Organization',
   principal_status: 'Status',
   principal_name_placeholder: 'Enter full name',
+  principal_first_name_placeholder: 'Enter first name',
+  principal_last_name_placeholder: 'Enter last name',
   principal_email_placeholder: 'Enter email address',
   principal_phone_placeholder: 'Enter phone number',
+  principal_phone_invalid: 'Please enter a valid phone number',
   delete_principal_confirm: 'Are you sure you want to delete this principal? This action cannot be undone.',
   principal_created: 'Principal created successfully!',
   principal_updated: 'Principal updated successfully!',
@@ -2031,7 +2124,7 @@ const enText = {
   error_updating_principal: 'Error updating principal',
   error_deleting_principal: 'Error deleting principal',
   error_loading_principals: 'Error loading principals',
-  
+
   // Table Headers and Labels
   table_name: 'Name',
   table_slug: 'Slug',
@@ -2047,7 +2140,11 @@ const enText = {
   email_placeholder: 'Enter email address',
   phone_placeholder: 'Enter phone number',
   status_placeholder: 'Select status',
-  
+  ssn: 'Social Security Number (SSN)',
+  ssn_placeholder: '000000-0000',
+  address: 'Address',
+  address_placeholder: 'Enter address (optional)',
+
   // Delete Modal Translations
   delete_organization_title: 'Delete Organization',
   delete_organization_message: 'Are you sure you want to delete this organization? This action cannot be undone.',
@@ -2059,7 +2156,7 @@ const enText = {
   cancel_delete: 'Cancel',
   creating: 'Creating...',
   updating: 'Updating...',
-  
+
   // Student Management
   students: 'Students',
   create_student: 'Create Student',
@@ -2127,13 +2224,17 @@ const isText = {
   configureSystemPreferences: 'Stilla kerfisvalkosti',
   generateReports: 'Búa til skýrslur',
   createUsageAnalyticsReports: 'Búa til notkunargreiningarskýrslur',
-  
+
   // Guardian Management
   guardians: 'Forráðamenn',
   create_guardian: 'Búa til forráðamann',
   edit_guardian: 'Breyta forráðamanni',
   delete_guardian: 'Eyða forráðamanni',
   full_name: 'Fullt nafn',
+  first_name: 'Fornafn',
+  last_name: 'Eftirnafn',
+  first_name_placeholder: 'Sláðu inn fornafn',
+  last_name_placeholder: 'Sláðu inn eftirnafn',
   email: 'Netfang',
   phone: 'Sími',
   organization: 'Stofnun',
@@ -2156,7 +2257,7 @@ const isText = {
   error_updating_guardian: 'Villa við að uppfæra forráðamann',
   error_deleting_guardian: 'Villa við að eyða forráðamanni',
   error_loading_guardians: 'Villa við að hlaða forráðamönnum',
-  
+
   // Organization Management
   organizations: 'Stofnanir',
   create_organization: 'Búa til stofnun',
@@ -2176,20 +2277,25 @@ const isText = {
   error_updating_organization: 'Villa við að uppfæra stofnun',
   error_deleting_organization: 'Villa við að eyða stofnun',
   error_loading_organizations: 'Villa við að hlaða stofnunum',
-  
+
   // Principal Management
   principals: 'Skólastjórar',
   create_principal: 'Búa til skólastjóra',
   edit_principal: 'Breyta skólastjóra',
   delete_principal: 'Eyða skólastjóra',
   principal_name: 'Fullt nafn',
+  principal_first_name: 'Fornafn',
+  principal_last_name: 'Eftirnafn',
   principal_email: 'Netfang',
   principal_phone: 'Sími',
   principal_org: 'Stofnun',
   principal_status: 'Staða',
   principal_name_placeholder: 'Sláðu inn fullt nafn',
+  principal_first_name_placeholder: 'Sláðu inn fornafn',
+  principal_last_name_placeholder: 'Sláðu inn eftirnafn',
   principal_email_placeholder: 'Sláðu inn netfang',
   principal_phone_placeholder: 'Sláðu inn símanúmer',
+  principal_phone_invalid: 'Vinsamlegast sláðu inn gilt símanúmer',
   delete_principal_confirm: 'Ertu viss um að þú viljir eyða þessum skólastjóra? Þessa aðgerð er ekki hægt að afturkalla.',
   principal_created: 'Skólastjóri búinn til með góðum árangri!',
   principal_updated: 'Skólastjóri uppfærður með góðum árangri!',
@@ -2198,7 +2304,7 @@ const isText = {
   error_updating_principal: 'Villa við að uppfæra skólastjóra',
   error_deleting_principal: 'Villa við að eyða skólastjóra',
   error_loading_principals: 'Villa við að hlaða skólastjórum',
-  
+
   // Table Headers and Labels
   table_name: 'Nafn',
   table_slug: 'Slug',
@@ -2214,7 +2320,11 @@ const isText = {
   email_placeholder: 'Sláðu inn netfang',
   phone_placeholder: 'Sláðu inn símanúmer',
   status_placeholder: 'Veldu staðu',
-  
+  ssn: 'Kennitala',
+  ssn_placeholder: '000000-0000',
+  address: 'Heimilisfang',
+  address_placeholder: 'Sláðu inn heimilisfang (valfrjálst)',
+
   // Delete Modal Translations
   delete_organization_title: 'Eyða stofnun',
   delete_organization_message: 'Ertu viss um að þú viljir eyða þessari stofnun? Þessa aðgerð er ekki hægt að afturkalla.',
@@ -2226,7 +2336,7 @@ const isText = {
   cancel_delete: 'Hætta við',
   creating: 'Býr til...',
   updating: 'Uppfærir...',
-  
+
   // Student Management
   students: 'Nemendur',
   create_student: 'Búa til nemanda',

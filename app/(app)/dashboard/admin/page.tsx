@@ -3,12 +3,11 @@
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
 import { AdminDashboard } from '@/app/components/AdminDashboard';
-import Navbar from '@/app/components/Navbar';
 
 export default function AdminDashboardPage() {
   const { user, loading, isSigningIn } = useRequireAuth('admin');
 
-  // Only show loading if we're actually loading and don't have a user yet
+  // Show loading ONLY if we have no user yet (avoid flicker after sign-in)
   if (loading && !user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
@@ -30,7 +29,6 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <Navbar />
       <main className="container mx-auto px-4 py-8">
         <AdminDashboard />
       </main>

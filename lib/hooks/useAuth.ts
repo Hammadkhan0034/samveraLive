@@ -9,7 +9,7 @@ export function useAuth() {
   return useAuthContext();
 }
 
-export function useRequireAuth(requiredRole?: SamveraRole) {
+export function useRequireAuth(requiredRole?: SamveraRole | SamveraRole[]) {
   const { user, loading, session, isSigningIn } = useAuth();
   const router = useRouter();
 
@@ -24,18 +24,22 @@ export function useRequireAuth(requiredRole?: SamveraRole) {
       const userRoles = user.user_metadata?.roles || session?.user?.user_metadata?.roles;
       const activeRole = user.user_metadata?.activeRole || session?.user?.user_metadata?.activeRole;
       
-      if (userRoles && !userRoles.includes(requiredRole)) {
-        // If user doesn't have required role, redirect to their default dashboard
-        const defaultRole = activeRole || userRoles[0];
-        const path = defaultRole === 'principal'
-          ? '/dashboard/principal'
-          : defaultRole === 'teacher'
-          ? '/dashboard/teacher'
-          : defaultRole === 'admin'
-          ? '/dashboard/admin'
-          : '/dashboard/parent';
-        router.push(path);
-        return;
+      if (userRoles) {
+        const required = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
+        const hasAnyRequired = required.some((r) => (userRoles as SamveraRole[]).includes(r));
+        if (!hasAnyRequired) {
+          // If user doesn't have required role, redirect to their default dashboard
+          const defaultRole = activeRole || userRoles[0];
+          const path = defaultRole === 'principal'
+            ? '/dashboard/principal'
+            : defaultRole === 'teacher'
+            ? '/dashboard/teacher'
+            : defaultRole === 'admin'
+            ? '/dashboard/admin'
+            : '/dashboard/parent';
+          router.push(path);
+          return;
+        }
       }
     }
   }, [user, loading, requiredRole, router, session]);

@@ -1,9 +1,5 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
-import { createUserAuthEntry } from 'app/core/createAuthEntry'
-
-// Force dynamic rendering
-export const dynamic = 'force-dynamic'
 
 // Guardian role ID
 const GUARDIAN_ROLE_ID = 10
@@ -20,71 +16,17 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const orgId = searchParams.get('orgId')
     
-    // Resolve org_id if it's "1" to a proper UUID
-    let actualOrgId = orgId;
-    if (orgId === "1") {
-      const { data: firstOrg } = await supabaseAdmin
-        .from('orgs')
-        .select('id')
-        .limit(1)
-        .single();
-      
-      if (firstOrg?.id) {
-        actualOrgId = firstOrg.id;
-      } else {
-        actualOrgId = '00000000-0000-0000-0000-000000000001'; // Default UUID for testing
-      }
+    if (!orgId) {
+      return NextResponse.json({ error: 'orgId is required' }, { status: 400 })
     }
 
-    // Final query: guardians for this org
+    // Query guardians for this specific org only
     const { data: guardians, error } = await supabaseAdmin
       .from('users')
-      .select('id,email,phone,full_name,org_id,role_id,is_active,created_at,metadata')
-      .eq('role_id', GUARDIAN_ROLE_ID)
-      .eq('org_id', actualOrgId)
+      .select('id,email,phone,first_name,last_name,org_id,role,is_active,created_at')
+      .eq('role', 'guardian')
+      .eq('org_id', orgId)
       .order('created_at', { ascending: false })
-    
-
-    // If no guardians found for this org, let's also check the default org
-    if ((!guardians || guardians.length === 0) && actualOrgId !== '1db3c97c-de42-4ad2-bb72-cc0b6cda69f7') {
-      const { data: defaultGuardians, error: defaultError } = await supabaseAdmin
-        .from('users')
-        .select('id,email,phone,full_name,org_id,role_id,is_active,created_at,metadata')
-        .eq('org_id', '1db3c97c-de42-4ad2-bb72-cc0b6cda69f7')
-        .eq('role_id', GUARDIAN_ROLE_ID)
-        .order('created_at', { ascending: false });
-      
-      
-      if (defaultGuardians && defaultGuardians.length > 0) {
-        return NextResponse.json({ 
-          guardians: defaultGuardians,
-          total_guardians: defaultGuardians.length
-        }, { status: 200 });
-      }
-    }
-
-    // Let's also try a simple query without filters to see what's in the database
-    const { data: allUsersSimple, error: allUsersSimpleError } = await supabaseAdmin
-      .from('users')
-      .select('id,email,phone,full_name,org_id,role_id,is_active,created_at')
-      .order('created_at', { ascending: false })
-      .limit(5);
-    
-
-    // Let's specifically check for the guardian we just created
-    const { data: specificGuardian, error: specificError } = await supabaseAdmin
-      .from('users')
-      .select('id,email,phone,full_name,org_id,role_id,is_active,created_at')
-      .eq('role_id', GUARDIAN_ROLE_ID)
-      .order('created_at', { ascending: false });
-    
-
-    // Let's also check if there are any users with the specific org_id we're looking for
-    const { data: orgUsers, error: orgError } = await supabaseAdmin
-      .from('users')
-      .select('id,email,phone,full_name,org_id,role_id,is_active,created_at')
-      .eq('org_id', actualOrgId);
-    
 
     if (error) {
       console.error('❌ Error fetching guardians:', error);
@@ -111,14 +53,194 @@ export async function POST(request: Request) {
     }
     
     const body = await request.json()
-    const { name, full_name, email, phone, org_id, created_by } = body || {}
+    const { first_name, last_name, email, phone, ssn, address, org_id, student_id } = body || {}
     
-    // Use full_name if provided, otherwise use name
-    const guardianName = full_name || name;
-    
-    if (!email || !guardianName) {
+    if (!email || !first_name) {
       return NextResponse.json({ 
-        error: `Missing required fields: ${!email ? 'email' : ''} ${!guardianName ? 'name' : ''}`.trim()
+        error: `Missing required fields: ${!email ? 'email' : ''} ${!first_name ? 'first_name' : ''}`.trim()
+      }, { status: 400 })
+    }
+    
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return NextResponse.json({ 
+        error: 'Please enter a valid email address' 
+      }, { status: 400 })
+    }
+    
+    // Use the provided org_id or reject if not provided
+    let actualOrgId = org_id;
+    if (!org_id || org_id === "1") {
+      return NextResponse.json({ 
+        error: 'Organization ID is required for guardian creation' 
+      }, { status: 400 })
+    }
+
+    // Check if user already exists in public.users table
+    const { data: existingPublicUser } = await supabaseAdmin
+      .from('users')
+      .select('id, email')
+      .eq('email', email)
+      .maybeSingle()
+
+    if (existingPublicUser) {
+      return NextResponse.json({
+        error: 'This email is already being used by another user'
+      }, { status: 400 })
+    }
+
+    // Create auth user with default password
+    console.log('👤 Checking if auth user exists...')
+    const { data: existingAuthUsers } = await supabaseAdmin.auth.admin.listUsers()
+    const existingAuthUser = existingAuthUsers?.users.find(u => u.email === email)
+
+    let authUser = existingAuthUser
+
+    // Create auth user if it doesn't exist
+    if (!existingAuthUser) {
+      console.log('📝 Creating new auth user with default password...')
+      const defaultPassword = 'test123456'
+      const { data: newAuthUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password: defaultPassword,
+        email_confirm: true, // Auto-confirm email
+        user_metadata: {
+          roles: ['parent'],
+          activeRole: 'parent',
+          role: 'parent',
+          org_id: actualOrgId,
+          first_name: (first_name || '').trim(),
+          last_name: (last_name || '').trim() || null,
+          ...(student_id ? { student_id } : {}),
+        }
+      })
+
+      if (createError) {
+        console.error('❌ Failed to create auth user:', createError)
+        return NextResponse.json({ error: createError.message }, { status: 500 })
+      }
+
+      if (!newAuthUser?.user) {
+        return NextResponse.json({ error: 'Auth user not created' }, { status: 500 })
+      }
+
+      authUser = newAuthUser.user
+      console.log('✅ Auth user created successfully')
+    } else {
+      console.log('ℹ️ Auth user already exists, using existing user')
+    }
+
+    // Ensure authUser is defined before proceeding
+    if (!authUser) {
+      return NextResponse.json({ error: 'Auth user not found or created' }, { status: 500 })
+    }
+
+    const guardianId = authUser.id
+    
+    // Create simple guardian record in users table
+    const userData = {
+      id: guardianId,
+      email: email,
+      phone: phone || null,
+      first_name: first_name,
+      last_name: last_name || null,
+      role: 'guardian' as any,
+      org_id: actualOrgId,
+      is_active: true,
+      ssn: ssn || null,
+      address: address || null,
+    };
+    
+    
+    
+    const { error: publicUserError } = await supabaseAdmin
+      .from('users')
+      .insert(userData)
+
+    if (publicUserError) {
+      console.error('❌ Failed to create guardian:', publicUserError)
+      return NextResponse.json({ error: `Failed to create guardian: ${publicUserError.message}` }, { status: 500 })
+    }
+    // Optionally link to a specific student
+    let createdRelationship: any = null
+    let studentClassId: string | null = null
+    if (student_id) {
+      const { data: relationship, error: linkError } = await supabaseAdmin
+        .from('guardian_students')
+        .insert({ guardian_id: guardianId, student_id, relation: 'parent', org_id })
+        .select('id')
+        .single()
+      if (!linkError) createdRelationship = relationship
+
+      const { data: studentRow } = await supabaseAdmin
+        .from('students')
+        .select('class_id')
+        .eq('id', student_id)
+        .maybeSingle()
+      studentClassId = studentRow?.class_id ?? null
+    }
+
+    // Update auth user metadata with org and class scope
+    try {
+      await supabaseAdmin.auth.admin.updateUserById(guardianId, {
+        user_metadata: {
+          roles: ['parent'],
+          activeRole: 'parent',
+          org_id: actualOrgId,
+          ...(studentClassId ? { class_id: studentClassId } : {}),
+          ...(student_id ? { student_id } : {}),
+        },
+      })
+    } catch (e) {
+      console.warn('Unable to update guardian auth metadata', e)
+    }
+
+    // Let's verify the guardian was actually created by querying it back
+    const { data: verifyGuardian, error: verifyError } = await supabaseAdmin
+      .from('users')
+      .select('id,email,phone,first_name,last_name,org_id,role,is_active,created_at,ssn,address')
+      .eq('id', guardianId)
+      .single();
+    
+
+
+    return NextResponse.json({ 
+      guardian: {
+        id: guardianId,
+        email: email,
+        first_name: first_name,
+        last_name: last_name || null,
+        org_id: actualOrgId,
+        role: 'guardian',
+        ssn: ssn || null,
+        address: address || null,
+      },
+      message: 'Guardian account created successfully with default password.',
+      verification: verifyGuardian,
+      relationship: createdRelationship
+    }, { status: 201 })
+
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 })
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    if (!supabaseAdmin) {
+      console.error('❌ Supabase admin client not configured. Missing SUPABASE_SERVICE_ROLE_KEY in .env.local')
+      return NextResponse.json({ 
+        error: 'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local' 
+      }, { status: 500 })
+    }
+    
+    const body = await request.json()
+    const { id, first_name, last_name, email, phone, ssn, address, org_id, is_active } = body || {}
+    
+    if (!id || !email || !first_name) {
+      return NextResponse.json({ 
+        error: `Missing required fields: ${!id ? 'id' : ''} ${!email ? 'email' : ''} ${!first_name ? 'first_name' : ''}`.trim()
       }, { status: 400 })
     }
     
@@ -146,71 +268,37 @@ export async function POST(request: Request) {
       }
     }
     
-
-    // Create user auth entry
-    const { data: authData, error: authError } = await createUserAuthEntry(email, "test123456", 'parent', guardianName)
-    if (authError) {
-      console.error('❌ Error creating user auth entry:', authError)
-      const errorMessage = (authError as any)?.message || 'Failed to create user auth entry'
-      return NextResponse.json({ error: errorMessage }, { status: 500 })
-    }
-
-    // Generate a simple UUID for the guardian
-    if (!authData?.user?.id) {
-      return NextResponse.json({ error: 'Failed to create user - no user data returned' }, { status: 500 })
-    }
-    const guardianId = authData.user.id
-    
-    // Create simple guardian record in users table
-    const userData = {
-      id: guardianId,
-      email: email,
-      phone: phone || null,
-      full_name: guardianName,
-      role_id: GUARDIAN_ROLE_ID,
-      org_id: actualOrgId,
-      is_active: true,
-      metadata: {
-        role: 'parent',
+    // Update guardian record in users table
+    const { data: updatedGuardian, error: updateError } = await supabaseAdmin
+      .from('users')
+      .update({
+        email: email,
+        phone: phone || null,
+        first_name: first_name,
+        last_name: last_name || null,
         org_id: actualOrgId,
-        phone: phone || null
-      }
-    };
-    
-    
-    
-    const { error: publicUserError } = await supabaseAdmin
-      .from('users')
-      .insert(userData)
+        is_active: is_active !== undefined ? is_active : true,
+        role: 'guardian' as any,
+        ssn: ssn || null,
+        address: address || null,
+      })
+      .eq('id', id)
+      .eq('role', 'guardian')
+      .select('id,email,phone,first_name,last_name,org_id,role,is_active,created_at,ssn,address')
+      .single()
 
-    if (publicUserError) {
-      console.error('❌ Failed to create guardian:', publicUserError)
-      return NextResponse.json({ error: `Failed to create guardian: ${publicUserError.message}` }, { status: 500 })
+    if (updateError) {
+      console.error('❌ Failed to update guardian:', updateError)
+      return NextResponse.json({ error: `Failed to update guardian: ${updateError.message}` }, { status: 500 })
     }
-
-
-    // Let's verify the guardian was actually created by querying it back
-    const { data: verifyGuardian, error: verifyError } = await supabaseAdmin
-      .from('users')
-      .select('id,email,phone,full_name,org_id,role_id,is_active,created_at')
-      .eq('id', guardianId)
-      .single();
-    
-
 
     return NextResponse.json({ 
-      guardian: {
-        id: guardianId,
-        email: email,
-        full_name: guardianName,
-        org_id: actualOrgId,
-        role_id: GUARDIAN_ROLE_ID
-      },
-      message: 'Guardian created successfully!',
-      verification: verifyGuardian
-    }, { status: 201 })
+      guardian: updatedGuardian,
+      message: 'Guardian updated successfully!'
+    }, { status: 200 })
 
   } catch (err: any) {
+    console.error('❌ Error in guardians PUT:', err)
     return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 })
   }
 }
@@ -236,7 +324,7 @@ export async function DELETE(request: Request) {
       .from('users')
       .delete()
       .eq('id', id)
-      .eq('role_id', GUARDIAN_ROLE_ID)
+      .eq('role', 'guardian')
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })

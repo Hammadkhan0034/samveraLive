@@ -1,8 +1,9 @@
 // Landing Page Code.
-
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
+import { useTheme } from '@/lib/contexts/ThemeContext';
 import { motion } from 'framer-motion';
 import {
   CalendarDays, MessageSquare, Shield, Camera, Baby, ShoppingBag, CheckSquare,
@@ -11,35 +12,10 @@ import {
 
 
 export default function SamveraLanding() {
-  const [lang, setLang] = useState<'is' | 'en'>('en');
-  const [isDark, setIsDark] = useState(false);
+  const { lang, setLang } = useLanguage();
+  const { isDark, toggleTheme } = useTheme();
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
   const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
-
-  // Theme management
-  useEffect(() => {
-    const savedTheme = typeof window !== "undefined" ? localStorage.getItem("theme") : null;
-    const prefersDark = typeof window !== "undefined" ? window.matchMedia("(prefers-color-scheme: dark)").matches : false;
-    const shouldUseDark = savedTheme ? savedTheme === "dark" : prefersDark;
-    setIsDark(shouldUseDark);
-    const root = document.documentElement;
-    if (shouldUseDark) {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-  }, []);
-
-  useEffect(() => {
-    const root = document.documentElement;
-    if (isDark) {
-      root.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      root.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-    }
-  }, [isDark]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -97,7 +73,7 @@ export default function SamveraLanding() {
             <button
               type="button"
               aria-label={isDark ? "Activate light mode" : "Activate dark mode"}
-              onClick={() => setIsDark(v => !v)}
+              onClick={toggleTheme}
               className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:border-slate-600 dark:hover:bg-slate-700"
             >
               {isDark ? <Sun size={16} /> : <Moon size={16} />}
@@ -108,11 +84,10 @@ export default function SamveraLanding() {
             <button
               type="button"
               aria-label={isDark ? "Activate light mode" : "Activate dark mode"}
-              onClick={() => setIsDark(v => !v)}
+              onClick={toggleTheme}
               className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:border-slate-600 dark:hover:bg-slate-700"
             >
               {isDark ? <Sun size={16} /> : <Moon size={16} />}
-              {/* <span>{isDark ? "Light" : "Dark"}</span> */}
             </button>
             <div className="relative language-dropdown">
               <button
@@ -328,7 +303,6 @@ export default function SamveraLanding() {
             <span>© {new Date().getFullYear()} Samvera</span>
           </div>
           <div className="flex items-center gap-4">
-            {/* New small hosting note */}
             <span className="inline-flex items-center gap-1">
               <Cloud className="h-4 w-4" /> {t.footer_hosting}
             </span>

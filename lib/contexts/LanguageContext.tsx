@@ -25,19 +25,26 @@ interface LanguageProviderProps {
 }
 
 export const LanguageProvider = ({ children }: LanguageProviderProps) => {
+  // Always start with 'en' to match server-side rendering
+  // This prevents hydration mismatches
   const [lang, setLang] = useState<Lang>('en');
+  const [mounted, setMounted] = useState(false);
 
-  // Language persistence
+  // Load language from localStorage after component mounts (client-side only)
   useEffect(() => {
-    const saved = typeof window !== "undefined"
-      ? (localStorage.getItem('samvera_lang') as Lang | null)
-      : null;
-    if (saved === 'is' || saved === 'en') setLang(saved);
+    setMounted(true);
+    const saved = localStorage.getItem('samvera_lang') as Lang | null;
+    if (saved === 'is' || saved === 'en') {
+      setLang(saved);
+    }
   }, []);
-  
+
+  // Save language preference to localStorage when it changes
   useEffect(() => {
-    if (typeof window !== "undefined") localStorage.setItem('samvera_lang', lang);
-  }, [lang]);
+    if (mounted && typeof window !== "undefined") {
+      localStorage.setItem('samvera_lang', lang);
+    }
+  }, [lang, mounted]);
 
   const t = lang === 'is' ? isText : enText;
 

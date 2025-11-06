@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { Eye, EyeOff, Sun, Moon, Globe, ChevronDown, ArrowRight } from 'lucide-react';
 import { type SamveraRole } from '@/lib/auth';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { useTheme } from '@/lib/contexts/ThemeContext';
 
 type Lang = 'is' | 'en';
 
@@ -13,6 +14,7 @@ export default function SignInPage() {
   const router = useRouter();
   const qp = useSearchParams();
   const { signIn, signUp, signInWithOtp, verifyEmailOtp, user, loading } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
 
   // Allow ?role=teacher|principal|parent|admin to pick the demo role for signup
   const queryRole = qp?.get('role');
@@ -26,7 +28,6 @@ export default function SignInPage() {
   const [fullName, setFullName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [lang, setLang] = useState<Lang>('en');
-  const [isDark, setIsDark] = useState(false);
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState('');
@@ -44,6 +45,14 @@ export default function SignInPage() {
     }
   }, [qp]);
 
+  // Pre-fill email and password from query params (for magic link flow)
+  useEffect(() => {
+    const emailParam = qp?.get('email');
+    const passwordParam = qp?.get('password');
+    if (emailParam) setEmail(emailParam);
+    if (passwordParam) setPassword(passwordParam);
+  }, [qp]);
+
   // remember language between visits
   useEffect(() => {
     const saved = typeof window !== 'undefined'
@@ -55,30 +64,6 @@ export default function SignInPage() {
     if (typeof window !== 'undefined') localStorage.setItem('samvera_lang', lang);
   }, [lang]);
 
-  // Theme management
-  useEffect(() => {
-    const savedTheme = typeof window !== "undefined" ? localStorage.getItem("theme") : null;
-    const prefersDark = typeof window !== "undefined" ? window.matchMedia("(prefers-color-scheme: dark)").matches : false;
-    const shouldUseDark = savedTheme ? savedTheme === "dark" : prefersDark;
-    setIsDark(shouldUseDark);
-    const root = document.documentElement;
-    if (shouldUseDark) {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-  }, []);
-
-  useEffect(() => {
-    const root = document.documentElement;
-    if (isDark) {
-      root.classList.add("dark");
-      localStorage.setItem("theme", "dark");
-    } else {
-      root.classList.remove("dark");
-      localStorage.setItem("theme", "light");
-    }
-  }, [isDark]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -99,9 +84,9 @@ export default function SignInPage() {
 
   const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
 
-  // Redirect if already authenticated
+  // Redirect if already authenticated - only check once when loading completes and user exists
   useEffect(() => {
-    if (user && !loading) {
+    if (!loading && user) {
       const userRole = user.user_metadata?.activeRole || user.user_metadata?.roles?.[0];
       if (userRole) {
         const path = userRole === 'principal'
@@ -182,13 +167,7 @@ export default function SignInPage() {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      {/* Background decorations */}
-      {/* <div className="pointer-events-none absolute inset-0 -z-10 opacity-30 dark:opacity-20">
-        <div className="absolute -left-20 -top-20 h-96 w-96 rounded-full bg-gradient-to-tr from-coral-100 to-ocean-100 dark:from-coral-900/30 dark:to-ocean-900/30 blur-3xl" />
-        <div className="absolute -bottom-20 -right-20 h-96 w-96 rounded-full bg-gradient-to-tr from-ocean-100 to-sand-100 dark:from-ocean-900/30 dark:to-sand-900/30 blur-3xl" />
-      </div> */}
-
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">    
       <div className="relative flex min-h-screen items-center justify-center px-4 py-10">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
@@ -227,7 +206,7 @@ export default function SignInPage() {
               <button
                 type="button"
                 aria-label={isDark ? "Activate light mode" : "Activate dark mode"}
-                onClick={() => setIsDark(v => !v)}
+                onClick={toggleTheme}
                 className="inline-flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-1.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
               >
                 {isDark ? <Sun size={16} /> : <Moon size={16} />}

@@ -73,7 +73,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setIsSigningIn(false);
         }
       } else if (event === 'SIGNED_OUT') {
+        console.log('🔄 SIGNED_OUT event received');
         setIsSigningIn(false);
+        // Immediately redirect to signin to avoid any delay or flicker
+        if (typeof window !== 'undefined' && window.location.pathname !== '/signin') {
+          window.location.replace('/signin');
+        }
       }
     });
 
@@ -148,12 +153,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    console.log('🔄 Auth context signOut called...');
+    
+    // Clear local state first
+    setSession(null);
+    setUser(null);
+    setLoading(false);
+    
+    // Try to sign out from Supabase
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('❌ Supabase signOut error:', error);
+      // Even if Supabase signOut fails, we still want to clear local state
+    } else {
+      console.log('✅ Supabase signOut successful');
+    }
+    
     // Clear any local auth cookies
     if (typeof document !== 'undefined') {
       document.cookie = `samvera_email=; Path=/; Max-Age=0; SameSite=Lax`;
       document.cookie = `samvera_roles=; Path=/; Max-Age=0; SameSite=Lax`;
       document.cookie = `samvera_active_role=; Path=/; Max-Age=0; SameSite=Lax`;
+      console.log('✅ Local cookies cleared');
     }
   };
 

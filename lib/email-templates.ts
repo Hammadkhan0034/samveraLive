@@ -283,3 +283,101 @@ This is an automated message. Please do not reply to this email.
   `.trim();
 }
 
+// Guardian invitation templates (non-OTP; directs to sign-in with default password)
+export function getGuardianInvitationEmailHTML(params: {
+  guardianName: string;
+  organizationName: string;
+  email: string;
+  password: string;
+  signInUrl: string;
+}): string {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guardian Invitation - Samvera</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #334155; background-color: #f8fafc; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 40px auto; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden; }
+    .header { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #ffffff; padding: 40px 30px; text-align: center; }
+    .header h1 { margin: 0; font-size: 28px; font-weight: 700; }
+    .header p { margin: 10px 0 0; opacity: 0.9; font-size: 16px; }
+    .content { padding: 40px 30px; }
+    .greeting { font-size: 18px; font-weight: 600; margin-bottom: 20px; color: #0f172a; }
+    .message { margin-bottom: 30px; line-height: 1.8; color: #475569; }
+    .credentials-box { background: #f1f5f9; border-left: 4px solid #0f172a; padding: 20px; margin: 30px 0; border-radius: 8px; }
+    .credential-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 12px; background: #ffffff; border-radius: 6px; }
+    .credential-label { font-weight: 500; color: #64748b; font-size: 14px; }
+    .credential-value { font-family: 'Courier New', monospace; background: #0f172a; color: #ffffff; padding: 6px 12px; border-radius: 4px; font-size: 14px; font-weight: 600; }
+    .button-container { text-align: center; margin: 30px 0; }
+    .button { display: inline-block; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #ffffff !important; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-weight: 600; font-size: 16px; box-shadow: 0 4px 12px rgba(15,23,42,0.3); transition: all 0.3s ease; }
+    .button:hover { box-shadow: 0 6px 16px rgba(15,23,42,0.4); transform: translateY(-2px); }
+    .note { margin-top: 16px; font-size: 14px; color: #475569; text-align: center; }
+    .footer { background: #f8fafc; padding: 30px; text-align: center; border-top: 1px solid #e2e8f0; }
+    .footer p { margin: 5px 0; color: #64748b; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>👋 Welcome to Samvera</h1>
+      <p>You're invited as a guardian</p>
+    </div>
+    <div class="content">
+      <div class="greeting">Hello ${params.guardianName || 'there'}!</div>
+      <div class="message">
+        <p>You've been invited by <strong>${params.organizationName}</strong> to access your child's information on the Samvera platform.</p>
+        <p>Your account has been created. Use the credentials below to sign in:</p>
+      </div>
+      <div class="credentials-box">
+        <div class="credential-item"><span class="credential-label">Email:</span><span class="credential-value">${params.email}</span></div>
+        <div class="credential-item"><span class="credential-label">Password:</span><span class="credential-value">${params.password}</span></div>
+      </div>
+      <div class="button-container">
+        <a href="${params.signInUrl}" class="button">🔐 Go to Sign In</a>
+        <div class="note">After signing in, you can change your password from your profile.</div>
+      </div>
+    </div>
+    <div class="footer">
+      <p><strong>Samvera Education Platform</strong></p>
+      <p>This is an automated message. Please do not reply to this email.</p>
+      <p style="margin-top: 15px; font-size: 12px;">© ${new Date().getFullYear()} Samvera. All rights reserved.</p>
+    </div>
+  </div>
+</body>
+</html>
+  `.trim();
+}
+
+export function getGuardianInvitationEmailText(params: {
+  guardianName: string;
+  organizationName: string;
+  email: string;
+  password: string;
+  signInUrl: string;
+}): string {
+  return `
+Welcome to Samvera!
+
+Hello ${params.guardianName || 'there'}!
+
+You've been invited by ${params.organizationName} to access your child's information on the Samvera platform.
+
+Use these credentials to sign in:
+
+Email:    ${params.email}
+Password: ${params.password}
+
+Sign in here: ${params.signInUrl}
+
+After signing in, please change your password from your profile.
+
+---
+Samvera Education Platform
+© ${new Date().getFullYear()} Samvera. All rights reserved.
+This is an automated message. Please do not reply to this email.
+  `.trim();
+}
+

@@ -64,7 +64,7 @@ export async function POST(request: Request) {
         role_id: invitation.role_id,
         is_active: true,
         metadata: {
-          role: 'teacher', // Default role
+          role: 'staff', // Default role
           email_verified: true,
           invited_by: invitation.created_by,
           accepted_at: new Date().toISOString()
@@ -84,7 +84,7 @@ export async function POST(request: Request) {
         email: publicUser.email,
         phone: publicUser.phone,
         name: publicUser.full_name,
-        role: publicUser.metadata?.role || 'teacher',
+        role: publicUser.metadata?.role || 'staff',
         org_id: publicUser.org_id,
         is_active: publicUser.is_active
       }

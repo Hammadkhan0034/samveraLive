@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/hooks/useAuth';
 
@@ -11,11 +11,15 @@ interface Announcement {
   created_at: string;
   author_id: string;
   class_id?: string;
+  class_name?: string | null;
 }
 
 interface AnnouncementListProps {
   classId?: string;
   orgId?: string;
+  userId?: string;
+  userRole?: string;
+  teacherClassIds?: string[]; // For teachers: all assigned class IDs
   showAuthor?: boolean;
   limit?: number;
   lang?: 'is' | 'en';
@@ -26,21 +30,113 @@ type Lang = 'is' | 'en';
 export default function AnnouncementList({ 
   classId, 
   orgId, 
+  userId,
+  userRole,
+  teacherClassIds,
   showAuthor = false, 
   limit = 10,
   lang = 'en'
 }: AnnouncementListProps) {
   const { user } = useAuth();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Start with false to avoid initial skeleton
   const [error, setError] = useState('');
   const [orgName, setOrgName] = useState<string | null>(null);
+  const [hydratedFromCache, setHydratedFromCache] = useState(false);
 
   const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
 
+  const loadAnnouncements = useCallback(async () => {
+    try {
+      // Never show loading skeleton - we always show cached data instantly
+      // Fresh data loads silently in background
+      setError('');
+
+      const params = new URLSearchParams();
+      if (classId) params.set('classId', classId);
+      if (userId) params.set('userId', userId);
+      if (userRole) params.set('userRole', userRole);
+      if (teacherClassIds && teacherClassIds.length > 0) {
+        params.set('teacherClassIds', teacherClassIds.join(','));
+      }
+      params.set('limit', String(limit));
+
+      const res = await fetch(`/api/announcements?${params.toString()}`, { cache: 'no-store' });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({} as any));
+        throw new Error(err.error || `Failed with ${res.status}`);
+      }
+      const { announcements: data } = await res.json();
+
+      const normalized: Announcement[] = (data || []).map((row: any) => ({
+        id: row.id,
+        title: row.title,
+        body: row.body,
+        created_at: row.created_at,
+        author_id: row.author_id,
+        class_id: row.class_id ?? undefined,
+        class_name: row.class_name || null,
+      }));
+      setAnnouncements(normalized);
+
+      // Write-through cache for instant next render
+      // Include userId and userRole in cache key for proper filtering
+      try {
+        const effectiveOrgId = orgId || (user?.user_metadata?.org_id || user?.user_metadata?.organization_id);
+        const cacheKey = effectiveOrgId ? `announcements_${effectiveOrgId}_${classId || 'org'}_${userId || 'all'}_${userRole || 'all'}` : null;
+        if (typeof window !== 'undefined' && cacheKey) {
+          localStorage.setItem(cacheKey, JSON.stringify(normalized));
+        }
+      } catch {
+        // ignore cache errors
+      }
+    } catch (err: any) {
+      console.error('Failed to load announcements:', err);
+      setError(t.failed_to_load);
+    } finally {
+      setLoading(false);
+    }
+  }, [classId, orgId, userId, userRole, limit, t, user]);
+
   useEffect(() => {
+    // Instant render from cache (no skeleton) and then refresh in background
+    const effectiveOrgId = orgId || (user?.user_metadata?.org_id || user?.user_metadata?.organization_id);
+    // Use same cache key format as loadAnnouncements
+    const cacheKey = effectiveOrgId ? `announcements_${effectiveOrgId}_${classId || 'org'}_${userId || 'all'}_${userRole || 'all'}` : null;
+
+    if (typeof window !== 'undefined' && cacheKey) {
+      try {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          const parsed = JSON.parse(cached) as Announcement[];
+          if (Array.isArray(parsed)) {
+            setAnnouncements(parsed);
+            setLoading(false); // Ensure loading is false when we have cache
+            setHydratedFromCache(true);
+          }
+        }
+      } catch {
+        // ignore cache errors
+      }
+    }
+
+    // Load fresh data in background without showing loading
     loadAnnouncements();
-  }, [classId, orgId]);
+  }, [classId, orgId, userId, userRole, loadAnnouncements]);
+  
+  // Listen for custom event to refresh announcements
+  useEffect(() => {
+    const handleRefresh = () => {
+      // Don't show loading skeleton when refreshing - just update in background
+      // Keep hydratedFromCache true so we don't show skeleton
+      loadAnnouncements();
+    };
+    
+    window.addEventListener('announcements-refresh', handleRefresh);
+    return () => {
+      window.removeEventListener('announcements-refresh', handleRefresh);
+    };
+  }, [loadAnnouncements]);
 
   useEffect(() => {
     const effectiveOrgId = orgId || (user?.user_metadata?.org_id || user?.user_metadata?.organization_id);
@@ -58,39 +154,6 @@ export default function AnnouncementList({
       }
     })();
   }, [orgId, user?.user_metadata?.org_id]);
-
-  const loadAnnouncements = async () => {
-    try {
-      setLoading(true);
-      setError('');
-
-      const params = new URLSearchParams();
-      if (classId) params.set('classId', classId);
-      params.set('limit', String(limit));
-
-      const res = await fetch(`/api/announcements?${params.toString()}`, { cache: 'no-store' });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({} as any));
-        throw new Error(err.error || `Failed with ${res.status}`);
-      }
-      const { announcements: data } = await res.json();
-
-      const normalized: Announcement[] = (data || []).map((row: any) => ({
-        id: row.id,
-        title: row.title,
-        body: row.body,
-        created_at: row.created_at,
-        author_id: row.author_id,
-        class_id: row.class_id ?? undefined,
-      }));
-      setAnnouncements(normalized);
-    } catch (err: any) {
-      console.error('Failed to load announcements:', err);
-      setError(t.failed_to_load);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -144,40 +207,25 @@ export default function AnnouncementList({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" suppressHydrationWarning>
       {announcements.map((announcement) => (
-        <div key={announcement.id} className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-4">
-          <div className="flex justify-between items-start mb-2">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100">
+        <div key={announcement.id} className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-4" suppressHydrationWarning>
+          <div className="flex items-center gap-3 overflow-hidden">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100 truncate flex-1 min-w-0">
               {announcement.title}
             </h3>
-            <span className="text-sm text-gray-500 dark:text-slate-400">
+            {announcement.class_id ? (
+              <span className="bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 px-2 py-1 rounded-full text-xs whitespace-nowrap flex-shrink-0">
+                {announcement.class_name || t.class_announcement}
+              </span>
+            ) : (
+              <span className="bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300 px-2 py-1 rounded-full text-xs whitespace-nowrap flex-shrink-0">
+                {orgName || t.organization_wide}
+              </span>
+            )}
+            <span className="text-sm text-gray-500 dark:text-slate-400 whitespace-nowrap flex-shrink-0">
               {formatDate(announcement.created_at)}
             </span>
-          </div>
-          
-          <p className="text-gray-700 dark:text-slate-300 mb-3 whitespace-pre-wrap">
-            {announcement.body}
-          </p>
-          
-          <div className="flex justify-between items-center text-sm text-gray-500 dark:text-slate-400">
-            <div className="flex items-center space-x-4">
-              {showAuthor && (
-                <span>
-                  {t.by}: {announcement.author_id}
-                </span>
-              )}
-              {announcement.class_id && (
-                <span className="bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 px-2 py-1 rounded-full text-xs">
-                  {t.class_announcement}
-                </span>
-              )}
-              {!announcement.class_id && (
-                <span className="bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300 px-2 py-1 rounded-full text-xs">
-                  {orgName ? orgName : t.organization_wide}
-                </span>
-              )}
-            </div>
           </div>
         </div>
       ))}

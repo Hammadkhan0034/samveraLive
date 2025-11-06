@@ -20,6 +20,7 @@ const ROLE_HIERARCHY: Record<SamveraRole, number> = {
 // Protected routes and their required roles
 const PROTECTED_ROUTES = [
   { path: '/dashboard/teacher', roles: ['teacher', 'principal', 'admin'] },
+  { path: '/dashboard/principal/students', roles: ['principal'] },
   { path: '/dashboard/principal', roles: ['principal', 'admin'] },
   { path: '/dashboard/parent', roles: ['parent'] },
   { path: '/dashboard/admin', roles: ['admin'] },
@@ -111,5 +112,5 @@ export async function middleware(req: NextRequest) {
 
 export const config = { 
   // Apply middleware to all dashboard routes
-  matcher: []
+  matcher: ['/dashboard/:path*']
 };

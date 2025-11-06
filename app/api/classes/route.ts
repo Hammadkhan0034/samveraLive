@@ -1,24 +1,21 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic'
-
 // Teacher role ID
 const TEACHER_ROLE_ID = 20
 
 export async function GET(request: Request) {
   try {
     if (!supabaseAdmin) {
-      return NextResponse.json({ 
-        error: 'Admin client not configured' 
+      return NextResponse.json({
+        error: 'Admin client not configured'
       }, { status: 500 })
     }
-    
+
     const { searchParams } = new URL(request.url)
     const orgId = searchParams.get('orgId')
     const createdBy = searchParams.get('createdBy')
-    
+
     let query = supabaseAdmin
       .from('classes')
       .select(`
@@ -33,42 +30,73 @@ export async function GET(request: Request) {
       `)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
-    
+
     // Filter by creator (principal) if provided
     if (createdBy) {
       query = query.eq('created_by', createdBy)
     }
-    
+
     // Filter by organization if provided
     if (orgId) {
       query = query.eq('org_id', orgId)
     }
-    
+
     const { data: classes, error } = await query
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // Get assigned teachers for each class using class_memberships table
+    // Get assigned teachers for each class using class_memberships and staff tables
     const classesWithTeachers = supabaseAdmin ? await Promise.all(
       (classes || []).map(async (cls) => {
         const { data: memberships } = await supabaseAdmin!
           .from('class_memberships')
           .select(`
-            user_id,
-            membership_role,
-            users!inner(id, full_name, email, role_id)
-          `)
+        user_id,
+        membership_role,
+        users!inner(id, first_name, last_name, email)
+      `)
           .eq('class_id', cls.id)
-          .eq('users.role_id', TEACHER_ROLE_ID)
-        
-        const teachers = memberships?.map((m: any) => ({
-          id: m.users.id,
-          full_name: m.users.full_name,
-          email: m.users.email
-        })) || []
-        
+          .eq('membership_role', 'teacher')
+          .eq('org_id', orgId || cls.org_id)
+
+        const userIds = memberships?.map((m: any) => m.user_id) || []
+        let staffRecords: any[] = []
+
+        if (userIds.length > 0) {
+          const orgIdToUse = orgId || cls.org_id
+          if (orgIdToUse) {
+            const { data: staffData } = await supabaseAdmin!
+              .from('staff')
+              .select('user_id')
+              .in('user_id', userIds)
+              .eq('org_id', orgIdToUse)
+            staffRecords = staffData || []
+          } else {
+            const { data: staffData } = await supabaseAdmin!
+              .from('staff')
+              .select('user_id')
+              .in('user_id', userIds)
+            staffRecords = staffData || []
+          }
+        }
+
+        const staffUserIds = new Set((staffRecords || []).map((s: any) => s.user_id))
+
+        const teachers = memberships?.filter((m: any) => staffUserIds.has(m.user_id)).map((m: any) => {
+          const firstName = m.users.first_name || ''
+          const lastName = m.users.last_name || ''
+          const fullName = `${firstName} ${lastName}`.trim() || 'Unknown'
+          return {
+            id: m.users.id,
+            full_name: fullName,
+            first_name: m.users.first_name,
+            last_name: m.users.last_name,
+            email: m.users.email
+          }
+        }) || []
+
         return {
           ...cls,
           assigned_teachers: teachers
@@ -76,7 +104,7 @@ export async function GET(request: Request) {
       })
     ) : classes || []
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       classes: classesWithTeachers || []
     }, { status: 200 })
 
@@ -88,36 +116,35 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     if (!supabaseAdmin) {
-      return NextResponse.json({ 
-        error: 'Admin client not configured' 
+      return NextResponse.json({
+        error: 'Admin client not configured'
       }, { status: 500 })
     }
-    
+
     const body = await request.json()
     const { name, code, created_by, teacher_id, org_id } = body || {}
-    
+
     if (!name || !created_by) {
-      return NextResponse.json({ 
-        error: 'name and created_by are required' 
+      return NextResponse.json({
+        error: 'name and created_by are required'
       }, { status: 400 })
     }
 
     // Get organization ID from user if not provided
     let organizationId = org_id;
     let actualCreatedBy = created_by;
-    
+
     if (!organizationId) {
       const { data: userData } = await supabaseAdmin
         .from('users')
         .select('org_id')
         .eq('id', created_by)
         .single();
-      
+
       organizationId = userData?.org_id;
     }
 
     // Try to find the user in the users table
-    // First, try to find by the provided created_by ID (in case it's a valid users table ID)
     const { data: existingUser } = await supabaseAdmin
       .from('users')
       .select('id, org_id')
@@ -138,7 +165,7 @@ export async function POST(request: Request) {
           .eq('org_id', organizationId)
           .limit(1)
           .single();
-        
+
         if (orgUser) {
           actualCreatedBy = orgUser.id;
         }
@@ -146,15 +173,15 @@ export async function POST(request: Request) {
     }
 
     if (!organizationId) {
-      return NextResponse.json({ 
-        error: 'Organization ID is required' 
+      return NextResponse.json({
+        error: 'Organization ID is required'
       }, { status: 400 })
     }
 
     // If we still don't have a valid created_by user, try to create a system user or use null
     if (!actualCreatedBy) {
       console.warn('⚠️ No valid user found for created_by, trying to create system user');
-      
+
       // Try to create a system user for this organization
       try {
         const { data: systemUser, error: systemUserError } = await supabaseAdmin
@@ -168,7 +195,7 @@ export async function POST(request: Request) {
           })
           .select('id')
           .single();
-        
+
         if (systemUser && !systemUserError) {
           actualCreatedBy = systemUser.id;
           console.log('✅ Created system user for organization');
@@ -227,9 +254,22 @@ export async function POST(request: Request) {
           class_id: newClass.id
         }
       })
+
+      // Also create class_memberships row with org_id
+      const { error: cmError } = await supabaseAdmin
+        .from('class_memberships')
+        .insert({
+          org_id: organizationId,
+          class_id: newClass.id,
+          user_id: teacher_id,
+          membership_role: 'teacher'
+        })
+      if (cmError) {
+        console.warn('⚠️ Failed to create class_memberships on class create:', cmError)
+      }
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       class: newClass,
       message: teacher_id ? 'Class created and teacher assigned' : 'Class created successfully'
     }, { status: 201 })
@@ -242,14 +282,14 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     if (!supabaseAdmin) {
-      return NextResponse.json({ 
-        error: 'Admin client not configured' 
+      return NextResponse.json({
+        error: 'Admin client not configured'
       }, { status: 500 })
     }
-    
+
     const body = await request.json()
-    const { id, name, code, teacher_id} = body || {}
-    
+    const { id, name, code, teacher_id } = body || {}
+
     if (!id) {
       return NextResponse.json({ error: 'Class ID is required' }, { status: 400 })
     }
@@ -297,6 +337,32 @@ export async function PUT(request: Request) {
           class_id: id
         }
       })
+
+      // Create/ensure class_memberships with org_id
+      // First fetch class org_id
+      let classOrgId: string | null = null
+      try {
+        const { data: classRow } = await supabaseAdmin
+          .from('classes')
+          .select('org_id')
+          .eq('id', id)
+          .single()
+        classOrgId = classRow?.org_id || null
+      } catch {}
+
+      if (classOrgId) {
+        const { error: cmUpsertError } = await supabaseAdmin
+          .from('class_memberships')
+          .upsert({
+            org_id: classOrgId,
+            class_id: id,
+            user_id: teacher_id,
+            membership_role: 'teacher'
+          }, { onConflict: 'class_id,user_id' })
+        if (cmUpsertError) {
+          console.warn('⚠️ Failed to upsert class_memberships on class update:', cmUpsertError)
+        }
+      }
     }
 
     return NextResponse.json({ class: updatedClass }, { status: 200 })
@@ -309,14 +375,14 @@ export async function PUT(request: Request) {
 export async function DELETE(request: Request) {
   try {
     if (!supabaseAdmin) {
-      return NextResponse.json({ 
-        error: 'Admin client not configured' 
+      return NextResponse.json({
+        error: 'Admin client not configured'
       }, { status: 500 })
     }
-    
+
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
-    
+
     if (!id) {
       return NextResponse.json({ error: 'Class ID is required' }, { status: 400 })
     }

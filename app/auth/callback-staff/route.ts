@@ -3,9 +3,6 @@ import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic'
-
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
   const token = requestUrl.searchParams.get('token')
@@ -19,31 +16,17 @@ export async function GET(request: Request) {
     const supabase = createRouteHandlerClient({ cookies })
     
     // Exchange code for session
-    await supabase.auth.exchangeCodeForSession(code)
+    const { data: sessionData } = await supabase.auth.exchangeCodeForSession(code)
     console.log('✅ Session established from magic link')
-  }
-
-  // Mark invitation as accepted
-  if (token && org_id && user_id && supabaseAdmin) {
-    console.log('📝 Marking invitation as accepted...')
     
-    const { error: acceptError } = await supabaseAdmin
-      .from('invitations')
-      .update({
-        accepted_by: user_id,
-        accepted_at: new Date().toISOString()
-      })
-      .eq('token', token)
-
-    if (acceptError) {
-      console.error('❌ Failed to mark invitation as accepted:', acceptError)
-    } else {
-      console.log('✅ Invitation marked as accepted:', { user_id, token })
+    // Redirect to accept-staff page which will handle invitation acceptance with the authenticated session
+    if (token && org_id) {
+      return NextResponse.redirect(`${requestUrl.origin}/invite/accept-staff?token=${token}&org_id=${org_id}`)
     }
   }
 
-  // Redirect to signin page
-  console.log('🔄 Redirecting to signin page...')
-  return NextResponse.redirect(`${requestUrl.origin}/signin?message=invitation_accepted`)
+  // Fallback: redirect to signin if no token
+  console.log('🔄 Redirecting to signin...')
+  return NextResponse.redirect(`${requestUrl.origin}/signin`)
 }
 

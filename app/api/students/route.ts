@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic'
-
 export async function GET(request: Request) {
   try {
     if (!supabaseAdmin) {
@@ -28,14 +25,23 @@ export async function GET(request: Request) {
         id,
         user_id,
         class_id,
-        first_name,
-        last_name,
-        dob,
-        gender,
+        users!students_user_id_fkey (
+          id,
+          first_name,
+          last_name,
+          dob,
+          gender,
+          phone,
+          address,
+          ssn
+        ),
+        registration_time,
+        start_date,
+        barngildi,
+        student_language,
         medical_notes_encrypted,
         allergies_encrypted,
         emergency_contact_encrypted,
-        metadata,
         created_at,
         updated_at,
         classes!students_class_id_fkey (
@@ -44,6 +50,7 @@ export async function GET(request: Request) {
         )
       `)
       .is('deleted_at', null)
+      .eq('org_id', orgId)
       .order('created_at', { ascending: false })
 
     // Filter by class if provided
@@ -68,18 +75,30 @@ export async function GET(request: Request) {
           }
         }
         
-        const { data: guardianRelations } = await supabaseAdmin
+        const { data: guardianRelations, error: guardianError } = await supabaseAdmin
           .from('guardian_students')
           .select(`
             id,
             relation,
+            guardian_id,
+            student_id,
             users!guardian_students_guardian_id_fkey (
               id,
-              full_name,
+              first_name,
+              last_name,
               email
             )
           `)
           .eq('student_id', student.id)
+        
+        if (guardianError) {
+          console.error(`❌ Error fetching guardians for student ${student.id}:`, guardianError);
+        }
+        
+        // Log guardian data for debugging
+        if (guardianRelations && guardianRelations.length > 0) {
+          console.log(`✅ Found ${guardianRelations.length} guardian(s) for student ${student.id}:`, guardianRelations);
+        }
 
         return {
           ...student,
@@ -87,12 +106,7 @@ export async function GET(request: Request) {
         }
       })
     )
-
-    console.log(`📊 Students for org ${orgId}:`, {
-      total_students: studentsWithGuardians?.length || 0,
-      class_filter: classId || 'all'
-    });
-
+    
     return NextResponse.json({ 
       students: studentsWithGuardians || [],
       total_students: studentsWithGuardians?.length || 0
@@ -123,12 +137,25 @@ export async function POST(request: Request) {
       dob, 
       gender, 
       class_id, 
+      registration_time,
+      start_date,
+      barngildi,
+      student_language,
       medical_notes, 
       allergies, 
       emergency_contact,
       org_id,
+      phone,
+      address,
+      social_security_number,
       guardian_ids = [] // Array of guardian IDs to link
     } = body || {}
+    const normalizedLanguage =
+    student_language === 'english' ? 'english' :
+    student_language === 'icelandic' ? 'icelandic' :
+    student_language === 'en' ? 'english' :
+    student_language === 'is' ? 'icelandic' :
+      'english'
     
     if (!first_name) {
       return NextResponse.json({ 
@@ -136,7 +163,7 @@ export async function POST(request: Request) {
       }, { status: 400 })
     }
     
-    console.log('📋 Creating student:', { first_name, last_name, class_id, guardian_ids });
+    console.log('📋 Creating student:', { first_name, last_name, class_id, registration_time, student_language:normalizedLanguage, guardian_ids,barngildi });
 
 
     
@@ -144,7 +171,16 @@ export async function POST(request: Request) {
     // Validate date of birth if provided
     let validatedDob = null;
     if (dob) {
+      // Ensure the date is in ISO format (YYYY-MM-DD)
       const birthDate = new Date(dob);
+      
+      // Check if the date is valid
+      if (isNaN(birthDate.getTime())) {
+        return NextResponse.json({ 
+          error: 'Invalid date format for date of birth' 
+        }, { status: 400 })
+      }
+      
       const today = new Date();
       const age = today.getFullYear() - birthDate.getFullYear();
       const monthDiff = today.getMonth() - birthDate.getMonth();
@@ -161,25 +197,75 @@ export async function POST(request: Request) {
         }, { status: 400 })
       }
       
-      validatedDob = dob;
+      // Convert to ISO format for database storage
+      validatedDob = birthDate.toISOString().split('T')[0];
     }
+
+    // Validate start_date if provided
+    let validatedStartDate = null;
+    if (start_date) {
+      const startDate = new Date(start_date);
+      
+      // Check if the date is valid
+      if (isNaN(startDate.getTime())) {
+        return NextResponse.json({ 
+          error: 'Invalid date format for start date' 
+        }, { status: 400 })
+      }
+      
+      // Convert to ISO format for database storage
+      validatedStartDate = startDate.toISOString().split('T')[0];
+    }
+
+    // Normalize gender and barngildi
+    const normalizedGender = (gender || 'unknown').toString().toLowerCase();
+    const normalizedBarngildi = (() => {
+      const n = Number(barngildi);
+      if (isNaN(n)) return 0;
+      return Math.min(1.9, Math.max(0.5, Number(n.toFixed(1))));
+    })();
+
+    // First create a user record for the student
+    const { data: createdUser, error: userError } = await supabaseAdmin
+      .from('users')
+      .insert({
+        first_name,
+        last_name: last_name || null,
+        dob: validatedDob,
+        gender: normalizedGender,
+        phone: phone || null,
+        address: address || null,
+        ssn: social_security_number || null,
+        role: 'student' as any,
+        org_id: org_id || null,
+        is_active: true,
+      })
+      .select('id')
+      .single()
+
+    if (userError) {
+      console.error('❌ Failed to create student user:', userError)
+      return NextResponse.json({ error: `Failed to create student user: ${userError.message}` }, { status: 500 })
+    }
+
+    const userId = createdUser?.id
 
     // Create student record
     const { data: student, error: studentError } = await supabaseAdmin
       .from('students')
       .insert({
-        first_name,
-        last_name,
-        dob: validatedDob,
-        gender: gender || 'unknown',
+        user_id: userId,
         class_id: class_id || null,
         org_id: org_id || null,
+        registration_time: registration_time || null,
+        start_date: validatedStartDate,
+        barngildi: normalizedBarngildi,
+        student_language: normalizedLanguage,
         medical_notes_encrypted: medical_notes || null,
         allergies_encrypted: allergies || null,
         emergency_contact_encrypted: emergency_contact || null,
-        metadata: {}
       })
-      .select('id,first_name,last_name,dob,gender,class_id,created_at')
+      .select('id,user_id,class_id,registration_time,start_date,barngildi,student_language,created_at')
       .single()
 
     if (studentError) {
@@ -187,47 +273,28 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: `Failed to create student: ${studentError.message}` }, { status: 500 })
     }
 
-    // Link guardians to student if provided
-    let linkedGuardians = [];
-    if (guardian_ids.length > 0) {
-      const guardianStudentLinks = guardian_ids.map((guardian_id: string) => ({
-        guardian_id,
-        student_id: student.id,
-        relation: 'parent' // Default relation
-      }))
+    // Linking guardians to student via API has been deprecated; handled by /api/guardian-students
+    // Intentionally no-op here
 
-      const { error: linkError } = await supabaseAdmin
-        .from('guardian_students')
-        .insert(guardianStudentLinks)
+    // // Update student metadata with guardian information
+    // if (linkedGuardians.length > 0) {
+    //   const { error: metadataError } = await supabaseAdmin
+    //     .from('students')
+    //     .update({
+    //       metadata: {
+    //         guardian_ids: linkedGuardians,
+    //         guardian_count: linkedGuardians.length,
+    //         last_guardian_update: new Date().toISOString()
+    //       }
+    //     })
+    //     .eq('id', student.id)
 
-      if (linkError) {
-        console.error('❌ Failed to link guardians to student:', linkError)
-        // Don't fail the whole request, just log the error
-      } else {
-        console.log('✅ Linked guardians to student:', guardian_ids)
-        linkedGuardians = guardian_ids;
-      }
-    }
-
-    // Update student metadata with guardian information
-    if (linkedGuardians.length > 0) {
-      const { error: metadataError } = await supabaseAdmin
-        .from('students')
-        .update({
-          metadata: {
-            guardian_ids: linkedGuardians,
-            guardian_count: linkedGuardians.length,
-            last_guardian_update: new Date().toISOString()
-          }
-        })
-        .eq('id', student.id)
-
-      if (metadataError) {
-        console.error('❌ Failed to update student metadata:', metadataError)
-      } else {
-        console.log('✅ Updated student metadata with guardian info')
-      }
-    }
+    //   if (metadataError) {
+    //     console.error('❌ Failed to update student metadata:', metadataError)
+    //   } else {
+    //     console.log('✅ Updated student metadata with guardian info')
+    //   }
+    // }
 
     console.log('✅ Student created successfully:', student.id)
 
@@ -259,12 +326,25 @@ export async function PUT(request: Request) {
       dob, 
       gender, 
       class_id, 
+      registration_time,
+      start_date,
+      barngildi,
+      student_language,
       medical_notes, 
       allergies, 
       emergency_contact,
       org_id,
+      phone,
+      address,
+      social_security_number,
       guardian_ids = []
     } = body || {}
+    const normalizedLanguage =
+    student_language === 'english' ? 'english' :
+    student_language === 'icelandic' ? 'icelandic' :
+    student_language === 'en' ? 'english' :
+    student_language === 'is' ? 'icelandic' :
+      'english'
     
     if (!id || !first_name) {
       return NextResponse.json({ 
@@ -272,12 +352,21 @@ export async function PUT(request: Request) {
       }, { status: 400 })
     }
     
-    console.log('📋 Updating student:', { id, first_name, last_name, class_id, guardian_ids });
+    console.log('📋 Updating student:', { id, first_name, last_name, class_id, registration_time, student_language: normalizedLanguage, guardian_ids,barngildi });
 
     // Validate date of birth if provided
     let validatedDob = null;
     if (dob) {
+      // Ensure the date is in ISO format (YYYY-MM-DD)
       const birthDate = new Date(dob);
+      
+      // Check if the date is valid
+      if (isNaN(birthDate.getTime())) {
+        return NextResponse.json({ 
+          error: 'Invalid date format for date of birth' 
+        }, { status: 400 })
+      }
+      
       const today = new Date();
       const age = today.getFullYear() - birthDate.getFullYear();
       const monthDiff = today.getMonth() - birthDate.getMonth();
@@ -294,26 +383,85 @@ export async function PUT(request: Request) {
         }, { status: 400 })
       }
       
-      validatedDob = dob;
+      // Convert to ISO format for database storage
+      validatedDob = birthDate.toISOString().split('T')[0];
     }
 
-    // Update student record
+    // Validate start_date if provided
+    let validatedStartDate = null;
+    if (start_date) {
+      const startDate = new Date(start_date);
+      
+      // Check if the date is valid
+      if (isNaN(startDate.getTime())) {
+        return NextResponse.json({ 
+          error: 'Invalid date format for start date' 
+        }, { status: 400 })
+      }
+      
+      // Convert to ISO format for database storage
+      validatedStartDate = startDate.toISOString().split('T')[0];
+    }
+
+    // Fetch student to get user_id for user updates
+    const { data: existingStudent, error: fetchStudentErr } = await supabaseAdmin
+      .from('students')
+      .select('user_id')
+      .eq('id', id)
+      .single()
+
+    if (fetchStudentErr) {
+      console.error('❌ Failed to fetch student for update:', fetchStudentErr)
+      return NextResponse.json({ error: 'Failed to load student for update' }, { status: 500 })
+    }
+
+    const userIdForUpdate = existingStudent?.user_id
+
+    // Normalize gender and barngildi
+    const normalizedGender = (gender || 'unknown').toString().toLowerCase();
+    const normalizedBarngildi = (() => {
+      const n = Number(barngildi);
+      if (isNaN(n)) return 0;
+      return Math.min(1.9, Math.max(0.5, Number(n.toFixed(1))));
+    })();
+
+    // Update user record if available
+    if (userIdForUpdate) {
+      const { error: userUpdErr } = await supabaseAdmin
+        .from('users')
+        .update({
+          first_name,
+          last_name: last_name || null,
+          dob: validatedDob,
+          gender: normalizedGender,
+          phone: phone || null,
+          address: address || null,
+          ssn: social_security_number || null,
+        })
+        .eq('id', userIdForUpdate)
+
+      if (userUpdErr) {
+        console.error('❌ Failed to update student user:', userUpdErr)
+      }
+    }
+
+    // Update student record (non-user fields)
     const { data: student, error: studentError } = await supabaseAdmin
       .from('students')
       .update({
-        first_name,
-        last_name,
-        dob: validatedDob,
-        gender: gender || 'unknown',
         class_id: class_id || null,
         org_id: org_id || null,
+        registration_time: registration_time || null,
+        start_date: validatedStartDate,
+        barngildi: normalizedBarngildi,
+        student_language: normalizedLanguage,
         medical_notes_encrypted: medical_notes || null,
         allergies_encrypted: allergies || null,
         emergency_contact_encrypted: emergency_contact || null,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
-      .select('id,first_name,last_name,dob,gender,class_id,updated_at')
+      .select('id,user_id,class_id,registration_time,start_date,barngildi,student_language,updated_at')
       .single()
 
     if (studentError) {
@@ -321,57 +469,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: `Failed to update student: ${studentError.message}` }, { status: 500 })
     }
 
-    // Update guardian-student relationships if provided
-    let linkedGuardians = [];
-    if (guardian_ids.length >= 0) {
-      // First, remove existing relationships
-      const { error: deleteError } = await supabaseAdmin
-        .from('guardian_students')
-        .delete()
-        .eq('student_id', id)
-
-      if (deleteError) {
-        console.error('❌ Failed to remove existing guardian relationships:', deleteError)
-      }
-
-      // Then, add new relationships if any
-      if (guardian_ids.length > 0) {
-        const guardianStudentLinks = guardian_ids.map((guardian_id: string) => ({
-          guardian_id,
-          student_id: id,
-          relation: 'parent'
-        }))
-
-        const { error: linkError } = await supabaseAdmin
-          .from('guardian_students')
-          .insert(guardianStudentLinks)
-
-        if (linkError) {
-          console.error('❌ Failed to link guardians to student:', linkError)
-        } else {
-          console.log('✅ Updated guardian relationships for student:', guardian_ids)
-          linkedGuardians = guardian_ids;
-        }
-      }
-
-      // Update student metadata with guardian information
-      const { error: metadataError } = await supabaseAdmin
-        .from('students')
-        .update({
-          metadata: {
-            guardian_ids: linkedGuardians,
-            guardian_count: linkedGuardians.length,
-            last_guardian_update: new Date().toISOString()
-          }
-        })
-        .eq('id', id)
-
-      if (metadataError) {
-        console.error('❌ Failed to update student metadata:', metadataError)
-      } else {
-        console.log('✅ Updated student metadata with guardian info')
-      }
-    }
+    // Guardian-student relationship updates are handled via /api/guardian-students; skipping here
 
     console.log('✅ Student updated successfully:', student.id)
 

@@ -173,6 +173,68 @@ export async function updateUserRole(userId: string, newRoles: SamveraRole[], ac
   return { success: true };
 }
 
+export async function updateAnnouncement(announcementId: string, data: {
+  title: string;
+  body: string;
+  classId?: string;
+}) {
+  // Only admins and the author can update announcements
+  const { user } = await requireServerAuth();
+  
+  const supabase = supabaseAdmin ?? createSupabaseServer();
+  
+  // First check if user is admin or the author
+  const { data: announcement } = await supabase
+    .from('announcements')
+    .select('author_id, org_id')
+    .eq('id', announcementId)
+    .single();
+    
+  if (!announcement) {
+    throw new Error('Announcement not found');
+  }
+  
+  const userRoles = user.user_metadata?.roles || [];
+  const isAdmin = userRoles.includes('admin');
+  const isAuthor = announcement.author_id === user.id;
+  
+  if (!isAdmin && !isAuthor) {
+    throw new Error('Insufficient permissions to update this announcement');
+  }
+  
+  // Validate org_id matches user's org
+  const userOrgId = (user.user_metadata?.org_id as string | undefined) || (user.user_metadata?.organization_id as string | undefined);
+  if (!isAdmin && announcement.org_id && userOrgId && announcement.org_id !== userOrgId) {
+    throw new Error('Cannot update announcement from different organization');
+  }
+  
+  const updatePayload: Record<string, any> = {
+    title: data.title.trim(),
+    body: data.body.trim(),
+    updated_at: new Date().toISOString(),
+  };
+  
+  // Update class_id if provided
+  if (data.classId !== undefined) {
+    updatePayload.class_id = data.classId || null;
+  }
+  
+  const { data: updated, error } = await supabase
+    .from('announcements')
+    .update(updatePayload)
+    .eq('id', announcementId)
+    .select()
+    .single();
+    
+  if (error) {
+    throw new Error(`Failed to update announcement: ${error.message}`);
+  }
+  
+  revalidatePath('/dashboard');
+  revalidatePath('/dashboard/announcements');
+  return updated;
+}
+
 export async function deleteAnnouncement(announcementId: string) {
   // Only admins and the author can delete announcements
   const { user } = await requireServerAuth();
@@ -208,6 +270,7 @@ export async function deleteAnnouncement(announcementId: string) {
   }
   
   revalidatePath('/dashboard');
+  revalidatePath('/dashboard/announcements');
   return { success: true };
 }
 
