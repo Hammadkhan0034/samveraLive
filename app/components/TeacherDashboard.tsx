@@ -68,7 +68,8 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
   // ---- Attendance state ----
   // Track attendance by student ID (string) - true = present, false = absent
   const [attendance, setAttendance] = useState<Record<string, boolean>>({});
-  const [savingAttendance, setSavingAttendance] = useState<Record<string, boolean>>({});
+  const [savedAttendance, setSavedAttendance] = useState<Record<string, boolean>>({}); // Original saved state
+  const [isSavingAttendance, setIsSavingAttendance] = useState(false);
 
   const [threads] = useState([
     { id: uid(), name: 'Guðrún (Parent)', preview: t.sample_msg, unread: true },
@@ -186,19 +187,18 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
       }
       
       setAttendance(allAttendance);
+      setSavedAttendance(allAttendance); // Store original state
       console.log('✅ Attendance loaded for today:', allAttendance);
     } catch (error) {
       console.error('❌ Error loading attendance:', error);
     }
   }
 
-  // Save attendance to database
-  async function saveAttendance(studentId: string, isPresent: boolean, classId?: string | null) {
-    if (!finalOrgId || !session?.user?.id) return;
+  // Save single attendance record to database
+  async function saveAttendanceRecord(studentId: string, isPresent: boolean, classId?: string | null) {
+    if (!finalOrgId || !session?.user?.id) return false;
 
     try {
-      setSavingAttendance(prev => ({ ...prev, [studentId]: true }));
-      
       const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
       const status = isPresent ? 'present' : 'absent';
       
@@ -219,33 +219,73 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
 
       if (response.ok) {
         console.log('✅ Attendance saved:', { studentId, status });
+        return true;
       } else {
         console.error('❌ Failed to save attendance:', data.error);
-        // Revert the change on error
-        setAttendance(prev => ({ ...prev, [studentId]: !isPresent }));
+        return false;
       }
     } catch (error: any) {
       console.error('❌ Error saving attendance:', error);
-      // Revert the change on error
-      setAttendance(prev => ({ ...prev, [studentId]: !isPresent }));
+      return false;
+    }
+  }
+
+  // Submit all attendance changes
+  async function submitAttendance() {
+    if (!finalOrgId || !session?.user?.id || isSavingAttendance) return;
+
+    try {
+      setIsSavingAttendance(true);
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Get all students that have attendance changes
+      const studentsToSave = students.filter(student => {
+        const currentStatus = attendance[student.id] || false;
+        const savedStatus = savedAttendance[student.id] || false;
+        return currentStatus !== savedStatus;
+      });
+
+      if (studentsToSave.length === 0) {
+        console.log('No attendance changes to save');
+        setIsSavingAttendance(false);
+        return;
+      }
+
+      console.log(`📋 Saving attendance for ${studentsToSave.length} student(s)...`);
+
+      // Save all changed attendance records
+      const savePromises = studentsToSave.map(async (student) => {
+        const isPresent = attendance[student.id] || false;
+        const classId = student.class_id || (student as any)?.classes?.id || null;
+        return saveAttendanceRecord(student.id, isPresent, classId);
+      });
+
+      const results = await Promise.allSettled(savePromises);
+      const successCount = results.filter(r => r.status === 'fulfilled' && r.value === true).length;
+      const failureCount = results.length - successCount;
+
+      if (failureCount === 0) {
+        // All saved successfully - update saved state
+        setSavedAttendance({ ...attendance });
+        console.log(`✅ Successfully saved attendance for ${successCount} student(s)`);
+      } else {
+        console.error(`❌ Failed to save attendance for ${failureCount} student(s)`);
+        alert(`Failed to save attendance for ${failureCount} student(s). Please try again.`);
+      }
+    } catch (error: any) {
+      console.error('❌ Error submitting attendance:', error);
+      alert('Error saving attendance. Please try again.');
     } finally {
-      setSavingAttendance(prev => ({ ...prev, [studentId]: false }));
+      setIsSavingAttendance(false);
     }
   }
 
   function togglePresent(studentId: string, checked: boolean) {
-    // Optimistically update UI
+    // Only update UI, don't save yet
     setAttendance((prev) => ({ ...prev, [studentId]: checked }));
-    
-    // Find student to get class_id
-    const student = students.find(s => s.id === studentId);
-    const classId = student?.class_id || (student as any)?.classes?.id || null;
-    
-    // Save to database
-    saveAttendance(studentId, checked, classId);
   }
 
-  async function markAllPresent(classId?: string) {
+  function markAllPresent(classId?: string) {
     const studentsToMark = classId 
       ? students.filter(s => {
           const sClassId = s.class_id || (s as any).classes?.id;
@@ -253,23 +293,22 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
         })
       : students;
     
-    // Optimistically update UI
+    // Only update UI, don't save yet
     const newAttendance = { ...attendance };
     studentsToMark.forEach(s => {
       newAttendance[s.id] = true;
     });
     setAttendance(newAttendance);
-    
-    // Save all to database
-    const today = new Date().toISOString().split('T')[0];
-    const savePromises = studentsToMark.map(async (student) => {
-      const sClassId = student.class_id || (student as any).classes?.id || null;
-      return saveAttendance(student.id, true, sClassId);
-    });
-    
-    await Promise.allSettled(savePromises);
-    console.log('✅ All students marked as present');
   }
+
+  // Check if there are unsaved changes
+  const hasUnsavedChanges = React.useMemo(() => {
+    return students.some(student => {
+      const currentStatus = attendance[student.id] || false;
+      const savedStatus = savedAttendance[student.id] || false;
+      return currentStatus !== savedStatus;
+    });
+  }, [attendance, savedAttendance, students]);
 
   // ---- Media actions (mock) ----
   function handleFiles(files: FileList | null) {
@@ -980,9 +1019,11 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
             students={students}
             teacherClasses={teacherClasses}
             attendance={attendance}
-            savingAttendance={savingAttendance}
+            hasUnsavedChanges={hasUnsavedChanges}
+            isSaving={isSavingAttendance}
             onMarkAll={markAllPresent} 
             onToggle={togglePresent}
+            onSubmit={submitAttendance}
             loadingStudents={loadingStudents}
           />
         )}
@@ -1494,18 +1535,22 @@ function AttendancePanel({
   students,
   teacherClasses,
   attendance,
-  savingAttendance,
+  hasUnsavedChanges,
+  isSaving,
   onMarkAll,
   onToggle,
+  onSubmit,
   loadingStudents,
 }: {
   t: typeof enText;
   students: Array<{ id: string; first_name: string; last_name: string | null; dob: string | null; gender: string; class_id: string | null; created_at: string; classes?: any; guardians?: Array<{ id: string; relation: string; users?: { id: string; full_name: string; email: string } }> }>;
   teacherClasses: any[];
   attendance: Record<string, boolean>;
-  savingAttendance?: Record<string, boolean>;
+  hasUnsavedChanges: boolean;
+  isSaving: boolean;
   onMarkAll: (classId?: string) => void;
   onToggle: (studentId: string, checked: boolean) => void;
+  onSubmit: () => void;
   loadingStudents: boolean;
 }) {
   const [selectedClassId, setSelectedClassId] = useState<string>('all');
@@ -1601,13 +1646,38 @@ function AttendancePanel({
           )}
           <button
             onClick={() => onMarkAll(selectedClassId !== 'all' ? selectedClassId : undefined)}
-            className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
           >
             <Plus className="h-4 w-4" />
             {t.att_mark_all_in}
           </button>
+          <button
+            onClick={onSubmit}
+            disabled={!hasUnsavedChanges || isSaving || loadingStudents}
+            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-emerald-700 dark:hover:bg-emerald-600"
+          >
+            {isSaving ? (
+              <>
+                <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {t.saved || 'Saving...'}
+              </>
+            ) : (
+              <>
+                <CheckSquare className="h-4 w-4" />
+                {t.submit_attendance || 'Submit Attendance'}
+              </>
+            )}
+          </button>
         </div>
       </div>
+      {hasUnsavedChanges && !isSaving && (
+        <div className="mb-4 rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-300">
+          {t.unsaved_changes || 'You have unsaved changes. Click "Submit Attendance" to save.'}
+        </div>
+      )}
       
       {loadingStudents ? (
         <div className="text-center py-8 text-slate-600 dark:text-slate-400">{t.loading}</div>
@@ -1618,20 +1688,20 @@ function AttendancePanel({
             : t.no_students_in_class || 'No students in this class'}
         </div>
       ) : (
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {filteredStudents.map((student) => {
             const isPresent = attendance[student.id] || false;
             const studentName = getStudentName(student);
             return (
-              <label
+          <label
                 key={student.id}
-                className={clsx(
-                  'flex cursor-pointer items-center justify-between rounded-xl border p-3 transition',
+            className={clsx(
+              'flex cursor-pointer items-center justify-between rounded-xl border p-3 transition',
                   isPresent
-                    ? 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300'
-                    : 'border-slate-200 bg-white text-slate-700 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300'
-                )}
-              >
+                ? 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300'
+                : 'border-slate-200 bg-white text-slate-700 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300'
+            )}
+          >
                 <div className="flex flex-col">
                   <span className="font-medium">{studentName}</span>
                   {(student.class_id || (student as any).classes?.id) && (
@@ -1640,17 +1710,17 @@ function AttendancePanel({
                     </span>
                   )}
                 </div>
-                <input
-                  type="checkbox"
+            <input
+              type="checkbox"
                   checked={isPresent}
                   onChange={(e) => onToggle(student.id, e.target.checked)}
-                  disabled={savingAttendance?.[student.id]}
+                  disabled={isSaving || loadingStudents}
                   className="h-4 w-4 disabled:opacity-50 disabled:cursor-not-allowed"
-                />
-              </label>
+            />
+          </label>
             );
           })}
-        </div>
+      </div>
       )}
     </div>
   );
@@ -2819,6 +2889,8 @@ const enText = {
   magic_link_sent_to_guardians: 'Magic link sent to {count} guardian(s)',
   magic_link_send_failed: 'Failed to send magic links',
   no_guardians_linked: 'No guardians linked to this student',
+  submit_attendance: 'Submit Attendance',
+  unsaved_changes: 'You have unsaved changes. Click "Submit Attendance" to save.',
 };
 
 const isText = {
@@ -2969,6 +3041,8 @@ const isText = {
   magic_link_sent_to_guardians: 'Töfraslóð send til {count} forráðamanns',
   magic_link_send_failed: 'Tókst ekki að senda töfraslóð',
   no_guardians_linked: 'Engir forráðamenn tengdir við þennan nemanda',
+  submit_attendance: 'Vista mætingu',
+  unsaved_changes: 'Þú hefur óvistaðar breytingar. Smelltu á "Vista mætingu" til að vista.',
 };
 
 // Announcements Panel Component
