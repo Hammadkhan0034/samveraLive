@@ -516,13 +516,13 @@ export default function ClassDetailsPage() {
           {classData ? (
             <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
               <table className="min-w-full text-sm">
-                <thead className="bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                <thead className="bg-black text-white">
                   <tr>
-                    <th className="px-4 py-2 text-left">{t.col_name || 'Name'}</th>
-                    <th className="px-4 py-2 text-left">{t.col_students || 'Students'}</th>
-                    <th className="px-4 py-2 text-left">{t.col_staff || 'Staff'}</th>
-                    <th className="px-4 py-2 text-left">{t.class_description || 'Description'}</th>
-                    <th className="px-4 py-2 text-left">{t.visible_yes || 'Visible'}</th>
+                    <th className="px-4 py-2 text-left text-white">{t.col_name || 'Name'}</th>
+                    <th className="px-4 py-2 text-left text-white">{t.col_students || 'Students'}</th>
+                    <th className="px-4 py-2 text-left text-white">{t.col_staff || 'Staff'}</th>
+                    <th className="px-4 py-2 text-left text-white">{t.class_description || 'Description'}</th>
+                    <th className="px-4 py-2 text-left text-white">{t.visible_yes || 'Visible'}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -553,12 +553,12 @@ export default function ClassDetailsPage() {
           {assignedTeachers.length > 0 || classData ? (
             <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
               <table className="min-w-full text-sm">
-                <thead className="bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                <thead className="bg-black text-white">
                   <tr>
-                    <th className="px-4 py-2 text-left">{t.first_name || 'First Name'}</th>
-                    <th className="px-4 py-2 text-left">{t.last_name || 'Last Name'}</th>
-                    <th className="px-4 py-2 text-left">{t.email || 'Email'}</th>
-                    <th className="px-4 py-2 text-left">{t.col_actions || 'Actions'}</th>
+                    <th className="px-4 py-2 text-left text-white">{t.first_name || 'First Name'}</th>
+                    <th className="px-4 py-2 text-left text-white">{t.last_name || 'Last Name'}</th>
+                    <th className="px-4 py-2 text-left text-white">{t.email || 'Email'}</th>
+                    <th className="px-4 py-2 text-left text-white">{t.col_actions || 'Actions'}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -609,13 +609,13 @@ export default function ClassDetailsPage() {
             <div className="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
               <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
                 <table className="min-w-full text-sm">
-                  <thead className="bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-slate-300 sticky top-0">
+                  <thead className="bg-black text-white sticky top-0">
                     <tr>
-                      <th className="px-4 py-2 text-left">{t.first_name || 'First Name'}</th>
-                      <th className="px-4 py-2 text-left">{t.last_name || 'Last Name'}</th>
-                      <th className="px-4 py-2 text-left">{t.dob || 'Date of Birth'}</th>
-                      <th className="px-4 py-2 text-left">{t.gender || 'Gender'}</th>
-                      <th className="px-4 py-2 text-left">{t.col_actions || 'Actions'}</th>
+                      <th className="px-4 py-2 text-left text-white">{t.first_name || 'First Name'}</th>
+                      <th className="px-4 py-2 text-left text-white">{t.last_name || 'Last Name'}</th>
+                      <th className="px-4 py-2 text-left text-white">{t.dob || 'Date of Birth'}</th>
+                      <th className="px-4 py-2 text-left text-white">{t.gender || 'Gender'}</th>
+                      <th className="px-4 py-2 text-left text-white">{t.col_actions || 'Actions'}</th>
                     </tr>
                   </thead>
                   <tbody>

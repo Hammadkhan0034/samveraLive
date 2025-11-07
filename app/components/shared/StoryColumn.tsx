@@ -130,7 +130,15 @@ export default function StoryColumn({
             params.set('teacherAuthorId', effectiveUserId);
           }
           if (teacherClassIds.length > 0) {
-            params.set('teacherClassIds', teacherClassIds.join(','));
+            const classIdsString = teacherClassIds.join(',');
+            params.set('teacherClassIds', classIdsString);
+            console.log('📤 StoryColumn: Sending teacherClassIds to API:', {
+              teacherClassIds,
+              classIdsString,
+              userId: effectiveUserId
+            });
+          } else {
+            console.log('⚠️ StoryColumn: No teacherClassIds provided');
           }
         } else if (effectiveUserRole === 'parent') {
           params.set('audience', 'parent');
@@ -142,6 +150,9 @@ export default function StoryColumn({
           }
         } else if (effectiveUserRole === 'principal') {
           params.set('audience', 'principal');
+          if (effectiveUserId) {
+            params.set('principalAuthorId', effectiveUserId);
+          }
         }
 
         const res = await fetch(`/api/stories?${params.toString()}`, { cache: 'no-store' });

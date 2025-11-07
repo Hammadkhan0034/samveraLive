@@ -135,12 +135,14 @@ export default function AddMenuPage() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
 
-      // Set flag to trigger refresh on menus-list page
+      // Set flag to trigger refresh on menus-list and menus-view pages
       if (typeof window !== 'undefined') {
         localStorage.setItem('menu_data_updated', 'true');
+        // Dispatch custom event for instant update
+        window.dispatchEvent(new Event('menu-updated'));
       }
 
-      // Redirect to menus list page - it will auto-refresh on focus
+      // Redirect to menus list page - it will auto-refresh instantly
       router.push('/dashboard/menus-list');
     } catch (e: any) {
       console.error('❌ Error submitting menu:', e.message);

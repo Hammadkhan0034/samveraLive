@@ -14,6 +14,12 @@ export default function ParentDashboard({ lang = 'en' }: { lang?: Lang }) {
   const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
   const { session } = useAuth();
   const router = useRouter();
+  
+  // Prefetch menu routes for instant navigation
+  useEffect(() => {
+    router.prefetch('/dashboard/menus-view');
+    router.prefetch('/dashboard/stories');
+  }, [router]);
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
 
@@ -275,7 +281,16 @@ export default function ParentDashboard({ lang = 'en' }: { lang?: Lang }) {
               return (
                 <button
                   key={idx}
-                  onClick={() => router.push(item.title === t.menu ? '/dashboard/menus-view' : '/dashboard/stories')}
+                  onClick={() => {
+                    // Instant navigation - prefetch if not already done
+                    if (item.title === t.menu) {
+                      router.prefetch('/dashboard/menus-view');
+                      router.push('/dashboard/menus-view');
+                    } else {
+                      router.prefetch('/dashboard/stories');
+                      router.push('/dashboard/stories');
+                    }
+                  }}
                   className="block rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow dark:border-slate-700 dark:bg-slate-800 text-left w-full"
                 >
                   <div className="mb-4 flex items-center gap-3">

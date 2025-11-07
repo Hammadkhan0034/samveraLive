@@ -240,15 +240,15 @@ export default function StaffManagement({ lang = 'en' }: StaffManagementProps) {
         <h4 className="text-md font-medium mb-3 text-slate-900 dark:text-slate-100">{t.active_staff_members}</h4>
         <div className="overflow-y-auto max-h-64 rounded-md border border-slate-200 dark:border-slate-700">
           <table className="w-full text-sm">
-            <thead className="sticky top-0 bg-white dark:bg-slate-700 z-10">
-              <tr className="text-left text-slate-600 dark:text-slate-300">
-                <th className="py-2 pr-3 pl-3">{t.first_name || 'First Name'}</th>
-                <th className="py-2 pr-3">{t.last_name || 'Last Name'}</th>
-                <th className="py-2 pr-3">{t.email}</th>
-                <th className="py-2 pr-3">{t.staff_role || 'Role'}</th>
-                <th className="py-2 pr-3">{t.status}</th>
-                <th className="py-2 pr-3">{t.joined}</th>
-                <th className="py-2 pr-3">{t.actions}</th>
+            <thead className="sticky top-0 bg-black text-white z-10">
+              <tr className="text-left">
+                <th className="py-2 pr-3 pl-3 text-white">{t.first_name || 'First Name'}</th>
+                <th className="py-2 pr-3 text-white">{t.last_name || 'Last Name'}</th>
+                <th className="py-2 pr-3 text-white">{t.email}</th>
+                <th className="py-2 pr-3 text-white">{t.staff_role || 'Role'}</th>
+                <th className="py-2 pr-3 text-white">{t.status}</th>
+                <th className="py-2 pr-3 text-white">{t.joined}</th>
+                <th className="py-2 pr-3 text-white">{t.actions}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-600">

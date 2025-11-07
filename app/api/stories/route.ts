@@ -44,25 +44,30 @@ export async function GET(request: Request) {
     // Audience-specific filters
     if (audience === 'teacher') {
       // Teachers should see:
-      // 1. Org-wide stories (class_id is null)
-      // 2. Their own class-specific stories (for classes they teach)
+      // 1. ALL org-wide stories (principal's stories) - class_id is null
+      // 2. Class-specific stories ONLY for their assigned classes (strict filtering)
       const teacherClassIds = (teacherClassIdsCsv || '')
         .split(',')
         .map(s => s.trim())
         .filter(Boolean)
       
+      console.log('🔍 Teacher story filtering:', {
+        teacherClassIdsCsv,
+        teacherClassIds,
+        teacherAuthorId
+      })
+      
       if (teacherClassIds.length > 0) {
-        // Show org-wide stories OR stories for teacher's classes
-        query = query.or(`class_id.is.null,class_id.in.(${teacherClassIds.join(',')})`)
-        
-        // Also include stories created by this teacher (if author_id provided)
-        // This ensures teacher sees their own stories even if class filtering fails
-        if (teacherAuthorId) {
-          // We'll post-process to include teacher's own stories
-          // For now, the class_id filter should cover it
-        }
+        // Show org-wide stories (class_id is null) OR stories for teacher's assigned classes only
+        // Strict filtering: only show class-specific stories if teacher is assigned to that class
+        // Using Supabase PostgREST filter syntax: class_id.is.null,class_id.in.(id1,id2,...)
+        const filterString = `class_id.is.null,class_id.in.(${teacherClassIds.join(',')})`
+        console.log('📝 Applying teacher filter:', filterString)
+        query = query.or(filterString)
       } else {
-        // Fallback: if no class IDs provided, show org-wide only
+        // Fallback: if no class IDs provided, show org-wide only (principal's stories)
+        // This ensures teachers without assigned classes only see org-wide stories
+        console.log('⚠️ No teacher class IDs provided, showing org-wide stories only')
         query = query.is('class_id', null)
       }
     } else if (audience === 'parent') {
@@ -121,19 +126,125 @@ export async function GET(request: Request) {
         query = query.is('class_id', null)
       }
     } else if (audience === 'principal') {
-      // Show only org-wide stories to principals to avoid teacher class stories
-      query = query.is('class_id', null)
+      // Principals should see:
+      // 1. All org-wide stories they created (class_id is null)
+      // 2. All class-specific stories they created (for any class)
+      // Get principal's user ID from request if available
+      const principalAuthorId = searchParams.get('principalAuthorId')
+      if (principalAuthorId) {
+        // Show all stories created by this principal (both org-wide and class-specific)
+        query = query.eq('author_id', principalAuthorId)
+      } else {
+        // If no author ID, show all org-wide stories (fallback)
+        query = query.is('class_id', null)
+      }
     }
+    
+    // Note: Organization-wide stories (class_id is null) are visible to:
+    // - Principal (who created them)
+    // - All Teachers (via audience=teacher filter)
+    // - All Parents (via audience=parent filter)
+    
+    // Class-specific stories are visible to:
+    // - Principal (who created them, via principalAuthorId filter)
+    // - Teachers of that class (via teacherClassIds filter)
+    // - Guardians of students in that class (via parentClassIds filter)
 
     let { data, error } = await query
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+    if (error) {
+      console.error('❌ Error fetching stories:', error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
 
-    // Post-process for teachers: ensure they see their own stories even if class filtering missed some
-    if (audience === 'teacher' && teacherAuthorId && data) {
-      // Add any stories created by this teacher that might have been missed
-      const teacherStories = data.filter((s: any) => s.author_id === teacherAuthorId)
-      // If we already have them, no need to add duplicates
-      // The class_id filter should have covered it, but this is a safety net
+    // Post-process for teachers: STRICT filtering to ensure only assigned class stories are shown
+    if (audience === 'teacher' && data) {
+      const teacherClassIds = (teacherClassIdsCsv || '')
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean)
+      
+      console.log('🔍 Post-processing teacher stories:', {
+        teacherClassIdsCsv,
+        teacherClassIds,
+        totalStoriesBeforeFilter: data.length,
+        storiesBeforeFilter: data.map((s: any) => ({
+          id: s.id,
+          class_id: s.class_id,
+          title: s.title
+        }))
+      })
+      
+      if (teacherClassIds.length > 0) {
+        // STRICTLY filter: only show org-wide stories OR stories from teacher's assigned classes
+        // This is a double-check to ensure no stories from unassigned classes slip through
+        const filteredStories = data.filter((story: any) => {
+          // Show org-wide stories (class_id is null or empty)
+          if (!story.class_id || story.class_id === null || story.class_id === '') {
+            return true
+          }
+          // STRICT: Only show class-specific stories if teacher is EXACTLY assigned to that class
+          // Use strict equality check to ensure exact match
+          const isAssigned = teacherClassIds.some(classId => classId === story.class_id)
+          
+          if (!isAssigned) {
+            console.log('❌ Filtering out story - teacher not assigned to class:', {
+              storyId: story.id,
+              storyClassId: story.class_id,
+              teacherClassIds,
+              title: story.title
+            })
+          }
+          
+          return isAssigned
+        })
+        
+        console.log('✅ Teacher story filtering result:', {
+          totalStoriesBefore: data.length,
+          filteredStories: filteredStories.length,
+          teacherClassIds,
+          storiesAfterFilter: filteredStories.map((s: any) => ({
+            id: s.id,
+            class_id: s.class_id,
+            title: s.title
+          }))
+        })
+        
+        // Final validation: Double-check that no stories from unassigned classes are included
+        const validatedStories = filteredStories.filter((story: any) => {
+          // Org-wide stories are always valid
+          if (!story.class_id || story.class_id === null || story.class_id === '') {
+            return true
+          }
+          // Verify class_id is in teacher's assigned classes
+          const isValid = teacherClassIds.includes(story.class_id)
+          if (!isValid) {
+            console.error('❌ VALIDATION FAILED: Story from unassigned class found:', {
+              storyId: story.id,
+              storyClassId: story.class_id,
+              teacherClassIds,
+              title: story.title
+            })
+          }
+          return isValid
+        })
+        
+        if (validatedStories.length !== filteredStories.length) {
+          console.error('⚠️ Validation removed stories:', {
+            before: filteredStories.length,
+            after: validatedStories.length
+          })
+        }
+        
+        data = validatedStories
+      } else {
+        // If no class IDs, only show org-wide stories (strictly filter out all class-specific stories)
+        const orgWideStories = data.filter((story: any) => !story.class_id || story.class_id === null || story.class_id === '')
+        console.log('✅ Teacher with no classes - showing org-wide stories only:', {
+          totalStories: data.length,
+          orgWideStories: orgWideStories.length
+        })
+        data = orgWideStories
+      }
     }
 
     return NextResponse.json({ stories: data || [] })

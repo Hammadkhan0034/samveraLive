@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useMemo } from 'react';
+import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import LinkStudentGuardian from '../../../components/LinkStudentGuardian';
 import { useRequireAuth, useAuth } from '../../../../lib/hooks/useAuth';
@@ -8,7 +9,7 @@ import { useLanguage } from '@/lib/contexts/LanguageContext';
 
 export default function LinkStudentPage() {
   const router = useRouter();
-  const { user, loading, isSigningIn } = useRequireAuth('teacher');
+  const { user, loading, isSigningIn } = useRequireAuth(['teacher', 'principal']);
   const { lang } = useLanguage();
 
 
@@ -28,9 +29,17 @@ export default function LinkStudentPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
         <main className="mx-auto max-w-6xl px-4 py-8 md:px-6 mt-10">
-          <h1 className="mb-4 text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-            {lang === 'is' ? 'Tengja nemanda' : 'Link Student'}
-          </h1>
+          <div className="mb-6 flex items-center gap-3">
+            <button
+              onClick={() => router.back()}
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            >
+              <ArrowLeft className="h-4 w-4" /> {lang === 'is' ? 'Til baka' : 'Back'}
+            </button>
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+              {lang === 'is' ? 'Tengja nemanda' : 'Link Student'}
+            </h1>
+          </div>
           <LinkStudentGuardian lang={lang} />
       </main>
     </div>

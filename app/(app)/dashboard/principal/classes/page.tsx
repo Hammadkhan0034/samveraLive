@@ -766,13 +766,13 @@ export default function ClassesPage() {
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="bg-slate-50 text-slate-600 dark:bg-slate-700 dark:text-slate-300">
+              <thead className="bg-black text-white">
                 <tr>
-                  <th className="px-4 py-3">{t.col_name}</th>
-                  <th className="px-4 py-3">{t.col_students}</th>
-                  <th className="px-4 py-3">{t.col_staff}</th>
-                  <th className="px-4 py-3">{t.col_visible}</th>
-                  <th className="px-4 py-3">{t.col_actions}</th>
+                  <th className="px-4 py-2 text-white">{t.col_name}</th>
+                  <th className="px-4 py-2 text-white">{t.col_students}</th>
+                  <th className="px-4 py-2 text-white">{t.col_staff}</th>
+                  <th className="px-4 py-2 text-white">{t.col_visible}</th>
+                  <th className="px-4 py-2 text-white">{t.col_actions}</th>
                 </tr>
               </thead>
               <tbody className="[&_tr:not(:last-child)]:border-b [&_tr:not(:last-child)]:border-slate-200 dark:[&_tr:not(:last-child)]:border-slate-600">

@@ -195,13 +195,10 @@ export default function StoriesPage() {
         if (cached) {
           const parsed = JSON.parse(cached) as Story[];
           if (Array.isArray(parsed) && parsed.length > 0) {
-            // Filter to only show stories created by the current user
-            const userStories = parsed.filter((s: Story) => s.author_id === user?.id);
-            if (userStories.length > 0) {
-              setStories(userStories);
-              setHydratedFromCache(true);
-              setLoading(false); // Don't show loading if we have cache
-            }
+            // Show all cached stories (no filtering)
+            setStories(parsed);
+            setHydratedFromCache(true);
+            setLoading(false); // Don't show loading if we have cache
           }
         }
       } catch (e) {
@@ -358,20 +355,22 @@ export default function StoriesPage() {
         if (parentClassIds.length > 0) params.set('parentClassIds', parentClassIds.join(','));
       } else if (isPrincipal) {
         params.set('audience', 'principal');
+        if (user?.id) {
+          params.set('principalAuthorId', user.id);
+        }
       }
       const res = await fetch(`/api/stories?${params.toString()}`, { cache: 'no-store' });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
       const storiesList = Array.isArray(json.stories) ? json.stories : [];
-      // Filter to only show stories created by the current user
-      const userStories = storiesList.filter((s: Story) => s.author_id === user?.id);
-      setStories(userStories);
+      // Show all stories returned by API (no additional filtering needed)
+      setStories(storiesList);
       
       // Cache stories for instant load next time
       if (user?.id) {
         try {
           const cacheKey = `stories_cache_${orgId}_${user.id}`;
-          localStorage.setItem(cacheKey, JSON.stringify(userStories));
+          localStorage.setItem(cacheKey, JSON.stringify(storiesList));
         } catch (e) {
           // Ignore cache errors
         }
@@ -379,7 +378,7 @@ export default function StoriesPage() {
       
       // Preload images for all stories in background
       // This ensures instant display when user clicks on a story
-      userStories.forEach((story: Story) => {
+      storiesList.forEach((story: Story) => {
         // Fetch story items for preloading in background (no blocking)
         fetch(`/api/story-items?storyId=${story.id}${orgId ? `&orgId=${orgId}` : ''}`, { cache: 'no-store' })
           .then(res => res.json())
@@ -591,17 +590,13 @@ export default function StoriesPage() {
           left: 0, 
           right: 0, 
           bottom: 0,
-          width: '100vw',
-          height: '100vh',
+          width: '100%',
+          height: '100%',
           overflow: 'hidden'
         }}>
           <img 
             src={imageSrc} 
             alt={it.caption || activeStory?.title || ''} 
-            onClick={(e) => {
-              e.stopPropagation();
-              togglePause();
-            }}
             onError={(e) => {
               console.error('❌ Image load error');
               console.error('Full URL:', imageSrc);
@@ -627,8 +622,8 @@ export default function StoriesPage() {
               left: 0,
               right: 0,
               bottom: 0,
-              width: '100vw', 
-              height: '100vh', 
+              width: '100%', 
+              height: '100%', 
               objectFit: 'cover',
               objectPosition: 'center',
               display: 'block',
@@ -817,27 +812,27 @@ export default function StoriesPage() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-slate-200 dark:border-slate-700">
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 dark:text-slate-100">{t.col_title}</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 dark:text-slate-100">{t.col_scope}</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 dark:text-slate-100">{t.col_caption}</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold text-slate-900 dark:text-slate-100">{t.actions}</th>
+                  <thead className="bg-black text-white">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-sm font-semibold text-white">{t.col_title}</th>
+                      <th className="px-4 py-2 text-left text-sm font-semibold text-white">{t.col_scope}</th>
+                      <th className="px-4 py-2 text-left text-sm font-semibold text-white">{t.col_caption}</th>
+                      <th className="px-4 py-2 text-left text-sm font-semibold text-white">{t.actions}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
                     {stories.map((s) => (
                       <tr key={s.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/30">
-                        <td className="px-4 py-3 text-sm text-slate-900 dark:text-slate-100">
+                        <td className="px-4 py-2 text-sm text-slate-900 dark:text-slate-100">
                           {s.title || '—'}
                         </td>
-                        <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
+                        <td className="px-4 py-2 text-sm text-slate-600 dark:text-slate-400">
                           {s.class_id ? t.class_label : t.org_wide}
                         </td>
-                        <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
+                        <td className="px-4 py-2 text-sm text-slate-600 dark:text-slate-400">
                           {s.caption || t.no_caption}
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-2">
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => openStoryViewer(s)}
@@ -875,7 +870,7 @@ export default function StoriesPage() {
 
           {viewerOpen && activeStory && (
             <div 
-              className="fixed inset-0 z-50 bg-black" 
+              className="fixed inset-0 z-50 bg-black flex items-center justify-center" 
               style={{ width: '100vw', height: '100vh', top: 0, left: 0, right: 0, bottom: 0 }}
               onClick={(e) => {
                 // Close on background click (outside story content)
@@ -884,7 +879,7 @@ export default function StoriesPage() {
                 }
               }}
             >
-              <div className="relative w-full h-full bg-black overflow-hidden" style={{ width: '100vw', height: '100vh', position: 'relative' }}>
+              <div className="relative w-full h-full bg-black overflow-hidden max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl mx-auto rounded-lg shadow-lg" style={{ width: '90%', height: '90vh', maxHeight: '800px', position: 'relative' }}>
                 {/* Progress bars at top */}
                 <div className="absolute top-2 left-2 right-2 z-10 flex gap-1">
                   {activeItems.map((_, idx) => {
@@ -909,11 +904,38 @@ export default function StoriesPage() {
                     left: 0, 
                     right: 0, 
                     bottom: 0, 
-                    width: '100vw', 
-                    height: '100vh',
+                    width: '100%', 
+                    height: '100%',
                     overflow: 'hidden'
                   }}
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    // Handle click for pause/play (center zone)
+                    const target = e.currentTarget as HTMLElement;
+                    const containerRect = target.getBoundingClientRect();
+                    const containerWidth = containerRect.width;
+                    const clickX = e.clientX - containerRect.left;
+                    const leftZone = containerWidth / 3;
+                    const rightZone = (containerWidth * 2) / 3;
+                    
+                    if (clickX < leftZone) {
+                      // Left zone - previous
+                      if (activeIndex > 0) {
+                        setActiveIndex(activeIndex - 1);
+                        setProgress(0);
+                        scheduleNext(activeItems, activeIndex - 1);
+                      }
+                    } else if (clickX > rightZone) {
+                      // Right zone - next
+                      if (activeIndex < activeItems.length - 1) {
+                        setActiveIndex(activeIndex + 1);
+                        setProgress(0);
+                        scheduleNext(activeItems, activeIndex + 1);
+                      }
+                    } else {
+                      // Center zone - pause/play
+                      togglePause();
+                    }
+                  }}
                 >
                   {renderActiveItem()}
                 </div>
