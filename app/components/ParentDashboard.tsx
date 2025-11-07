@@ -2,7 +2,7 @@
 import React, { useMemo, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import FeatureGrid, { FeatureItem } from '@/app/components/FeatureGrid';
-import { Bell, CalendarDays, MessageSquare, Camera, Utensils, FileText } from 'lucide-react';
+import { Bell, CalendarDays, MessageSquare, Camera, Utensils, FileText, ClipboardCheck } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/hooks/useAuth';
 import AnnouncementList from './AnnouncementList';
@@ -25,6 +25,8 @@ export default function ParentDashboard({ lang = 'en' }: { lang?: Lang }) {
   const [derivedClassId, setDerivedClassId] = useState<string | null>(null);
   const [displayStudent, setDisplayStudent] = useState<{ name: string; className?: string } | null>(null);
   const [menusForStudents, setMenusForStudents] = useState<Array<{ studentName: string; className?: string; menu: { breakfast?: string | null; lunch?: string | null; snack?: string | null; notes?: string | null } }>>([]);
+  const [attendanceData, setAttendanceData] = useState<Array<{ studentId: string; studentName: string; className?: string; status: string; date: string }>>([]);
+  const [loadingAttendance, setLoadingAttendance] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -236,6 +238,90 @@ export default function ParentDashboard({ lang = 'en' }: { lang?: Lang }) {
     return () => { isMounted = false; };
   }, [session, derivedClassId, linkedStudents]);
 
+  // Load attendance for linked students
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadAttendance() {
+      if (!session?.user?.id || linkedStudents.length === 0) {
+        if (isMounted) {
+          setAttendanceData([]);
+        }
+        return;
+      }
+
+      try {
+        setLoadingAttendance(true);
+        const orgId = (session?.user?.user_metadata as any)?.org_id as string | undefined;
+        if (!orgId) {
+          if (isMounted) {
+            setAttendanceData([]);
+            setLoadingAttendance(false);
+          }
+          return;
+        }
+
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        const todayStr = `${yyyy}-${mm}-${dd}`;
+
+        // Fetch attendance for all linked students
+        const attendancePromises = linkedStudents.map(async (student) => {
+          try {
+            const response = await fetch(
+              `/api/attendance?orgId=${orgId}&studentId=${student.id}&date=${todayStr}&t=${Date.now()}`,
+              { cache: 'no-store' }
+            );
+            if (response.ok) {
+              const data = await response.json();
+              const record = data.attendance?.[0];
+              return {
+                studentId: student.id,
+                studentName: `${student.first_name} ${student.last_name || ''}`.trim(),
+                className: student.classes?.name,
+                status: record?.status || 'not_recorded',
+                date: todayStr,
+              };
+            }
+            return {
+              studentId: student.id,
+              studentName: `${student.first_name} ${student.last_name || ''}`.trim(),
+              className: student.classes?.name,
+              status: 'not_recorded',
+              date: todayStr,
+            };
+          } catch (error) {
+            return {
+              studentId: student.id,
+              studentName: `${student.first_name} ${student.last_name || ''}`.trim(),
+              className: student.classes?.name,
+              status: 'not_recorded',
+              date: todayStr,
+            };
+          }
+        });
+
+        const results = await Promise.all(attendancePromises);
+        if (isMounted) {
+          setAttendanceData(results);
+          setLoadingAttendance(false);
+        }
+      } catch (error: any) {
+        console.error('Error loading attendance:', error);
+        if (isMounted) {
+          setAttendanceData([]);
+          setLoadingAttendance(false);
+        }
+      }
+    }
+
+    loadAttendance();
+
+    return () => { isMounted = false; };
+  }, [session, linkedStudents]);
+
   const items: FeatureItem[] = [
     { href: '/notices', title: t.notices, desc: t.notices_desc, Icon: Bell },
     { href: '/calendar', title: t.calendar, desc: t.calendar_desc, Icon: CalendarDays },
@@ -243,6 +329,7 @@ export default function ParentDashboard({ lang = 'en' }: { lang?: Lang }) {
     { href: '/media', title: t.media, desc: t.media_desc, Icon: Camera },
     { href: '#', title: t.stories, desc: t.stories_desc, Icon: FileText },
     { href: '#', title: t.menu, desc: t.menu_desc, Icon: Utensils },
+    { href: '#', title: t.attendance, desc: t.attendance_desc, Icon: ClipboardCheck },
   ];
 
   return (
@@ -270,12 +357,18 @@ export default function ParentDashboard({ lang = 'en' }: { lang?: Lang }) {
       <div className="mt-6">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {items.map((item, idx) => {
-            if (item.href === '#' && (item.title === t.menu || item.title === t.stories)) {
-              // Custom menu tile with onClick - navigate to menus view page
+            if (item.href === '#' && (item.title === t.menu || item.title === t.stories || item.title === t.attendance)) {
+              // Custom menu/stories/attendance tile with onClick
+              const getRoute = () => {
+                if (item.title === t.menu) return '/dashboard/menus-view';
+                if (item.title === t.stories) return '/dashboard/stories';
+                if (item.title === t.attendance) return '/dashboard/attendance';
+                return '#';
+              };
               return (
                 <button
                   key={idx}
-                  onClick={() => router.push(item.title === t.menu ? '/dashboard/menus-view' : '/dashboard/stories')}
+                  onClick={() => router.push(getRoute())}
                   className="block rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow dark:border-slate-700 dark:bg-slate-800 text-left w-full"
                 >
                   <div className="mb-4 flex items-center gap-3">
@@ -429,6 +522,83 @@ export default function ParentDashboard({ lang = 'en' }: { lang?: Lang }) {
           )}
         </div>
 
+        {/* Attendance Card */}
+        {linkedStudents.length > 0 && (
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                {t.attendance_title || 'Today\'s Attendance'}
+              </h2>
+              <div className="text-sm text-slate-500 dark:text-slate-400" suppressHydrationWarning>
+                {mounted ? new Date().toLocaleDateString(lang === 'is' ? 'is-IS' : 'en-US', { 
+                  month: 'short', 
+                  day: 'numeric' 
+                }) : ''}
+              </div>
+            </div>
+            {loadingAttendance ? (
+              <div className="text-center py-6 text-slate-500 dark:text-slate-400">
+                {t.loading || 'Loading...'}
+              </div>
+            ) : attendanceData.length === 0 ? (
+              <div className="text-center py-6">
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  {t.no_attendance_data || 'No attendance data available'}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {attendanceData.map((att) => {
+                  const getStatusColor = (status: string) => {
+                    switch (status) {
+                      case 'present':
+                        return 'bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-300';
+                      case 'absent':
+                        return 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300';
+                      case 'late':
+                        return 'bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-300';
+                      case 'excused':
+                        return 'bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300';
+                      default:
+                        return 'bg-slate-50 border-slate-200 text-slate-800 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300';
+                    }
+                  };
+                  const getStatusText = (status: string) => {
+                    switch (status) {
+                      case 'present':
+                        return t.attendance_present || 'Present';
+                      case 'absent':
+                        return t.attendance_absent || 'Absent';
+                      case 'late':
+                        return t.attendance_late || 'Late';
+                      case 'excused':
+                        return t.attendance_excused || 'Excused';
+                      default:
+                        return t.attendance_not_recorded || 'Not Recorded';
+                    }
+                  };
+                  return (
+                    <div
+                      key={att.studentId}
+                      className={`flex items-center justify-between p-3 rounded-lg border ${getStatusColor(att.status)}`}
+                    >
+                      <div className="flex-1">
+                        <div className="font-medium">{att.studentName}</div>
+                        {att.className && (
+                          <div className="text-xs opacity-75 mt-0.5">{att.className}</div>
+                        )}
+                      </div>
+                      <div className="text-sm font-semibold">
+                        {getStatusText(att.status)}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Linked Students Table */}
         {linkedStudents.length > 0 && (
           <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
@@ -575,6 +745,16 @@ const enText = {
   my_students: 'My Students',
   student_name: 'Name',
   student_class: 'Class',
+  attendance: 'Attendance',
+  attendance_desc: 'View your child\'s attendance records.',
+  attendance_title: 'Today\'s Attendance',
+  attendance_present: 'Present',
+  attendance_absent: 'Absent',
+  attendance_late: 'Late',
+  attendance_excused: 'Excused',
+  attendance_not_recorded: 'Not Recorded',
+  no_attendance_data: 'No attendance data available',
+  loading: 'Loading...',
 };
 
 const isText = {
@@ -617,4 +797,14 @@ const isText = {
   my_students: 'Nemendur mínir',
   student_name: 'Nafn',
   student_class: 'Klasi',
+  attendance: 'Mæting',
+  attendance_desc: 'Skoða mætingarskrá barnsins.',
+  attendance_title: 'Mæting dagsins',
+  attendance_present: 'Mætt',
+  attendance_absent: 'Fjarverandi',
+  attendance_late: 'Seinn',
+  attendance_excused: 'Afskráð',
+  attendance_not_recorded: 'Ekki skráð',
+  no_attendance_data: 'Engin mætingargögn tiltæk',
+  loading: 'Hleður...',
 };
