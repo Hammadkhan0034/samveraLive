@@ -65,15 +65,10 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
   // Final org_id to use - from metadata, database, or default
   const finalOrgId = orgIdFromMetadata || dbOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID || '1db3c97c-de42-4ad2-bb72-cc0b6cda69f7';
 
-  // ---- Demo data / state ----
-  const [roster, setRoster] = useState(
-    Array.from({ length: 15 }).map((_, i) => ({
-      id: i + 1,
-      name: `${t.child} ${i + 1}`,
-      present: i % 3 !== 0, // just some demo variation
-    }))
-  );
-  const kidsIn = roster.filter((r) => r.present).length;
+  // ---- Attendance state ----
+  // Track attendance by student ID (string) - true = present, false = absent
+  const [attendance, setAttendance] = useState<Record<string, boolean>>({});
+  const [savingAttendance, setSavingAttendance] = useState<Record<string, boolean>>({});
 
   const [threads] = useState([
     { id: uid(), name: 'Guðrún (Parent)', preview: t.sample_msg, unread: true },
@@ -138,13 +133,19 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
     guardian_ids: [] as string[]
   });
 
+  // Calculate kids checked in from actual students (needed for tiles badge)
+  const kidsIn = useMemo(() => {
+    return students.filter(s => attendance[s.id]).length;
+  }, [students, attendance]);
+
+  // Define tiles array after kidsIn is calculated
   const tiles: Array<{
     id: TileId;
     title: string;
     desc: string;
     Icon: React.ElementType;
     badge?: string | number;
-  }> = [
+  }> = useMemo(() => [
       { id: 'attendance', title: t.tile_att, desc: t.tile_att_desc, Icon: CheckSquare, badge: kidsIn },
       { id: 'diapers', title: t.tile_diaper, desc: t.tile_diaper_desc, Icon: Baby },
       { id: 'messages', title: t.tile_msg, desc: t.tile_msg_desc, Icon: MessageSquare, badge: threads.filter(x => x.unread).length || undefined },
@@ -155,14 +156,119 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
       { id: 'guardians', title: t.tile_guardians || 'Guardians', desc: t.tile_guardians_desc || 'Manage guardians', Icon: Users },
       { id: 'link_student', title: t.tile_link_student || 'Link Student', desc: t.tile_link_student_desc || 'Link a guardian to a student', Icon: LinkIcon },
       { id: 'menus', title: t.tile_menus || 'Menus', desc: t.tile_menus_desc || 'Manage daily menus', Icon: Utensils },
-    ];
+    ], [t, kidsIn, threads, uploads, studentRequests]);
 
   // ---- Attendance actions ----
-  function togglePresent(id: number, checked: boolean) {
-    setRoster((prev) => prev.map((r) => (r.id === id ? { ...r, present: checked } : r)));
+  // Load attendance for today
+  async function loadAttendanceForToday() {
+    if (!finalOrgId || students.length === 0) return;
+
+    try {
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+      const classIds = teacherClasses.map(c => c.id).filter(Boolean);
+      
+      // Load attendance for all assigned classes
+      const allAttendance: Record<string, boolean> = {};
+      
+      for (const classId of classIds) {
+        const response = await fetch(
+          `/api/attendance?orgId=${finalOrgId}&classId=${classId}&date=${today}&t=${Date.now()}`,
+          { cache: 'no-store' }
+        );
+        const data = await response.json();
+        
+        if (response.ok && data.attendance) {
+          data.attendance.forEach((record: any) => {
+            // Map status to boolean: 'present' = true, others = false
+            allAttendance[record.student_id] = record.status === 'present';
+          });
+        }
+      }
+      
+      setAttendance(allAttendance);
+      console.log('✅ Attendance loaded for today:', allAttendance);
+    } catch (error) {
+      console.error('❌ Error loading attendance:', error);
+    }
   }
-  function markAllPresent() {
-    setRoster((prev) => prev.map((r) => ({ ...r, present: true })));
+
+  // Save attendance to database
+  async function saveAttendance(studentId: string, isPresent: boolean, classId?: string | null) {
+    if (!finalOrgId || !session?.user?.id) return;
+
+    try {
+      setSavingAttendance(prev => ({ ...prev, [studentId]: true }));
+      
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+      const status = isPresent ? 'present' : 'absent';
+      
+      const response = await fetch('/api/attendance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          org_id: finalOrgId,
+          class_id: classId || null,
+          student_id: studentId,
+          date: today,
+          status: status,
+          recorded_by: session.user.id
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log('✅ Attendance saved:', { studentId, status });
+      } else {
+        console.error('❌ Failed to save attendance:', data.error);
+        // Revert the change on error
+        setAttendance(prev => ({ ...prev, [studentId]: !isPresent }));
+      }
+    } catch (error: any) {
+      console.error('❌ Error saving attendance:', error);
+      // Revert the change on error
+      setAttendance(prev => ({ ...prev, [studentId]: !isPresent }));
+    } finally {
+      setSavingAttendance(prev => ({ ...prev, [studentId]: false }));
+    }
+  }
+
+  function togglePresent(studentId: string, checked: boolean) {
+    // Optimistically update UI
+    setAttendance((prev) => ({ ...prev, [studentId]: checked }));
+    
+    // Find student to get class_id
+    const student = students.find(s => s.id === studentId);
+    const classId = student?.class_id || (student as any)?.classes?.id || null;
+    
+    // Save to database
+    saveAttendance(studentId, checked, classId);
+  }
+
+  async function markAllPresent(classId?: string) {
+    const studentsToMark = classId 
+      ? students.filter(s => {
+          const sClassId = s.class_id || (s as any).classes?.id;
+          return sClassId === classId;
+        })
+      : students;
+    
+    // Optimistically update UI
+    const newAttendance = { ...attendance };
+    studentsToMark.forEach(s => {
+      newAttendance[s.id] = true;
+    });
+    setAttendance(newAttendance);
+    
+    // Save all to database
+    const today = new Date().toISOString().split('T')[0];
+    const savePromises = studentsToMark.map(async (student) => {
+      const sClassId = student.class_id || (student as any).classes?.id || null;
+      return saveAttendance(student.id, true, sClassId);
+    });
+    
+    await Promise.allSettled(savePromises);
+    console.log('✅ All students marked as present');
   }
 
   // ---- Media actions (mock) ----
@@ -471,6 +577,13 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
       return () => clearInterval(refreshInterval);
     }
   }, [session?.user?.id, teacherClasses.length]);
+
+  // Load attendance when students are loaded
+  React.useEffect(() => {
+    if (students.length > 0 && finalOrgId && session?.user?.id && teacherClasses.length > 0) {
+      loadAttendanceForToday();
+    }
+  }, [students.length, finalOrgId, session?.user?.id, teacherClasses.length]);
 
   // Load guardians immediately when student request modal opens (without showing loading state)
   React.useEffect(() => {
@@ -788,7 +901,7 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
             <Users className="h-4 w-4" />
             <span>
               {t.kids_checked_in}:{' '}
-              <span className="font-medium">{kidsIn}</span> / {roster.length}
+              <span className="font-medium">{kidsIn}</span> / {students.length}
             </span>
             <span className="mx-2 text-slate-300 dark:text-slate-600">•</span>
             <CalendarDays className="h-4 w-4" />
@@ -801,7 +914,7 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
           <Users className="h-4 w-4" />
           <span>
             {t.kids_checked_in}:{' '}
-            <span className="font-medium">{kidsIn}</span> / {roster.length}
+            <span className="font-medium">{kidsIn}</span> / {students.length}
           </span>
           <span className="mx-2 text-slate-300 dark:text-slate-600">•</span>
           <CalendarDays className="h-4 w-4" />
@@ -862,7 +975,16 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
       {/* Active panel */}
       <section className="mt-8">
         {active === 'attendance' && (
-          <AttendancePanel t={t} roster={roster} onMarkAll={markAllPresent} onToggle={togglePresent} />
+          <AttendancePanel 
+            t={t} 
+            students={students}
+            teacherClasses={teacherClasses}
+            attendance={attendance}
+            savingAttendance={savingAttendance}
+            onMarkAll={markAllPresent} 
+            onToggle={togglePresent}
+            loadingStudents={loadingStudents}
+          />
         )}
         {active === 'diapers' && <DiaperPanel t={t} />}
         {active === 'messages' && <MessagesPanel t={t} threads={threads} />}
@@ -1369,48 +1491,167 @@ type="text"
 
 function AttendancePanel({
   t,
-  roster,
+  students,
+  teacherClasses,
+  attendance,
+  savingAttendance,
   onMarkAll,
   onToggle,
+  loadingStudents,
 }: {
   t: typeof enText;
-  roster: { id: number; name: string; present: boolean }[];
-  onMarkAll: () => void;
-  onToggle: (id: number, checked: boolean) => void;
+  students: Array<{ id: string; first_name: string; last_name: string | null; dob: string | null; gender: string; class_id: string | null; created_at: string; classes?: any; guardians?: Array<{ id: string; relation: string; users?: { id: string; full_name: string; email: string } }> }>;
+  teacherClasses: any[];
+  attendance: Record<string, boolean>;
+  savingAttendance?: Record<string, boolean>;
+  onMarkAll: (classId?: string) => void;
+  onToggle: (studentId: string, checked: boolean) => void;
+  loadingStudents: boolean;
 }) {
+  const [selectedClassId, setSelectedClassId] = useState<string>('all');
+
+  // Filter students by selected class
+  const filteredStudents = React.useMemo(() => {
+    if (selectedClassId === 'all') {
+      return students;
+    }
+    
+    // Filter by class_id - handle both direct class_id and nested classes.id
+    const filtered = students.filter(s => {
+      const studentClassId = s.class_id || (s as any).classes?.id || null;
+      
+      // Normalize both IDs to strings for comparison
+      const normalizedStudentClassId = studentClassId ? String(studentClassId).trim() : null;
+      const normalizedSelectedClassId = selectedClassId ? String(selectedClassId).trim() : null;
+      
+      const matches = normalizedStudentClassId === normalizedSelectedClassId;
+      
+      // Debug each student for first few
+      if (students.indexOf(s) < 3) {
+        console.log('Student filter check:', {
+          studentId: s.id,
+          studentClassId: normalizedStudentClassId,
+          selectedClassId: normalizedSelectedClassId,
+          matches
+        });
+      }
+      
+      return matches;
+    });
+    
+    // Debug logging
+    console.log('AttendancePanel - Filtering students:', {
+      selectedClassId,
+      totalStudents: students.length,
+      filteredCount: filtered.length,
+      allStudentClassIds: students.slice(0, 5).map(s => ({
+        id: s.id,
+        class_id: s.class_id,
+        classes_id: (s as any).classes?.id,
+        firstName: (s as any).users?.first_name || s.first_name,
+        lastName: (s as any).users?.last_name || s.last_name
+      }))
+    });
+    
+    return filtered;
+  }, [students, selectedClassId]);
+
+  // Get class name for display
+  const getClassName = (classId: string | null) => {
+    if (!classId) return 'No Class';
+    const classInfo = teacherClasses.find(c => c.id === classId);
+    return classInfo?.name || `Class ${classId.substring(0, 8)}...`;
+  };
+
+  // Get student full name - check both direct and nested users object
+  const getStudentName = (student: any) => {
+    const firstName = (student as any).users?.first_name || student.first_name || '';
+    const lastName = (student as any).users?.last_name || student.last_name || '';
+    const fullName = `${firstName} ${lastName}`.trim();
+    return fullName || 'Unknown';
+  };
+
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">{t.att_title}</h2>
-        <button
-          onClick={onMarkAll}
-          className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
-        >
-          <Plus className="h-4 w-4" />
-          {t.att_mark_all_in}
-        </button>
-      </div>
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-        {roster.map((s) => (
-          <label
-            key={s.id}
-            className={clsx(
-              'flex cursor-pointer items-center justify-between rounded-xl border p-3 transition',
-              s.present
-                ? 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300'
-                : 'border-slate-200 bg-white text-slate-700 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300'
-            )}
+        <div className="flex items-center gap-3">
+          {/* Class Filter Dropdown */}
+          {teacherClasses.length > 0 ? (
+            <select
+              value={selectedClassId}
+              onChange={(e) => {
+                const newClassId = e.target.value;
+                console.log('Class filter changed:', { from: selectedClassId, to: newClassId });
+                setSelectedClassId(newClassId);
+              }}
+              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+            >
+              <option value="all">{t.all_classes || 'All Classes'}</option>
+              {teacherClasses.map((cls) => (
+                <option key={cls.id} value={cls.id}>
+                  {cls.name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <div className="text-sm text-slate-500 dark:text-slate-400">
+              {t.no_classes_assigned || 'No classes assigned'}
+            </div>
+          )}
+          <button
+            onClick={() => onMarkAll(selectedClassId !== 'all' ? selectedClassId : undefined)}
+            className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
           >
-            <span className="font-medium">{s.name}</span>
-            <input
-              type="checkbox"
-              checked={s.present}
-              onChange={(e) => onToggle(s.id, e.target.checked)}
-              className="h-4 w-4"
-            />
-          </label>
-        ))}
+            <Plus className="h-4 w-4" />
+            {t.att_mark_all_in}
+          </button>
+        </div>
       </div>
+      
+      {loadingStudents ? (
+        <div className="text-center py-8 text-slate-600 dark:text-slate-400">{t.loading}</div>
+      ) : filteredStudents.length === 0 ? (
+        <div className="text-center py-8 text-slate-500 dark:text-slate-400">
+          {selectedClassId === 'all' 
+            ? t.no_students_found || 'No students found in assigned classes'
+            : t.no_students_in_class || 'No students in this class'}
+        </div>
+      ) : (
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredStudents.map((student) => {
+            const isPresent = attendance[student.id] || false;
+            const studentName = getStudentName(student);
+            return (
+              <label
+                key={student.id}
+                className={clsx(
+                  'flex cursor-pointer items-center justify-between rounded-xl border p-3 transition',
+                  isPresent
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300'
+                    : 'border-slate-200 bg-white text-slate-700 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300'
+                )}
+              >
+                <div className="flex flex-col">
+                  <span className="font-medium">{studentName}</span>
+                  {(student.class_id || (student as any).classes?.id) && (
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                      {getClassName(student.class_id || (student as any).classes?.id)}
+                    </span>
+                  )}
+                </div>
+                <input
+                  type="checkbox"
+                  checked={isPresent}
+                  onChange={(e) => onToggle(student.id, e.target.checked)}
+                  disabled={savingAttendance?.[student.id]}
+                  className="h-4 w-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+              </label>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -2558,6 +2799,8 @@ const enText = {
   requested_date: 'Requested Date',
   search_students_placeholder: 'Search students...',
   no_students_found_search: 'No students found matching your search',
+  no_students_in_class: 'No students in this class',
+  all_classes: 'All Classes',
   prev: 'Prev',
   next: 'Next',
   actions: 'Actions',
@@ -2706,6 +2949,8 @@ const isText = {
   requested_date: 'Beiðnidagsetning',
   search_students_placeholder: 'Leita að nemendum...',
   no_students_found_search: 'Engir nemendur fundust sem passa við leit',
+  no_students_in_class: 'Engir nemendur í þessum hóp',
+  all_classes: 'Allir hópar',
   prev: 'Fyrri',
   next: 'Næsta',
   actions: 'Aðgerðir',
