@@ -172,7 +172,7 @@ export default function AddMenuPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
 
-        <main className="mx-auto max-w-4xl px-4 py-8 md:px-6 mt-10">
+        <main className="mx-auto max-w-5xl px-4 py-8 md:px-6 mt-10 ml-20">
           {/* Header */}
           <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-4">

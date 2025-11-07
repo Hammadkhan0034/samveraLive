@@ -6,6 +6,7 @@ import { Bell, CalendarDays, MessageSquare, Camera, Utensils, FileText } from 'l
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/hooks/useAuth';
 import AnnouncementList from './AnnouncementList';
+import StoryColumn from './shared/StoryColumn';
 
 type Lang = 'is' | 'en';
 
@@ -255,6 +256,15 @@ export default function ParentDashboard({ lang = 'en' }: { lang?: Lang }) {
           {t.welcome_message}
         </p>
       </div>
+
+      {/* Stories Column */}
+      <StoryColumn
+        lang={lang}
+        orgId={(session?.user?.user_metadata as any)?.org_id}
+        userId={session?.user?.id}
+        userRole="parent"
+        parentClassIds={linkedStudents.map(s => s.class_id).filter(Boolean) as string[]}
+      />
 
       {/* Shared FeatureGrid for tiles */}
       <div className="mt-6">

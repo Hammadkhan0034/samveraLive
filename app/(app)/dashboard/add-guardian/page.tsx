@@ -4,16 +4,14 @@ import React, { useMemo, useEffect, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useRequireAuth } from '@/lib/hooks/useAuth';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { GuardianForm, type GuardianFormData } from '@/app/components/shared/GuardianForm';
-
-type Lang = 'is' | 'en';
 
 export default function AddGuardianPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, loading, isSigningIn } = useRequireAuth();
-
-  const [lang, setLang] = useState<Lang>('en');
+  const { lang } = useLanguage();
   const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
 
   const userMetadata = user?.user_metadata;
@@ -103,7 +101,7 @@ export default function AddGuardianPage() {
       
       // If creating new guardian (not editing), show success message
       if (!data.id) {
-        setSuccessMessage(lang === 'is' ? 'Forráðamaður stofnaður með góðum árangri' : 'Guardian created successfully');
+        setSuccessMessage(t.guardian_created_success);
         // Auto-hide after 3 seconds and redirect
         setTimeout(() => {
           router.back();
@@ -139,7 +137,7 @@ export default function AddGuardianPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-        <main className="mx-auto max-w-7xl px-4 py-8 md:px-6 mt-10">
+        <main className="mx-auto max-w-6xl px-4 py-8 md:px-6 mt-10 ml-20">
           <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-4">
               <button onClick={() => router.back()} className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
@@ -223,7 +221,8 @@ const enText = {
   ssn: 'Social Security Number (SSN)',
   ssn_placeholder: '000000-0000',
   address: 'Address',
-  address_placeholder: 'Enter address (optional)'
+  address_placeholder: 'Enter address (optional)',
+  guardian_created_success: 'Guardian created successfully'
 };
 
 const isText = {
@@ -253,7 +252,8 @@ const isText = {
   ssn: 'Kennitala',
   ssn_placeholder: '000000-0000',
   address: 'Heimilisfang',
-  address_placeholder: 'Sláðu inn heimilisfang (valfrjálst)'
+  address_placeholder: 'Sláðu inn heimilisfang (valfrjálst)',
+  guardian_created_success: 'Forráðamaður stofnaður með góðum árangri'
 };
 
 

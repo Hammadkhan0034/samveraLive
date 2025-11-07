@@ -8,6 +8,38 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url)
+    const id = searchParams.get('id') || undefined // For fetching single announcement
+    
+    // If id is provided, fetch single announcement
+    if (id) {
+      const { data, error } = await supabaseAdmin
+        .from('announcements')
+        .select('id,title,body,created_at,author_id,class_id,classes(id,name)')
+        .eq('id', id)
+        .eq('is_public', true)
+        .single()
+      
+      if (error || !data) {
+        return NextResponse.json({ error: 'Announcement not found' }, { status: 404 })
+      }
+      
+      const classData = Array.isArray(data.classes) && data.classes.length > 0 
+        ? data.classes[0] 
+        : (data.classes && !Array.isArray(data.classes) ? data.classes : null)
+      
+      const transformed = {
+        id: data.id,
+        title: data.title,
+        body: data.body,
+        created_at: data.created_at,
+        author_id: data.author_id,
+        class_id: data.class_id,
+        class_name: classData?.name || null,
+      }
+      
+      return NextResponse.json({ announcement: transformed }, { status: 200 })
+    }
+    
     const classId = searchParams.get('classId') || undefined
     const teacherClassIdsCsv = searchParams.get('teacherClassIds') // comma-separated class IDs for teacher
     const limit = Number(searchParams.get('limit') || '10')
@@ -339,15 +371,21 @@ export async function GET(request: Request) {
     }
 
     // Transform data to include class name
-    const transformedData = (data || []).map((ann: any) => ({
-      id: ann.id,
-      title: ann.title,
-      body: ann.body,
-      created_at: ann.created_at,
-      author_id: ann.author_id,
-      class_id: ann.class_id,
-      class_name: ann.classes?.name || null,
-    }))
+    const transformedData = (data || []).map((ann: any) => {
+      const classData = Array.isArray(ann.classes) && ann.classes.length > 0 
+        ? ann.classes[0] 
+        : (ann.classes && !Array.isArray(ann.classes) ? ann.classes : null)
+      
+      return {
+        id: ann.id,
+        title: ann.title,
+        body: ann.body,
+        created_at: ann.created_at,
+        author_id: ann.author_id,
+        class_id: ann.class_id,
+        class_name: classData?.name || null,
+      }
+    })
 
     return NextResponse.json({ announcements: transformedData }, { status: 200 })
   } catch (err: any) {

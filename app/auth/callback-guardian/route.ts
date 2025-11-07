@@ -23,10 +23,6 @@ export async function GET(request: Request) {
     // If guardian_id is provided, set default password and redirect to signin
     if (guardian_id && sessionData?.user) {
       try {
-        if (!supabaseAdmin) {
-          console.error('❌ supabaseAdmin is not available')
-          return NextResponse.redirect(`${requestUrl.origin}/signin?error=admin_unavailable`)
-        }
         // Set default password for the guardian
         const defaultPassword = 'test123456'
         await supabaseAdmin.auth.admin.updateUserById(sessionData.user.id, {

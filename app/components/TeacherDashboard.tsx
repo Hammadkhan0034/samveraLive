@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { option } from 'framer-motion/client';
 import { useRouter } from 'next/navigation';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
+import StoryColumn from './shared/StoryColumn';
 
 type Lang = 'is' | 'en';
 type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
@@ -807,6 +808,15 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
           <span>{t.today_hint}</span>
         </div>
       </div>
+
+      {/* Stories Column */}
+      <StoryColumn
+        lang={lang}
+        orgId={finalOrgId}
+        userId={session?.user?.id}
+        userRole="teacher"
+        teacherClassIds={teacherClasses.map(c => c.id).filter(Boolean)}
+      />
 
       {/* Feature tiles */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">

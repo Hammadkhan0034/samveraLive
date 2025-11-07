@@ -133,10 +133,6 @@ export default function AnnouncementForm({
 
   return (
     <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100 mb-4">
-        {mode === 'edit' ? t.edit_announcement : t.create_announcement}
-      </h3>
-
       <form onSubmit={handleSubmit} className="space-y-4">
         {showClassSelector && (
           <div>

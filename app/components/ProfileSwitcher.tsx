@@ -9,7 +9,6 @@ const roleToPath: Record<SamveraRole, string> = {
   teacher: '/dashboard/teacher',
   principal: '/dashboard/principal',
   parent: '/dashboard/parent',
-  admin: '/dashboard/admin',
 };
 
 type Props = {
@@ -69,7 +68,7 @@ export default function ProfileSwitcher({ className = '', labelIs, labelEn }: Pr
       >
         {roles.map((r) => (
           <option key={r} value={r}>
-            {r === 'teacher' ? 'Teacher' : r === 'principal' ? 'Principal' : r === 'admin' ? 'Admin' : 'Parent'}
+            {r === 'teacher' ? 'Teacher' : r === 'principal' ? 'Principal' : 'Parent'}
           </option>
         ))}
       </select>

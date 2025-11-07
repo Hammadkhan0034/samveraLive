@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
-import { Users, School, ChartBar as BarChart3, FileText, Plus, ListFilter as Filter, Search, CircleCheck as CheckCircle2, Circle as XCircle, Eye, EyeOff, Settings, Bell, Utensils } from 'lucide-react';
+import { Users, School, ChartBar as BarChart3, FileText, Plus, ListFilter as Filter, Search, CircleCheck as CheckCircle2, Circle as XCircle, Eye, EyeOff, Settings, Bell, Utensils, Megaphone } from 'lucide-react';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import { useAuth } from '@/lib/hooks/useAuth';
 import AnnouncementList from './AnnouncementList';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import StoryColumn from './shared/StoryColumn';
  
 
 type Lang = 'is' | 'en';
@@ -103,11 +103,12 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
         loadGuardiansForKPI(false),
         loadStudentsForKPI(false),
         loadMenusForKPI(false),
-        loadStoriesForKPI()
+        loadStoriesForKPI(),
+        loadAnnouncementsForKPI()
       ]).then((results) => {
         // Log results for debugging
         results.forEach((result, index) => {
-          const names = ['loadOrgs', 'loadClassesForKPI', 'loadStaff', 'loadStaffForKPI', 'loadGuardiansForKPI', 'loadStudentsForKPI', 'loadMenusForKPI', 'loadStoriesForKPI'];
+          const names = ['loadOrgs', 'loadClassesForKPI', 'loadStaff', 'loadStaffForKPI', 'loadGuardiansForKPI', 'loadStudentsForKPI', 'loadMenusForKPI', 'loadStoriesForKPI', 'loadAnnouncementsForKPI'];
           if (result.status === 'rejected') {
             console.error(`❌ ${names[index]} failed:`, result.reason);
           } else {
@@ -220,6 +221,28 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
     }
   }
 
+  async function loadAnnouncementsForKPI() {
+    const orgId = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
+    if (!orgId || !session?.user?.id) return;
+    try {
+      const params = new URLSearchParams();
+      params.set('userId', session.user.id);
+      params.set('userRole', (userMetadata?.role || userMetadata?.activeRole || 'principal') as string);
+      params.set('limit', '100');
+      
+      const res = await fetch(`/api/announcements?${params.toString()}&t=${Date.now()}`, { cache: 'no-store' });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
+      const list = json.announcements || [];
+      setAnnouncementsCount(list.length);
+      if (typeof window !== 'undefined' && session?.user?.id) {
+        localStorage.setItem(`announcements_count_cache_${session.user.id}`, String(list.length));
+      }
+    } catch (e: any) {
+      console.error('❌ Error loading announcements count:', e.message);
+    }
+  }
+
   // Listen for stories refresh event
   useEffect(() => {
     const handleStoriesRefresh = () => {
@@ -251,6 +274,20 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
     }
   }, [finalOrgId, session?.user?.id]);
 
+  // Listen for announcements refresh event
+  useEffect(() => {
+    const handleAnnouncementsRefresh = () => {
+      loadAnnouncementsForKPI();
+    };
+    
+    if (typeof window !== 'undefined') {
+      window.addEventListener('announcements-refresh', handleAnnouncementsRefresh);
+      return () => {
+        window.removeEventListener('announcements-refresh', handleAnnouncementsRefresh);
+      };
+    }
+  }, [finalOrgId, session?.user?.id, userMetadata]);
+
   // Refresh all data function for real-time updates
   const refreshAllData = async () => {
     if (session?.user?.id) {
@@ -262,7 +299,8 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
         loadGuardiansForKPI(),
         loadStudentsForKPI(),
         loadMenusForKPI(),
-        loadStoriesForKPI()
+        loadStoriesForKPI(),
+        loadAnnouncementsForKPI()
       ]);
     }
   };
@@ -310,6 +348,14 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
   const [storiesCount, setStoriesCount] = useState(() => {
     if (typeof window !== 'undefined' && session?.user?.id) {
       const cached = localStorage.getItem(`stories_count_cache_${session.user.id}`);
+      return cached ? parseInt(cached) : 0;
+    }
+    return 0;
+  });
+
+  const [announcementsCount, setAnnouncementsCount] = useState(() => {
+    if (typeof window !== 'undefined' && session?.user?.id) {
+      const cached = localStorage.getItem(`announcements_count_cache_${session.user.id}`);
       return cached ? parseInt(cached) : 0;
     }
     return 0;
@@ -364,6 +410,12 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
       value: storiesCount,
       icon: FileText,
       onClick: () => router.push('/dashboard/stories')
+    },
+    {
+      label: t.kpi_announcements,
+      value: announcementsCount,
+      icon: Megaphone,
+      onClick: () => router.push('/dashboard/announcements')
     },
   ];
 
@@ -529,6 +581,14 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
         </div>
       </div>
 
+      {/* Stories Column */}
+      <StoryColumn
+        lang={lang}
+        orgId={finalOrgId}
+        userId={session?.user?.id}
+        userRole="principal"
+      />
+
       {/* KPIs */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map(({ label, value, icon: Icon, onClick }, i) => (
@@ -552,17 +612,11 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
         ))}
       </div>
 
-      {/* Announcements Section */}
+      {/* School Announcements Section */}
       <div className="mt-8">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4">
             <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">{t.announcements_list}</h3>
-            <Link
-              href="/dashboard/announcements"
-              className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline"
-            >
-              {t.view_all_announcements || 'View All'}
-            </Link>
           </div>
           <AnnouncementList
             orgId={finalOrgId}
@@ -623,6 +677,7 @@ const enText = {
   kpi_guardians: 'Total guardians',
   kpi_menus: 'Menus',
   kpi_stories: 'Stories',
+  kpi_announcements: 'Announcements',
   classes_management: 'Classes Management',
   add_class: 'Add class',
   invite_staff: 'Invite staff',
@@ -810,6 +865,7 @@ const isText = {
   kpi_guardians: 'Heildarfjöldi forráðamanna',
   kpi_menus: 'Matseðillar',
   kpi_stories: 'Sögur',
+  kpi_announcements: 'Tilkynningar',
   classes_management: 'Hópastjórnun',
   add_class: 'Bæta við hóp',
   invite_staff: 'Bjóða starfsmanni',

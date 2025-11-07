@@ -95,6 +95,12 @@ const enText = {
   systemAlertTriggered: "System alert triggered",
   thisMonth: "this month",
   thisWeek: "this week",
+  
+  // Stories
+  stories_title: "Stories",
+  create_story: "Create Story",
+  no_stories: "No stories yet",
+  view_story: "View Story",
 } as const;
 
 const isText = {
@@ -136,4 +142,10 @@ const isText = {
   systemAlertTriggered: "Kerfisviðvörun kveikt",
   thisMonth: "þennan mánuð",
   thisWeek: "þessa viku",
+  
+  // Stories
+  stories_title: "Sögur",
+  create_story: "Búa til sögu",
+  no_stories: "Engar sögur ennþá",
+  view_story: "Skoða sögu",
 } as const;

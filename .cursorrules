@@ -1,0 +1,273 @@
+# Samvera Cursor Rules
+
+## Project Overview
+Samvera is a Next.js 13 application with multi-role access control (Admin, Principal, Teacher, Parent/Guardian), multi-tenant organization support, and internationalization (English/Icelandic).
+
+## Technology Stack
+- **Framework**: Next.js 13.5.1 (App Router)
+- **Language**: TypeScript (strict mode)
+- **Database/Auth**: Supabase
+- **Styling**: Tailwind CSS with dark mode support
+- **UI Components**: Custom components with Lucide React icons, Framer Motion animations
+- **State Management**: React Context (AuthContext, LanguageContext)
+
+## Code Style & Conventions
+
+### TypeScript
+- Use strict TypeScript with proper type definitions
+- Prefer `interface` for object shapes, `type` for unions/intersections
+- Use `as const` for literal types when appropriate
+- Always type function parameters and return values
+- Use path aliases: `@/` maps to project root
+
+### File Organization
+- API routes: `app/api/[route]/route.ts`
+- Components: `app/components/` (shared in `app/components/shared/`)
+- Server utilities: `lib/`
+- Client contexts: `lib/contexts/`
+- Types: `lib/types/`
+- Hooks: `lib/hooks/`
+
+### Component Patterns
+- **Client Components**: Must have `'use client'` directive at the top
+- **Server Components**: Default, no directive needed
+- Use functional components with TypeScript
+- Props should be typed with interfaces
+- Use React hooks appropriately (useState, useEffect, useContext)
+
+### Naming Conventions
+- Components: PascalCase (e.g., `GuardianForm.tsx`)
+- Files/functions: camelCase for utilities, PascalCase for components
+- Constants: UPPER_SNAKE_CASE (e.g., `GUARDIAN_ROLE_ID`)
+- API routes: HTTP methods (GET, POST, PUT, DELETE) as named exports
+
+## Authentication & Authorization
+
+### Roles
+- **Role Types**: `'admin' | 'principal' | 'teacher' | 'parent'`
+- **Role Hierarchy**: admin (4) > principal (3) > teacher (2) > parent (1)
+- **Role Paths**: Defined in `lib/auth.ts` and `middleware.ts`
+- Always check user roles before granting access
+- Use Supabase session for authentication state
+
+### Multi-Tenancy
+- All data operations must include `org_id` filtering
+- Never allow cross-organization data access
+- Validate `org_id` in all API routes
+- Use `supabaseAdmin` for server-side operations requiring elevated permissions
+
+### Middleware
+- Dashboard routes are protected by middleware
+- Middleware validates session and role-based access
+- Redirects unauthorized users to `/signin`
+- Adds user context to headers for server components
+
+## Database Patterns
+
+### Supabase Client Usage
+- **Client-side**: Use `createBrowserClient` from `@/lib/supabaseClient`
+- **Server-side**: Use `createServerClient` from `@/lib/supabaseServer`
+- **Admin operations**: Use `supabaseAdmin` from `@/lib/supabaseClient`
+- Always handle errors from Supabase queries
+- Use `.maybeSingle()` when expecting 0 or 1 result, `.single()` when expecting exactly 1
+
+### Query Patterns
+- Always filter by `org_id` for organization-scoped data
+- Use `.order()` for consistent sorting (default: `created_at DESC`)
+- Select only needed fields with `.select()`
+- Validate required fields before database operations
+
+## API Route Patterns
+
+### Structure
+```typescript
+export async function GET(request: Request) {
+  try {
+    // Validate supabaseAdmin availability
+    if (!supabaseAdmin) {
+      return NextResponse.json({ error: '...' }, { status: 500 })
+    }
+    
+    // Validate query params/body
+    // Perform database operations
+    // Return NextResponse.json with appropriate status
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 })
+  }
+}
+```
+
+### Error Handling
+- Always use try/catch blocks
+- Return appropriate HTTP status codes (400, 401, 403, 404, 500)
+- Include descriptive error messages
+- Log errors with console.error and emoji indicators (✅ success, ❌ error)
+- Never expose sensitive information in error messages
+
+### Validation
+- Validate required fields early
+- Use email regex: `/^[^\s@]+@[^\s@]+\.[^\s@]+$/`
+- Validate `org_id` is provided and not "1" (unless explicitly handling legacy)
+- Validate user permissions before data operations
+
+## Internationalization (i18n)
+
+### Language Support
+- Supported languages: English (`'en'`) and Icelandic (`'is'`)
+- Language state managed by `LanguageContext`
+- Use `useLanguage()` hook to access translations
+- Translations stored in `LanguageContext.tsx`
+
+### Translation Requirements
+- **ALL user-facing text** must be translatable
+- Form labels and placeholders must support translations with fallbacks
+- Use the `t` object from `useLanguage()` hook
+- Provide fallback English text when translation missing
+- Pattern: `{t.label_key || 'Fallback English Text'}`
+
+### Translation Keys
+- Use descriptive, hierarchical keys (e.g., `create_guardian`, `first_name_placeholder`)
+- Keep translation objects typed with `as const`
+- Add new translations to both `enText` and `isText` objects
+
+## Styling Guidelines
+
+### Tailwind CSS
+- Use utility classes for styling
+- Support dark mode: `dark:` variants for all color-related classes
+- Common color palette: `slate-*`, `blue-*`, `red-*`, `emerald-*`
+- Use consistent spacing: `p-6`, `gap-3`, `mb-4`, etc.
+- Rounded corners: `rounded-lg` or `rounded-2xl`
+- Focus states: `focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500`
+
+### Form Styling
+- Input fields: `rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2`
+- Buttons: `rounded-lg bg-black px-4 py-2 text-sm text-white`
+- Disabled states: `disabled:opacity-50 disabled:cursor-not-allowed`
+- Error messages: `text-red-600 dark:text-red-400`
+- Success messages: `text-emerald-600 dark:text-emerald-400`
+
+### Responsive Design
+- Use grid layouts: `grid grid-cols-1 md:grid-cols-2 gap-3`
+- Mobile-first approach
+- Test on various screen sizes
+
+## Component Patterns
+
+### Forms
+- Accept `translations` prop for all labels/placeholders
+- Provide fallback text for missing translations
+- Use controlled components with `useState`
+- Handle loading states with disabled buttons and spinners
+- Show error/success messages clearly
+- Validate inputs on both client and server
+
+### Tables
+- Use consistent column headers
+- Support sorting and filtering when appropriate
+- Include actions (edit, delete) with proper permissions
+- Show empty states when no data
+
+### Modals
+- Use overlay with `fixed inset-0 z-50`
+- Include close button (X icon)
+- Handle ESC key and click-outside to close
+- Support both modal and page modes (`asPage` prop)
+
+## Security Best Practices
+
+### Data Protection
+- Never expose sensitive data (SSN, passwords) in API responses
+- Use environment variables for secrets (`.env.local`)
+- Validate all user inputs
+- Use parameterized queries (Supabase handles this)
+- Check user permissions before data operations
+
+### Authentication
+- Use Supabase magic links for passwordless authentication
+- Store invitation tokens securely
+- Set appropriate expiration times (7 days for invitations)
+- Never expose service role keys in client-side code
+
+## Error Handling & Logging
+
+### Console Logging
+- Use emoji indicators: ✅ for success, ❌ for errors
+- Include context in log messages
+- Log errors before returning API responses
+- Use `console.warn` for non-critical issues
+
+### User-Facing Errors
+- Provide clear, actionable error messages
+- Don't expose internal implementation details
+- Use appropriate HTTP status codes
+- Include error details in development, generic messages in production
+
+## Testing & Development
+
+### Scripts
+- `npm run dev`: Start development server on port 3000
+- `npm run build`: Build for production
+- `npm run lint`: Run ESLint
+- `npm run create:admin`: Create admin user
+- `npm run create:test:all`: Create test users
+
+### Environment Variables
+- Required: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+- Optional: `NEXT_PUBLIC_SITE_URL` (defaults to `http://localhost:3000`)
+
+## Code Quality
+
+### Best Practices
+- Keep functions focused and single-purpose
+- Extract reusable logic into utilities
+- Use meaningful variable names
+- Add comments for complex business logic
+- Follow DRY (Don't Repeat Yourself) principle
+- Keep components small and composable
+
+### Performance
+- Use React.memo for expensive components when appropriate
+- Lazy load heavy components
+- Optimize database queries (select only needed fields)
+- Use proper indexing in database queries
+
+## Common Patterns to Follow
+
+### Creating Users
+1. Create auth entry via `createUserAuthEntry()`
+2. Create public user record in `users` table
+3. Update auth metadata with roles and org_id
+4. Send magic link if invitation flow
+5. Link to related entities (students, classes) if needed
+
+### Updating Users
+1. Validate user exists and belongs to correct org
+2. Update `users` table
+3. Update auth metadata if roles changed
+4. Return updated user data
+
+### Deleting Users
+1. Validate user exists and belongs to correct org
+2. Check for related records (soft delete preferred)
+3. Delete user record
+4. Consider cascade deletes for related data
+
+## When Adding New Features
+
+1. **Check role permissions** - Ensure proper access control
+2. **Add org_id filtering** - All queries must be org-scoped
+3. **Add translations** - Support both English and Icelandic
+4. **Handle errors** - Proper try/catch and user-friendly messages
+5. **Test dark mode** - Ensure UI works in both themes
+6. **Validate inputs** - Both client and server-side
+7. **Update types** - Add TypeScript interfaces as needed
+8. **Document** - Add comments for complex logic
+
+## Notes
+- Default password for test users: `'test123456'`
+- Guardian role ID constant: `GUARDIAN_ROLE_ID = 10`
+- Organization ID "1" is legacy and should be resolved to actual UUID
+- Magic link expiration: 7 days from creation
+- Session cookie max age: 7 days
+

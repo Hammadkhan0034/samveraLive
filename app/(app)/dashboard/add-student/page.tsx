@@ -4,23 +4,21 @@ import React, { useMemo, useEffect, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useRequireAuth } from '@/lib/hooks/useAuth';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { StudentForm, type StudentFormData } from '@/app/components/shared/StudentForm';
-
-type Lang = 'is' | 'en';
 
 export default function AddStudentPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, loading, isSigningIn } = useRequireAuth();
-
-  const [lang, setLang] = useState<Lang>('en');
+  const { lang } = useLanguage();
   const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
 
   // Try to get org_id from multiple possible locations
   const userMetadata = user?.user_metadata;
   const orgId = userMetadata?.org_id || userMetadata?.organization_id || userMetadata?.orgId;
   const role = (userMetadata?.role || userMetadata?.user_role || userMetadata?.app_role || '').toString().toLowerCase();
-  const rolesArr: any[] = (userMetadata && Array.isArray(userMetadata.roles)) ? userMetadata.roles : [];
+  const rolesArr: any[] = Array.isArray(userMetadata?.roles) ? userMetadata?.roles : [];
   const activeRole = (userMetadata?.activeRole || '').toString().toLowerCase();
   const isPrincipal = [role, activeRole, ...rolesArr].some((r) => typeof r === 'string' && r.toLowerCase() === 'principal');
   const defaultStatus: 'pending' | 'approved' = isPrincipal ? 'approved' : 'pending';
@@ -223,7 +221,7 @@ export default function AddStudentPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-        <main className="mx-auto max-w-7xl px-4 py-8 md:px-6 mt-10">
+        <main className="mx-auto max-w-6xl px-4 py-8 md:px-6 mt-10 ml-20">
           <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-4">
               <button

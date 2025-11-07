@@ -330,7 +330,7 @@ export default function EditStoryPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-        <main className="mx-auto max-w-7xl px-4 py-8 md:px-6 mt-10">
+        <main className="mx-auto max-w-4xl px-4 py-8 md:px-6 mt-10 ml-20">
           <div className="mb-6 flex items-center gap-4">
             <button
               onClick={() => router.back()}
