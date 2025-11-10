@@ -19,6 +19,7 @@ export default function ParentDashboard({ lang = 'en' }: { lang?: Lang }) {
   useEffect(() => {
     router.prefetch('/dashboard/menus-view');
     router.prefetch('/dashboard/stories');
+    router.prefetch('/dashboard/attendance');
   }, [router]);
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
@@ -379,9 +380,12 @@ export default function ParentDashboard({ lang = 'en' }: { lang?: Lang }) {
                     if (item.title === t.menu) {
                       router.prefetch('/dashboard/menus-view');
                       router.push('/dashboard/menus-view');
-                    } else {
+                    } else if (item.title === t.stories) {
                       router.prefetch('/dashboard/stories');
                       router.push('/dashboard/stories');
+                    } else if (item.title === t.attendance) {
+                      router.prefetch('/dashboard/attendance');
+                      router.push('/dashboard/attendance');
                     }
                   }}
                   className="block rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow dark:border-slate-700 dark:bg-slate-800 text-left w-full"
