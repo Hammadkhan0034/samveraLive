@@ -389,9 +389,10 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
       onClick: () => router.push('/dashboard/principal/classes')
     },
     { 
-      label: t.kpi_incidents, 
-      value: 2, 
-      icon: FileText 
+      label: t.kpi_link_student, 
+      value: '', 
+      icon: Users,
+      onClick: () => router.push('/dashboard/link-student')
     },
     { 
       label: t.kpi_guardians, 
@@ -673,7 +674,7 @@ const enText = {
   kpi_students: 'Total students',
   kpi_staff: 'Total staff',
   kpi_classes: 'Classes',
-  kpi_incidents: 'Incidents (30d)',
+  kpi_link_student: 'Link Student',
   kpi_guardians: 'Total guardians',
   kpi_menus: 'Menus',
   kpi_stories: 'Stories',
@@ -861,7 +862,7 @@ const isText = {
   kpi_students: 'Heildarfjöldi nemenda',
   kpi_staff: 'Heildarfjöldi starfsmanna',
   kpi_classes: 'Hópar',
-  kpi_incidents: 'Atvik (30 dagar)',
+  kpi_link_student: 'Tengja nemanda',
   kpi_guardians: 'Heildarfjöldi forráðamanna',
   kpi_menus: 'Matseðillar',
   kpi_stories: 'Sögur',

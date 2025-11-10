@@ -51,20 +51,43 @@ export default function AnnouncementForm({
     }
   }, [initialData, mode, propClassId]);
 
-  // Fetch teacher classes if showClassSelector is true
+  // Fetch classes if showClassSelector is true
   useEffect(() => {
     if (showClassSelector && user?.id) {
       const fetchClasses = async () => {
         try {
           setLoadingClasses(true);
-          const response = await fetch(`/api/teacher-classes?userId=${user.id}&t=${Date.now()}`, { cache: 'no-store' });
-          const data = await response.json();
+          
+          // Determine user role
+          const userMetadata = user?.user_metadata as any;
+          const role = userMetadata?.role || userMetadata?.activeRole || 
+            (Array.isArray(userMetadata?.roles) ? userMetadata.roles[0] : '');
+          const roleLower = role?.toString().toLowerCase() || '';
+          const isPrincipal = roleLower === 'principal' || roleLower === 'admin';
+          
+          // Get orgId
+          const effectiveOrgId = orgId || userMetadata?.org_id || userMetadata?.organization_id;
+          
+          let response;
+          if (isPrincipal && effectiveOrgId) {
+            // For principals/admins: load all organization classes
+            response = await fetch(`/api/classes?orgId=${effectiveOrgId}&t=${Date.now()}`, { cache: 'no-store' });
+            const data = await response.json();
+            
+            if (response.ok && data.classes) {
+              setClasses(data.classes.map((c: any) => ({ id: c.id, name: c.name })) || []);
+            }
+          } else {
+            // For teachers: load only their assigned classes
+            response = await fetch(`/api/teacher-classes?userId=${user.id}&t=${Date.now()}`, { cache: 'no-store' });
+            const data = await response.json();
 
-          if (response.ok && data.classes) {
-            setClasses(data.classes || []);
+            if (response.ok && data.classes) {
+              setClasses(data.classes || []);
+            }
           }
         } catch (err) {
-          console.error('Error fetching teacher classes:', err);
+          console.error('Error fetching classes:', err);
         } finally {
           setLoadingClasses(false);
         }
@@ -72,7 +95,7 @@ export default function AnnouncementForm({
 
       fetchClasses();
     }
-  }, [showClassSelector, user?.id]);
+  }, [showClassSelector, user?.id, orgId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

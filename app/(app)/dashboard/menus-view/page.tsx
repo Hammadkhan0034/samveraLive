@@ -64,6 +64,30 @@ export default function MenusViewPage() {
     }
     return [];
   });
+  const [hydratedFromCache, setHydratedFromCache] = useState(() => {
+    // Check if we loaded from cache during initialization
+    if (typeof window !== 'undefined') {
+      try {
+        const cachedUserId = sessionStorage.getItem('current_user_id');
+        const cachedOrgId = sessionStorage.getItem('current_org_id');
+        if (cachedUserId && cachedOrgId) {
+          const cacheKey = `parent_menus_${cachedUserId}_${cachedOrgId}`;
+          const cached = localStorage.getItem(cacheKey);
+          const cacheTime = localStorage.getItem(`${cacheKey}_time`);
+          if (cached && cacheTime) {
+            const cachedMenus = JSON.parse(cached);
+            const age = Date.now() - parseInt(cacheTime);
+            if (cachedMenus && Array.isArray(cachedMenus) && age < 10 * 60 * 1000 && cachedMenus.length > 0) {
+              return true;
+            }
+          }
+        }
+      } catch (e) {
+        // Ignore cache errors
+      }
+    }
+    return false;
+  });
   const [loadingMenus, setLoadingMenus] = useState(false); // Start with false - will load from cache immediately
   const [loadingLinkedStudents, setLoadingLinkedStudents] = useState(false); // Start with false
   const [error, setError] = useState<string | null>(null);
@@ -340,6 +364,27 @@ export default function MenusViewPage() {
     }
   }, [orgId, classId, linkedStudents, user?.id]);
 
+  // Hydrate from cache instantly on mount if available
+  useEffect(() => {
+    if (orgId && user?.id) {
+      try {
+        const cacheKey = `parent_menus_${user.id}_${orgId}`;
+        const cached = localStorage.getItem(cacheKey);
+        const cacheTime = localStorage.getItem(`${cacheKey}_time`);
+        if (cached && cacheTime) {
+          const cachedMenus = JSON.parse(cached);
+          const age = Date.now() - parseInt(cacheTime);
+          if (cachedMenus && Array.isArray(cachedMenus) && age < 10 * 60 * 1000 && cachedMenus.length > 0) {
+            setMenus(cachedMenus);
+            setHydratedFromCache(true);
+          }
+        }
+      } catch (e) {
+        // Ignore cache errors
+      }
+    }
+  }, [orgId, user?.id]);
+
   // Load menus when orgId and user are available - use cache immediately, refresh in background
   // Use a ref to track if we've already loaded menus to prevent duplicate calls
   const menusLoadedRef = useRef(false);
@@ -351,11 +396,48 @@ export default function MenusViewPage() {
     }
   }, [orgId, user?.id]); // Removed loadMenus from dependencies to prevent re-renders
 
-  // Note: Removed auto-reload listeners to prevent flickering/reloading after menu is shown
-  // Menus will only reload when:
-  // - Page is first loaded
-  // - Date is changed
-  // - User manually refreshes the page
+  // Listen for menu updates and refresh instantly
+  useEffect(() => {
+    const handleMenuUpdate = () => {
+      // Check if menu was updated
+      if (typeof window !== 'undefined') {
+        const menuUpdated = localStorage.getItem('menu_data_updated');
+        if (menuUpdated === 'true') {
+          // Clear the flag
+          localStorage.removeItem('menu_data_updated');
+          // Refresh menus instantly
+          if (orgId && user?.id) {
+            loadMenus();
+          }
+        }
+      }
+    };
+
+    // Listen for window focus (when user returns from another page)
+    const handleFocus = () => handleMenuUpdate();
+    // Listen for visibility change (when tab becomes visible)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        handleMenuUpdate();
+      }
+    };
+    // Listen for custom menu update event
+    const handleCustomEvent = () => handleMenuUpdate();
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('focus', handleFocus);
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      window.addEventListener('menu-updated', handleCustomEvent);
+      // Also check immediately in case page is already focused
+      handleMenuUpdate();
+
+      return () => {
+        window.removeEventListener('focus', handleFocus);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        window.removeEventListener('menu-updated', handleCustomEvent);
+      };
+    }
+  }, [orgId, user?.id, loadMenus]);
 
 
   // Filter menus by selected date
@@ -420,13 +502,12 @@ export default function MenusViewPage() {
   if (loading && !user && isSigningIn) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-          <div className="flex items-center justify-center min-h-screen">
-            <div className="text-center">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-600 mx-auto mb-4"></div>
-              <p className="text-slate-600 dark:text-slate-400">
-                {t.loading}
-              </p>
-            </div>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-600 mx-auto mb-4"></div>
+            <p className="text-slate-600 dark:text-slate-400">
+              {t.loading}
+            </p>
           </div>
         </div>
       </div>

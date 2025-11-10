@@ -249,6 +249,65 @@ export default function MenusListPage() {
     }
   }, [orgId, classId, user?.id, userMetadata]);
 
+  // Listen for menu updates and refresh instantly
+  useEffect(() => {
+    const handleMenuUpdate = () => {
+      // Check if menu was updated
+      if (typeof window !== 'undefined') {
+        const menuUpdated = localStorage.getItem('menu_data_updated');
+        if (menuUpdated === 'true') {
+          // Clear the flag
+          localStorage.removeItem('menu_data_updated');
+          // Refresh menus instantly
+          if (orgId && user?.id) {
+            loadMenus();
+          }
+        }
+      }
+    };
+
+    // Listen for window focus (when user returns from edit page)
+    const handleFocus = () => handleMenuUpdate();
+    // Listen for visibility change (when tab becomes visible)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        handleMenuUpdate();
+      }
+    };
+    // Listen for custom menu update event
+    const handleCustomEvent = () => handleMenuUpdate();
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('focus', handleFocus);
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      window.addEventListener('menu-updated', handleCustomEvent);
+      // Also check immediately in case page is already focused
+      handleMenuUpdate();
+      
+      return () => {
+        window.removeEventListener('focus', handleFocus);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        window.removeEventListener('menu-updated', handleCustomEvent);
+      };
+    }
+  }, [orgId, user?.id, loadMenus]);
+
+  // Also listen for pathname changes (when navigating back from edit page)
+  useEffect(() => {
+    if (pathname === '/dashboard/menus-list') {
+      // Check if menu was updated when we navigate to this page
+      if (typeof window !== 'undefined') {
+        const menuUpdated = localStorage.getItem('menu_data_updated');
+        if (menuUpdated === 'true') {
+          localStorage.removeItem('menu_data_updated');
+          if (orgId && user?.id) {
+            loadMenus();
+          }
+        }
+      }
+    }
+  }, [pathname, orgId, user?.id, loadMenus]);
+
   // Load menus when orgId is available
   useEffect(() => {
     if (orgId) {

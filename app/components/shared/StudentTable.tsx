@@ -85,13 +85,13 @@ export function StudentTable({
               <th className="py-2 pr-3 text-white">{t.student_class}</th>
               <th className="py-2 pr-3 text-white">{t.student_dob}</th>
               <th className="py-2 pr-3 text-white">{t.student_gender}</th>
-              {/* Guardians column removed */}
+              <th className="py-2 pr-3 text-white">{t.student_guardians}</th>
               <th className="py-2 pr-3 text-white">{t.actions}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
             {students.length === 0 ? (
-              <tr><td colSpan={7} className="py-4 text-center">{t.no_students}</td></tr>
+              <tr><td colSpan={8} className="py-4 text-center">{t.no_students}</td></tr>
             ) : (
               students.map((s) => (
                 <tr key={s.id} className="h-12 hover:bg-slate-50/50 dark:hover:bg-slate-700/30 dark:text-slate-100 text-center">
@@ -105,7 +105,19 @@ export function StudentTable({
                     }
                   </td>
                   <td className="py-2 pr-3">{(s as any).users?.gender ?? s.gender ?? '—'}</td>
-                  {/* Guardians cell removed */}
+                  <td className="py-2 pr-3">
+                    {s.guardians && s.guardians.length > 0
+                      ? s.guardians
+                          .map((g: any) => {
+                            const firstName = g.users?.first_name || '';
+                            const lastName = g.users?.last_name || '';
+                            const name = `${firstName} ${lastName}`.trim();
+                            return name || '—';
+                          })
+                          .filter((name: string) => name !== '—')
+                          .join(', ') || '—'
+                      : '—'}
+                  </td>
                   <td className="py-2 pr-3 space-x-1">
                     <button
                       onClick={() => onEdit(s)}

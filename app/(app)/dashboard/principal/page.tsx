@@ -5,7 +5,6 @@ import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
 import PrincipalDashboard from '../../../components/PrincipalDashboard';
 import { useRequireAuth, useAuth } from '../../../../lib/hooks/useAuth';
-import LinkStudentGuardian from '../../../components/LinkStudentGuardian';
 
 export default function PrincipalDashboardPage() {
   const router = useRouter();
@@ -33,10 +32,6 @@ export default function PrincipalDashboardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       <PrincipalDashboard lang={lang} />
-      <div className="mx-auto max-w-7xl px-4 md:px-6 mt-6">
-        {/* Link Guardian ↔ Student widget */}
-        <LinkStudentGuardian lang={lang} />
-      </div>
     </div>
   );
 }
