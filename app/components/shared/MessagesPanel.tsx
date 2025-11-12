@@ -233,14 +233,21 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
         // Teachers - load for principal, guardian, and teacher roles (for teacher-to-teacher messaging)
         if (role === 'principal' || role === 'guardian' || role === 'teacher') {
           if (role === 'teacher') {
-            // For teachers, load other teachers (excluding current user)
+            // For teachers, load ALL other teachers from the same organization (excluding current user)
             try {
               const teachersRes = await fetch(`/api/staff-management?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
               const teachersData = await teachersRes.json();
               if (teachersRes.ok && teachersData.staff) {
                 // Filter to only teachers (not principals) and exclude current user
+                // This ensures all teachers from the same organization can message each other
                 const teacherRoleStaff = teachersData.staff
-                  .filter((t: any) => (t.role || 'teacher') === 'teacher' && t.id !== session?.user?.id);
+                  .filter((t: any) => {
+                    const userRole = t.role || 'teacher';
+                    const isTeacher = userRole === 'teacher';
+                    const isNotCurrentUser = t.id !== session?.user?.id;
+                    return isTeacher && isNotCurrentUser;
+                  });
+                
                 setTeachers(teacherRoleStaff.map((t: any) => ({
                   id: t.id,
                   first_name: t.first_name || '',
@@ -248,12 +255,14 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
                   email: t.email || '',
                   role: t.role || 'teacher'
                 })));
+                
+                console.log(`✅ Loaded ${teacherRoleStaff.length} teachers for messaging`);
               } else {
-                console.warn('Failed to load teachers for teacher role:', teachersData);
+                console.warn('❌ Failed to load teachers for teacher role:', teachersData);
                 setTeachers([]);
               }
             } catch (error) {
-              console.error('Error loading teachers for teacher role:', error);
+              console.error('❌ Error loading teachers for teacher role:', error);
               setTeachers([]);
             }
           } else if (role === 'guardian' && linkedStudentClassIds.size > 0) {

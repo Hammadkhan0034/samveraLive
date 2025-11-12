@@ -30,8 +30,17 @@ export async function GET(request: Request) {
       }, { status: 500 })
     }
 
-    // Enforce role and derive org_id from authenticated user
-    await requireServerRoles(['principal', 'admin'] as any)
+    // Allow principals, admins, and teachers to read staff data (for messaging purposes)
+    // Teachers can read to see other teachers for messaging, but cannot modify staff
+    const { user } = await requireServerAuth()
+    const userRoles = user.user_metadata?.roles || []
+    const isTeacher = userRoles.includes('teacher') && !userRoles.includes('principal') && !userRoles.includes('admin')
+    
+    // Check role permission
+    if (!userRoles.some((role: string) => ['principal', 'admin', 'teacher'].includes(role))) {
+      throw new Error(`One of roles [principal, admin, teacher] required. User has roles: ${userRoles.join(', ')}`)
+    }
+    
     const orgId = await getRequesterOrgIdOrThrow()
 
     // Get all staff members from staff table, joining with users table
@@ -48,19 +57,28 @@ export async function GET(request: Request) {
       .order('created_at', { ascending: false })
 
     // Transform the data to match expected format
-    let staff = staffData?.map((s: any) => ({
-      id: s.users.id,
-      email: s.users.email,
-      first_name: s.users.first_name,
-      last_name: s.users.last_name,
-      phone: s.users.phone,
-      address: s.users.address,
-      ssn: s.users.ssn,
-      org_id: s.users.org_id,
-      is_active: s.users.is_active,
-      created_at: s.users.created_at,
-      role: s.users.role || 'teacher'
-    })) || []
+    // For teachers, exclude sensitive data (SSN, phone, address) for security
+    let staff = staffData?.map((s: any) => {
+      const baseData: any = {
+        id: s.users.id,
+        email: s.users.email,
+        first_name: s.users.first_name,
+        last_name: s.users.last_name,
+        org_id: s.users.org_id,
+        is_active: s.users.is_active,
+        created_at: s.users.created_at,
+        role: s.users.role || 'teacher'
+      }
+      
+      // Only include sensitive fields for principals and admins
+      if (!isTeacher) {
+        baseData.phone = s.users.phone
+        baseData.address = s.users.address
+        baseData.ssn = s.users.ssn
+      }
+      
+      return baseData
+    }) || []
 
     const error = staffErr
 
@@ -84,19 +102,25 @@ export async function GET(request: Request) {
           .filter((m: any) => m.users?.org_id === orgId)
           .reduce((acc: any[], m: any) => {
             if (!acc.find((u) => u.id === m.users.id)) {
-              acc.push({
+              const baseData: any = {
                 id: m.users.id,
                 email: m.users.email,
                 first_name: m.users.first_name,
                 last_name: m.users.last_name,
-                phone: m.users.phone,
-                address: m.users.address,
-                ssn: m.users.ssn,
                 org_id: m.users.org_id,
                 is_active: m.users.is_active,
                 created_at: m.users.created_at,
                 role: 'teacher'
-              })
+              }
+              
+              // Only include sensitive fields for principals and admins
+              if (!isTeacher) {
+                baseData.phone = m.users.phone
+                baseData.address = m.users.address
+                baseData.ssn = m.users.ssn
+              }
+              
+              acc.push(baseData)
             }
             return acc
           }, [])
