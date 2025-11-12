@@ -163,6 +163,46 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'recipient_id or recipient_ids is required' }, { status: 400 });
     }
 
+    // For DM threads, check if a thread already exists between these participants
+    if (thread_type === 'dm' && recipient_id) {
+      const participantIds = [user.id, recipient_id].sort();
+      
+      // Find all threads where both users are participants
+      const { data: existingParticipants } = await supabaseAdmin
+        .from('message_participants')
+        .select('message_id')
+        .in('user_id', participantIds)
+        .eq('org_id', orgId);
+      
+      if (existingParticipants && existingParticipants.length > 0) {
+        // Group by message_id to find threads with both participants
+        const messageIdCounts = new Map<string, number>();
+        existingParticipants.forEach((p: any) => {
+          messageIdCounts.set(p.message_id, (messageIdCounts.get(p.message_id) || 0) + 1);
+        });
+        
+        // Find threads that have both participants (count === 2)
+        for (const [messageId, count] of Array.from(messageIdCounts.entries())) {
+          if (count === 2) {
+            // Check if this is a DM thread and not deleted
+            const { data: existingMessage } = await supabaseAdmin
+              .from('messages')
+              .select('id, thread_type, deleted_at')
+              .eq('id', messageId)
+              .eq('org_id', orgId)
+              .eq('thread_type', 'dm')
+              .is('deleted_at', null)
+              .maybeSingle();
+            
+            if (existingMessage) {
+              // Return existing thread instead of creating a new one
+              return NextResponse.json({ message: existingMessage }, { status: 200 });
+            }
+          }
+        }
+      }
+    }
+
     // Create message thread
     const { data: message, error: messageError } = await supabaseAdmin
       .from('messages')
