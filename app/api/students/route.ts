@@ -126,6 +126,25 @@ export async function POST(request: Request) {
         error: 'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local' 
       }, { status: 500 })
     }
+
+    // Validate Supabase URL is configured
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (!supabaseUrl) {
+      console.error('❌ NEXT_PUBLIC_SUPABASE_URL is not configured')
+      return NextResponse.json({ 
+        error: 'Supabase URL is not configured. Please check your environment variables.' 
+      }, { status: 500 })
+    }
+
+    // Validate URL format
+    try {
+      new URL(supabaseUrl);
+    } catch (urlError) {
+      console.error('❌ Invalid Supabase URL format:', supabaseUrl)
+      return NextResponse.json({ 
+        error: `Invalid Supabase URL format: ${supabaseUrl}` 
+      }, { status: 500 })
+    }
     
     const body = await request.json()
 
@@ -226,26 +245,54 @@ export async function POST(request: Request) {
     })();
 
     // First create a user record for the student
-    const { data: createdUser, error: userError } = await supabaseAdmin
-      .from('users')
-      .insert({
-        first_name,
-        last_name: last_name || null,
-        dob: validatedDob,
-        gender: normalizedGender,
-        phone: phone || null,
-        address: address || null,
-        ssn: social_security_number || null,
-        role: 'student' as any,
-        org_id: org_id || null,
-        is_active: true,
-      })
-      .select('id')
-      .single()
+    let createdUser, userError;
+    try {
+      const result = await supabaseAdmin
+        .from('users')
+        .insert({
+          first_name,
+          last_name: last_name || null,
+          dob: validatedDob,
+          gender: normalizedGender,
+          phone: phone || null,
+          address: address || null,
+          ssn: social_security_number || null,
+          role: 'student' as any,
+          org_id: org_id || null,
+          is_active: true,
+        })
+        .select('id')
+        .single()
+      
+      createdUser = result.data;
+      userError = result.error;
+    } catch (networkError: any) {
+      console.error('❌ Network error creating student user:', networkError);
+      console.error('❌ Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+      console.error('❌ Error details:', {
+        message: networkError?.message,
+        cause: networkError?.cause,
+        stack: networkError?.stack
+      });
+      return NextResponse.json({ 
+        error: `Network error: Failed to connect to Supabase. Please check your connection and Supabase configuration.`,
+        details: networkError?.message || 'Unknown network error'
+      }, { status: 500 })
+    }
 
     if (userError) {
       console.error('❌ Failed to create student user:', userError)
-      return NextResponse.json({ error: `Failed to create student user: ${userError.message}` }, { status: 500 })
+      console.error('❌ Error details:', {
+        message: userError.message,
+        details: userError.details,
+        hint: userError.hint,
+        code: userError.code
+      })
+      return NextResponse.json({ 
+        error: `Failed to create student user: ${userError.message}`,
+        details: userError.details || '',
+        hint: userError.hint || ''
+      }, { status: 500 })
     }
 
     const userId = createdUser?.id

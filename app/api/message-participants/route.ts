@@ -1,0 +1,265 @@
+import { NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabaseClient';
+import { requireServerAuth } from '@/lib/supabaseServer';
+
+async function getRequesterOrgId(userId: string): Promise<string | null> {
+  if (!supabaseAdmin) return null;
+  
+  const { data, error } = await supabaseAdmin
+    .from('users')
+    .select('org_id')
+    .eq('id', userId)
+    .maybeSingle();
+  
+  if (error || !data) return null;
+  return data.org_id;
+}
+
+export async function GET(request: Request) {
+  try {
+    if (!supabaseAdmin) {
+      return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 });
+    }
+
+    const { user } = await requireServerAuth();
+    const orgId = await getRequesterOrgId(user.id);
+    
+    if (!orgId) {
+      return NextResponse.json({ error: 'Organization ID not found' }, { status: 400 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const messageId = searchParams.get('messageId');
+
+    if (!messageId) {
+      return NextResponse.json({ error: 'messageId is required' }, { status: 400 });
+    }
+
+    // Verify user has access to this message thread
+    const { data: participant } = await supabaseAdmin
+      .from('message_participants')
+      .select('message_id')
+      .eq('user_id', user.id)
+      .eq('message_id', messageId)
+      .eq('org_id', orgId)
+      .maybeSingle();
+
+    if (!participant) {
+      return NextResponse.json({ error: 'Message thread not found or access denied' }, { status: 404 });
+    }
+
+    // Fetch all participants
+    const { data: participants, error } = await supabaseAdmin
+      .from('message_participants')
+      .select(`
+        *,
+        users!inner(id, first_name, last_name, email, role)
+      `)
+      .eq('message_id', messageId)
+      .eq('org_id', orgId);
+
+    if (error) {
+      console.error('❌ Error fetching participants:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ participants: participants || [] }, { status: 200 });
+  } catch (err: any) {
+    console.error('❌ Error in message-participants GET:', err);
+    return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 });
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    if (!supabaseAdmin) {
+      return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 });
+    }
+
+    const { user } = await requireServerAuth();
+    const orgId = await getRequesterOrgId(user.id);
+    
+    if (!orgId) {
+      return NextResponse.json({ error: 'Organization ID not found' }, { status: 400 });
+    }
+
+    const body = await request.json();
+    const { message_id, user_id, role = null } = body;
+
+    if (!message_id || !user_id) {
+      return NextResponse.json({ error: 'message_id and user_id are required' }, { status: 400 });
+    }
+
+    // Verify user has access to this message thread
+    const { data: existingParticipant } = await supabaseAdmin
+      .from('message_participants')
+      .select('message_id')
+      .eq('user_id', user.id)
+      .eq('message_id', message_id)
+      .eq('org_id', orgId)
+      .maybeSingle();
+
+    if (!existingParticipant) {
+      return NextResponse.json({ error: 'Message thread not found or access denied' }, { status: 404 });
+    }
+
+    // Check if participant already exists
+    const { data: existing } = await supabaseAdmin
+      .from('message_participants')
+      .select('id')
+      .eq('message_id', message_id)
+      .eq('user_id', user_id)
+      .eq('org_id', orgId)
+      .maybeSingle();
+
+    if (existing) {
+      return NextResponse.json({ error: 'Participant already exists' }, { status: 400 });
+    }
+
+    // Add participant
+    const { data: participant, error } = await supabaseAdmin
+      .from('message_participants')
+      .insert({
+        org_id: orgId,
+        message_id,
+        user_id,
+        role,
+        unread: true
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('❌ Error adding participant:', error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ participant }, { status: 201 });
+  } catch (err: any) {
+    console.error('❌ Error in message-participants POST:', err);
+    return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 });
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    if (!supabaseAdmin) {
+      return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 });
+    }
+
+    const { user } = await requireServerAuth();
+    const orgId = await getRequesterOrgId(user.id);
+    
+    if (!orgId) {
+      return NextResponse.json({ error: 'Organization ID not found' }, { status: 400 });
+    }
+
+    const body = await request.json();
+    const { id, unread, role } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: 'Participant ID is required' }, { status: 400 });
+    }
+
+    // Verify user has access (either updating their own or is participant in the thread)
+    const { data: participant } = await supabaseAdmin
+      .from('message_participants')
+      .select('id, user_id, message_id')
+      .eq('id', id)
+      .eq('org_id', orgId)
+      .maybeSingle();
+
+    if (!participant) {
+      return NextResponse.json({ error: 'Participant not found' }, { status: 404 });
+    }
+
+    // User can update their own participant record or if they're a participant in the thread
+    const { data: userParticipant } = await supabaseAdmin
+      .from('message_participants')
+      .select('id')
+      .eq('message_id', participant.message_id)
+      .eq('user_id', user.id)
+      .eq('org_id', orgId)
+      .maybeSingle();
+
+    if (!userParticipant && participant.user_id !== user.id) {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+    }
+
+    const updateData: any = {};
+    if (unread !== undefined) updateData.unread = unread;
+    if (role !== undefined) updateData.role = role;
+
+    const { data: updated, error } = await supabaseAdmin
+      .from('message_participants')
+      .update(updateData)
+      .eq('id', id)
+      .eq('org_id', orgId)
+      .select()
+      .single();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ participant: updated }, { status: 200 });
+  } catch (err: any) {
+    console.error('❌ Error in message-participants PUT:', err);
+    return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    if (!supabaseAdmin) {
+      return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 });
+    }
+
+    const { user } = await requireServerAuth();
+    const orgId = await getRequesterOrgId(user.id);
+    
+    if (!orgId) {
+      return NextResponse.json({ error: 'Organization ID not found' }, { status: 400 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ error: 'Participant ID is required' }, { status: 400 });
+    }
+
+    // Verify user has access
+    const { data: participant } = await supabaseAdmin
+      .from('message_participants')
+      .select('id, user_id, message_id')
+      .eq('id', id)
+      .eq('org_id', orgId)
+      .maybeSingle();
+
+    if (!participant) {
+      return NextResponse.json({ error: 'Participant not found' }, { status: 404 });
+    }
+
+    // User can remove their own participant record
+    if (participant.user_id !== user.id) {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+    }
+
+    const { error } = await supabaseAdmin
+      .from('message_participants')
+      .delete()
+      .eq('id', id)
+      .eq('org_id', orgId);
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true }, { status: 200 });
+  } catch (err: any) {
+    console.error('❌ Error in message-participants DELETE:', err);
+    return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 });
+  }
+}
+

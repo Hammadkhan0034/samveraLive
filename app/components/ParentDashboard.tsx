@@ -15,11 +15,12 @@ export default function ParentDashboard({ lang = 'en' }: { lang?: Lang }) {
   const { session } = useAuth();
   const router = useRouter();
   
-  // Prefetch menu routes for instant navigation
+  // Prefetch routes for instant navigation
   useEffect(() => {
     router.prefetch('/dashboard/menus-view');
     router.prefetch('/dashboard/stories');
     router.prefetch('/dashboard/attendance');
+    router.prefetch('/dashboard/parent/messages');
   }, [router]);
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
@@ -329,10 +330,36 @@ export default function ParentDashboard({ lang = 'en' }: { lang?: Lang }) {
     return () => { isMounted = false; };
   }, [session, linkedStudents]);
 
+  const [messagesCount, setMessagesCount] = useState(0);
+
+  // Load messages count
+  useEffect(() => {
+    if (!session?.user?.id) return;
+
+    async function loadMessagesCount() {
+      try {
+        if (!session?.user?.id) return;
+        const res = await fetch(`/api/messages?userId=${session.user.id}&t=${Date.now()}`, { cache: 'no-store' });
+        const json = await res.json();
+        if (res.ok && json.threads) {
+          const unreadCount = json.threads.filter((t: any) => t.unread).length;
+          setMessagesCount(unreadCount);
+        }
+      } catch (error) {
+        console.error('Error loading messages count:', error);
+      }
+    }
+
+    loadMessagesCount();
+    // Refresh every 30 seconds
+    const interval = setInterval(loadMessagesCount, 30000);
+    return () => clearInterval(interval);
+  }, [session?.user?.id]);
+
   const items: FeatureItem[] = [
     { href: '/notices', title: t.notices, desc: t.notices_desc, Icon: Bell },
     { href: '/calendar', title: t.calendar, desc: t.calendar_desc, Icon: CalendarDays },
-    { href: '/messages', title: t.messages, desc: t.messages_desc, Icon: MessageSquare, badge: 2 },
+    { href: '/dashboard/parent/messages', title: t.messages, desc: t.messages_desc, Icon: MessageSquare, badge: messagesCount > 0 ? messagesCount : undefined },
     { href: '/media', title: t.media, desc: t.media_desc, Icon: Camera },
     { href: '#', title: t.stories, desc: t.stories_desc, Icon: FileText },
     { href: '#', title: t.menu, desc: t.menu_desc, Icon: Utensils },
@@ -412,10 +439,14 @@ export default function ParentDashboard({ lang = 'en' }: { lang?: Lang }) {
             }
             // Regular tiles with Link
             return (
-              <a
+              <button
                 key={idx}
-                href={item.href}
-                className="block rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow dark:border-slate-700 dark:bg-slate-800"
+                onClick={() => {
+                  if (item.href && item.href !== '#') {
+                    router.push(item.href);
+                  }
+                }}
+                className="block rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow dark:border-slate-700 dark:bg-slate-800 text-left w-full"
               >
                 <div className="mb-4 flex items-center gap-3">
                   {item.Icon ? (
@@ -439,7 +470,7 @@ export default function ParentDashboard({ lang = 'en' }: { lang?: Lang }) {
                     {item.desc}
                   </p>
                 ) : null}
-              </a>
+              </button>
             );
           })}
         </div>

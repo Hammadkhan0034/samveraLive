@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
-import { Users, School, ChartBar as BarChart3, FileText, Plus, ListFilter as Filter, Search, CircleCheck as CheckCircle2, Circle as XCircle, Eye, EyeOff, Settings, Bell, Utensils, Megaphone } from 'lucide-react';
+import { Users, School, ChartBar as BarChart3, FileText, Plus, ListFilter as Filter, Search, CircleCheck as CheckCircle2, Circle as XCircle, Eye, EyeOff, Settings, Bell, Utensils, Megaphone, MessageSquare } from 'lucide-react';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import { useAuth } from '@/lib/hooks/useAuth';
 import AnnouncementList from './AnnouncementList';
@@ -104,7 +104,8 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
         loadStudentsForKPI(false),
         loadMenusForKPI(false),
         loadStoriesForKPI(),
-        loadAnnouncementsForKPI()
+        loadAnnouncementsForKPI(),
+        loadMessagesForKPI(false)
       ]).then((results) => {
         // Log results for debugging
         results.forEach((result, index) => {
@@ -243,6 +244,25 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
     }
   }
 
+  async function loadMessagesForKPI(showLoading = true) {
+    const orgId = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
+    if (!orgId || !session?.user?.id) return;
+    try {
+      const res = await fetch(`/api/messages?userId=${session.user.id}&t=${Date.now()}`, { cache: 'no-store' });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
+      const threads = json.threads || [];
+      // Count unread threads
+      const unreadCount = threads.filter((t: any) => t.unread).length;
+      setMessagesCount(unreadCount);
+      if (typeof window !== 'undefined' && session?.user?.id) {
+        localStorage.setItem(`messages_count_cache_${session.user.id}`, String(unreadCount));
+      }
+    } catch (e: any) {
+      console.error('❌ Error loading messages count:', e.message);
+    }
+  }
+
   // Listen for stories refresh event
   useEffect(() => {
     const handleStoriesRefresh = () => {
@@ -300,7 +320,8 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
         loadStudentsForKPI(),
         loadMenusForKPI(),
         loadStoriesForKPI(),
-        loadAnnouncementsForKPI()
+        loadAnnouncementsForKPI(),
+        loadMessagesForKPI()
       ]);
     }
   };
@@ -356,6 +377,14 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
   const [announcementsCount, setAnnouncementsCount] = useState(() => {
     if (typeof window !== 'undefined' && session?.user?.id) {
       const cached = localStorage.getItem(`announcements_count_cache_${session.user.id}`);
+      return cached ? parseInt(cached) : 0;
+    }
+    return 0;
+  });
+
+  const [messagesCount, setMessagesCount] = useState(() => {
+    if (typeof window !== 'undefined' && session?.user?.id) {
+      const cached = localStorage.getItem(`messages_count_cache_${session.user.id}`);
       return cached ? parseInt(cached) : 0;
     }
     return 0;
@@ -417,6 +446,12 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
       value: announcementsCount,
       icon: Megaphone,
       onClick: () => router.push('/dashboard/announcements')
+    },
+    {
+      label: t.kpi_messages,
+      value: messagesCount,
+      icon: MessageSquare,
+      onClick: () => router.push('/dashboard/principal/messages')
     },
   ];
 
@@ -596,7 +631,7 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
           <div
             key={i}
             className={`rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 ${
-              onClick ? 'cursor-pointer hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200' : ''
+              onClick !== undefined ? 'cursor-pointer hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200' : ''
             }`}
             onClick={onClick}
           >
@@ -679,6 +714,7 @@ const enText = {
   kpi_menus: 'Menus',
   kpi_stories: 'Stories',
   kpi_announcements: 'Announcements',
+  kpi_messages: 'Messages',
   classes_management: 'Classes Management',
   add_class: 'Add class',
   invite_staff: 'Invite staff',
@@ -867,6 +903,7 @@ const isText = {
   kpi_menus: 'Matseðillar',
   kpi_stories: 'Sögur',
   kpi_announcements: 'Tilkynningar',
+  kpi_messages: 'Skilaboð',
   classes_management: 'Hópastjórnun',
   add_class: 'Bæta við hóp',
   invite_staff: 'Bjóða starfsmanni',

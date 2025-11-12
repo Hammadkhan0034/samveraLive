@@ -236,6 +236,27 @@ export async function PUT(request: NextRequest) {
     // If approved, create the actual student record properly (users + students tables)
     if (status === 'approved') {
       try {
+        // Validate Supabase configuration
+        if (!supabaseUrl || !supabaseKey) {
+          console.error('❌ Supabase configuration missing:', { 
+            hasUrl: !!supabaseUrl, 
+            hasKey: !!supabaseKey 
+          });
+          return NextResponse.json({ 
+            error: 'Supabase configuration is missing. Please check your environment variables.' 
+          }, { status: 500 });
+        }
+
+        // Validate URL format
+        try {
+          new URL(supabaseUrl);
+        } catch (urlError) {
+          console.error('❌ Invalid Supabase URL format:', supabaseUrl);
+          return NextResponse.json({ 
+            error: `Invalid Supabase URL format: ${supabaseUrl}` 
+          }, { status: 500 });
+        }
+
         // Normalize gender
         const normalizedGender = (data.gender || 'unknown').toString().toLowerCase();
         
@@ -323,27 +344,53 @@ export async function PUT(request: NextRequest) {
         const finalClassId = (class_id !== undefined && class_id !== null && class_id !== '') ? class_id : data.class_id;
         
         // First create a user record for the student
-        const { data: createdUser, error: userError } = await supabaseAdmin
-          .from('users')
-          .insert({
-            first_name: data.first_name,
-            last_name: data.last_name || null,
-            dob: validatedDob,
-            gender: normalizedGender,
-            phone: finalPhone,
-            address: finalAddress,
-            ssn: finalSsn,
-            role: 'student' as any,
-            org_id: data.org_id,
-            is_active: true,
-          })
-          .select('id')
-          .single();
+        let createdUser, userError;
+        try {
+          const result = await supabaseAdmin
+            .from('users')
+            .insert({
+              first_name: data.first_name,
+              last_name: data.last_name || null,
+              dob: validatedDob,
+              gender: normalizedGender,
+              phone: finalPhone,
+              address: finalAddress,
+              ssn: finalSsn,
+              role: 'student' as any,
+              org_id: data.org_id,
+              is_active: true,
+            })
+            .select('id')
+            .single();
+          
+          createdUser = result.data;
+          userError = result.error;
+        } catch (networkError: any) {
+          console.error('❌ Network error creating student user:', networkError);
+          console.error('❌ Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+          console.error('❌ Error details:', {
+            message: networkError?.message,
+            cause: networkError?.cause,
+            stack: networkError?.stack
+          });
+          return NextResponse.json({ 
+            error: `Network error: Failed to connect to Supabase. Please check your connection and Supabase configuration.`,
+            details: networkError?.message || 'Unknown network error'
+          }, { status: 500 });
+        }
 
         if (userError) {
           console.error('❌ Failed to create student user:', userError);
+          console.error('❌ Error details:', {
+            message: userError.message,
+            details: userError.details,
+            hint: userError.hint,
+            code: userError.code
+          });
           return NextResponse.json({ 
-            error: `Failed to create student user: ${userError.message}` 
+            error: `Failed to create student user: ${userError.message}`,
+            details: userError.details || '',
+            hint: userError.hint || ''
           }, { status: 500 });
         }
 
