@@ -125,6 +125,14 @@ export async function GET(request: Request) {
         ? (Array.isArray(otherParticipant.users) ? otherParticipant.users[0] : otherParticipant.users)
         : null;
 
+      // Determine role with normalization
+      let participantRole = otherParticipantData?.role || (otherParticipant ? otherParticipant.role : null);
+      
+      // Normalize 'parent' role to 'guardian' for consistent display
+      if (participantRole === 'parent') {
+        participantRole = 'guardian';
+      }
+
       threadMap.set(message.id, {
         ...message,
         unread: participant.unread,
@@ -135,7 +143,7 @@ export async function GET(request: Request) {
           first_name: otherParticipantData.first_name,
           last_name: otherParticipantData.last_name,
           email: otherParticipantData.email,
-          role: otherParticipantData.role || (otherParticipant ? otherParticipant.role : null)
+          role: participantRole
         } : null
       });
     }

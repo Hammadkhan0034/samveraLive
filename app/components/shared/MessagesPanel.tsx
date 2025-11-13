@@ -803,7 +803,9 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
       }
     },
     onNewThread: (newThread) => {
-      // Filter thread for teacher role if needed
+      // For teacher role, show all threads (principals, teachers, and all guardians)
+      // If a thread exists, it means the teacher already has a conversation, so show it
+      // allowedGuardianIds is only used for filtering recipient dropdown, not existing threads
       let shouldAdd = true;
       if (role === 'teacher') {
         const otherParticipant = newThread.other_participant;
@@ -813,8 +815,9 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
           shouldAdd = true;
         } else if (otherParticipant.role === 'teacher') {
           shouldAdd = true;
-        } else if (otherParticipant.role === 'guardian' || !otherParticipant.role) {
-          shouldAdd = allowedGuardianIds.has(otherParticipant.id);
+        } else if (otherParticipant.role === 'guardian' || otherParticipant.role === 'parent' || !otherParticipant.role) {
+          // Show all guardian threads - if thread exists, it means conversation already started
+          shouldAdd = true;
         } else {
           shouldAdd = false;
         }
@@ -848,12 +851,14 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
   const filteredThreads = useMemo(() => {
     let filtered = threads;
 
-    // Filter threads for teacher role - only show principals, other teachers, and allowed guardians
+    // Filter threads for teacher role - show all existing threads
+    // Note: allowedGuardianIds is only used for filtering recipient dropdown, not existing threads
+    // If a thread exists, it means the teacher already has a conversation with that person, so show it
     if (role === 'teacher') {
       const beforeCount = filtered.length;
       const guardianThreads = filtered.filter(t => {
         const op = t.other_participant;
-        return op && (op.role === 'guardian' || !op.role);
+        return op && (op.role === 'guardian' || op.role === 'parent' || !op.role);
       });
       
       filtered = filtered.filter((thread: MessageThreadWithParticipants) => {
@@ -866,15 +871,12 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
         // Always show other teachers
         if (otherParticipant.role === 'teacher') return true;
         
-        // For guardians, only show if they're in the allowed list
-        if (otherParticipant.role === 'guardian' || !otherParticipant.role) {
-          const isAllowed = allowedGuardianIds.has(otherParticipant.id);
-          if (isAllowed) {
-            console.log(`✅ Showing guardian thread: ${otherParticipant.id} (${otherParticipant.first_name} ${otherParticipant.last_name})`);
-          } else {
-            console.log(`🔒 Filtering out guardian thread: ${otherParticipant.id} (${otherParticipant.first_name} ${otherParticipant.last_name}) - not in allowed list (allowedGuardianIds size: ${allowedGuardianIds.size})`);
-          }
-          return isAllowed;
+        // For guardians/parents, show ALL existing threads (don't filter by allowedGuardianIds)
+        // If a thread exists, it means the teacher already has a conversation with this guardian
+        // allowedGuardianIds is only used to filter the recipient dropdown for NEW conversations
+        if (otherParticipant.role === 'guardian' || otherParticipant.role === 'parent' || !otherParticipant.role) {
+          console.log(`✅ Showing guardian thread: ${otherParticipant.id} (${otherParticipant.first_name} ${otherParticipant.last_name || ''}) - existing conversation`);
+          return true;
         }
         
         return false;
@@ -882,11 +884,11 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
       
       const guardianThreadsShown = filtered.filter(t => {
         const op = t.other_participant;
-        return op && (op.role === 'guardian' || !op.role);
+        return op && (op.role === 'guardian' || op.role === 'parent' || !op.role);
       }).length;
       
       if (beforeCount !== filtered.length || guardianThreads.length > 0) {
-        console.log(`📊 Thread filtering summary: ${beforeCount} total -> ${filtered.length} filtered | ${guardianThreads.length} guardian threads found, ${guardianThreadsShown} shown (allowedGuardianIds: ${allowedGuardianIds.size})`);
+        console.log(`📊 Thread filtering summary: ${beforeCount} total -> ${filtered.length} filtered | ${guardianThreads.length} guardian threads found, ${guardianThreadsShown} shown`);
       }
     }
 

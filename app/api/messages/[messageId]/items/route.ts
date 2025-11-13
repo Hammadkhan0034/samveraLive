@@ -90,7 +90,7 @@ export async function GET(
     console.log('✅ Fetched message items:', transformedItems.length);
     return NextResponse.json({ items: transformedItems.reverse() }, { status: 200 }); // Reverse to show oldest first
   } catch (err: any) {
-    console.error('💥 Error in GET /api/messages/[messageId]/items:', err);
+    console.error('💥 Error in GET /[messageId]/items:', err);
     return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 });
   }
 }
@@ -171,7 +171,7 @@ export async function POST(
     console.log('✅ Created message item:', item.id);
     return NextResponse.json({ item }, { status: 201 });
   } catch (err: any) {
-    console.error('💥 Error in POST /api/messages/[messageId]/items:', err);
+    console.error('💥 Error in POST /[messageId]/items:', err);
     return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 });
   }
 }
