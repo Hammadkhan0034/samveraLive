@@ -37,7 +37,11 @@ async function hasUsersColumn(columnName: string): Promise<boolean> {
 
 export async function GET(request: Request) {
   try {
-    if (!supabaseAdmin) return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 })
+    if (!supabaseAdmin) {
+      console.error('❌ Supabase admin client not configured');
+      return NextResponse.json({ error: 'Admin client not configured. Please check SUPABASE_SERVICE_ROLE_KEY in .env.local' }, { status: 500 });
+    }
+    
     const { searchParams } = new URL(request.url)
     const orgId = searchParams.get('orgId') || undefined
     
@@ -140,8 +144,30 @@ export async function GET(request: Request) {
     }
     
     if (error) {
-      console.error('❌ Error fetching principals:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      // Handle fetch errors (network issues, connection problems)
+      const errorMessage = error.message || (typeof error === 'string' ? error : 'Unknown error');
+      const isFetchError = errorMessage.includes('fetch failed') || errorMessage.includes('TypeError: fetch failed');
+      
+      console.error('❌ Error fetching principals:', {
+        message: errorMessage,
+        details: (error as any)?.details || '',
+        hint: (error as any)?.hint || '',
+        code: (error as any)?.code || '',
+        isFetchError
+      });
+      
+      // If it's a fetch error, provide more helpful message
+      if (isFetchError) {
+        return NextResponse.json({ 
+          error: 'Database connection failed. Please check your Supabase configuration and network connection.',
+          details: errorMessage
+        }, { status: 503 }); // 503 Service Unavailable
+      }
+      
+      return NextResponse.json({ 
+        error: errorMessage,
+        details: (error as any)?.details || ''
+      }, { status: 500 })
     }
     
     // Double-check: Filter out any records that don't have role='principal'
@@ -183,8 +209,28 @@ export async function GET(request: Request) {
     console.log('✅ Returning principals:', principals.length, 'principals')
     return NextResponse.json({ principals }, { status: 200 })
   } catch (err: any) {
-    console.error('💥 Error in principals GET:', err)
-    return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 })
+    const errorMessage = err?.message || (typeof err === 'string' ? err : 'Unknown error');
+    const isFetchError = errorMessage.includes('fetch failed') || errorMessage.includes('TypeError: fetch failed');
+    
+    console.error('💥 Error in principals GET:', {
+      message: errorMessage,
+      details: err?.details || '',
+      stack: err?.stack || '',
+      isFetchError
+    });
+    
+    // If it's a fetch error, provide more helpful message
+    if (isFetchError) {
+      return NextResponse.json({ 
+        error: 'Database connection failed. Please check your Supabase configuration and network connection.',
+        details: errorMessage
+      }, { status: 503 }); // 503 Service Unavailable
+    }
+    
+    return NextResponse.json({ 
+      error: errorMessage,
+      details: err?.details || ''
+    }, { status: 500 })
   }
 }
 

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { supabaseAdmin } from '@/lib/supabaseClient';
-import { requireServerAuth } from '@/lib/supabaseServer';
 
 async function getRequesterOrgId(userId: string): Promise<string | null> {
   if (!supabaseAdmin) return null;
@@ -22,7 +23,13 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 });
     }
 
-    const { user } = await requireServerAuth();
+    const cookieStore = cookies();
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
     const orgId = await getRequesterOrgId(user.id);
     
     if (!orgId) {
@@ -149,7 +156,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 });
     }
 
-    const { user } = await requireServerAuth();
+    const cookieStore = cookies();
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
     const orgId = await getRequesterOrgId(user.id);
     
     if (!orgId) {
@@ -256,7 +269,13 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 });
     }
 
-    const { user } = await requireServerAuth();
+    const cookieStore = cookies();
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
     const orgId = await getRequesterOrgId(user.id);
     
     if (!orgId) {
@@ -312,7 +331,13 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 });
     }
 
-    const { user } = await requireServerAuth();
+    const cookieStore = cookies();
+    const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
     const orgId = await getRequesterOrgId(user.id);
     
     if (!orgId) {

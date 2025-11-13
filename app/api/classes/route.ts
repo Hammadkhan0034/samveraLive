@@ -61,30 +61,10 @@ export async function GET(request: Request) {
           .eq('membership_role', 'teacher')
           .eq('org_id', orgId || cls.org_id)
 
-        const userIds = memberships?.map((m: any) => m.user_id) || []
-        let staffRecords: any[] = []
-
-        if (userIds.length > 0) {
-          const orgIdToUse = orgId || cls.org_id
-          if (orgIdToUse) {
-            const { data: staffData } = await supabaseAdmin!
-              .from('staff')
-              .select('user_id')
-              .in('user_id', userIds)
-              .eq('org_id', orgIdToUse)
-            staffRecords = staffData || []
-          } else {
-            const { data: staffData } = await supabaseAdmin!
-              .from('staff')
-              .select('user_id')
-              .in('user_id', userIds)
-            staffRecords = staffData || []
-          }
-        }
-
-        const staffUserIds = new Set((staffRecords || []).map((s: any) => s.user_id))
-
-        const teachers = memberships?.filter((m: any) => staffUserIds.has(m.user_id)).map((m: any) => {
+        // Return ALL teachers from class_memberships, not just those in staff table
+        // This is important for guardians/parents who need to see teachers assigned to their children's classes
+        // even if the teacher is not in the staff table
+        const teachers = memberships?.map((m: any) => {
           const firstName = m.users.first_name || ''
           const lastName = m.users.last_name || ''
           const fullName = `${firstName} ${lastName}`.trim() || 'Unknown'

@@ -64,6 +64,7 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
   const prevAllowedGuardianIdsRef = useRef<string>('');
   const prevLinkedStudentClassIdsRef = useRef<string>('');
   const prevStudentIdsRef = useRef<string>('');
+  const isManuallyLoadingMessagesRef = useRef<boolean>(false);
 
   const userMetadata = session?.user?.user_metadata;
   const orgId = userMetadata?.org_id || userMetadata?.organization_id || userMetadata?.orgId;
@@ -129,6 +130,7 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
         const newKey = Array.from(guardianIdsSet).sort().join(',');
         // Only update if content actually changed
         if (prevAllowedGuardianIdsRef.current !== newKey) {
+          console.log(`✅ Loaded ${guardianIdsSet.size} allowed guardians for teacher:`, Array.from(guardianIdsSet));
           setAllowedGuardianIds(guardianIdsSet);
           prevAllowedGuardianIdsRef.current = newKey;
         }
@@ -156,36 +158,52 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
 
     async function loadLinkedStudents() {
       try {
+        console.log(`🔍 [Guardian Chat] Step 1: Loading linked students for guardian: ${guardianId}`);
         const studentsRes = await fetch(`/api/guardian-students?guardianId=${guardianId}&t=${Date.now()}`, { cache: 'no-store' });
         const studentsData = await studentsRes.json();
         if (studentsRes.ok && studentsData.relationships) {
           const studentIds = studentsData.relationships.map((r: any) => r.student_id).filter(Boolean);
+          console.log(`✅ [Guardian Chat] Step 1: Found ${studentIds.length} linked students for guardian:`, studentIds);
           
           if (studentIds.length > 0) {
+            console.log(`🔍 [Guardian Chat] Step 2: Loading student details to get class assignments...`);
             const studentsDetailsRes = await fetch(`/api/students?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
             const studentsDetails = await studentsDetailsRes.json();
             if (studentsDetailsRes.ok && studentsDetails.students) {
               const classIdsSet = new Set<string>();
+              const studentClassMap: Record<string, string[]> = {};
+              
               studentsDetails.students
                 .filter((s: any) => studentIds.includes(s.id))
                 .forEach((s: any) => {
                   const classId = s.class_id || s.classes?.id;
                   if (classId) {
                     classIdsSet.add(classId);
+                    if (!studentClassMap[s.id]) {
+                      studentClassMap[s.id] = [];
+                    }
+                    studentClassMap[s.id].push(classId);
                   }
                 });
+              
+              console.log(`✅ [Guardian Chat] Step 2: Found ${classIdsSet.size} unique classes for guardian's students`);
+              console.log(`📋 [Guardian Chat] Student-Class mapping:`, studentClassMap);
+              console.log(`📋 [Guardian Chat] Class IDs:`, Array.from(classIdsSet));
               setLinkedStudentClassIds(classIdsSet);
             } else {
+              console.warn('⚠️ [Guardian Chat] Step 2: Failed to load student details');
               setLinkedStudentClassIds(new Set());
             }
           } else {
+            console.warn('⚠️ [Guardian Chat] Step 1: No linked students found for guardian');
             setLinkedStudentClassIds(new Set());
           }
         } else {
+          console.warn('⚠️ [Guardian Chat] Step 1: Failed to load guardian-student relationships');
           setLinkedStudentClassIds(new Set());
         }
       } catch (error) {
-        console.error('Error loading linked students:', error);
+        console.error('❌ [Guardian Chat] Error loading linked students:', error);
         setLinkedStudentClassIds(new Set());
       }
     }
@@ -198,15 +216,25 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
   useEffect(() => {
     if (!orgId) return;
 
+    // For guardian role, wait for linkedStudentClassIds to be populated
+    if (role === 'guardian' && linkedStudentClassIds.size === 0) {
+      console.log(`⏳ [Guardian Chat] Waiting for linkedStudentClassIds to be populated...`);
+      return;
+    }
+
     // Calculate keys inside effect to avoid recalculation on every render
     const currentAllowedKey = Array.from(allowedGuardianIds).sort().join(',');
     const currentLinkedKey = Array.from(linkedStudentClassIds).sort().join(',');
     
-    // Only run if keys actually changed
-    if (prevAllowedGuardianIdsRef.current === currentAllowedKey && 
-        prevLinkedStudentClassIdsRef.current === currentLinkedKey &&
-        prevAllowedGuardianIdsRef.current !== '' && 
-        prevLinkedStudentClassIdsRef.current !== '') {
+    // For guardian role, always run if orgId is available (don't skip on first load)
+    // For other roles, only run if keys actually changed
+    const shouldSkip = role !== 'guardian' && 
+      prevAllowedGuardianIdsRef.current === currentAllowedKey && 
+      prevLinkedStudentClassIdsRef.current === currentLinkedKey &&
+      prevAllowedGuardianIdsRef.current !== '' && 
+      prevLinkedStudentClassIdsRef.current !== '';
+    
+    if (shouldSkip) {
       return;
     }
 
@@ -240,6 +268,7 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
               if (teachersRes.ok && teachersData.staff) {
                 // Filter to only teachers (not principals) and exclude current user
                 // This ensures all teachers from the same organization can message each other
+                
                 const teacherRoleStaff = teachersData.staff
                   .filter((t: any) => {
                     const userRole = t.role || 'teacher';
@@ -247,7 +276,7 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
                     const isNotCurrentUser = t.id !== session?.user?.id;
                     return isTeacher && isNotCurrentUser;
                   });
-                
+                console.log(teacherRoleStaff, '==================')
                 setTeachers(teacherRoleStaff.map((t: any) => ({
                   id: t.id,
                   first_name: t.first_name || '',
@@ -265,88 +294,251 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
               console.error('❌ Error loading teachers for teacher role:', error);
               setTeachers([]);
             }
-          } else if (role === 'guardian' && linkedStudentClassIds.size > 0) {
-            // For guardians, load teachers assigned to their students' classes
-            const classIdsArray = Array.from(linkedStudentClassIds);
-            const teacherIdsSet = new Set<string>();
-            
+          } else if (role === 'guardian') {
+            // For guardians, load ONLY teachers assigned to their students' classes
+            // Flow: Guardian → Students → Classes → Teachers
             try {
-              const classesRes = await fetch(`/api/classes?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
-              const classesData = await classesRes.json();
-              if (classesRes.ok && classesData.classes) {
-                const relevantClasses = classesData.classes.filter((c: any) => classIdsArray.includes(c.id));
-                relevantClasses.forEach((classData: any) => {
-                  // Check for assigned_teachers array
-                  if (classData?.assigned_teachers && Array.isArray(classData.assigned_teachers)) {
-                    classData.assigned_teachers.forEach((teacher: any) => {
-                      // Handle both object format {id, first_name, ...} and just id
-                      const teacherId = teacher?.id || teacher;
-                      if (teacherId) {
-                        teacherIdsSet.add(teacherId);
+              let teacherIdsSet = new Set<string>();
+              let classesData: any = null; // Store classes data for later use
+              let classIdsArray: string[] = []; // Store class IDs for later use
+              
+              // Step 3: Get teachers from guardian's students' classes
+              if (linkedStudentClassIds.size > 0) {
+                classIdsArray = Array.from(linkedStudentClassIds);
+                console.log(`🔍 [Guardian Chat] Step 3: Loading teachers from ${classIdsArray.length} classes:`, classIdsArray);
+                
+                try {
+                  // Try to get teachers from classes API first
+                  const classesRes = await fetch(`/api/classes?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
+                  classesData = await classesRes.json();
+                  if (classesRes.ok && classesData.classes) {
+                    const relevantClasses = classesData.classes.filter((c: any) => classIdsArray.includes(c.id));
+                    console.log(`✅ [Guardian Chat] Step 3a: Found ${relevantClasses.length} relevant classes from API`);
+                    
+                    relevantClasses.forEach((classData: any) => {
+                      // Check for assigned_teachers array (format: {id, full_name, first_name, last_name, email})
+                      if (classData?.assigned_teachers && Array.isArray(classData.assigned_teachers)) {
+                        console.log(`  📋 Class ${classData.name} has ${classData.assigned_teachers.length} assigned teachers:`, classData.assigned_teachers.map((t: any) => ({ id: t?.id || t, name: t?.first_name || t?.full_name || 'Unknown' })));
+                        classData.assigned_teachers.forEach((teacher: any) => {
+                          // Handle object format {id, first_name, ...} and just id
+                          const teacherId = teacher?.id || teacher;
+                          if (teacherId) {
+                            teacherIdsSet.add(teacherId);
+                            const teacherName = teacher.first_name || teacher.full_name || 'Unknown';
+                            console.log(`  ✅ Found teacher in class ${classData.name}: ${teacherId} (${teacherName})`);
+                            // Special check for the specific teacher mentioned
+                            if (teacherId === 'b43d997f-4852-4c70-abd8-9c13ff6bae9e' || teacherName.toLowerCase().includes('shayan')) {
+                              console.log(`  🎯 FOUND TARGET TEACHER: ${teacherId} - ${teacherName} in class ${classData.name}`);
+                            }
+                          }
+                        });
+                      } else {
+                        console.log(`  ⚠️ Class ${classData.name} (${classData.id}) has no assigned_teachers array`);
                       }
                     });
+                    console.log(`✅ [Guardian Chat] Step 3a: Found ${teacherIdsSet.size} unique teachers from classes API`);
+                  } else {
+                    console.warn('⚠️ [Guardian Chat] Step 3a: Classes API response not ok or no classes data:', classesData);
                   }
-                });
-              }
-            } catch (error) {
-              console.error('Error loading classes for teachers:', error);
-            }
-
-            if (teacherIdsSet.size > 0) {
-              const teacherIdsArray = Array.from(teacherIdsSet);
-              const teachersRes = await fetch(`/api/staff-management?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
-              const teachersData = await teachersRes.json();
-              if (teachersRes.ok && teachersData.staff) {
-                // Filter to only teachers (not principals) and match the IDs from classes
-                const filteredTeachers = teachersData.staff
-                  .filter((t: any) => {
-                    const isTeacher = (t.role || 'teacher') === 'teacher';
-                    const isAssigned = teacherIdsArray.includes(t.id);
-                    return isTeacher && isAssigned;
-                  })
-                  .map((t: any) => ({
-                    id: t.id,
-                    first_name: t.first_name || '',
-                    last_name: t.last_name || null,
-                    email: t.email || '',
-                    role: t.role || 'teacher'
-                  }));
-                setTeachers(filteredTeachers);
+                  
+                  // Step 3b: Fallback - Query class_memberships directly if assigned_teachers is empty
+                  if (teacherIdsSet.size === 0) {
+                    console.log(`🔍 [Guardian Chat] Step 3b: No teachers from classes API, querying class_memberships directly...`);
+                    try {
+                      const membershipsRes = await fetch(`/api/class-memberships?classIds=${classIdsArray.join(',')}&orgId=${orgId}&role=teacher&t=${Date.now()}`, { cache: 'no-store' });
+                      if (membershipsRes.ok) {
+                        const membershipsData = await membershipsRes.json();
+                        if (membershipsData.memberships && Array.isArray(membershipsData.memberships)) {
+                          membershipsData.memberships.forEach((m: any) => {
+                            const teacherId = m.user_id || m.user?.id;
+                            if (teacherId) {
+                              teacherIdsSet.add(teacherId);
+                              console.log(`  ✅ Found teacher from class_memberships: ${teacherId}`);
+                            }
+                          });
+                          console.log(`✅ [Guardian Chat] Step 3b: Found ${teacherIdsSet.size} teachers from class_memberships`);
+                        }
+                      } else {
+                        // If API doesn't exist, we'll handle it in the catch block below
+                        console.log(`⚠️ [Guardian Chat] Step 3b: class-memberships API not available, will query directly via Supabase`);
+                      }
+                    } catch (membershipError) {
+                      console.log(`⚠️ [Guardian Chat] Step 3b: Could not use class-memberships API, will continue with teachers from classes API`);
+                    }
+                  }
+                } catch (error) {
+                  console.error('❌ [Guardian Chat] Step 3: Error loading classes for teachers:', error);
+                }
+                
+                console.log(`📊 [Guardian Chat] Step 3 Summary: Total ${teacherIdsSet.size} unique teachers found from classes`);
+                if (teacherIdsSet.size > 0) {
+                  console.log(`📋 [Guardian Chat] Teacher IDs:`, Array.from(teacherIdsSet));
+                }
               } else {
-                setTeachers([]);
+                console.log('⚠️ [Guardian Chat] Step 3: No linked student classes found for guardian - will show empty teacher list');
               }
-            } else {
-              // If no teachers found for specific classes, still try to load all teachers as fallback
+
+              // Step 4: Load teachers from staff-management API and filter to only those assigned to guardian's students' classes
+              console.log(`🔍 [Guardian Chat] Step 4: Loading teachers from staff-management API (orgId: ${orgId})...`);
               const teachersRes = await fetch(`/api/staff-management?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
+              
+              if (!teachersRes.ok) {
+                console.error(`❌ [Guardian Chat] Step 4: Staff-management API returned error: ${teachersRes.status} ${teachersRes.statusText}`);
+                const errorData = await teachersRes.json().catch(() => ({}));
+                console.error('Error details:', errorData);
+                setTeachers([]);
+                return;
+              }
+              
               const teachersData = await teachersRes.json();
-              if (teachersRes.ok && teachersData.staff) {
-                // Filter to only teachers (not principals)
-                const teacherRoleStaff = teachersData.staff.filter((t: any) => (t.role || 'teacher') === 'teacher');
-                setTeachers(teacherRoleStaff.map((t: any) => ({
+              console.log(`📦 [Guardian Chat] Step 4: Staff-management API response:`, { 
+                hasStaff: !!teachersData.staff, 
+                staffLength: teachersData.staff?.length || 0,
+                totalStaff: teachersData.total_staff || 0
+              });
+              
+              if (teachersData.staff && Array.isArray(teachersData.staff)) {
+                console.log(`📊 [Guardian Chat] Step 4: Total staff from API: ${teachersData.staff.length}`);
+                
+                // Filter to only teachers (not principals or admins)
+                let filteredTeachers = teachersData.staff.filter((t: any) => {
+                  const userRole = (t.role || 'teacher').toLowerCase().trim();
+                  const isTeacher = userRole === 'teacher';
+                  if (!isTeacher) {
+                    console.log(`  🔒 Filtering out staff member: ${t.first_name || ''} ${t.last_name || ''} (role: ${t.role || 'null'})`);
+                  }
+                  return isTeacher;
+                });
+                
+                console.log(`✅ [Guardian Chat] Step 4: Filtered to ${filteredTeachers.length} teachers (excluding principals/admins) out of ${teachersData.staff.length} total staff`);
+                
+                // Step 5: Filter to ONLY teachers assigned to guardian's students' classes
+                if (teacherIdsSet.size > 0) {
+                  const teacherIdsArray = Array.from(teacherIdsSet);
+                  console.log(`🔍 [Guardian Chat] Step 5: Looking for ${teacherIdsArray.length} teachers in staff API:`, teacherIdsArray);
+                  console.log(`🔍 [Guardian Chat] Step 5: Available teachers in staff API (${filteredTeachers.length}):`, filteredTeachers.map((t: any) => ({ id: t.id, name: `${t.first_name} ${t.last_name || ''}`.trim() || t.email })));
+                  
+                  const beforeFilter = filteredTeachers.length;
+                  console.log(`🔍 [Guardian Chat] Step 5: Before filtering - looking for teacher IDs:`, teacherIdsArray);
+                  console.log(`🔍 [Guardian Chat] Step 5: Before filtering - available teacher IDs:`, filteredTeachers.map((t: any) => t.id));
+                  
+                  filteredTeachers = filteredTeachers.filter((t: any) => {
+                    const isMatch = teacherIdsArray.includes(t.id);
+                    if (t.id === 'b43d997f-4852-4c70-abd8-9c13ff6bae9e' || (t.first_name && t.first_name.toLowerCase().includes('shayan'))) {
+                      console.log(`  🎯 TARGET TEACHER CHECK: ${t.id} (${t.first_name} ${t.last_name || ''}) - isMatch: ${isMatch}, in array: ${teacherIdsArray.includes(t.id)}`);
+                    }
+                    return isMatch;
+                  });
+                  console.log(`✅ [Guardian Chat] Step 5: Filtered to ${filteredTeachers.length} teachers (from ${beforeFilter}) assigned to guardian's students' classes`);
+                  
+                  // If some teachers from classes are missing from staff API, try to get their details from classes API
+                  const foundTeacherIds = new Set(filteredTeachers.map((t: any) => t.id));
+                  const missingTeacherIds = teacherIdsArray.filter((id: string) => !foundTeacherIds.has(id));
+                  
+                  if (missingTeacherIds.length > 0) {
+                    console.warn(`⚠️ [Guardian Chat] Step 5: ${missingTeacherIds.length} teachers from classes not found in staff API:`, missingTeacherIds);
+                    if (missingTeacherIds.includes('b43d997f-4852-4c70-abd8-9c13ff6bae9e')) {
+                      console.warn(`  🎯 TARGET TEACHER IS MISSING FROM STAFF API! Will try to get from classes API`);
+                    }
+                    console.warn(`⚠️ [Guardian Chat] Attempting to get teacher details from classes API...`);
+                    
+                    // Get teacher details from classes API for missing teachers
+                    try {
+                      const relevantClasses = classesData?.classes?.filter((c: any) => classIdsArray.includes(c.id)) || [];
+                      console.log(`  🔍 Found ${relevantClasses.length} relevant classes to search for missing teachers`);
+                      const missingTeachers: any[] = [];
+                      
+                      relevantClasses.forEach((classData: any) => {
+                        if (classData?.assigned_teachers && Array.isArray(classData.assigned_teachers)) {
+                          classData.assigned_teachers.forEach((teacher: any) => {
+                            const teacherId = teacher?.id || teacher;
+                            if (teacherId && missingTeacherIds.includes(teacherId) && !foundTeacherIds.has(teacherId)) {
+                              // Add teacher from classes API if not already added
+                              if (!missingTeachers.find((t: any) => t.id === teacherId)) {
+                                const teacherData = {
+                                  id: teacherId,
+                                  first_name: teacher.first_name || '',
+                                  last_name: teacher.last_name || null,
+                                  email: teacher.email || '',
+                                  role: 'teacher'
+                                };
+                                missingTeachers.push(teacherData);
+                                foundTeacherIds.add(teacherId);
+                                if (teacherId === 'b43d997f-4852-4c70-abd8-9c13ff6bae9e' || (teacher.first_name && teacher.first_name.toLowerCase().includes('shayan'))) {
+                                  console.log(`  🎯 FOUND MISSING TARGET TEACHER in classes API:`, teacherData);
+                                }
+                              }
+                            }
+                          });
+                        }
+                      });
+                      
+                      if (missingTeachers.length > 0) {
+                        console.log(`✅ [Guardian Chat] Step 5: Added ${missingTeachers.length} missing teachers from classes API:`, missingTeachers.map((t: any) => ({ id: t.id, name: `${t.first_name} ${t.last_name || ''}`.trim() })));
+                        filteredTeachers.push(...missingTeachers);
+                      } else {
+                        console.warn(`  ⚠️ No missing teachers found in classes API data`);
+                      }
+                    } catch (error) {
+                      console.error('❌ [Guardian Chat] Step 5: Error getting missing teachers from classes:', error);
+                    }
+                  }
+                  
+                  if (filteredTeachers.length === 0) {
+                    console.warn(`⚠️ [Guardian Chat] Step 5: No teachers found after all attempts`);
+                    console.warn(`⚠️ [Guardian Chat] Teacher IDs from classes:`, Array.from(teacherIdsSet));
+                    const allTeacherIds = teachersData.staff
+                      .filter((t: any) => (t.role || 'teacher').toLowerCase().trim() === 'teacher')
+                      .map((t: any) => t.id);
+                    console.warn(`⚠️ [Guardian Chat] Teacher IDs in staff API:`, allTeacherIds);
+                  }
+                } else {
+                  console.warn(`⚠️ [Guardian Chat] Step 5: No teacher IDs found from classes - showing empty teacher list`);
+                  console.warn(`⚠️ [Guardian Chat] This means guardian's students have no classes or classes have no assigned teachers`);
+                  filteredTeachers = []; // Show empty list, no fallback to all teachers
+                }
+                
+                const teachersList = filteredTeachers.map((t: any) => ({
                   id: t.id,
                   first_name: t.first_name || '',
                   last_name: t.last_name || null,
                   email: t.email || '',
                   role: t.role || 'teacher'
-                })));
+                }));
+                
+                console.log(`✅ [Guardian Chat] Final: Setting ${teachersList.length} teachers for guardian dropdown`);
+                if (teachersList.length > 0) {
+                  console.log(`📋 [Guardian Chat] Teachers being set:`, teachersList.map((t: any) => ({ 
+                    id: t.id, 
+                    name: `${t.first_name} ${t.last_name || ''}`.trim() || t.email,
+                    email: t.email 
+                  })));
+                } else {
+                  console.warn(`⚠️ [Guardian Chat] No teachers will be shown in dropdown - guardian's students' classes have no assigned teachers`);
+                  console.warn(`⚠️ [Guardian Chat] Debug info:`, {
+                    teacherIdsFromClasses: Array.from(teacherIdsSet),
+                    filteredTeachersBeforeMapping: filteredTeachers.length,
+                    classIdsArray: classIdsArray,
+                    hasClassesData: !!classesData
+                  });
+                }
+                console.log(`🔍 [Guardian Chat] About to call setTeachers with ${teachersList.length} teachers`);
+                setTeachers(teachersList);
+                console.log(`✅ [Guardian Chat] setTeachers called`);
               } else {
+                console.warn('❌ [Guardian Chat] Step 4: Staff-management API response invalid or empty:', {
+                  ok: teachersRes.ok,
+                  status: teachersRes.status,
+                  hasStaff: !!teachersData.staff,
+                  staffIsArray: Array.isArray(teachersData.staff),
+                  data: teachersData
+                });
                 setTeachers([]);
               }
-            }
-          } else if (role === 'guardian') {
-            // For guardians without linked student classes, load all teachers as fallback
-            const teachersRes = await fetch(`/api/staff-management?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
-            const teachersData = await teachersRes.json();
-            if (teachersRes.ok && teachersData.staff) {
-              // Filter to only teachers (not principals)
-              const teacherRoleStaff = teachersData.staff.filter((t: any) => (t.role || 'teacher') === 'teacher');
-              setTeachers(teacherRoleStaff.map((t: any) => ({
-                id: t.id,
-                first_name: t.first_name || '',
-                last_name: t.last_name || null,
-                email: t.email || '',
-                role: t.role || 'teacher'
-              })));
+            } catch (error) {
+              console.error('❌ Error loading teachers for guardian:', error);
+              // Set empty array on error
+              setTeachers([]);
             }
           } else {
             // For principals, load all teachers
@@ -366,36 +558,55 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
 
         // Guardians - load for principal and teacher roles
         if (role === 'principal' || role === 'teacher') {
-          if (role === 'teacher' && allowedGuardianIds.size > 0) {
-            // For teachers, only load guardians linked to their students
-            const guardianIdsArray = Array.from(allowedGuardianIds);
+          try {
+            // Always try to load guardians - for teachers, we'll filter based on allowedGuardianIds
             const guardiansRes = await fetch(`/api/guardians?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
             const guardiansData = await guardiansRes.json();
             if (guardiansRes.ok && guardiansData.guardians) {
-              const filteredGuardians = guardiansData.guardians
-                .filter((g: any) => guardianIdsArray.includes(g.id))
-                .map((g: any) => ({
+              if (role === 'teacher') {
+                // For teachers, filter to only show guardians linked to their students
+                // But if allowedGuardianIds is empty, still load all guardians (they'll be filtered in the dropdown/threads)
+                // This ensures guardians appear in the dropdown even if allowedGuardianIds hasn't loaded yet
+                if (allowedGuardianIds.size > 0) {
+                  const guardianIdsArray = Array.from(allowedGuardianIds);
+                  const filteredGuardians = guardiansData.guardians
+                    .filter((g: any) => guardianIdsArray.includes(g.id))
+                    .map((g: any) => ({
+                      id: g.id,
+                      first_name: g.first_name || '',
+                      last_name: g.last_name || null,
+                      email: g.email || ''
+                    }));
+                  console.log(`✅ Loaded ${filteredGuardians.length} guardians for teacher (filtered from ${guardiansData.guardians.length} total)`);
+                  setGuardians(filteredGuardians);
+                } else {
+                  // Load all guardians initially - they'll be filtered when allowedGuardianIds is populated
+                  // This ensures guardians show up in the dropdown
+                  const allGuardians = guardiansData.guardians.map((g: any) => ({
+                    id: g.id,
+                    first_name: g.first_name || '',
+                    last_name: g.last_name || null,
+                    email: g.email || ''
+                  }));
+                  console.log(`⚠️ AllowedGuardianIds empty, loading all ${allGuardians.length} guardians for teacher (will filter when allowedGuardianIds is populated)`);
+                  setGuardians(allGuardians);
+                }
+              } else {
+                // For principals, load all guardians
+                setGuardians(guardiansData.guardians.map((g: any) => ({
                   id: g.id,
                   first_name: g.first_name || '',
                   last_name: g.last_name || null,
                   email: g.email || ''
-                }));
-              setGuardians(filteredGuardians);
+                })));
+              }
             } else {
+              console.warn('❌ Failed to load guardians:', guardiansData);
               setGuardians([]);
             }
-          } else {
-            // For principals, load all guardians
-            const guardiansRes = await fetch(`/api/guardians?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
-            const guardiansData = await guardiansRes.json();
-            if (guardiansRes.ok && guardiansData.guardians) {
-              setGuardians(guardiansData.guardians.map((g: any) => ({
-                id: g.id,
-                first_name: g.first_name || '',
-                last_name: g.last_name || null,
-                email: g.email || ''
-              })));
-            }
+          } catch (error) {
+            console.error('❌ Error loading guardians:', error);
+            setGuardians([]);
           }
         }
       } catch (error) {
@@ -410,9 +621,9 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
 
     loadRecipients();
     // Note: We check Set content via refs inside to prevent loops
-    // Size changes trigger re-check, but content comparison prevents unnecessary loads
+    // For guardian role, we need to depend on linkedStudentClassIds.size to wait for classes to load
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [orgId, role, session?.user?.id, allowedGuardianIds.size, linkedStudentClassIds.size]);
+  }, [orgId, role, session?.user?.id, linkedStudentClassIds.size]);
 
   // Load message threads
   useEffect(() => {
@@ -437,25 +648,26 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
         const res = await fetch(`/api/messages?userId=${currentSession.user.id}&t=${Date.now()}`, { cache: 'no-store' });
         const json = await res.json();
         if (res.ok && json.threads) {
-          let filteredThreads = json.threads;
-
-          // Filter threads for teacher role - only show principals, other teachers, and allowed guardians
-          if (role === 'teacher') {
-            filteredThreads = filteredThreads.filter((thread: MessageThreadWithParticipants) => {
-              const otherParticipant = thread.other_participant;
-              if (!otherParticipant) return false;
-              if (otherParticipant.role === 'principal') return true;
-              if (otherParticipant.role === 'teacher') return true;
-              if (otherParticipant.role === 'guardian' || !otherParticipant.role) {
-                return allowedGuardianIds.has(otherParticipant.id);
-              }
-              return false;
-            });
+          // Load all threads without filtering - filtering will happen in useMemo
+          // This ensures guardian threads appear even if allowedGuardianIds loads later
+          const guardianThreads = json.threads.filter((t: any) => {
+            const op = t.other_participant;
+            return op && (op.role === 'guardian' || !op.role);
+          });
+          console.log(`📥 Loaded ${json.threads.length} threads for teacher (${guardianThreads.length} guardian threads, allowedGuardianIds: ${allowedGuardianIds.size})`);
+          if (guardianThreads.length > 0) {
+            console.log(`👥 Guardian threads found:`, guardianThreads.map((t: any) => ({
+              id: t.id,
+              guardian_id: t.other_participant?.id,
+              guardian_name: `${t.other_participant?.first_name} ${t.other_participant?.last_name || ''}`,
+              in_allowed_list: allowedGuardianIds.has(t.other_participant?.id || '')
+            })));
           }
-
-          setThreads(filteredThreads);
-          if (filteredThreads.length > 0 && !selectedThread) {
-            setSelectedThread(filteredThreads[0]);
+          setThreads(json.threads);
+          
+          // Auto-select first thread if none selected
+          if (json.threads.length > 0 && !selectedThread) {
+            setSelectedThread(json.threads[0]);
           }
         }
       } catch (error) {
@@ -471,9 +683,9 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
 
     loadThreads();
     // Note: We check Set content via ref inside to prevent loops
-    // Size changes trigger re-check, but content comparison prevents unnecessary loads
+    // We only depend on session user id and role - Set size is checked via ref
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.user?.id, role, allowedGuardianIds.size]);
+  }, [session?.user?.id, role]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -484,6 +696,11 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
   useEffect(() => {
     if (!selectedThread || !session?.user?.id) {
       setMessages([]);
+      return;
+    }
+
+    // Skip loading if we're manually loading messages (e.g., after sending a message)
+    if (isManuallyLoadingMessagesRef.current) {
       return;
     }
 
@@ -627,18 +844,80 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
     },
   });
 
-  // Filter threads by search query
+  // Filter threads by role permissions and search query
   const filteredThreads = useMemo(() => {
-    if (!searchQuery.trim()) return threads;
-    const query = searchQuery.toLowerCase();
-    return threads.filter(thread => {
-      const otherParticipant = thread.other_participant;
-      if (!otherParticipant) return false;
-      const name = `${otherParticipant.first_name} ${otherParticipant.last_name || ''}`.toLowerCase();
-      const email = otherParticipant.email?.toLowerCase() || '';
-      return name.includes(query) || email.includes(query);
-    });
-  }, [threads, searchQuery]);
+    let filtered = threads;
+
+    // Filter threads for teacher role - only show principals, other teachers, and allowed guardians
+    if (role === 'teacher') {
+      const beforeCount = filtered.length;
+      const guardianThreads = filtered.filter(t => {
+        const op = t.other_participant;
+        return op && (op.role === 'guardian' || !op.role);
+      });
+      
+      filtered = filtered.filter((thread: MessageThreadWithParticipants) => {
+        const otherParticipant = thread.other_participant;
+        if (!otherParticipant) return false;
+        
+        // Always show principals
+        if (otherParticipant.role === 'principal') return true;
+        
+        // Always show other teachers
+        if (otherParticipant.role === 'teacher') return true;
+        
+        // For guardians, only show if they're in the allowed list
+        if (otherParticipant.role === 'guardian' || !otherParticipant.role) {
+          const isAllowed = allowedGuardianIds.has(otherParticipant.id);
+          if (isAllowed) {
+            console.log(`✅ Showing guardian thread: ${otherParticipant.id} (${otherParticipant.first_name} ${otherParticipant.last_name})`);
+          } else {
+            console.log(`🔒 Filtering out guardian thread: ${otherParticipant.id} (${otherParticipant.first_name} ${otherParticipant.last_name}) - not in allowed list (allowedGuardianIds size: ${allowedGuardianIds.size})`);
+          }
+          return isAllowed;
+        }
+        
+        return false;
+      });
+      
+      const guardianThreadsShown = filtered.filter(t => {
+        const op = t.other_participant;
+        return op && (op.role === 'guardian' || !op.role);
+      }).length;
+      
+      if (beforeCount !== filtered.length || guardianThreads.length > 0) {
+        console.log(`📊 Thread filtering summary: ${beforeCount} total -> ${filtered.length} filtered | ${guardianThreads.length} guardian threads found, ${guardianThreadsShown} shown (allowedGuardianIds: ${allowedGuardianIds.size})`);
+      }
+    }
+
+    // Apply search query filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(thread => {
+        const otherParticipant = thread.other_participant;
+        if (!otherParticipant) return false;
+        const name = `${otherParticipant.first_name} ${otherParticipant.last_name || ''}`.toLowerCase();
+        const email = otherParticipant.email?.toLowerCase() || '';
+        return name.includes(query) || email.includes(query);
+      });
+    }
+
+    return filtered;
+  }, [threads, searchQuery, role, allowedGuardianIds]);
+
+  // Update selected thread if it's no longer in filtered list
+  useEffect(() => {
+    if (selectedThread && filteredThreads.length > 0) {
+      const isSelectedThreadVisible = filteredThreads.some(t => t.id === selectedThread.id);
+      if (!isSelectedThreadVisible) {
+        // Selected thread is filtered out, select the first available thread
+        setSelectedThread(filteredThreads[0]);
+      }
+    } else if (!selectedThread && filteredThreads.length > 0) {
+      // No thread selected but we have filtered threads, select the first one
+      setSelectedThread(filteredThreads[0]);
+    }
+  }, [filteredThreads, selectedThread]);
 
   // Combined recipients list based on role
   const allRecipients = useMemo(() => {
@@ -715,6 +994,9 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
         
         if (existingThread) {
           threadId = existingThread.id;
+          // Select the existing thread
+          setSelectedThread(existingThread);
+          console.log(`✅ Using existing thread: ${threadId}`);
         } else {
           // If no existing thread found, create a new one
           const threadRes = await fetch('/api/messages', {
@@ -731,6 +1013,55 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
             throw new Error(threadData.error || 'Failed to create thread');
           }
           threadId = threadData.message.id;
+          
+          // Immediately add the new thread to the list so it appears right away
+          // We'll reload threads after sending the message to get the full data
+          if (threadData.message) {
+            // Get recipient info to create a temporary thread object
+            const recipient = allRecipients.find((r: any) => r.id === recipientId);
+            console.log(`🔍 Looking for recipient ${recipientId} in allRecipients (${allRecipients.length} total)`);
+            if (recipient) {
+              console.log(`✅ Found recipient: ${recipient.first_name} ${recipient.last_name || ''}, type: ${(recipient as any).type}`);
+              const newThread: MessageThreadWithParticipants = {
+                id: threadData.message.id,
+                org_id: orgId || '',
+                thread_type: 'dm',
+                subject: null,
+                created_by: session?.user?.id || '',
+                deleted_at: null,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                unread: false,
+                unread_count: 0,
+                latest_item: undefined,
+                other_participant: {
+                  id: recipient.id,
+                  first_name: recipient.first_name || '',
+                  last_name: recipient.last_name || null,
+                  email: recipient.email || '',
+                  role: (recipient as any).type || (recipient as any).role || 'guardian' // Use type as role
+                }
+              };
+              
+              // Add to threads list immediately
+              setThreads(prev => {
+                // Check if already exists
+                if (prev.some(t => t.id === newThread.id)) {
+                  console.log(`⚠️ Thread ${threadId} already exists in list`);
+                  return prev;
+                }
+                // Add at the beginning
+                console.log(`✅ Adding new thread to list: ${threadId} with role: ${newThread.other_participant?.role}, recipient type: ${(recipient as any).type}`);
+                return [newThread, ...prev];
+              });
+              
+              // Select the new thread
+              setSelectedThread(newThread);
+              console.log(`✅ Added new thread to list immediately: ${threadId} (${newThread.other_participant?.first_name} ${newThread.other_participant?.last_name || ''})`);
+            } else {
+              console.warn(`⚠️ Recipient ${recipientId} not found in allRecipients. Available recipients:`, allRecipients.map((r: any) => ({ id: r.id, name: `${r.first_name} ${r.last_name || ''}`, type: (r as any).type })));
+            }
+          }
         }
       }
 
@@ -748,6 +1079,29 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
         throw new Error(messageData.error || 'Failed to send message');
       }
 
+      // Add message to local state immediately for better UX
+      if (messageData.item) {
+        setMessages(prev => {
+          // Check if message already exists (avoid duplicates)
+          if (prev.some(m => m.id === messageData.item.id)) {
+            return prev;
+          }
+          return [...prev, messageData.item];
+        });
+        
+        // Update thread's latest_item
+        setThreads(prev => prev.map(t => 
+          t.id === threadId 
+            ? { ...t, latest_item: messageData.item, updated_at: messageData.item.created_at }
+            : t
+        ));
+        
+        // Update selected thread
+        setSelectedThread(prev => prev ? { ...prev, latest_item: messageData.item, updated_at: messageData.item.created_at } : null);
+        
+        console.log(`✅ Added message to local state: ${messageData.item.id}`);
+      }
+
       setSent(true);
       setTimeout(() => setSent(false), 1200);
       setMessageBody('');
@@ -755,37 +1109,65 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
       setShowNewConversation(false);
 
       // Reload threads to show the new conversation in the list
+      // Don't filter here - let the useMemo handle filtering based on role and allowedGuardianIds
       const currentSession = session;
       if (currentSession?.user?.id) {
         const threadsRes = await fetch(`/api/messages?userId=${currentSession.user.id}&t=${Date.now()}`, { cache: 'no-store' });
         const threadsData = await threadsRes.json();
         if (threadsRes.ok && threadsData.threads) {
-          let filteredThreads = threadsData.threads;
-          if (role === 'teacher') {
-            filteredThreads = filteredThreads.filter((t: MessageThreadWithParticipants) => {
-              const otherParticipant = t.other_participant;
-              if (!otherParticipant) return false;
-              if (otherParticipant.role === 'principal') return true;
-              if (otherParticipant.role === 'teacher') return true;
-              if (otherParticipant.role === 'guardian' || !otherParticipant.role) {
-                return allowedGuardianIds.has(otherParticipant.id);
-              }
-              return false;
-            });
-          }
-          setThreads(filteredThreads);
+          // Load all threads - filtering will be handled by useMemo
+          console.log(`📥 Reloaded ${threadsData.threads.length} threads after sending message`);
           
-          // Find and select the thread (either newly created or existing)
-          const targetThread = filteredThreads.find((t: any) => t.id === threadId);
-          if (targetThread) {
-            setSelectedThread(targetThread);
-            // Load messages for the selected thread
-            const messagesRes = await fetch(`/api/message-items?messageId=${threadId}&t=${Date.now()}`, { cache: 'no-store' });
-            const messagesData = await messagesRes.json();
-            if (messagesRes.ok && messagesData.items) {
-              setMessages(messagesData.items);
+          // Merge with existing threads to preserve the one we just added if it's not in the response yet
+          setThreads(prev => {
+            const serverThreadIds = new Set(threadsData.threads.map((t: any) => t.id));
+            // Keep threads that are in server response or were just added
+            const existingThreads = prev.filter(t => serverThreadIds.has(t.id) || t.id === threadId);
+            // Add new threads from server that we don't have
+            const newThreads = threadsData.threads.filter((t: any) => !prev.some(pt => pt.id === t.id));
+            // Combine and sort by updated_at (most recent first)
+            const combined = [...existingThreads, ...newThreads];
+            combined.sort((a, b) => {
+              const aTime = new Date(a.updated_at || a.created_at || 0).getTime();
+              const bTime = new Date(b.updated_at || b.created_at || 0).getTime();
+              return bTime - aTime;
+            });
+            console.log(`📊 Merged threads: ${prev.length} existing -> ${combined.length} total (${newThreads.length} new from server)`);
+            
+            // Find and select the thread (either newly created or existing)
+            const targetThread = combined.find((t: any) => t.id === threadId);
+            if (targetThread) {
+              console.log(`✅ Found target thread: ${threadId}, selecting it`);
+              
+              // Set flag to prevent useEffect from interfering
+              isManuallyLoadingMessagesRef.current = true;
+              
+              // Always reload messages from server to ensure we have the complete list including the message we just sent
+              // This ensures the message appears in the list even if there was a timing issue
+              fetch(`/api/message-items?messageId=${threadId}&t=${Date.now()}`, { cache: 'no-store' })
+                .then(messagesRes => messagesRes.json())
+                .then(messagesData => {
+                  if (messagesData.items) {
+                    setMessages(messagesData.items);
+                    console.log(`✅ Reloaded ${messagesData.items.length} messages for thread (including new message)`);
+                  }
+                  
+                  // Reset flag and update selected thread after messages are loaded
+                  isManuallyLoadingMessagesRef.current = false;
+                  setSelectedThread(targetThread);
+                })
+                .catch(err => {
+                  console.error('Error loading messages:', err);
+                  // Reset flag and still update selected thread even if message loading fails
+                  isManuallyLoadingMessagesRef.current = false;
+                  setSelectedThread(targetThread);
+                });
+            } else {
+              console.warn(`⚠️ Target thread ${threadId} not found in merged threads`);
             }
-          }
+            
+            return combined;
+          });
         }
       }
     } catch (error: any) {
@@ -809,7 +1191,7 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
                 setShowNewConversation(!showNewConversation);
                 setSelectedThread(null);
               }}
-              className="p-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+              className="p-2 rounded-lg bg-black hover:bg-gray-800 text-white transition-colors"
               title={t.new_message}
             >
               <MessageSquarePlus className="h-5 w-5" />
@@ -884,11 +1266,20 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
                       )}
                       {guardians.length > 0 && (
                         <optgroup label={t.guardian}>
-                          {guardians.map((g) => (
-                            <option key={g.id} value={g.id}>
-                              {g.first_name} {g.last_name || ''} ({g.email})
-                            </option>
-                          ))}
+                          {guardians
+                            .filter((g) => {
+                              // For teachers, only show guardians in allowedGuardianIds if it's populated
+                              // If allowedGuardianIds is empty, show all (they'll be filtered when it loads)
+                              if (allowedGuardianIds.size > 0) {
+                                return allowedGuardianIds.has(g.id);
+                              }
+                              return true;
+                            })
+                            .map((g) => (
+                              <option key={g.id} value={g.id}>
+                                {g.first_name} {g.last_name || ''} ({g.email})
+                              </option>
+                            ))}
                         </optgroup>
                       )}
                     </>
@@ -904,15 +1295,18 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
                           ))}
                         </optgroup>
                       )}
-                      {teachers.length > 0 && (
-                        <optgroup label={t.teacher}>
-                          {teachers.map((t) => (
-                            <option key={t.id} value={t.id}>
-                              {t.first_name} {t.last_name || ''} ({t.email})
-                            </option>
-                          ))}
-                        </optgroup>
-                      )}
+                      {(() => {
+                        console.log(`🔍 [Guardian Chat] Render check: teachers.length = ${teachers.length}, teachers =`, teachers);
+                        return teachers.length > 0 ? (
+                          <optgroup label={t.teacher}>
+                            {teachers.map((t) => (
+                              <option key={t.id} value={t.id}>
+                                {t.first_name} {t.last_name || ''} ({t.email})
+                              </option>
+                            ))}
+                          </optgroup>
+                        ) : null;
+                      })()}
                     </>
                   )}
                 </select>
@@ -930,7 +1324,7 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
               <button
                 onClick={sendMessage}
                 disabled={sending || !messageBody.trim() || !recipientId}
-                className="w-full rounded-lg bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                className="w-full rounded-lg bg-black px-3 py-1.5 text-sm text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
               >
                 <Send className="h-4 w-4" /> {t.send}
               </button>
@@ -968,7 +1362,7 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
                     setChatMessageBody('');
                   }}
                   className={`cursor-pointer p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors ${
-                    selectedThread?.id === thread.id ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-600' : ''
+                    selectedThread?.id === thread.id ? 'bg-slate-100 dark:bg-slate-800/50 border-l-4 border-black' : ''
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
@@ -980,7 +1374,7 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
                             : 'Unknown'}
                         </div>
                         {thread.unread && (
-                          <span className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-600"></span>
+                          <span className="flex-shrink-0 w-2 h-2 rounded-full bg-black"></span>
                         )}
                       </div>
                       <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-1">
@@ -1015,7 +1409,7 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
             {/* Chat Header */}
             <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
+                <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center text-white font-semibold">
                   {selectedThread.other_participant
                     ? (selectedThread.other_participant.first_name?.[0] || selectedThread.other_participant.email?.[0] || '?').toUpperCase()
                     : '?'}
@@ -1054,12 +1448,12 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
                         <div
                           className={`max-w-[70%] rounded-2xl px-4 py-2 ${
                             isOwn
-                              ? 'bg-blue-600 text-white rounded-br-sm'
+                              ? 'bg-black text-white rounded-br-sm'
                               : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-bl-sm border border-slate-200 dark:border-slate-700'
                           }`}
                         >
                           <p className="text-sm whitespace-pre-wrap break-words">{msg.body}</p>
-                          <p className={`text-xs mt-1 ${isOwn ? 'text-blue-100' : 'text-slate-400 dark:text-slate-500'}`}>
+                          <p className={`text-xs mt-1 ${isOwn ? 'text-white' : 'text-slate-400 dark:text-slate-500'}`}>
                             {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </p>
                         </div>
@@ -1094,13 +1488,13 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
                     }}
                     placeholder={t.msg_ph}
                     rows={1}
-                    className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 py-2 pr-12 text-sm dark:text-slate-200 dark:placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent max-h-[120px] overflow-y-auto"
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 py-2 pr-12 text-sm dark:text-slate-200 dark:placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent max-h-[120px] overflow-y-auto"
                   />
                 </div>
                 <button
                   onClick={sendChatMessage}
                   disabled={sending || !chatMessageBody.trim()}
-                  className="p-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="p-2 rounded-lg bg-black hover:bg-gray-800 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   <Send className="h-5 w-5" />
                 </button>

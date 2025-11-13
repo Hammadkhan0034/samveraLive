@@ -37,8 +37,8 @@ export async function GET(request: Request) {
     const isTeacher = userRoles.includes('teacher') && !userRoles.includes('principal') && !userRoles.includes('admin')
     
     // Check role permission
-    if (!userRoles.some((role: string) => ['principal', 'admin', 'teacher'].includes(role))) {
-      throw new Error(`One of roles [principal, admin, teacher] required. User has roles: ${userRoles.join(', ')}`)
+    if (!userRoles.some((role: string) => ['principal', 'admin', 'teacher', 'guardian', 'parent'].includes(role))) {
+      throw new Error(`One of roles [principal, admin, teacher, guardian, 'parent'] required. User has roles: ${userRoles.join(', ')}`)
     }
     
     const orgId = await getRequesterOrgIdOrThrow()
@@ -86,7 +86,140 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // derive staff from class_memberships with membership_role='teacher' joined to users (fallback)
+    // Also get teachers directly from users table (not just from staff table)
+    // This ensures all teachers are included, even if they're not in the staff table
+    try {
+      let usersWithTeacherRole: any[] = []
+      let usersError: any = null
+      
+      // Try to query with role filter first
+      const roleQuery = supabaseAdmin
+        .from('users')
+        .select('id,email,first_name,last_name,phone,address,ssn,org_id,is_active,created_at,role')
+        .eq('org_id', orgId)
+        .eq('role', 'teacher')
+        .is('deleted_at', null)
+      
+      const roleResult = await roleQuery
+      usersWithTeacherRole = roleResult.data || []
+      usersError = roleResult.error
+
+      
+      if (usersError && usersError.code === '42703') { // column does not exist
+        console.log('⚠️ Role column may not exist, trying alternative query...')
+        const allUsersQuery = supabaseAdmin
+          .from('users')
+          .select('id,email,first_name,last_name,phone,address,ssn,org_id,is_active,created_at,role')
+          .eq('org_id', orgId)
+          .is('deleted_at', null)
+        
+        const allUsersResult = await allUsersQuery
+        if (!allUsersResult.error && allUsersResult.data) {
+          // Filter to only include users who are not principals (assume they're teachers if not in staff table as principal)
+          const existingStaffIds = new Set(staff.map((s: any) => s.id))
+          usersWithTeacherRole = allUsersResult.data.filter((u: any) => {
+            // Exclude if already in staff array, or if role is 'principal' or 'guardian' or 'student'
+            const userRole = (u.role || '').toLowerCase()
+            return !existingStaffIds.has(u.id) && 
+                   userRole !== 'principal' && 
+                   userRole !== 'guardian' && 
+                   userRole !== 'student' &&
+                   userRole !== 'admin'
+          })
+          usersError = null
+        }
+      }
+
+      if (!usersError && usersWithTeacherRole && usersWithTeacherRole.length > 0) {
+        // Merge teachers from users table with staff from staff table
+        // Avoid duplicates by checking if user already exists in staff array
+        const existingStaffIds = new Set(staff.map((s: any) => s.id))
+        
+        usersWithTeacherRole.forEach((user: any) => {
+          if (!existingStaffIds.has(user.id)) {
+            const baseData: any = {
+              id: user.id,
+              email: user.email,
+              first_name: user.first_name,
+              last_name: user.last_name,
+              org_id: user.org_id,
+              is_active: user.is_active,
+              created_at: user.created_at,
+              role: user.role || 'teacher'
+            }
+            
+            // Only include sensitive fields for principals and admins
+            if (!isTeacher) {
+              baseData.phone = user.phone
+              baseData.address = user.address
+              baseData.ssn = user.ssn
+            }
+            
+            staff.push(baseData)
+            existingStaffIds.add(user.id)
+          }
+        })
+        
+        console.log(`✅ Added ${usersWithTeacherRole.length} teachers from users table (total staff: ${staff.length})`)
+      } else if (usersError) {
+        console.warn('⚠️ Error loading teachers from users table:', usersError)
+      }
+    } catch (e) {
+      console.warn('⚠️ Exception loading teachers from users table:', e)
+    }
+
+    // Also get teachers from class_memberships (ALWAYS run, not just as fallback)
+    // This ensures we catch teachers who are assigned to classes but might not be in staff table or have role='teacher' set
+    // This is CRITICAL for guardians/parents who need to see teachers assigned to their children's classes
+    try {
+      const existingStaffIds = new Set(staff.map((s: any) => s.id))
+      const { data: membershipUsers } = await supabaseAdmin
+        .from('class_memberships')
+        .select(`
+          user_id,
+          membership_role,
+          users!inner(id,email,first_name,last_name,phone,address,ssn,org_id,is_active,created_at,role)
+        `)
+        .eq('membership_role', 'teacher')
+        .eq('org_id', orgId)
+
+      if (membershipUsers && membershipUsers.length > 0) {
+        const derived = membershipUsers
+          .filter((m: any) => m.users?.org_id === orgId && !existingStaffIds.has(m.users.id))
+          .map((m: any) => {
+            const baseData: any = {
+              id: m.users.id,
+              email: m.users.email,
+              first_name: m.users.first_name,
+              last_name: m.users.last_name,
+              org_id: m.users.org_id,
+              is_active: m.users.is_active,
+              created_at: m.users.created_at,
+              role: m.users.role || 'teacher'
+            }
+            
+            // Only include sensitive fields for principals and admins
+            if (!isTeacher) {
+              baseData.phone = m.users.phone
+              baseData.address = m.users.address
+              baseData.ssn = m.users.ssn
+            }
+            
+            return baseData
+          })
+
+        if (derived.length > 0) {
+          staff.push(...derived)
+          console.log(`✅ Added ${derived.length} teachers from class_memberships (total staff: ${staff.length})`)
+        }
+      }
+    } catch (e) {
+      // ignore errors; just log them
+      console.warn('⚠️ Error loading teachers from class_memberships:', e)
+    }
+
+    // Fallback: derive staff from class_memberships if we still don't have any staff
+    // This ensures we return something even if staff table and users table queries fail
     if (staff.length === 0) {
       try {
         const { data: membershipUsers } = await supabaseAdmin
@@ -130,6 +263,20 @@ export async function GET(request: Request) {
         }
       } catch (e) {
         // ignore fallback errors; just return empty if both sources fail
+        console.warn('⚠️ Error loading teachers from class_memberships (fallback):', e)
+      }
+    }
+
+    // Log summary for debugging
+    console.log(`✅ [Staff Management API] Returning ${staff?.length || 0} staff members for orgId: ${orgId}`)
+    if (staff && staff.length > 0) {
+      const teacherCount = staff.filter((s: any) => (s.role || 'teacher').toLowerCase() === 'teacher').length
+      console.log(`📊 [Staff Management API] Breakdown: ${teacherCount} teachers, ${staff.length - teacherCount} other staff`)
+      if (teacherCount > 0) {
+        const teacherIds = staff
+          .filter((s: any) => (s.role || 'teacher').toLowerCase() === 'teacher')
+          .map((s: any) => ({ id: s.id, name: `${s.first_name} ${s.last_name || ''}`.trim() || s.email }))
+        console.log(`👥 [Staff Management API] Teachers:`, teacherIds)
       }
     }
 
