@@ -1,6 +1,6 @@
 'use client';
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Users, CalendarDays, Plus, Send, Paperclip, Bell, X, Search, ChevronLeft, ChevronRight, Edit, Trash2, Link as LinkIcon, Mail, Utensils } from 'lucide-react';
+import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Users, CalendarDays, Plus, Send, Paperclip, Bell, X, Search, ChevronLeft, ChevronRight, Edit, Trash2, Link as LinkIcon, Mail, Utensils, Menu } from 'lucide-react';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import { useAuth } from '@/lib/hooks/useAuth';
 import AnnouncementForm from './AnnouncementForm';
@@ -28,6 +28,7 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
   const { session } = useAuth();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   useEffect(() => { setMounted(true); }, []);
 
   // Prefetch routes for instant navigation
@@ -545,7 +546,7 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
 
   // Message threads loading removed - now handled inside MessagesPanel
 
-  // Load messages count for KPI
+  // Load messages count for KPI badge - only when messages tab is active or on initial mount
   async function loadMessagesForKPI() {
     if (!session?.user?.id) return;
     try {
@@ -559,6 +560,13 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
       console.error('Error loading messages count:', error);
     }
   }
+
+  // Load messages count for badge when messages tab becomes active
+  React.useEffect(() => {
+    if (active === 'messages' && session?.user?.id) {
+      loadMessagesForKPI();
+    }
+  }, [active, session?.user?.id]);
 
   // Load data immediately on mount and refresh when session is available
   React.useEffect(() => {
@@ -588,11 +596,11 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
           }
         }
 
-        // Start background loading
+        // Start background loading - only load teacher classes on mount
+        // createTableAndLoadData will be called when students tab becomes active
         if (session?.user?.id) {
           await Promise.allSettled([
-            loadTeacherClasses(false),
-            createTableAndLoadData()
+            loadTeacherClasses(false)
           ]);
         }
       } catch (error) {
@@ -604,43 +612,39 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user?.id, finalOrgId]);
 
-  // Load student requests and students when teacher classes are loaded
+  // Load student requests and students when teacher classes are loaded - ONLY if students tab is active
   React.useEffect(() => {
-    if (teacherClasses.length > 0) {
+    if (teacherClasses.length > 0 && active === 'students') {
       console.log('Teacher classes loaded, fetching students...', teacherClasses);
       Promise.allSettled([
         loadStudentRequests(false),
         loadStudents(false)
       ]);
-    } else if (session?.user?.id && !loadingClasses) {
+    } else if (session?.user?.id && !loadingClasses && teacherClasses.length === 0) {
       // Try loading classes again if they're not loaded yet
       console.log('No classes found yet, attempting to load...');
       loadTeacherClasses(false);
     }
-  }, [teacherClasses, session?.user?.id, loadingClasses]);
+  }, [teacherClasses, session?.user?.id, loadingClasses, active]);
 
-  // Auto-refresh student requests and students every 10 seconds to check for status updates from principal
+  // Load student requests and students ONLY when students tab becomes active (no auto-refresh)
   React.useEffect(() => {
-    if (session?.user?.id && teacherClasses.length > 0) {
-      // Load immediately
+    if (session?.user?.id && teacherClasses.length > 0 && active === 'students') {
+      // Create table if needed and load data
+      createTableAndLoadData(true);
+      
+      // Load immediately when tab becomes active
       loadStudentRequests(false);
       loadStudents(false);
-      
-      const refreshInterval = setInterval(() => {
-        loadStudentRequests(false);
-        loadStudents(false); // Also refresh students list to show newly approved students with guardians
-      }, 10000); // 10 seconds for faster updates
-
-      return () => clearInterval(refreshInterval);
     }
-  }, [session?.user?.id, teacherClasses.length]);
+  }, [session?.user?.id, teacherClasses.length, active]);
 
-  // Load attendance when students are loaded
+  // Load attendance ONLY when attendance tab is active
   React.useEffect(() => {
-    if (students.length > 0 && finalOrgId && session?.user?.id && teacherClasses.length > 0) {
+    if (active === 'attendance' && students.length > 0 && finalOrgId && session?.user?.id && teacherClasses.length > 0) {
       loadAttendanceForToday();
     }
-  }, [students.length, finalOrgId, session?.user?.id, teacherClasses.length]);
+  }, [active, students.length, finalOrgId, session?.user?.id, teacherClasses.length]);
 
   // Load guardians immediately when student request modal opens (without showing loading state)
   React.useEffect(() => {
@@ -787,8 +791,8 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
   //   }
   // }
 
-  // Create table and load data
-  async function createTableAndLoadData() {
+  // Create table and load data - ONLY when students tab is active
+  async function createTableAndLoadData(shouldLoadData = false) {
     try {
       console.log('🏗️ Creating student_requests table...');
       const createResponse = await fetch('/api/create-student-requests-table', {
@@ -799,9 +803,11 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
       console.log('📊 Create table result:', createData);
 
       if (createResponse.ok) {
-        console.log('✅ Table created successfully, loading data...');
-        // Don't show loading spinner for background refresh
-        loadStudentRequests(false);
+        console.log('✅ Table created successfully');
+        // Only load data if requested (when students tab is active)
+        if (shouldLoadData) {
+          loadStudentRequests(false);
+        }
       } else {
         console.error('❌ Failed to create table:', createData.error);
       }
@@ -946,15 +952,39 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
   }
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8 md:px-6 mt-10">
-      {/* Dashboard header */}
-      <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.title}</h1>
+    <div className="flex flex-col h-screen overflow-hidden">
+      {/* Dashboard header - spans full width */}
+      <div className="flex-shrink-0 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-4 md:px-6">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-3">
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+              aria-label="Toggle sidebar"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.title}</h1>
+          </div>
 
-        {/* Switch profile control (only shows if the user has multiple roles) */}
-        <div className="flex items-center gap-3">
-          <ProfileSwitcher />
-          <div className="hidden md:flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+          {/* Switch profile control (only shows if the user has multiple roles) */}
+          <div className="flex items-center gap-3">
+            <ProfileSwitcher />
+            <div className="hidden md:flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+              <Users className="h-4 w-4" />
+              <span>
+                {t.kids_checked_in}:{' '}
+                <span className="font-medium">{kidsIn}</span> / {students.length}
+              </span>
+              <span className="mx-2 text-slate-300 dark:text-slate-600">•</span>
+              <CalendarDays className="h-4 w-4" />
+              <span>{t.today_hint}</span>
+            </div>
+          </div>
+
+          {/* Small-screen stats row */}
+          <div className="md:hidden flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
             <Users className="h-4 w-4" />
             <span>
               {t.kids_checked_in}:{' '}
@@ -965,96 +995,148 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
             <span>{t.today_hint}</span>
           </div>
         </div>
-
-        {/* Small-screen stats row */}
-        <div className="md:hidden flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-          <Users className="h-4 w-4" />
-          <span>
-            {t.kids_checked_in}:{' '}
-            <span className="font-medium">{kidsIn}</span> / {students.length}
-          </span>
-          <span className="mx-2 text-slate-300 dark:text-slate-600">•</span>
-          <CalendarDays className="h-4 w-4" />
-          <span>{t.today_hint}</span>
-        </div>
       </div>
 
-      {/* Stories Column */}
-      <StoryColumn
-        lang={lang}
-        orgId={finalOrgId}
-        userId={session?.user?.id}
-        userRole="teacher"
-        teacherClassIds={teacherClasses.map(c => c.id).filter(Boolean)}
-      />
+      {/* Stories Column - spans full width */}
+      <div className="flex-shrink-0 px-4 py-4 md:px-6 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+        <StoryColumn
+          lang={lang}
+          orgId={finalOrgId}
+          userId={session?.user?.id}
+          userRole="teacher"
+          teacherClassIds={teacherClasses.map(c => c.id).filter(Boolean)}
+        />
+      </div>
 
-      {/* Feature tiles */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        {tiles.map(({ id, title, desc, Icon, badge }) => (
-          <button
-            key={id}
-            onClick={() => {
-              if (id === 'guardians') {
-                router.push('/dashboard/guardians');
-                return;
-              }
-              if (id === 'link_student') {
-                router.push('/dashboard/link-student');
-                return;
-              }
-              if (id === 'menus') {
-                router.push('/dashboard/menus-list');
-                return;
-              }
-              if (id === 'messages') {
-                router.push('/dashboard/teacher/messages');
-                return;
-              }
-              setActive(id);
-            }}
-            className={clsx(
-              'group rounded-2xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:shadow dark:border-slate-700 dark:bg-slate-800',
-              active === id && 'ring-2 ring-slate-300 dark:ring-slate-600'
-            )}
-          >
-            <div className="mb-2 flex items-center justify-between">
-              <span className="inline-flex items-center gap-2">
-                <span className="rounded-xl border border-slate-200 p-2 dark:border-slate-600">
-                  <Icon className="h-4 w-4 text-slate-700 dark:text-slate-300" />
-                </span>
-                <span className="font-medium text-slate-900 dark:text-slate-100">{title}</span>
-              </span>
-              {badge !== undefined && badge !== null && badge !== 0 && (
-                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700 dark:bg-slate-700 dark:text-slate-300" suppressHydrationWarning>{badge}</span>
-              )}
+      {/* Main content area with sidebar and content */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Sidebar */}
+        <aside
+          className={clsx(
+            'flex-shrink-0 w-72 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 overflow-y-auto transition-transform duration-300 ease-in-out',
+            'md:relative',
+            sidebarOpen 
+              ? 'fixed inset-y-0 left-0 z-50 translate-x-0 md:translate-x-0' 
+              : 'fixed inset-y-0 left-0 z-50 -translate-x-full md:relative md:translate-x-0'
+          )}
+        >
+          <div className="p-4">
+            <div className="mb-4 flex items-center justify-between md:hidden">
+              <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Menu</h2>
+              <button
+                onClick={() => setSidebarOpen(false)}
+                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300"
+                aria-label="Close sidebar"
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
-            <p className="text-sm text-slate-600 dark:text-slate-400">{desc}</p>
-          </button>
-        ))}
-      </div>
+            <nav className="space-y-1">
+              {tiles.map(({ id, title, desc, Icon, badge }) => (
+                <button
+                  key={id}
+                  onClick={() => {
+                    if (id === 'guardians') {
+                      router.push('/dashboard/guardians');
+                      setSidebarOpen(false);
+                      return;
+                    }
+                    if (id === 'link_student') {
+                      router.push('/dashboard/link-student');
+                      setSidebarOpen(false);
+                      return;
+                    }
+                    if (id === 'menus') {
+                      router.push('/dashboard/menus-list');
+                      setSidebarOpen(false);
+                      return;
+                    }
+                    if (id === 'messages') {
+                      router.push('/dashboard/teacher/messages');
+                      setSidebarOpen(false);
+                      return;
+                    }
+                    setActive(id);
+                    setSidebarOpen(false);
+                  }}
+                  className={clsx(
+                    'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                    'hover:bg-slate-100 dark:hover:bg-slate-700',
+                    active === id
+                      ? 'bg-slate-100 dark:bg-slate-700 border-l-4 border-slate-900 dark:border-slate-100'
+                      : 'border-l-4 border-transparent'
+                  )}
+                >
+                  <span className={clsx(
+                    'flex-shrink-0 rounded-lg p-2',
+                    active === id
+                      ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900'
+                      : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+                  )}>
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className={clsx(
+                        'font-medium truncate',
+                        active === id
+                          ? 'text-slate-900 dark:text-slate-100'
+                          : 'text-slate-700 dark:text-slate-300'
+                      )}>
+                        {title}
+                      </span>
+                      {badge !== undefined && badge !== null && badge !== 0 && (
+                        <span className="flex-shrink-0 rounded-full bg-slate-200 dark:bg-slate-600 px-2 py-0.5 text-xs font-medium text-slate-700 dark:text-slate-300" suppressHydrationWarning>
+                          {badge}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{desc}</p>
+                  </div>
+                </button>
+              ))}
+            </nav>
+          </div>
+        </aside>
 
-      {/* Active panel */}
-      <section className="mt-8">
-        {active === 'attendance' && (
-          <AttendancePanel 
-            t={t} 
-            students={students}
-            teacherClasses={teacherClasses}
-            attendance={attendance}
-            hasUnsavedChanges={hasUnsavedChanges}
-            isSaving={isSavingAttendance}
-            onMarkAll={markAllPresent} 
-            onToggle={togglePresent}
-            onSubmit={submitAttendance}
-            loadingStudents={loadingStudents}
+        {/* Mobile overlay */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+            onClick={() => setSidebarOpen(false)}
+            aria-hidden="true"
           />
         )}
-        {active === 'diapers' && <DiaperPanel t={t} />}
-        {active === 'media' && <MediaPanel t={t} uploads={uploads} onFiles={handleFiles} />}
-        {active === 'stories' && <StoriesPanel t={t} router={router} session={session} orgId={finalOrgId} teacherClasses={teacherClasses} />}
-        {active === 'announcements' && <AnnouncementsPanel t={t} lang={lang} teacherClasses={teacherClasses} />}
-        {active === 'students' && <StudentsPanel t={t} studentRequests={studentRequests} loadingRequests={loadingRequests} students={students} loadingStudents={loadingStudents} studentError={studentError} onAddStudent={() => router.push('/dashboard/add-student')} onEditStudent={openEditStudentModal} onDeleteStudent={openDeleteConfirm} teacherClasses={teacherClasses} />}
-      </section>
+
+        {/* Main content area */}
+        <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900">
+          <div className="p-4 md:p-6 lg:p-8">
+            {/* Active panel */}
+            <section>
+              {active === 'attendance' && (
+                <AttendancePanel 
+                  t={t} 
+                  students={students}
+                  teacherClasses={teacherClasses}
+                  attendance={attendance}
+                  hasUnsavedChanges={hasUnsavedChanges}
+                  isSaving={isSavingAttendance}
+                  onMarkAll={markAllPresent} 
+                  onToggle={togglePresent}
+                  onSubmit={submitAttendance}
+                  loadingStudents={loadingStudents}
+                />
+              )}
+              {active === 'diapers' && <DiaperPanel t={t} />}
+              {active === 'media' && <MediaPanel t={t} uploads={uploads} onFiles={handleFiles} />}
+              {active === 'stories' && <StoriesPanel t={t} router={router} session={session} orgId={finalOrgId} teacherClasses={teacherClasses} isActive={active === 'stories'} />}
+              {active === 'announcements' && <AnnouncementsPanel t={t} lang={lang} teacherClasses={teacherClasses} />}
+              {active === 'messages' && <MessagesPanel t={t} lang={lang} teacherClasses={teacherClasses} students={students} isActive={active === 'messages'} />}
+              {active === 'students' && <StudentsPanel t={t} studentRequests={studentRequests} loadingRequests={loadingRequests} students={students} loadingStudents={loadingStudents} studentError={studentError} onAddStudent={() => router.push('/dashboard/add-student')} onEditStudent={openEditStudentModal} onDeleteStudent={openDeleteConfirm} teacherClasses={teacherClasses} />}
+            </section>
+          </div>
+        </main>
+      </div>
 
       {/* Today's Menu removed per requirements */}
 
@@ -1545,7 +1627,7 @@ type="text"
         confirmButtonText={t.delete || 'Delete'}
         cancelButtonText={t.cancel}
       />
-    </main>
+    </div>
   );
 }
 
@@ -1824,7 +1906,7 @@ function DiaperPanel({ t }: { t: typeof enText }) {
   );
 }
 
-function MessagesPanel({ t, lang = 'en', teacherClasses = [], students = [] }: { t: typeof enText; lang?: Lang; teacherClasses?: any[]; students?: Array<{ id: string; class_id: string | null }> }) {
+function MessagesPanel({ t, lang = 'en', teacherClasses = [], students = [], isActive = false }: { t: typeof enText; lang?: Lang; teacherClasses?: any[]; students?: Array<{ id: string; class_id: string | null }>; isActive?: boolean }) {
   const { session } = useAuth();
   const [threads, setThreads] = useState<MessageThreadWithParticipants[]>([]);
   const [selectedThread, setSelectedThread] = useState<MessageThreadWithParticipants | null>(null);
@@ -1844,9 +1926,9 @@ function MessagesPanel({ t, lang = 'en', teacherClasses = [], students = [] }: {
   const userMetadata = session?.user?.user_metadata;
   const orgId = userMetadata?.org_id || userMetadata?.organization_id || userMetadata?.orgId;
 
-  // Load guardians linked to teacher's students
+  // Load guardians linked to teacher's students - ONLY when panel is active
   useEffect(() => {
-    if (!orgId || students.length === 0) {
+    if (!isActive || !orgId || students.length === 0) {
       setAllowedGuardianIds(new Set());
       return;
     }
@@ -1887,11 +1969,11 @@ function MessagesPanel({ t, lang = 'en', teacherClasses = [], students = [] }: {
     }
 
     loadAllowedGuardians();
-  }, [orgId, students]);
+  }, [isActive, orgId, students]);
 
-  // Load recipients (principals, teachers, and guardians)
+  // Load recipients (principals, teachers, and guardians) - ONLY when panel is active
   useEffect(() => {
-    if (!orgId) return;
+    if (!isActive || !orgId) return;
 
     async function loadRecipients() {
       setLoadingRecipients(true);
@@ -1968,11 +2050,11 @@ function MessagesPanel({ t, lang = 'en', teacherClasses = [], students = [] }: {
     }
 
     loadRecipients();
-  }, [orgId, allowedGuardianIds, session?.user?.id]);
+  }, [isActive, orgId, allowedGuardianIds, session?.user?.id]);
 
-  // Load principals separately to ensure they always load, independent of guardians
+  // Load principals separately - ONLY when panel is active
   useEffect(() => {
-    if (!orgId) return;
+    if (!isActive || !orgId) return;
 
     async function loadPrincipalsOnly() {
       console.log('🔄 Loading principals for orgId:', orgId);
@@ -2008,11 +2090,11 @@ function MessagesPanel({ t, lang = 'en', teacherClasses = [], students = [] }: {
     }
 
     loadPrincipalsOnly();
-  }, [orgId]);
+  }, [isActive, orgId]);
 
-  // Load message threads
+  // Load message threads - ONLY when panel is active
   useEffect(() => {
-    if (!session?.user?.id) return;
+    if (!isActive || !session?.user?.id) return;
 
     async function loadThreads() {
       if (!session?.user?.id) return;
@@ -2097,11 +2179,11 @@ function MessagesPanel({ t, lang = 'en', teacherClasses = [], students = [] }: {
 
     loadThreads();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.user?.id, Array.from(allowedGuardianIds).sort().join(','), principals.length]);
+  }, [isActive, session?.user?.id, Array.from(allowedGuardianIds).sort().join(','), principals.length]);
 
-  // Load messages for selected thread
+  // Load messages for selected thread - ONLY when panel is active
   useEffect(() => {
-    if (!selectedThread || !session?.user?.id) {
+    if (!isActive || !selectedThread || !session?.user?.id) {
       setMessages([]);
       return;
     }
@@ -2152,7 +2234,7 @@ function MessagesPanel({ t, lang = 'en', teacherClasses = [], students = [] }: {
     }
 
     loadMessages();
-  }, [selectedThread, session?.user?.id]);
+  }, [isActive, selectedThread, session?.user?.id]);
 
   // Set up Realtime subscriptions for messages
   const threadIds = useMemo(() => threads.map(t => t.id), [threads]);
@@ -2618,7 +2700,7 @@ function MediaPanel({
   );
 }
 
-function StoriesPanel({ t, router, session, orgId, teacherClasses }: { t: typeof enText; router: any; session: any; orgId: string; teacherClasses: any[] }) {
+function StoriesPanel({ t, router, session, orgId, teacherClasses, isActive = false }: { t: typeof enText; router: any; session: any; orgId: string; teacherClasses: any[]; isActive?: boolean }) {
   const [stories, setStories] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [storiesByClass, setStoriesByClass] = useState<Record<string, { class: any; stories: any[] }>>({});
@@ -2636,8 +2718,9 @@ function StoriesPanel({ t, router, session, orgId, teacherClasses }: { t: typeof
   const pausedTimeRef = useRef<number>(0);
   const itemStartTimeRef = useRef<number>(0);
 
+  // Load stories ONLY when panel is active
   useEffect(() => {
-    if (!orgId) return;
+    if (!isActive || !orgId) return;
     
     const loadStories = async () => {
       try {
@@ -2696,7 +2779,7 @@ function StoriesPanel({ t, router, session, orgId, teacherClasses }: { t: typeof
     };
     
     loadStories();
-  }, [orgId, teacherClasses, session?.user?.id]);
+  }, [isActive, orgId, teacherClasses, session?.user?.id]);
 
   function closeViewer(e?: React.MouseEvent) {
     if (e) {

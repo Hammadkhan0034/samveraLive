@@ -13,7 +13,7 @@ type Lang = 'is' | 'en';
 export default function SignInPage() {
   const router = useRouter();
   const qp = useSearchParams();
-  const { signIn, signUp, signInWithOtp, verifyEmailOtp, user, loading } = useAuth();
+  const { signIn, signUp, signInWithOtp, verifyEmailOtp, user, loading, isSigningIn } = useAuth();
   const { isDark, toggleTheme } = useTheme();
 
   // Allow ?role=teacher|principal|parent|admin to pick the demo role for signup
@@ -105,6 +105,11 @@ export default function SignInPage() {
     e.preventDefault();
     setErr('');
 
+    // Prevent multiple submissions
+    if (submitting || isSigningIn) {
+      return;
+    }
+
     const trimmed = email.trim().toLowerCase();
     if (!trimmed) {
       setErr(t.errors.email_required);
@@ -153,7 +158,12 @@ export default function SignInPage() {
         const { error } = await signIn(trimmed, password);
         if (error) {
           console.error('Signin failed:', error);
-          setErr(error.message || 'Signin failed. Please check your credentials.');
+          // Check for rate limit errors specifically
+          if (error.status === 429 || error.message?.toLowerCase().includes('rate limit') || error.message?.toLowerCase().includes('too many')) {
+            setErr(t.errors.rate_limit || 'Too many sign-in attempts. Please wait a few minutes before trying again.');
+          } else {
+            setErr(error.message || 'Signin failed. Please check your credentials.');
+          }
         }
         // Success is handled by the auth context redirect
       }
@@ -383,7 +393,7 @@ export default function SignInPage() {
 
               <button
                 type="submit"
-                disabled={submitting}
+                disabled={submitting || isSigningIn}
                 className="w-full rounded-md bg-slate-900 dark:bg-slate-600 py-2 px-4 font-medium text-white dark:text-slate-100 shadow-lg hover:shadow-xl hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all duration-200 flex items-center justify-center gap-2"
               >
                 {submitting ? (
@@ -480,6 +490,7 @@ const enText = {
     password_required: 'Please enter a password.',
     fullname_required: 'Please enter your full name.',
     otp_required: 'Please enter a verification code.',
+    rate_limit: 'Too many sign-in attempts. Please wait a few minutes before trying again.',
     unexpected: 'An unexpected error occurred. Please try again.',
   },
   success: {
@@ -525,6 +536,7 @@ const isText = {
     password_required: 'Vinsamlegast sláðu inn lykilorð.',
     fullname_required: 'Vinsamlegast sláðu inn fullt nafn.',
     otp_required: 'Vinsamlegast sláðu inn staðfestingarkóða.',
+    rate_limit: 'Of margar innskráningartilraunir. Vinsamlegast bíddu í nokkrar mínútur áður en þú reynir aftur.',
     unexpected: 'Óvænt villa kom upp. Vinsamlegast reyndu aftur.',
   },
   success: {

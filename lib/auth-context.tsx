@@ -86,19 +86,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    setIsSigningIn(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) {
-      setIsSigningIn(false);
-    } else {
-      // Reset isSigningIn immediately after successful sign in
-      // The redirect will happen in onAuthStateChange
-      setTimeout(() => setIsSigningIn(false), 100);
+    // Prevent concurrent sign-in attempts
+    if (isSigningIn) {
+      return { error: { message: 'Sign in already in progress. Please wait...', status: 429 } as AuthError };
     }
-    return { error };
+
+    setIsSigningIn(true);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        setIsSigningIn(false);
+        // Check for rate limit errors
+        if (error.status === 429 || error.message?.toLowerCase().includes('rate limit')) {
+          return { 
+            error: { 
+              ...error, 
+              message: 'Too many sign-in attempts. Please wait a few minutes before trying again.' 
+            } as AuthError 
+          };
+        }
+      } else {
+        // Reset isSigningIn immediately after successful sign in
+        // The redirect will happen in onAuthStateChange
+        setTimeout(() => setIsSigningIn(false), 100);
+      }
+      return { error };
+    } catch (err) {
+      setIsSigningIn(false);
+      const authError = err as AuthError;
+      // Check for rate limit errors in catch block
+      if (authError.status === 429 || authError.message?.toLowerCase().includes('rate limit')) {
+        return { 
+          error: { 
+            ...authError, 
+            message: 'Too many sign-in attempts. Please wait a few minutes before trying again.' 
+          } as AuthError 
+        };
+      }
+      return { error: authError };
+    }
   };
 
   const signUp = async (email: string, password: string, userRole: SamveraRole, fullName?: string) => {

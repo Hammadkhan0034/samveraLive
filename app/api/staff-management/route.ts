@@ -51,13 +51,14 @@ export async function GET(request: Request) {
   user_id,
   org_id,
   created_at,
-  users!inner(id,email,first_name,last_name,phone,address,ssn,org_id,is_active,created_at,role)
+  users!inner(id,email,first_name,last_name,phone,address,ssn,org_id,is_active,created_at,role,deleted_at)
 `)
       .eq('org_id', orgId)
       .order('created_at', { ascending: false })
 
     // Transform the data to match expected format
     // For teachers, exclude sensitive data (SSN, phone, address) for security
+    // Filter out deleted and inactive staff
     let staff = staffData?.map((s: any) => {
       const baseData: any = {
         id: s.users.id,
@@ -67,7 +68,8 @@ export async function GET(request: Request) {
         org_id: s.users.org_id,
         is_active: s.users.is_active,
         created_at: s.users.created_at,
-        role: s.users.role || 'teacher'
+        role: s.users.role || 'teacher',
+        deleted_at: s.users.deleted_at || null
       }
       
       // Only include sensitive fields for principals and admins
@@ -78,7 +80,7 @@ export async function GET(request: Request) {
       }
       
       return baseData
-    }) || []
+    }).filter((s: any) => s.is_active === true && !s.deleted_at) || []
 
     const error = staffErr
 

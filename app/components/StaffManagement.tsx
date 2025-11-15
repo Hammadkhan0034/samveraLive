@@ -256,7 +256,19 @@ export default function StaffManagement({ lang = 'en' }: StaffManagementProps) {
                 <tr><td colSpan={7} className="py-4 text-center text-slate-500 dark:text-slate-400">{t.no_staff_members}</td></tr>
               ) : (
                 staff.map((s) => (
-                  <tr key={s.id} className="h-12 hover:bg-slate-50/50 dark:hover:bg-slate-700/50">
+                  <tr 
+                    key={s.id} 
+                    className="h-12 hover:bg-slate-50/50 dark:hover:bg-slate-700/50"
+                    onClick={(e) => {
+                      // Prevent row click from triggering navigation
+                      // Only allow clicks on buttons to work
+                      if ((e.target as HTMLElement).tagName !== 'BUTTON' && 
+                          !(e.target as HTMLElement).closest('button')) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }
+                    }}
+                  >
                     <td className="py-2 pr-3 pl-3 text-slate-900 dark:text-slate-100">{(s as any).first_name || (s as any).full_name?.split(' ')[0] || ''}</td>
                     <td className="py-2 pr-3 text-slate-900 dark:text-slate-100">{(s as any).last_name || ((s as any).full_name ? (s as any).full_name.split(' ').slice(1).join(' ') : '')}</td>
                     <td className="py-2 pr-3 text-slate-700 dark:text-slate-300">{s.email}</td>
@@ -269,10 +281,22 @@ export default function StaffManagement({ lang = 'en' }: StaffManagementProps) {
                     <td className="py-2 pr-3 text-slate-700 dark:text-slate-300">{new Date(s.created_at).toLocaleDateString()}</td>
                     <td className="py-2 pr-3">
                       <div className="flex items-center gap-2">
-                        <button onClick={() => openEditStaffModal(s)} className="inline-flex items-center gap-1 rounded-md border px-2 py-1 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-600">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openEditStaffModal(s);
+                          }} 
+                          className="inline-flex items-center gap-1 rounded-md border px-2 py-1 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-600"
+                        >
                           <Edit className="h-3 w-3" /> {t.edit || 'Edit'}
                         </button>
-                        <button onClick={() => openDeleteStaffModal(s.id)} className="inline-flex items-center gap-1 rounded-md border px-2 py-1 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 border-red-300 dark:border-red-600">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openDeleteStaffModal(s.id);
+                          }} 
+                          className="inline-flex items-center gap-1 rounded-md border px-2 py-1 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 border-red-300 dark:border-red-600"
+                        >
                           <Trash2 className="h-3 w-3" /> {t.delete}
                         </button>
                       </div>
