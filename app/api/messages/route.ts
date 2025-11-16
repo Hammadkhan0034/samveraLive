@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { supabaseAdmin } from '@/lib/supabaseClient';
+import { getRealtimeDataCacheHeaders } from '@/lib/cacheConfig';
 
 async function getRequesterOrgId(userId: string): Promise<string | null> {
   if (!supabaseAdmin) return null;
@@ -74,7 +75,10 @@ export async function GET(request: Request) {
     }
 
     if (!participants || participants.length === 0) {
-      return NextResponse.json({ threads: [] }, { status: 200 });
+      return NextResponse.json({ threads: [] }, {
+        status: 200,
+        headers: getRealtimeDataCacheHeaders()
+      });
     }
 
     // Get unique message IDs
@@ -171,7 +175,10 @@ export async function GET(request: Request) {
 
     const threads = Array.from(threadMap.values());
 
-    return NextResponse.json({ threads }, { status: 200 });
+    return NextResponse.json({ threads }, {
+      status: 200,
+      headers: getRealtimeDataCacheHeaders()
+    });
   } catch (err: any) {
     console.error('❌ Error in messages GET:', err);
     return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 });

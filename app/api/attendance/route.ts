@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
+import { getNoCacheHeaders } from '@/lib/cacheConfig'
 
 export async function GET(request: Request) {
   try {
@@ -76,7 +77,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ 
       attendance: attendance || [],
       total: attendance?.length || 0
-    }, { status: 200 })
+    }, {
+      status: 200,
+      headers: getNoCacheHeaders()
+    })
 
   } catch (err: any) {
     console.error('❌ Error in attendance GET:', err)

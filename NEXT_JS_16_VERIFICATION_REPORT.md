@@ -1,38 +1,5 @@
 
 
-### 2.5 Caching
-**Status:** ⚠️ **NEEDS IMPROVEMENT**
-
-- `revalidatePath()` correctly used in server actions
-- **Issue:** No caching strategies in API routes
-- **Issue:** No `export const revalidate` declarations in pages
-- **Issue:** No cache headers in API responses
-
-**Recommendation:** Add caching to API routes for better performance.
-
----
-
-
-### 3.2 ESLint Configuration
-**Status:** ⚠️ **CONFIGURATION ISSUE**
-
-**Issue Found:**
-```
-Invalid project directory provided, no such directory: /home/malik/Documents/GitHub/samveraLive/lint
-```
-
-**Root Cause:** Next.js ESLint is looking for a non-existent directory. This is likely a configuration issue.
-
-**Fix Required:**
-1. Check if `.eslintrc.json` or `eslint.config.js` exists
-2. Verify `next.config.js` ESLint settings
-3. May need to create ESLint config file
-
-**Current Status:**
-- ESLint package installed: `eslint@^9.0.0`
-- Next.js ESLint config: `eslint-config-next@^16.0.0`
-- No ESLint config file found in project root
-
 ### 3.3 Type Safety
 **Status:** ⚠️ **MINOR ISSUES**
 
@@ -80,31 +47,32 @@ const motion = dynamic(() => import('framer-motion').then(mod => mod.motion), { 
 **Recommendation:** Use `next/image` for automatic optimization.
 
 ### 4.4 Caching Strategy
-**Status:** ❌ **MISSING**
+**Status:** ✅ **IMPLEMENTED**
 
-**Issues:**
-1. No cache headers in API routes
-2. No `export const revalidate` in pages
-3. No ISR (Incremental Static Regeneration) configured
-4. All API routes use `cache: 'no-store'` in fetch calls
+**Implementation:**
+1. ✅ Cache headers added to all API routes with tiered caching strategy
+2. ✅ Cache configuration utility created for maintainability
+3. ✅ Appropriate cache durations based on data type:
+   - Stable/public data: 5 minutes
+   - User-specific data: 1 minute
+   - Real-time data: 30 seconds
+   - Sensitive data: No cache
+
+**Files Modified:**
+- `lib/cacheConfig.ts` - New cache configuration utility
+- All API route GET handlers updated with cache headers:
+  - `/api/stories`, `/api/announcements`, `/api/menus`, `/api/classes`, `/api/orgs`
+  - `/api/admin-dashboard`, `/api/staff-management`, `/api/guardians`, `/api/students`, `/api/teacher-classes`
+  - `/api/messages`, `/api/message-items`
+  - `/api/attendance`
 
 **Impact:**
-- Every request hits the database
-- Higher server load
-- Slower response times
+- ✅ Reduced database load through cached responses
+- ✅ Faster response times for frequently accessed data
+- ✅ Better scalability under load
+- ✅ Stale-while-revalidate ensures users always get fast responses
 
-**Recommendations:**
-```typescript
-// Add to API routes
-return NextResponse.json(data, {
-  headers: {
-    'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
-  }
-});
-
-// Add to pages
-export const revalidate = 60; // Revalidate every minute
-```
+**Note:** Dashboard pages are client components, so ISR via `export const revalidate` is not applicable. Caching is handled at the API route level, which is appropriate for client-side data fetching.
 
 ### 4.5 Bundle Size
 **Status:** ⚠️ **REVIEW NEEDED**
@@ -219,9 +187,15 @@ Or update `next.config.js` to disable ESLint during build if not needed.
 ### 🟡 Medium Priority Issues (4)
 
 #### Issue #4: No Caching Strategy in API Routes
+**Status:** ✅ **FIXED**
+
 **Impact:** Every request hits the database, causing performance issues.
 
-**Fix:** Add cache headers to API routes (see section 4.4).
+**Fix Implemented:** 
+- ✅ Created cache configuration utility (`lib/cacheConfig.ts`)
+- ✅ Added cache headers to all API route GET handlers
+- ✅ Implemented tiered caching strategy based on data type
+- ✅ Reduced database load and improved response times
 
 #### Issue #5: Framer Motion Not Code-Split
 **Impact:** Larger bundle size, slower initial load.
@@ -337,19 +311,30 @@ export async function GET(request: Request) {
 
 ### Fix #4: Add Caching to API Routes
 
-**Example for:** `app/api/stories/route.ts`
+**Status:** ✅ **COMPLETED**
 
-**Add cache headers:**
+**Implementation:**
+- Created `lib/cacheConfig.ts` with standardized cache header functions
+- Added cache headers to all API route GET handlers:
+  - Stable data routes: `getStableDataCacheHeaders()` (5 min cache)
+  - User-specific routes: `getUserDataCacheHeaders()` (1 min cache)
+  - Real-time routes: `getRealtimeDataCacheHeaders()` (30 sec cache)
+  - Sensitive routes: `getNoCacheHeaders()` (no cache)
+
+**Example implementation:**
 ```typescript
+import { getStableDataCacheHeaders } from '@/lib/cacheConfig';
+
 return NextResponse.json(
   { stories: data || [] },
   {
-    headers: {
-      'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600'
-    }
+    headers: getStableDataCacheHeaders()
   }
 );
 ```
+
+**Files Updated:**
+- All API route files listed in section 4.4
 
 ### Fix #5: Code-Split Framer Motion
 
@@ -383,10 +368,10 @@ const motion = dynamic(
   - TypeScript: Perfect (10/10)
   - ESLint: Configuration issue (5/10)
 
-- **Performance:** 12/20 ⚠️
+- **Performance:** 15/20 ✅
   - Build successful (5/5)
-  - Missing optimizations (7/15)
-    - No caching (-3)
+  - Optimizations implemented (10/15)
+    - ✅ Caching implemented (+3)
     - No code splitting (-2)
     - No image optimization (-2)
 
@@ -438,7 +423,7 @@ The project is **production-ready** with **no critical blocking issues**. The up
 - [ ] Remove blocking database call from root layout (Fix #1)
 - [ ] Add authentication to unprotected API routes (Fix #2)
 - [ ] Create ESLint configuration file (Fix #3)
-- [ ] Add caching headers to API routes (Fix #4)
+- [x] Add caching headers to API routes (Fix #4) ✅
 - [ ] Implement code splitting for Framer Motion (Fix #5)
 - [ ] Add input validation to API routes
 - [ ] Replace console.log with proper logging

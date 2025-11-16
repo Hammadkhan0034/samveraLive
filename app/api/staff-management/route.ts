@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 import { requireServerRoles, requireServerOrgAccess, requireServerAuth } from '@/lib/supabaseServer'
+import { getUserDataCacheHeaders } from '@/lib/cacheConfig'
 // Invitation email handled via Supabase Admin API (inviteUserByEmail)
 
 // Staff/Teacher role ID
@@ -285,7 +286,10 @@ export async function GET(request: Request) {
     return NextResponse.json({
       staff: staff || [],
       total_staff: staff?.length || 0
-    }, { status: 200 })
+    }, {
+      status: 200,
+      headers: getUserDataCacheHeaders()
+    })
 
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 })

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
+import { getStableDataCacheHeaders } from '@/lib/cacheConfig'
 
 export async function GET(request: Request) {
   try {
@@ -52,7 +53,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ 
       menus: menus || [],
       total_menus: menus?.length || 0
-    }, { status: 200 })
+    }, {
+      status: 200,
+      headers: getStableDataCacheHeaders()
+    })
 
   } catch (err: any) {
     console.error('❌ Error in menus GET:', err)

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
+import { getStableDataCacheHeaders } from '@/lib/cacheConfig'
 
 export async function GET(request: Request) {
   try {
@@ -247,7 +248,9 @@ export async function GET(request: Request) {
       }
     }
 
-    return NextResponse.json({ stories: data || [] })
+    return NextResponse.json({ stories: data || [] }, {
+      headers: getStableDataCacheHeaders()
+    })
   } catch (e: any) {
     return NextResponse.json({ error: e.message || 'Unknown error' }, { status: 500 })
   }

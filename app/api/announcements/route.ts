@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
+import { getStableDataCacheHeaders } from '@/lib/cacheConfig'
 
 export async function GET(request: Request) {
   try {
@@ -37,7 +38,10 @@ export async function GET(request: Request) {
         class_name: classData?.name || null,
       }
       
-      return NextResponse.json({ announcement: transformed }, { status: 200 })
+      return NextResponse.json({ announcement: transformed }, {
+        status: 200,
+        headers: getStableDataCacheHeaders()
+      })
     }
     
     const classId = searchParams.get('classId') || undefined
@@ -387,7 +391,10 @@ export async function GET(request: Request) {
       }
     })
 
-    return NextResponse.json({ announcements: transformedData }, { status: 200 })
+    return NextResponse.json({ announcements: transformedData }, {
+      status: 200,
+      headers: getStableDataCacheHeaders()
+    })
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 })
   }

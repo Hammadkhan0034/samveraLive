@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getUserDataCacheHeaders } from '@/lib/cacheConfig';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -72,7 +73,9 @@ export async function GET(request: NextRequest) {
           console.error('❌ Full error details:', JSON.stringify(classError, null, 2));
           // Instead of returning error, return empty array to prevent UI errors
           console.log('⚠️ Returning empty classes array due to database error');
-          return NextResponse.json({ classes: [] });
+          return NextResponse.json({ classes: [] }, {
+            headers: getUserDataCacheHeaders()
+          });
         }
 
         console.log('✅ Class details found:', classDetails);
@@ -81,7 +84,9 @@ export async function GET(request: NextRequest) {
           console.error('❌ No class details found for IDs:', classIds);
           console.error('❌ This might mean the class was deleted or doesn\'t exist');
           console.log('⚠️ Returning empty classes array instead of error');
-          return NextResponse.json({ classes: [] });
+          return NextResponse.json({ classes: [] }, {
+            headers: getUserDataCacheHeaders()
+          });
         }
         
         const classes = classDetails?.map(cls => ({
@@ -91,16 +96,22 @@ export async function GET(request: NextRequest) {
         })) || [];
         
         console.log('✅ Assigned classes found:', classes);
-        return NextResponse.json({ classes });
+        return NextResponse.json({ classes }, {
+          headers: getUserDataCacheHeaders()
+        });
       } catch (queryError) {
         console.error('💥 Unexpected error in class details query:', queryError);
         console.log('⚠️ Returning empty classes array due to unexpected error');
-        return NextResponse.json({ classes: [] });
+        return NextResponse.json({ classes: [] }, {
+          headers: getUserDataCacheHeaders()
+        });
       }
     } else {
       console.log('⚠️ No class memberships found for this teacher');
       // Return empty array instead of all organization classes
-      return NextResponse.json({ classes: [] });
+      return NextResponse.json({ classes: [] }, {
+        headers: getUserDataCacheHeaders()
+      });
     }
 
   } catch (error) {

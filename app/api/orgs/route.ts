@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
+import { getStableDataCacheHeaders } from '@/lib/cacheConfig'
 
 export async function GET(request: Request) {
   try {
@@ -10,7 +11,10 @@ export async function GET(request: Request) {
     const q = supabaseAdmin.from('orgs').select('id,name,slug,timezone,created_at,updated_at').order('created_at', { ascending: false })
     const { data, error } = ids.length ? await q.in('id', ids) : await q
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-    return NextResponse.json({ orgs: data || [] }, { status: 200 })
+    return NextResponse.json({ orgs: data || [] }, {
+      status: 200,
+      headers: getStableDataCacheHeaders()
+    })
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 })
   }

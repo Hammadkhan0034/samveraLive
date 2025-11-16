@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseClient';
 import { requireServerAuth } from '@/lib/supabaseServer';
+import { getRealtimeDataCacheHeaders } from '@/lib/cacheConfig';
 
 async function getRequesterOrgId(userId: string): Promise<string | null> {
   if (!supabaseAdmin) return null;
@@ -73,7 +74,10 @@ export async function GET(request: Request) {
       .eq('user_id', user.id)
       .eq('org_id', orgId);
 
-    return NextResponse.json({ items: items || [] }, { status: 200 });
+    return NextResponse.json({ items: items || [] }, {
+      status: 200,
+      headers: getRealtimeDataCacheHeaders()
+    });
   } catch (err: any) {
     console.error('❌ Error in message-items GET:', err);
     return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 });

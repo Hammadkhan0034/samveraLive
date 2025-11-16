@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
+import { getUserDataCacheHeaders } from '@/lib/cacheConfig'
 
 const PRINCIPAL_ROLE_ID = 30
 const GUARDIAN_ROLE_ID = 10
@@ -266,7 +267,10 @@ export async function GET(request: Request) {
       teachers,
       guardians,
       students
-    }, { status: 200 })
+    }, {
+      status: 200,
+      headers: getUserDataCacheHeaders()
+    })
 
   } catch (err: any) {
     console.error('❌ Error in admin-dashboard GET:', err)

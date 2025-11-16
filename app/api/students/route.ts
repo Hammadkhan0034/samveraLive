@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
+import { getUserDataCacheHeaders } from '@/lib/cacheConfig'
 
 export async function GET(request: Request) {
   try {
@@ -110,7 +111,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ 
       students: studentsWithGuardians || [],
       total_students: studentsWithGuardians?.length || 0
-    }, { status: 200 })
+    }, {
+      status: 200,
+      headers: getUserDataCacheHeaders()
+    })
 
   } catch (err: any) {
     console.error('❌ Error in students GET:', err)

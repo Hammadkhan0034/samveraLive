@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
+import { getUserDataCacheHeaders } from '@/lib/cacheConfig'
 
 // Guardian role ID
 const GUARDIAN_ROLE_ID = 10
@@ -36,7 +37,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ 
       guardians: guardians || [],
       total_guardians: guardians?.length || 0
-    }, { status: 200 })
+    }, {
+      status: 200,
+      headers: getUserDataCacheHeaders()
+    })
 
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 })

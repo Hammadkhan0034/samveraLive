@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
+import { getStableDataCacheHeaders } from '@/lib/cacheConfig'
 
 // Teacher role ID
 const TEACHER_ROLE_ID = 20
@@ -86,7 +87,10 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       classes: classesWithTeachers || []
-    }, { status: 200 })
+    }, {
+      status: 200,
+      headers: getStableDataCacheHeaders()
+    })
 
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 })
