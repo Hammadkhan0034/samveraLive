@@ -61,7 +61,6 @@ export function AdminDashboard() {
   const [guardianError, setGuardianError] = useState<string | null>(null);
   const [isSubmittingGuardian, setIsSubmittingGuardian] = useState(false);
   const [guardianForm, setGuardianForm] = useState<{ id?: string; first_name: string; last_name: string; email: string; phone: string; org_id: string; is_active?: boolean }>({ first_name: '', last_name: '', email: '', phone: '', org_id: '', is_active: true });
-  const [guardianRefreshKey, setGuardianRefreshKey] = useState(0);
 
   // Teachers states
   const [teachers, setTeachers] = useState<Array<{ id: string; email: string | null; phone: string | null; first_name: string; last_name: string; org_id: string; is_active: boolean; created_at: string; org_name?: string }>>([]);
@@ -81,6 +80,9 @@ export function AdminDashboard() {
   // Global loading state - always false to show KPIs immediately
   const [isInitialLoading, setIsInitialLoading] = useState(false);
   const didInit = React.useRef(false);
+  
+  // Server-provided statistics
+  const [serverStats, setServerStats] = useState<AdminStats | null>(null);
 
   // Modal states
   const [isOrgModalOpen, setIsOrgModalOpen] = useState(false);
@@ -153,9 +155,9 @@ export function AdminDashboard() {
           copy[idx] = (json as any).org;
           return copy;
         });
-      } else {
-        await loadOrgs();
       }
+      // Refresh dashboard data to ensure stats are updated
+      loadDashboardData().catch(err => console.error('Error refreshing dashboard:', err));
     } catch (e: any) {
       console.error('❌ Error submitting organization:', e.message);
       setOrgError(e.message);
@@ -209,6 +211,57 @@ export function AdminDashboard() {
     }
   }
 
+  // Load dashboard data from single API endpoint
+  async function loadDashboardData() {
+    try {
+      console.log('🔄 Loading admin dashboard data from API...');
+      
+      const res = await fetch('/api/admin-dashboard', { cache: 'no-store' });
+      const json = await res.json();
+
+      if (!res.ok) {
+        throw new Error(json.error || `Failed with ${res.status}`);
+      }
+
+      console.log('📥 Admin dashboard API response:', {
+        stats: json.stats,
+        orgs: json.orgs?.length || 0,
+        principals: json.principals?.length || 0,
+        teachers: json.teachers?.length || 0,
+        guardians: json.guardians?.length || 0,
+        students: json.students?.length || 0
+      });
+
+      // Update all state from single response
+      setOrgs(json.orgs || []);
+      setPrincipals(json.principals || []);
+      setTeachers(json.teachers || []);
+      setGuardians(json.guardians || []);
+      setStudents(json.students || []);
+      setServerStats(json.stats || null);
+
+      // Cache data for instant loading on refresh
+      if (typeof window !== 'undefined') {
+        try {
+          sessionStorage.setItem('admin_orgs', JSON.stringify(json.orgs || []));
+          sessionStorage.setItem('admin_principals', JSON.stringify(json.principals || []));
+          sessionStorage.setItem('admin_teachers', JSON.stringify(json.teachers || []));
+          sessionStorage.setItem('admin_guardians', JSON.stringify(json.guardians || []));
+          sessionStorage.setItem('admin_students', JSON.stringify(json.students || []));
+          sessionStorage.setItem('admin_stats', JSON.stringify(json.stats || null));
+        } catch { }
+      }
+
+      console.log('✅ Admin dashboard data loaded successfully');
+    } catch (e: any) {
+      console.error('❌ Error loading admin dashboard data:', e.message);
+      setOrgError(e.message);
+      setPrincipalError(e.message);
+      setGuardianError(e.message);
+      setStudentError(e.message);
+    }
+  }
+
   // Load data immediately when component mounts - always load fresh, no cached data on refresh
   React.useEffect(() => {
     // Always clear in-memory data on mount to avoid showing stale values
@@ -217,41 +270,7 @@ export function AdminDashboard() {
     setGuardians([]);
     setTeachers([]);
     setStudents([]);
-
-    const loadAllData = async () => {
-      try {
-        console.log('🔄 Loading fresh data for Admin Dashboard...');
-        // Don't set loading state - show dashboard immediately
-
-        // First load orgs, then load data that depends on orgs
-        await loadOrgs();
-
-        // Now load principals (doesn't depend on orgs)
-        await loadPrincipals();
-
-        // Load org-dependent data in parallel (need orgs to be loaded first)
-        const results = await Promise.allSettled([
-          loadGuardians(false),
-          loadTeachers(false),
-          loadStudents(false)
-        ]);
-
-        // Log results for debugging
-        results.forEach((result, index) => {
-          const names = ['loadGuardians', 'loadTeachers', 'loadStudents'];
-          if (result.status === 'rejected') {
-            console.error(`❌ ${names[index]} failed:`, result.reason);
-          } else {
-            console.log(`✅ ${names[index]} completed`);
-          }
-        });
-
-        console.log('✅ All fresh data loading completed');
-
-      } catch (error) {
-        console.error('❌ Error loading data:', error);
-      }
-    };
+    setServerStats(null);
 
     // Always load fresh data - only skip if already initialized in this render cycle
     if (didInit.current) {
@@ -260,22 +279,8 @@ export function AdminDashboard() {
     }
     didInit.current = true;
     // Start loading fresh data immediately - no cached data on refresh
-    loadAllData();
+    loadDashboardData();
   }, []);
-
-  // No fallback needed - isInitialLoading is always false to show KPIs immediately
-
-  // Load teachers, guardians, and students when orgs are available (always fresh)
-  React.useEffect(() => {
-    if (orgs.length > 0) {
-      console.log('🔄 Orgs available, loading dependent data fresh');
-      loadTeachers(false);
-      loadGuardians(false);
-      loadStudents(false);
-    } else {
-      console.log('⚠️ No orgs available yet, cannot load students/teachers/guardians');
-    }
-  }, [orgs.length]);
 
   // loadClasses removed to reduce unnecessary code and requests
 
@@ -362,8 +367,8 @@ export function AdminDashboard() {
       setPrincipalPhoneError(null);
       setIsPrincipalModalOpen(false);
 
-      // Force refresh principals list in background to ensure data is in sync
-      loadPrincipals().catch(err => console.error('Error refreshing principals:', err));
+      // Force refresh dashboard data in background to ensure data is in sync
+      loadDashboardData().catch(err => console.error('Error refreshing dashboard:', err));
     } catch (e: any) {
       console.error('❌ Error submitting principal:', e.message);
       setPrincipalError(e.message);
@@ -431,11 +436,11 @@ export function AdminDashboard() {
       setIsDeletePrincipalModalOpen(false);
       setPrincipalToDelete(null);
 
-      // Force refresh principals list without showing loading
-      console.log('🔄 Refreshing principals list...');
-      await loadPrincipals();
+      // Force refresh dashboard data to ensure stats are updated
+      console.log('🔄 Refreshing dashboard data...');
+      await loadDashboardData();
 
-      console.log('✅ Principals list refreshed');
+      console.log('✅ Dashboard data refreshed');
     } catch (e: any) {
       console.error('❌ Error deleting principal:', e.message);
       setPrincipalError(e.message);
@@ -528,7 +533,6 @@ export function AdminDashboard() {
 
         const guardiansList = json.guardians || [];
         setGuardians(guardiansList);
-        setGuardianRefreshKey(prev => prev + 1);
         console.log('✅ Default guardians loaded:', guardiansList.length);
         return;
       }
@@ -561,7 +565,6 @@ export function AdminDashboard() {
       console.log('📋 All guardians:', allGuardians);
 
       setGuardians(allGuardians);
-      setGuardianRefreshKey(prev => prev + 1); // Force re-render
       // Cache guardians for instant loading on refresh
       if (typeof window !== 'undefined') {
         try {
@@ -614,15 +617,14 @@ export function AdminDashboard() {
             return [...prev, { ...newGuardian, org_name: orgs.find(o => o.id === newGuardian.org_id)?.name || '' }];
           }
         });
-        setGuardianRefreshKey(prev => prev + 1); // Force stats recalculation
       }
 
       setIsGuardianModalOpen(false);
       setGuardianForm({ first_name: '', last_name: '', email: '', phone: '', org_id: '', is_active: true });
 
-      // Force refresh the guardians list in background to ensure data is in sync
-      console.log('🔄 Refreshing guardians list in background...');
-      loadGuardians(false).catch(err => console.error('Error refreshing guardians:', err));
+      // Force refresh dashboard data in background to ensure data is in sync
+      console.log('🔄 Refreshing dashboard data in background...');
+      loadDashboardData().catch(err => console.error('Error refreshing dashboard:', err));
 
       // Guardian created successfully - data already refreshed in table
     } catch (e: any) {
@@ -673,7 +675,7 @@ export function AdminDashboard() {
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
       setIsDeleteGuardianModalOpen(false);
       setGuardianToDelete(null);
-      await loadGuardians(false);
+      await loadDashboardData();
     } catch (e: any) {
       setGuardianError(e.message);
     }
@@ -928,66 +930,27 @@ export function AdminDashboard() {
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
       setIsDeleteStudentModalOpen(false);
       setStudentToDelete(null);
-      await loadStudents(false);
+      await loadDashboardData();
     } catch (e: any) {
       setStudentError(e.message);
     }
   }
 
-  // Calculate real stats from loaded data - force recalculation when data changes
+  // Use server-provided stats, fallback to default if not loaded yet
   const stats: AdminStats = React.useMemo(() => {
-    // Debug: Log all counts before calculation
-    const principalsCount = principals.length;
-    const teachersCount = teachers.length;
-    const guardiansCount = guardians.length;
-    const studentsCount = students.length;
-
-
-    // Compute unique users across all roles to match users table count
-    const uniqueUserIds = new Set<string>();
-    principals.forEach((p: any) => p?.id && uniqueUserIds.add(p.id));
-    teachers.forEach((t: any) => t?.id && uniqueUserIds.add(t.id));
-    guardians.forEach((g: any) => g?.id && uniqueUserIds.add(g.id));
-    students.forEach((s: any) => (s?.user_id || s?.id) && uniqueUserIds.add(s.user_id || s.id));
-
-    const calculatedStats = {
-      // Total Users = unique users across principals, teachers, guardians, students
-      totalUsers: uniqueUserIds.size,
-      // Total Teachers from all organizations
-      totalTeachers: teachersCount,
-      totalStudents: studentsCount,
-      totalParents: guardiansCount,
-      // Active Users = Active Principals + Active Teachers + Active Guardians + All Students (students don't have is_active field, so count all)
-      activeUsers: principals.filter(p => p.is_active).length +
-        teachers.filter(t => t.is_active).length +
-        guardians.filter(g => g.is_active).length +
-        students.length,
-      newRegistrations: principals.filter(p => {
-        const createdDate = new Date(p.created_at || 0);
-        const weekAgo = new Date();
-        weekAgo.setDate(weekAgo.getDate() - 7);
-        return createdDate > weekAgo;
-      }).length + teachers.filter(t => {
-        const createdDate = new Date(t.created_at || 0);
-        const weekAgo = new Date();
-        weekAgo.setDate(weekAgo.getDate() - 7);
-        return createdDate > weekAgo;
-      }).length + guardians.filter(g => {
-        const createdDate = new Date(g.created_at || 0);
-        const weekAgo = new Date();
-        weekAgo.setDate(weekAgo.getDate() - 7);
-        return createdDate > weekAgo;
-      }).length + students.filter(s => {
-        const createdDate = new Date(s.created_at || 0);
-        const weekAgo = new Date();
-        weekAgo.setDate(weekAgo.getDate() - 7);
-        return createdDate > weekAgo;
-      }).length
+    if (serverStats) {
+      return serverStats;
+    }
+    // Return default stats while loading
+    return {
+      totalUsers: 0,
+      totalTeachers: 0,
+      totalStudents: 0,
+      totalParents: 0,
+      activeUsers: 0,
+      newRegistrations: 0
     };
-
-    console.log('✅ Final calculated stats:', calculatedStats);
-    return calculatedStats;
-  }, [principals, teachers, guardians, students, guardianRefreshKey]); // Use full arrays instead of .length for better reactivity
+  }, [serverStats]);
 
   const recentActivities = [
     { id: 1, type: 'user_registration', user: 'Anna Jónsdóttir', role: 'Teacher', time: '2 minutes ago' },
@@ -1162,7 +1125,7 @@ export function AdminDashboard() {
           value={stats.totalParents}
           icon={Users}
           color="bg-orange-500"
-          key={`parents-${guardianRefreshKey}`}
+          key={`parents-${stats.totalParents}`}
         />
         <StatCard
           title={t.activeUsers}
@@ -1729,11 +1692,11 @@ export function AdminDashboard() {
             });
           }
 
-          setIsStudentModalOpen(false);
-          setStudentForm({ first_name: '', last_name: '', dob: '', gender: 'unknown', class_id: '', medical_notes: '', allergies: '', emergency_contact: '', org_id: '', guardian_ids: [], phone: '', address: '', registration_time: '', start_date: '', barngildi: 0, student_language: '', social_security_number: '' });
+      setIsStudentModalOpen(false);
+      setStudentForm({ first_name: '', last_name: '', dob: '', gender: 'unknown', class_id: '', medical_notes: '', allergies: '', emergency_contact: '', org_id: '', guardian_ids: [], phone: '', address: '', registration_time: '', start_date: '', barngildi: 0, student_language: '', social_security_number: '' });
 
-          // Force refresh the students list in background to ensure data is in sync
-          loadStudents(false).catch(err => console.error('Error refreshing students:', err));
+      // Force refresh dashboard data in background to ensure data is in sync
+      loadDashboardData().catch(err => console.error('Error refreshing dashboard:', err));
         }}
         initialData={studentForm}
         loading={isSubmittingStudent}
