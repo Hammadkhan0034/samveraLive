@@ -1,10 +1,20 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 import { getStableDataCacheHeaders } from '@/lib/cacheConfig'
+import { requireServerAuth } from '@/lib/supabaseServer'
 import { z } from 'zod'
 import { validateQuery, validateBody, orgIdSchema, classIdSchema, userIdSchema, dateSchema, notesSchema, uuidSchema } from '@/lib/validation'
 
 export async function GET(request: Request) {
+  try {
+    await requireServerAuth()
+  } catch (authError: any) {
+    if (authError.message === 'Authentication required') {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+    throw authError
+  }
+
   try {
     if (!supabaseAdmin) {
       console.error('❌ Supabase admin client not configured. Missing SUPABASE_SERVICE_ROLE_KEY in .env.local')
@@ -72,6 +82,15 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  try {
+    await requireServerAuth()
+  } catch (authError: any) {
+    if (authError.message === 'Authentication required') {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+    throw authError
+  }
+
   try {
     if (!supabaseAdmin) {
       console.error('❌ Supabase admin client not configured. Missing SUPABASE_SERVICE_ROLE_KEY in .env.local')
@@ -193,6 +212,15 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
+    await requireServerAuth()
+  } catch (authError: any) {
+    if (authError.message === 'Authentication required') {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+    throw authError
+  }
+
+  try {
     if (!supabaseAdmin) {
       console.error('❌ Supabase admin client not configured. Missing SUPABASE_SERVICE_ROLE_KEY in .env.local')
       return NextResponse.json({ 
@@ -256,6 +284,15 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  try {
+    await requireServerAuth()
+  } catch (authError: any) {
+    if (authError.message === 'Authentication required') {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+    throw authError
+  }
+
   try {
     if (!supabaseAdmin) {
       console.error('❌ Supabase admin client not configured. Missing SUPABASE_SERVICE_ROLE_KEY in .env.local')

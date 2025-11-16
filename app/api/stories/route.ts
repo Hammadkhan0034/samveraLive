@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 import { getStableDataCacheHeaders } from '@/lib/cacheConfig'
+import { requireServerAuth } from '@/lib/supabaseServer'
 import { z } from 'zod'
 import { validateQuery, validateBody, orgIdSchema, classIdSchema, userIdSchema, titleSchema, captionSchema, futureDateSchema, uuidSchema, storyIdSchema, isoDateTimeSchema, positiveNumberSchema } from '@/lib/validation'
 
@@ -26,6 +27,15 @@ const getStoriesQuerySchema = z.object({
 }, { message: 'For teacher audience, either teacherClassIds or teacherAuthorId must be provided' });
 
 export async function GET(request: Request) {
+  try {
+    await requireServerAuth()
+  } catch (authError: any) {
+    if (authError.message === 'Authentication required') {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+    throw authError
+  }
+
   try {
     if (!supabaseAdmin) {
       return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 })
@@ -289,6 +299,15 @@ const postStoryBodySchema = z.object({
 
 export async function POST(request: Request) {
   try {
+    await requireServerAuth()
+  } catch (authError: any) {
+    if (authError.message === 'Authentication required') {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+    throw authError
+  }
+
+  try {
     if (!supabaseAdmin) {
       return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 })
     }
@@ -434,6 +453,15 @@ const putStoryBodySchema = z.object({
 
 export async function PUT(request: Request) {
   try {
+    await requireServerAuth()
+  } catch (authError: any) {
+    if (authError.message === 'Authentication required') {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+    throw authError
+  }
+
+  try {
     if (!supabaseAdmin) {
       return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 })
     }
@@ -514,6 +542,15 @@ const deleteStoryQuerySchema = z.object({
 });
 
 export async function DELETE(request: Request) {
+  try {
+    await requireServerAuth()
+  } catch (authError: any) {
+    if (authError.message === 'Authentication required') {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+    throw authError
+  }
+
   try {
     if (!supabaseAdmin) {
       return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 })

@@ -1,10 +1,20 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 import { getStableDataCacheHeaders } from '@/lib/cacheConfig'
+import { requireServerAuth } from '@/lib/supabaseServer'
 import { z } from 'zod'
 import { validateQuery, validateBody, uuidSchema, classIdSchema, userIdSchema, titleSchema, notesSchema, orgIdSchema } from '@/lib/validation'
 
 export async function GET(request: Request) {
+  try {
+    await requireServerAuth()
+  } catch (authError: any) {
+    if (authError.message === 'Authentication required') {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+    throw authError
+  }
+
   try {
     if (!supabaseAdmin) {
       return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 })
