@@ -1,9 +1,17 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 import { getStableDataCacheHeaders } from '@/lib/cacheConfig'
+import { z } from 'zod'
+import { validateQuery, validateBody, orgIdSchema, userIdSchema, nameSchema, codeSchema, classIdSchema } from '@/lib/validation'
 
 // Teacher role ID
 const TEACHER_ROLE_ID = 20
+
+// GET query parameter schema
+const getClassesQuerySchema = z.object({
+  orgId: orgIdSchema.optional(),
+  createdBy: userIdSchema.optional(),
+});
 
 export async function GET(request: Request) {
   try {
@@ -14,8 +22,11 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url)
-    const orgId = searchParams.get('orgId')
-    const createdBy = searchParams.get('createdBy')
+    const queryValidation = validateQuery(getClassesQuerySchema, searchParams)
+    if (!queryValidation.success) {
+      return queryValidation.error
+    }
+    const { orgId, createdBy } = queryValidation.data
 
     let query = supabaseAdmin
       .from('classes')
@@ -106,13 +117,11 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { name, code, created_by, teacher_id, org_id } = body || {}
-
-    if (!name || !created_by) {
-      return NextResponse.json({
-        error: 'name and created_by are required'
-      }, { status: 400 })
+    const bodyValidation = validateBody(postClassBodySchema, body)
+    if (!bodyValidation.success) {
+      return bodyValidation.error
     }
+    const { name, code, created_by, teacher_id, org_id } = bodyValidation.data
 
     // Get organization ID from user if not provided
     let organizationId = org_id;
@@ -263,6 +272,14 @@ export async function POST(request: Request) {
   }
 }
 
+// PUT body schema
+const putClassBodySchema = z.object({
+  id: classIdSchema,
+  name: nameSchema.optional(),
+  code: codeSchema,
+  teacher_id: userIdSchema.optional(),
+});
+
 export async function PUT(request: Request) {
   try {
     if (!supabaseAdmin) {
@@ -272,11 +289,11 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json()
-    const { id, name, code, teacher_id } = body || {}
-
-    if (!id) {
-      return NextResponse.json({ error: 'Class ID is required' }, { status: 400 })
+    const bodyValidation = validateBody(putClassBodySchema, body)
+    if (!bodyValidation.success) {
+      return bodyValidation.error
     }
+    const { id, name, code, teacher_id } = bodyValidation.data
 
     // Update class
     const updateData: any = { updated_at: new Date().toISOString() }
@@ -365,11 +382,11 @@ export async function DELETE(request: Request) {
     }
 
     const { searchParams } = new URL(request.url)
-    const id = searchParams.get('id')
-
-    if (!id) {
-      return NextResponse.json({ error: 'Class ID is required' }, { status: 400 })
+    const queryValidation = validateQuery(deleteClassQuerySchema, searchParams)
+    if (!queryValidation.success) {
+      return queryValidation.error
     }
+    const { id } = queryValidation.data
 
     // Soft delete (set deleted_at)
     const { error } = await supabaseAdmin

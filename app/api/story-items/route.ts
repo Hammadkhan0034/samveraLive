@@ -1,5 +1,14 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
+import { getStableDataCacheHeaders } from '@/lib/cacheConfig'
+import { z } from 'zod'
+import { validateQuery, storyIdSchema, orgIdSchema } from '@/lib/validation'
+
+// GET query parameter schema
+const getStoryItemsQuerySchema = z.object({
+  storyId: storyIdSchema,
+  orgId: orgIdSchema.optional(),
+});
 
 export async function GET(request: Request) {
   try {
@@ -8,14 +17,13 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url)
-    const storyId = searchParams.get('storyId')
-    const orgId = searchParams.get('orgId')
+    const queryValidation = validateQuery(getStoryItemsQuerySchema, searchParams)
+    if (!queryValidation.success) {
+      return queryValidation.error
+    }
+    const { storyId, orgId } = queryValidation.data
 
     console.log('🔍 Fetching story items for storyId:', storyId, 'orgId:', orgId)
-
-    if (!storyId) {
-      return NextResponse.json({ error: 'storyId is required' }, { status: 400 })
-    }
 
     let query = supabaseAdmin
       .from('story_items')
@@ -51,7 +59,10 @@ export async function GET(request: Request) {
       }))
     }
 
-    return NextResponse.json({ items: data || [] }, { status: 200 })
+    return NextResponse.json({ items: data || [] }, { 
+      status: 200,
+      headers: getStableDataCacheHeaders()
+    })
   } catch (e: any) {
     console.error('❌ Exception fetching story items:', e)
     return NextResponse.json({ error: e.message || 'Unknown error' }, { status: 500 })

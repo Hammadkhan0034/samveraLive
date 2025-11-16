@@ -1,5 +1,30 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
+import { getUserDataCacheHeaders } from '@/lib/cacheConfig'
+import { z } from 'zod'
+import { validateQuery, orgIdSchema, uuidSchema } from '@/lib/validation'
+
+// GET query parameter schema
+const searchTeachersQuerySchema = z.object({
+  q: z.string().optional().default(''),
+  orgId: orgIdSchema,
+  mode: z.enum(['email', 'name', 'any']).optional().default('any'),
+  limit: z.string().transform((val) => Math.min(parseInt(val) || 10, 25)).optional().default('10'),
+  excludeIds: z.string().transform((val) => val ? val.split(',').filter(Boolean) : []).optional().default(''),
+}).refine((data) => {
+  // Validate that excludeIds are valid UUIDs if provided
+  if (data.excludeIds && data.excludeIds.length > 0) {
+    return data.excludeIds.every(id => {
+      try {
+        uuidSchema.parse(id);
+        return true;
+      } catch {
+        return false;
+      }
+    });
+  }
+  return true;
+}, { message: 'excludeIds must contain valid UUIDs' });
 
 // GET /api/search-teachers?q=...&orgId=...&mode=email|name|any&limit=10&excludeIds=...
 export async function GET(request: Request) {
@@ -9,16 +34,11 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url)
-    const q = (searchParams.get('q') || '').trim()
-    const orgId = searchParams.get('orgId') || undefined
-    const mode = (searchParams.get('mode') || 'any') as 'email' | 'name' | 'any'
-    const limit = Math.min(parseInt(searchParams.get('limit') || '10', 10) || 10, 25)
-    const excludeIdsParam = searchParams.get('excludeIds')
-    const excludeIds = excludeIdsParam ? excludeIdsParam.split(',').filter(Boolean) : []
-
-    if (!orgId) {
-      return NextResponse.json({ error: 'orgId is required' }, { status: 400 })
+    const queryValidation = validateQuery(searchTeachersQuerySchema, searchParams)
+    if (!queryValidation.success) {
+      return queryValidation.error
     }
+    const { q, orgId, mode, limit, excludeIds } = queryValidation.data
 
     if (!q) {
       return NextResponse.json({ results: [], count: 0 }, { status: 200 })
@@ -39,8 +59,8 @@ export async function GET(request: Request) {
 
     let teacherUserIds = (staffData || []).map((s: any) => s.user_id).filter(Boolean)
     
-    // Apply exclude IDs if provided
-    if (excludeIds.length > 0) {
+    // Apply exclude IDs if provided (already validated as UUIDs)
+    if (excludeIds && excludeIds.length > 0) {
       teacherUserIds = teacherUserIds.filter((id: string) => !excludeIds.includes(id))
     }
     
@@ -83,7 +103,10 @@ export async function GET(request: Request) {
       full_name: `${teacher.first_name || ''} ${teacher.last_name || ''}`.trim() || teacher.email || 'Unknown',
     }))
 
-    return NextResponse.json({ results, count: results.length }, { status: 200 })
+    return NextResponse.json({ results, count: results.length }, { 
+      status: 200,
+      headers: getUserDataCacheHeaders()
+    })
   } catch (err: any) {
     console.error('❌ Error in search-teachers API:', err)
     return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 })

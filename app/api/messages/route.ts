@@ -3,6 +3,8 @@ import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { supabaseAdmin } from '@/lib/supabaseClient';
 import { getRealtimeDataCacheHeaders } from '@/lib/cacheConfig';
+import { z } from 'zod';
+import { validateQuery, validateBody, userIdSchema, threadTypeSchema, uuidSchema } from '@/lib/validation';
 
 async function getRequesterOrgId(userId: string): Promise<string | null> {
   if (!supabaseAdmin) return null;
@@ -59,7 +61,15 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId') || user.id;
+    // GET query parameter schema
+    const getMessagesQuerySchema = z.object({
+      userId: userIdSchema.optional(),
+    });
+    const queryValidation = validateQuery(getMessagesQuerySchema, searchParams);
+    if (!queryValidation.success) {
+      return queryValidation.error;
+    }
+    const userId = queryValidation.data.userId || user.id;
 
     // Fetch message threads where user is a participant
     // First, get all participants for this user
@@ -227,11 +237,21 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { thread_type = 'dm', subject, recipient_id, recipient_ids } = body;
-
-    if (!recipient_id && (!recipient_ids || recipient_ids.length === 0)) {
-      return NextResponse.json({ error: 'recipient_id or recipient_ids is required' }, { status: 400 });
+    // POST body schema
+    const postMessageBodySchema = z.object({
+      thread_type: threadTypeSchema.default('dm'),
+      subject: z.string().max(500).nullable().optional(),
+      recipient_id: userIdSchema.optional(),
+      recipient_ids: z.array(userIdSchema).optional(),
+    }).refine((data) => data.recipient_id || (data.recipient_ids && data.recipient_ids.length > 0), {
+      message: 'recipient_id or recipient_ids is required',
+    });
+    
+    const bodyValidation = validateBody(postMessageBodySchema, body);
+    if (!bodyValidation.success) {
+      return bodyValidation.error;
     }
+    const { thread_type, subject, recipient_id, recipient_ids } = bodyValidation.data;
 
     // For DM threads, check if a thread already exists between these participants
     if (thread_type === 'dm' && recipient_id) {
@@ -361,11 +381,18 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { id, subject, deleted_at } = body;
-
-    if (!id) {
-      return NextResponse.json({ error: 'Message ID is required' }, { status: 400 });
+    // PUT body schema
+    const putMessageBodySchema = z.object({
+      id: uuidSchema,
+      subject: z.string().max(500).nullable().optional(),
+      deleted_at: z.string().datetime().nullable().optional(),
+    });
+    
+    const bodyValidation = validateBody(putMessageBodySchema, body);
+    if (!bodyValidation.success) {
+      return bodyValidation.error;
     }
+    const { id, subject, deleted_at } = bodyValidation.data;
 
     // Verify user has access to this message
     const { data: participant } = await supabaseAdmin

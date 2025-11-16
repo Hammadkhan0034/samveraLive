@@ -1,5 +1,28 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseClient';
+import { getRealtimeDataCacheHeaders } from '@/lib/cacheConfig';
+import { z } from 'zod';
+import { validateParams, validateQuery, uuidSchema, userIdSchema, nonNegativeIntSchema } from '@/lib/validation';
+
+// Path parameter schema
+const messageIdParamsSchema = z.object({
+  messageId: uuidSchema,
+});
+
+// GET query parameter schema
+const getMessageItemsQuerySchema = z.object({
+  user_id: userIdSchema,
+  limit: z.string().transform((val) => Math.min(parseInt(val) || 50, 100)).optional().default('50'),
+  offset: z.string().transform((val) => Math.max(parseInt(val) || 0, 0)).optional().default('0'),
+});
+
+// POST body schema
+const postMessageItemBodySchema = z.object({
+  user_id: userIdSchema,
+  org_id: uuidSchema,
+  body: z.string().min(1, { message: 'Message body is required' }).max(10000, { message: 'Message body is too long' }),
+  attachments: z.array(z.any()).optional().default([]),
+});
 
 export async function GET(
   request: Request,
@@ -10,15 +33,19 @@ export async function GET(
       return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 });
     }
 
-    const { messageId } = await params;
-    const { searchParams } = new URL(request.url);
-    const user_id = searchParams.get('user_id');
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
-
-    if (!user_id) {
-      return NextResponse.json({ error: 'Missing user_id' }, { status: 400 });
+    const rawParams = await params;
+    const paramsValidation = validateParams(messageIdParamsSchema, rawParams);
+    if (!paramsValidation.success) {
+      return paramsValidation.error;
     }
+    const { messageId } = paramsValidation.data;
+
+    const { searchParams } = new URL(request.url);
+    const queryValidation = validateQuery(getMessageItemsQuerySchema, searchParams);
+    if (!queryValidation.success) {
+      return queryValidation.error;
+    }
+    const { user_id, limit, offset } = queryValidation.data;
 
     // Verify user is a participant in this thread
     const { data: participant, error: participantError } = await supabaseAdmin
@@ -88,7 +115,10 @@ export async function GET(
     });
 
     console.log('✅ Fetched message items:', transformedItems.length);
-    return NextResponse.json({ items: transformedItems.reverse() }, { status: 200 }); // Reverse to show oldest first
+    return NextResponse.json({ items: transformedItems.reverse() }, { 
+      status: 200,
+      headers: getRealtimeDataCacheHeaders()
+    }); // Reverse to show oldest first
   } catch (err: any) {
     console.error('💥 Error in GET /[messageId]/items:', err);
     return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 });
@@ -104,13 +134,19 @@ export async function POST(
       return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 });
     }
 
-    const { messageId } = await params;
-    const body = await request.json();
-    const { user_id, org_id, body: messageBody, attachments = [] } = body;
-
-    if (!user_id || !org_id || !messageBody || !messageBody.trim()) {
-      return NextResponse.json({ error: 'Missing required fields: user_id, org_id, body' }, { status: 400 });
+    const rawParams = await params;
+    const paramsValidation = validateParams(messageIdParamsSchema, rawParams);
+    if (!paramsValidation.success) {
+      return paramsValidation.error;
     }
+    const { messageId } = paramsValidation.data;
+
+    const body = await request.json();
+    const bodyValidation = validateBody(postMessageItemBodySchema, body);
+    if (!bodyValidation.success) {
+      return bodyValidation.error;
+    }
+    const { user_id, org_id, body: messageBody, attachments } = bodyValidation.data;
 
     // Verify user is a participant
     const { data: participant, error: participantError } = await supabaseAdmin

@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 import { requireServerRoles, requireServerOrgAccess, requireServerAuth } from '@/lib/supabaseServer'
 import { getUserDataCacheHeaders } from '@/lib/cacheConfig'
+import { z } from 'zod'
+import { validateBody, validateQuery, firstNameSchema, lastNameSchema, emailSchema, roleSchema, phoneSchema, addressSchema, ssnSchema, classIdSchema, userIdSchema, uuidSchema } from '@/lib/validation'
 // Invitation email handled via Supabase Admin API (inviteUserByEmail)
 
 // Staff/Teacher role ID
@@ -312,23 +314,26 @@ export async function POST(request: Request) {
     const created_by = user.id
 
     const body = await request.json()
-    const { first_name, last_name, email, role, phone, class_id, address, ssn, education_level, union_membership } = body || {}
-
-    // Normalize class_id to a valid UUID or null
-    const normalizeToUuidOrNull = (v: any) => (typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v.trim?.() || v) ? v : null)
-    const normalizedClassId = normalizeToUuidOrNull(class_id)
-
-    if (!email) {
-      return NextResponse.json({
-        error: 'Missing required field: email'
-      }, { status: 400 })
+    // POST body schema
+    const postStaffBodySchema = z.object({
+      first_name: firstNameSchema,
+      last_name: lastNameSchema,
+      email: emailSchema,
+      role: roleSchema,
+      phone: phoneSchema,
+      class_id: classIdSchema.optional(),
+      address: addressSchema,
+      ssn: ssnSchema,
+      education_level: z.string().max(100).nullable().optional(),
+      union_membership: z.string().max(100).nullable().optional(),
+    });
+    
+    const bodyValidation = validateBody(postStaffBodySchema, body)
+    if (!bodyValidation.success) {
+      return bodyValidation.error
     }
-
-    if (!first_name || !first_name.trim()) {
-      return NextResponse.json({
-        error: 'Missing required field: first_name'
-      }, { status: 400 })
-    }
+    const { first_name, last_name, email, role, phone, class_id, address, ssn, education_level, union_membership } = bodyValidation.data
+    const normalizedClassId = class_id && String(class_id).trim() !== '' ? class_id : null
 
     // Check if user already exists in public.users table
     const { data: existingPublicUser } = await supabaseAdmin
@@ -512,23 +517,27 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json()
-    const { 
-      id,
-      first_name,
-      last_name,
-      email,
-      phone,
-      address,
-      ssn,
-      education_level,
-      union_membership,
-      role,
-      is_active
-    } = body || {}
-
-    if (!id) {
-      return NextResponse.json({ error: 'id is required' }, { status: 400 })
+    // PUT body schema
+    const putStaffBodySchema = z.object({
+      id: userIdSchema,
+      first_name: firstNameSchema.optional(),
+      last_name: lastNameSchema,
+      email: emailSchema.optional(),
+      role: roleSchema.optional(),
+      phone: phoneSchema,
+      address: addressSchema,
+      ssn: ssnSchema,
+      is_active: z.boolean().optional(),
+      class_id: classIdSchema.optional(),
+      education_level: z.string().max(100).nullable().optional(),
+      union_membership: z.string().max(100).nullable().optional(),
+    });
+    
+    const bodyValidation = validateBody(putStaffBodySchema, body)
+    if (!bodyValidation.success) {
+      return bodyValidation.error
     }
+    const { id, first_name, last_name, email, role, phone, address, ssn, is_active, class_id, education_level, union_membership } = bodyValidation.data
 
     console.log('🔧 Updating staff member:', { id, first_name, last_name, email, phone, address, ssn, role, education_level, union_membership })
 
@@ -655,11 +664,16 @@ export async function DELETE(request: Request) {
     }
 
     const { searchParams } = new URL(request.url)
-    const id = searchParams.get('id')
-
-    if (!id) {
-      return NextResponse.json({ error: 'id is required' }, { status: 400 })
+    // DELETE query parameter schema
+    const deleteStaffQuerySchema = z.object({
+      id: userIdSchema,
+    });
+    
+    const queryValidation = validateQuery(deleteStaffQuerySchema, searchParams)
+    if (!queryValidation.success) {
+      return queryValidation.error
     }
+    const { id } = queryValidation.data
 
     // Enforce role and verify org access
     await requireServerRoles(['principal', 'admin'] as any)

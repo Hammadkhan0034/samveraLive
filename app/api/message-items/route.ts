@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseClient';
 import { requireServerAuth } from '@/lib/supabaseServer';
 import { getRealtimeDataCacheHeaders } from '@/lib/cacheConfig';
+import { z } from 'zod';
+import { validateQuery, validateBody, uuidSchema } from '@/lib/validation';
 
 async function getRequesterOrgId(userId: string): Promise<string | null> {
   if (!supabaseAdmin) return null;
@@ -30,11 +32,16 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const messageId = searchParams.get('messageId');
-
-    if (!messageId) {
-      return NextResponse.json({ error: 'messageId is required' }, { status: 400 });
+    // GET query parameter schema
+    const getMessageItemsQuerySchema = z.object({
+      messageId: uuidSchema,
+    });
+    
+    const queryValidation = validateQuery(getMessageItemsQuerySchema, searchParams);
+    if (!queryValidation.success) {
+      return queryValidation.error;
     }
+    const { messageId } = queryValidation.data;
 
     // Verify user has access to this message thread
     const { data: participant } = await supabaseAdmin
@@ -98,15 +105,18 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { message_id, body: messageBody, attachments = [] } = body;
-
-    if (!message_id) {
-      return NextResponse.json({ error: 'message_id is required' }, { status: 400 });
+    // POST body schema
+    const postMessageItemBodySchema = z.object({
+      message_id: uuidSchema,
+      body: z.string().min(1, { message: 'Message body is required' }).max(10000),
+      attachments: z.array(z.any()).default([]),
+    });
+    
+    const bodyValidation = validateBody(postMessageItemBodySchema, body);
+    if (!bodyValidation.success) {
+      return bodyValidation.error;
     }
-
-    if (!messageBody || !messageBody.trim()) {
-      return NextResponse.json({ error: 'Message body is required' }, { status: 400 });
-    }
+    const { message_id, body: messageBody, attachments } = bodyValidation.data;
 
     // Verify user has access to this message thread
     const { data: participant } = await supabaseAdmin
@@ -169,11 +179,17 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { id, body: messageBody } = body;
-
-    if (!id) {
-      return NextResponse.json({ error: 'Message item ID is required' }, { status: 400 });
+    // PUT body schema
+    const putMessageItemBodySchema = z.object({
+      id: uuidSchema,
+      body: z.string().min(1).max(10000).optional(),
+    });
+    
+    const bodyValidation = validateBody(putMessageItemBodySchema, body);
+    if (!bodyValidation.success) {
+      return bodyValidation.error;
     }
+    const { id, body: messageBody } = bodyValidation.data;
 
     // Get existing item to check author and get edit history
     const { data: existingItem, error: fetchError } = await supabaseAdmin
@@ -235,11 +251,16 @@ export async function DELETE(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
-
-    if (!id) {
-      return NextResponse.json({ error: 'Message item ID is required' }, { status: 400 });
+    // DELETE query parameter schema
+    const deleteMessageItemQuerySchema = z.object({
+      id: uuidSchema,
+    });
+    
+    const queryValidation = validateQuery(deleteMessageItemQuerySchema, searchParams);
+    if (!queryValidation.success) {
+      return queryValidation.error;
     }
+    const { id } = queryValidation.data;
 
     // Get existing item to check author
     const { data: existingItem } = await supabaseAdmin

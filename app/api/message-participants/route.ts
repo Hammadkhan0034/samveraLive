@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseClient';
 import { requireServerAuth } from '@/lib/supabaseServer';
+import { getRealtimeDataCacheHeaders } from '@/lib/cacheConfig';
+import { z } from 'zod';
+import { validateQuery, validateBody, validateParams, uuidSchema, userIdSchema } from '@/lib/validation';
 
 async function getRequesterOrgId(userId: string): Promise<string | null> {
   if (!supabaseAdmin) return null;
@@ -14,6 +17,30 @@ async function getRequesterOrgId(userId: string): Promise<string | null> {
   if (error || !data) return null;
   return data.org_id;
 }
+
+// GET query parameter schema
+const getMessageParticipantsQuerySchema = z.object({
+  messageId: uuidSchema,
+});
+
+// POST body schema
+const postMessageParticipantBodySchema = z.object({
+  message_id: uuidSchema,
+  user_id: userIdSchema,
+  role: z.string().nullable().optional(),
+});
+
+// PUT body schema
+const putMessageParticipantBodySchema = z.object({
+  id: uuidSchema,
+  unread: z.boolean().optional(),
+  role: z.string().nullable().optional(),
+});
+
+// DELETE query parameter schema
+const deleteMessageParticipantQuerySchema = z.object({
+  id: uuidSchema,
+});
 
 export async function GET(request: Request) {
   try {
@@ -29,11 +56,11 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const messageId = searchParams.get('messageId');
-
-    if (!messageId) {
-      return NextResponse.json({ error: 'messageId is required' }, { status: 400 });
+    const queryValidation = validateQuery(getMessageParticipantsQuerySchema, searchParams);
+    if (!queryValidation.success) {
+      return queryValidation.error;
     }
+    const { messageId } = queryValidation.data;
 
     // Verify user has access to this message thread
     const { data: participant } = await supabaseAdmin
@@ -63,7 +90,10 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ participants: participants || [] }, { status: 200 });
+    return NextResponse.json({ participants: participants || [] }, { 
+      status: 200,
+      headers: getRealtimeDataCacheHeaders()
+    });
   } catch (err: any) {
     console.error('❌ Error in message-participants GET:', err);
     return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 });
@@ -84,11 +114,11 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { message_id, user_id, role = null } = body;
-
-    if (!message_id || !user_id) {
-      return NextResponse.json({ error: 'message_id and user_id are required' }, { status: 400 });
+    const bodyValidation = validateBody(postMessageParticipantBodySchema, body);
+    if (!bodyValidation.success) {
+      return bodyValidation.error;
     }
+    const { message_id, user_id, role = null } = bodyValidation.data;
 
     // Verify user has access to this message thread
     const { data: existingParticipant } = await supabaseAdmin
@@ -155,11 +185,11 @@ export async function PUT(request: Request) {
     }
 
     const body = await request.json();
-    const { id, unread, role } = body;
-
-    if (!id) {
-      return NextResponse.json({ error: 'Participant ID is required' }, { status: 400 });
+    const bodyValidation = validateBody(putMessageParticipantBodySchema, body);
+    if (!bodyValidation.success) {
+      return bodyValidation.error;
     }
+    const { id, unread, role } = bodyValidation.data;
 
     // Verify user has access (either updating their own or is participant in the thread)
     const { data: participant } = await supabaseAdmin
@@ -223,11 +253,11 @@ export async function DELETE(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
-
-    if (!id) {
-      return NextResponse.json({ error: 'Participant ID is required' }, { status: 400 });
+    const queryValidation = validateQuery(deleteMessageParticipantQuerySchema, searchParams);
+    if (!queryValidation.success) {
+      return queryValidation.error;
     }
+    const { id } = queryValidation.data;
 
     // Verify user has access
     const { data: participant } = await supabaseAdmin

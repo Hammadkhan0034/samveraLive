@@ -1,5 +1,23 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
+import { z } from 'zod'
+import { validateParams, validateBody, storyIdSchema, captionSchema } from '@/lib/validation'
+
+// Path parameter schema
+const storyIdParamsSchema = z.object({
+  storyId: storyIdSchema,
+});
+
+// POST body schema
+const postStoryItemsBodySchema = z.object({
+  items: z.array(z.object({
+    url: z.string().url().nullable().optional(),
+    order_index: z.number().int().nonnegative().optional(),
+    duration_ms: z.number().int().positive().optional(),
+    caption: captionSchema,
+    mime_type: z.string().nullable().optional(),
+  })).min(1, { message: 'At least one item is required' }),
+});
 
 export async function POST(
   request: Request,
@@ -10,17 +28,19 @@ export async function POST(
       return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 })
     }
 
-    const { storyId } = await params
+    const rawParams = await params
+    const paramsValidation = validateParams(storyIdParamsSchema, rawParams)
+    if (!paramsValidation.success) {
+      return paramsValidation.error
+    }
+    const { storyId } = paramsValidation.data
+
     const body = await request.json()
-    const { items } = body || {}
-
-    if (!storyId) {
-      return NextResponse.json({ error: 'storyId is required' }, { status: 400 })
+    const bodyValidation = validateBody(postStoryItemsBodySchema, body)
+    if (!bodyValidation.success) {
+      return bodyValidation.error
     }
-
-    if (!Array.isArray(items)) {
-      return NextResponse.json({ error: 'items must be an array' }, { status: 400 })
-    }
+    const { items } = bodyValidation.data
 
     // Verify story exists and get org_id
     const { data: story, error: storyError } = await supabaseAdmin
@@ -92,11 +112,12 @@ export async function DELETE(
       return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 })
     }
 
-    const { storyId } = await params
-
-    if (!storyId) {
-      return NextResponse.json({ error: 'storyId is required' }, { status: 400 })
+    const rawParams = await params
+    const paramsValidation = validateParams(storyIdParamsSchema, rawParams)
+    if (!paramsValidation.success) {
+      return paramsValidation.error
     }
+    const { storyId } = paramsValidation.data
 
     // Verify story exists
     const { data: story, error: storyError } = await supabaseAdmin

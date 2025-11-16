@@ -1,5 +1,19 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
+import { getStableDataCacheHeaders } from '@/lib/cacheConfig'
+import { z } from 'zod'
+import { validateParams, validateQuery, storyIdSchema, userIdSchema, orgIdSchema } from '@/lib/validation'
+
+// Path parameter schema
+const storyIdParamsSchema = z.object({
+  storyId: storyIdSchema,
+});
+
+// Query parameter schema
+const getStoryQuerySchema = z.object({
+  authorId: userIdSchema.optional(),
+  orgId: orgIdSchema.optional(),
+});
 
 export async function GET(
   request: Request,
@@ -10,14 +24,19 @@ export async function GET(
       return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 })
     }
 
-    const { storyId } = await params
-    const { searchParams } = new URL(request.url)
-    const authorId = searchParams.get('authorId') // Optional: to verify ownership
-    const orgId = searchParams.get('orgId') // Optional: to verify org access
-
-    if (!storyId) {
-      return NextResponse.json({ error: 'storyId is required' }, { status: 400 })
+    const rawParams = await params
+    const paramsValidation = validateParams(storyIdParamsSchema, rawParams)
+    if (!paramsValidation.success) {
+      return paramsValidation.error
     }
+    const { storyId } = paramsValidation.data
+
+    const { searchParams } = new URL(request.url)
+    const queryValidation = validateQuery(getStoryQuerySchema, searchParams)
+    if (!queryValidation.success) {
+      return queryValidation.error
+    }
+    const { authorId, orgId } = queryValidation.data
 
     // Fetch story
     const { data: story, error: storyError } = await supabaseAdmin
@@ -60,7 +79,10 @@ export async function GET(
     return NextResponse.json({ 
       story,
       items: items || []
-    }, { status: 200 })
+    }, { 
+      status: 200,
+      headers: getStableDataCacheHeaders()
+    })
   } catch (e: any) {
     console.error('❌ Exception in GET /api/stories/[storyId]:', e)
     return NextResponse.json({ error: e.message || 'Unknown error' }, { status: 500 })

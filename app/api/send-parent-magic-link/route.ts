@@ -1,5 +1,13 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
+import { z } from 'zod'
+import { validateBody, userIdSchema, emailSchema } from '@/lib/validation'
+
+// POST body schema
+const sendParentMagicLinkBodySchema = z.object({
+  guardian_id: userIdSchema,
+  email: emailSchema,
+});
 
 export async function POST(request: Request) {
   try {
@@ -8,11 +16,11 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { guardian_id, email } = body || {}
-
-    if (!guardian_id || !email) {
-      return NextResponse.json({ error: 'Missing guardian_id or email' }, { status: 400 })
+    const bodyValidation = validateBody(sendParentMagicLinkBodySchema, body)
+    if (!bodyValidation.success) {
+      return bodyValidation.error
     }
+    const { guardian_id, email } = bodyValidation.data
 
     // Get guardian's org_id
     const { data: guardianData, error: guardianErr } = await supabaseAdmin

@@ -1,21 +1,34 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+import { getUserDataCacheHeaders } from '@/lib/cacheConfig'
+import { z } from 'zod'
+import { validateQuery, validateBody, userIdSchema, orgIdSchema, classIdSchema } from '@/lib/validation'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+// GET query parameter schema
+const getTeacherMetadataQuerySchema = z.object({
+  user_id: userIdSchema,
+});
+
+// POST body schema
+const postTeacherMetadataBodySchema = z.object({
+  user_id: userIdSchema,
+  org_id: orgIdSchema,
+  class_id: classIdSchema.optional(),
+});
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const user_id = searchParams.get('user_id')
-    
-    if (!user_id) {
-      return NextResponse.json({ 
-        error: 'user_id is required' 
-      }, { status: 400 })
+    const queryValidation = validateQuery(getTeacherMetadataQuerySchema, searchParams)
+    if (!queryValidation.success) {
+      return queryValidation.error
     }
+    const { user_id } = queryValidation.data
 
     console.log('🔍 Looking up user:', user_id);
 
@@ -46,6 +59,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ 
       org_id: userData.org_id,
       class_id: userData.metadata?.class_id || null
+    }, {
+      headers: getUserDataCacheHeaders()
     })
 
   } catch (err: any) {
@@ -58,15 +73,14 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const { user_id, org_id, class_id } = await request.json()
+    const body = await request.json()
+    const bodyValidation = validateBody(postTeacherMetadataBodySchema, body)
+    if (!bodyValidation.success) {
+      return bodyValidation.error
+    }
+    const { user_id, org_id, class_id } = bodyValidation.data
     
     console.log('📝 Updating user metadata:', { user_id, org_id, class_id });
-    
-    if (!user_id || !org_id) {
-      return NextResponse.json({ 
-        error: 'user_id and org_id are required' 
-      }, { status: 400 })
-    }
 
     // Get current user metadata
     const { data: user, error: userError } = await supabaseAdmin.auth.admin.getUserById(user_id)

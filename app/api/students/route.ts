@@ -1,6 +1,14 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 import { getUserDataCacheHeaders } from '@/lib/cacheConfig'
+import { z } from 'zod'
+import { validateQuery, validateBody, orgIdSchema, classIdSchema, studentIdSchema, firstNameSchema, lastNameSchema, studentDobSchema, genderSchema, studentLanguageSchema, barngildiSchema, phoneSchema, addressSchema, ssnSchema, medicalNotesSchema, allergiesSchema, emergencyContactSchema, guardianIdsSchema, dateSchema } from '@/lib/validation'
+
+// GET query parameter schema
+const getStudentsQuerySchema = z.object({
+  orgId: orgIdSchema,
+  classId: classIdSchema.optional(),
+});
 
 export async function GET(request: Request) {
   try {
@@ -12,12 +20,11 @@ export async function GET(request: Request) {
     }
     
     const { searchParams } = new URL(request.url)
-    const orgId = searchParams.get('orgId')
-    const classId = searchParams.get('classId')
-    
-    if (!orgId) {
-      return NextResponse.json({ error: 'orgId is required' }, { status: 400 })
+    const queryValidation = validateQuery(getStudentsQuerySchema, searchParams)
+    if (!queryValidation.success) {
+      return queryValidation.error
     }
+    const { orgId, classId } = queryValidation.data
 
     // Build query based on filters
     let query = supabaseAdmin
@@ -122,6 +129,46 @@ export async function GET(request: Request) {
   }
 }
 
+// POST body schema
+const postStudentBodySchema = z.object({
+  first_name: firstNameSchema,
+  last_name: lastNameSchema,
+  dob: studentDobSchema.nullable().optional(),
+  gender: genderSchema.optional(),
+  class_id: classIdSchema.optional(),
+  registration_time: z.string().nullable().optional(),
+  start_date: dateSchema.nullable().optional(),
+  barngildi: barngildiSchema.optional(),
+  student_language: studentLanguageSchema.optional(),
+  medical_notes: medicalNotesSchema,
+  allergies: allergiesSchema,
+  emergency_contact: emergencyContactSchema,
+  org_id: orgIdSchema.optional(),
+  phone: phoneSchema,
+  address: addressSchema,
+  social_security_number: ssnSchema,
+  guardian_ids: guardianIdsSchema.optional().default([]),
+}).transform((data) => {
+  // Transform dates to ISO format strings
+  let validatedDob = null;
+  if (data.dob) {
+    const birthDate = new Date(data.dob);
+    validatedDob = birthDate.toISOString().split('T')[0];
+  }
+  
+  let validatedStartDate = null;
+  if (data.start_date) {
+    const startDate = new Date(data.start_date);
+    validatedStartDate = startDate.toISOString().split('T')[0];
+  }
+  
+  return {
+    ...data,
+    dob: validatedDob,
+    start_date: validatedStartDate,
+  };
+});
+
 export async function POST(request: Request) {
   try {
     if (!supabaseAdmin) {
@@ -151,19 +198,20 @@ export async function POST(request: Request) {
     }
     
     const body = await request.json()
-
-
-
+    const bodyValidation = validateBody(postStudentBodySchema, body)
+    if (!bodyValidation.success) {
+      return bodyValidation.error
+    }
     const { 
       first_name, 
       last_name, 
-      dob, 
-      gender, 
+      dob: validatedDob, 
+      gender: normalizedGender, 
       class_id, 
       registration_time,
-      start_date,
-      barngildi,
-      student_language,
+      start_date: validatedStartDate,
+      barngildi: normalizedBarngildi,
+      student_language: normalizedLanguage,
       medical_notes, 
       allergies, 
       emergency_contact,
@@ -171,8 +219,8 @@ export async function POST(request: Request) {
       phone,
       address,
       social_security_number,
-      guardian_ids = [] // Array of guardian IDs to link
-    } = body || {}
+      guardian_ids
+    } = bodyValidation.data
     const normalizedLanguage =
     student_language === 'english' ? 'english' :
     student_language === 'icelandic' ? 'icelandic' :
@@ -240,14 +288,6 @@ export async function POST(request: Request) {
       validatedStartDate = startDate.toISOString().split('T')[0];
     }
 
-    // Normalize gender and barngildi
-    const normalizedGender = (gender || 'unknown').toString().toLowerCase();
-    const normalizedBarngildi = (() => {
-      const n = Number(barngildi);
-      if (isNaN(n)) return 0;
-      return Math.min(1.9, Math.max(0.5, Number(n.toFixed(1))));
-    })();
-
     // First create a user record for the student
     let createdUser, userError;
     try {
@@ -257,7 +297,7 @@ export async function POST(request: Request) {
           first_name,
           last_name: last_name || null,
           dob: validatedDob,
-          gender: normalizedGender,
+          gender: normalizedGender || 'unknown',
           phone: phone || null,
           address: address || null,
           ssn: social_security_number || null,
@@ -310,8 +350,8 @@ export async function POST(request: Request) {
         org_id: org_id || null,
         registration_time: registration_time || null,
         start_date: validatedStartDate,
-        barngildi: normalizedBarngildi,
-        student_language: normalizedLanguage,
+        barngildi: normalizedBarngildi || 0.5,
+        student_language: normalizedLanguage || 'english',
         medical_notes_encrypted: medical_notes || null,
         allergies_encrypted: allergies || null,
         emergency_contact_encrypted: emergency_contact || null,
@@ -360,6 +400,47 @@ export async function POST(request: Request) {
   }
 }
 
+// PUT body schema
+const putStudentBodySchema = z.object({
+  id: studentIdSchema,
+  first_name: firstNameSchema,
+  last_name: lastNameSchema,
+  dob: studentDobSchema.nullable().optional(),
+  gender: genderSchema.optional(),
+  class_id: classIdSchema.optional(),
+  registration_time: z.string().nullable().optional(),
+  start_date: dateSchema.nullable().optional(),
+  barngildi: barngildiSchema.optional(),
+  student_language: studentLanguageSchema.optional(),
+  medical_notes: medicalNotesSchema,
+  allergies: allergiesSchema,
+  emergency_contact: emergencyContactSchema,
+  org_id: orgIdSchema.optional(),
+  phone: phoneSchema,
+  address: addressSchema,
+  social_security_number: ssnSchema,
+  guardian_ids: guardianIdsSchema.optional().default([]),
+}).transform((data) => {
+  // Transform dates to ISO format strings
+  let validatedDob = null;
+  if (data.dob) {
+    const birthDate = new Date(data.dob);
+    validatedDob = birthDate.toISOString().split('T')[0];
+  }
+  
+  let validatedStartDate = null;
+  if (data.start_date) {
+    const startDate = new Date(data.start_date);
+    validatedStartDate = startDate.toISOString().split('T')[0];
+  }
+  
+  return {
+    ...data,
+    dob: validatedDob,
+    start_date: validatedStartDate,
+  };
+});
+
 export async function PUT(request: Request) {
   try {
     if (!supabaseAdmin) {
@@ -370,17 +451,21 @@ export async function PUT(request: Request) {
     }
     
     const body = await request.json()
+    const bodyValidation = validateBody(putStudentBodySchema, body)
+    if (!bodyValidation.success) {
+      return bodyValidation.error
+    }
     const { 
       id,
       first_name, 
       last_name, 
-      dob, 
-      gender, 
+      dob: validatedDob, 
+      gender: normalizedGender, 
       class_id, 
       registration_time,
-      start_date,
-      barngildi,
-      student_language,
+      start_date: validatedStartDate,
+      barngildi: normalizedBarngildi,
+      student_language: normalizedLanguage,
       medical_notes, 
       allergies, 
       emergency_contact,
@@ -388,71 +473,10 @@ export async function PUT(request: Request) {
       phone,
       address,
       social_security_number,
-      guardian_ids = []
-    } = body || {}
-    const normalizedLanguage =
-    student_language === 'english' ? 'english' :
-    student_language === 'icelandic' ? 'icelandic' :
-    student_language === 'en' ? 'english' :
-    student_language === 'is' ? 'icelandic' :
-      'english'
+      guardian_ids
+    } = bodyValidation.data
     
-    if (!id || !first_name) {
-      return NextResponse.json({ 
-        error: 'Missing required fields: id, first_name' 
-      }, { status: 400 })
-    }
-    
-    console.log('📋 Updating student:', { id, first_name, last_name, class_id, registration_time, student_language: normalizedLanguage, guardian_ids,barngildi });
-
-    // Validate date of birth if provided
-    let validatedDob = null;
-    if (dob) {
-      // Ensure the date is in ISO format (YYYY-MM-DD)
-      const birthDate = new Date(dob);
-      
-      // Check if the date is valid
-      if (isNaN(birthDate.getTime())) {
-        return NextResponse.json({ 
-          error: 'Invalid date format for date of birth' 
-        }, { status: 400 })
-      }
-      
-      const today = new Date();
-      const age = today.getFullYear() - birthDate.getFullYear();
-      const monthDiff = today.getMonth() - birthDate.getMonth();
-      
-      // Calculate actual age
-      const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate()) 
-        ? age - 1 
-        : age;
-      
-      // Check if age is within valid range (0-18 years)
-      if (actualAge < 0 || actualAge > 18) {
-        return NextResponse.json({ 
-          error: 'Student age must be between 0 and 18 years old' 
-        }, { status: 400 })
-      }
-      
-      // Convert to ISO format for database storage
-      validatedDob = birthDate.toISOString().split('T')[0];
-    }
-
-    // Validate start_date if provided
-    let validatedStartDate = null;
-    if (start_date) {
-      const startDate = new Date(start_date);
-      
-      // Check if the date is valid
-      if (isNaN(startDate.getTime())) {
-        return NextResponse.json({ 
-          error: 'Invalid date format for start date' 
-        }, { status: 400 })
-      }
-      
-      // Convert to ISO format for database storage
-      validatedStartDate = startDate.toISOString().split('T')[0];
-    }
+    console.log('📋 Updating student:', { id, first_name, last_name, class_id, registration_time, student_language: normalizedLanguage, guardian_ids, barngildi: normalizedBarngildi });
 
     // Fetch student to get user_id for user updates
     const { data: existingStudent, error: fetchStudentErr } = await supabaseAdmin
@@ -468,14 +492,6 @@ export async function PUT(request: Request) {
 
     const userIdForUpdate = existingStudent?.user_id
 
-    // Normalize gender and barngildi
-    const normalizedGender = (gender || 'unknown').toString().toLowerCase();
-    const normalizedBarngildi = (() => {
-      const n = Number(barngildi);
-      if (isNaN(n)) return 0;
-      return Math.min(1.9, Math.max(0.5, Number(n.toFixed(1))));
-    })();
-
     // Update user record if available
     if (userIdForUpdate) {
       const { error: userUpdErr } = await supabaseAdmin
@@ -484,7 +500,7 @@ export async function PUT(request: Request) {
           first_name,
           last_name: last_name || null,
           dob: validatedDob,
-          gender: normalizedGender,
+          gender: normalizedGender || 'unknown',
           phone: phone || null,
           address: address || null,
           ssn: social_security_number || null,
@@ -504,8 +520,8 @@ export async function PUT(request: Request) {
         org_id: org_id || null,
         registration_time: registration_time || null,
         start_date: validatedStartDate,
-        barngildi: normalizedBarngildi,
-        student_language: normalizedLanguage,
+        barngildi: normalizedBarngildi || 0.5,
+        student_language: normalizedLanguage || 'english',
         medical_notes_encrypted: medical_notes || null,
         allergies_encrypted: allergies || null,
         emergency_contact_encrypted: emergency_contact || null,
@@ -535,6 +551,11 @@ export async function PUT(request: Request) {
   }
 }
 
+// DELETE query parameter schema
+const deleteStudentQuerySchema = z.object({
+  id: studentIdSchema,
+});
+
 export async function DELETE(request: Request) {
   try {
     if (!supabaseAdmin) {
@@ -545,11 +566,11 @@ export async function DELETE(request: Request) {
     }
     
     const { searchParams } = new URL(request.url)
-    const id = searchParams.get('id')
-    
-    if (!id) {
-      return NextResponse.json({ error: 'id is required' }, { status: 400 })
+    const queryValidation = validateQuery(deleteStudentQuerySchema, searchParams)
+    if (!queryValidation.success) {
+      return queryValidation.error
     }
+    const { id } = queryValidation.data
 
     // Soft delete student
     const { error } = await supabaseAdmin

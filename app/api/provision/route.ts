@@ -2,6 +2,17 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 import { supabaseAdmin } from '@/lib/supabaseClient'
+import { z } from 'zod'
+import { validateBody, orgIdSchema, classIdSchema, uuidSchema } from '@/lib/validation'
+
+// POST body schema
+const provisionOrgBodySchema = z.object({
+  orgName: z.string().min(1).max(200).optional().default('My School'),
+  slug: z.string().min(1).max(100).transform((val) => val.toLowerCase()).optional().default('my-school'),
+  timezone: z.string().min(1).max(100).optional().default('UTC'),
+  roleId: z.number().int().nullable().optional(),
+  classId: classIdSchema.optional(),
+});
 
 export async function POST(request: Request) {
   try {
@@ -37,11 +48,11 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json().catch(() => ({} as any))
-    const orgName: string = body.orgName || 'My School'
-    const slug: string = (body.slug || 'my-school').toLowerCase()
-    const timezone: string = body.timezone || 'UTC'
-    const roleId: number | null = body.roleId ?? null
-    const classId: string | null = body.classId ?? null
+    const bodyValidation = validateBody(provisionOrgBodySchema, body)
+    if (!bodyValidation.success) {
+      return bodyValidation.error
+    }
+    const { orgName, slug, timezone, roleId, classId } = bodyValidation.data
 
     // 1) Upsert organization by slug
     const { data: orgRow, error: orgErr } = await supabaseAdmin

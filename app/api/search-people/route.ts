@@ -1,5 +1,17 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
+import { getUserDataCacheHeaders } from '@/lib/cacheConfig'
+import { z } from 'zod'
+import { validateQuery, orgIdSchema } from '@/lib/validation'
+
+// GET query parameter schema
+const searchPeopleQuerySchema = z.object({
+  q: z.string().optional().default(''),
+  orgId: orgIdSchema,
+  role: z.enum(['guardian', 'student', 'all']).optional().default('all'),
+  mode: z.enum(['email', 'name', 'any']).optional().default('any'),
+  limit: z.string().transform((val) => Math.min(parseInt(val) || 10, 25)).optional().default('10'),
+});
 
 // GET /api/search-people?q=...&orgId=...&role=guardian|student|all&mode=email|name|any&limit=10
 export async function GET(request: Request) {
@@ -9,15 +21,11 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url)
-    const q = (searchParams.get('q') || '').trim()
-    const orgId = searchParams.get('orgId') || undefined
-    const role = (searchParams.get('role') || 'all') as 'guardian' | 'student' | 'all'
-    const mode = (searchParams.get('mode') || 'any') as 'email' | 'name' | 'any'
-    const limit = Math.min(parseInt(searchParams.get('limit') || '10', 10) || 10, 25)
-
-    if (!orgId) {
-      return NextResponse.json({ error: 'orgId is required' }, { status: 400 })
+    const queryValidation = validateQuery(searchPeopleQuerySchema, searchParams)
+    if (!queryValidation.success) {
+      return queryValidation.error
     }
+    const { q, orgId, role, mode, limit } = queryValidation.data
 
     if (!q) {
       return NextResponse.json({ results: [], count: 0 }, { status: 200 })
@@ -127,7 +135,9 @@ export async function GET(request: Request) {
     const [guardians, students] = await Promise.all([guardianPromise, studentPromise])
     const combined = [...guardians, ...students].slice(0, limit)
 
-    return NextResponse.json({ results: combined, count: combined.length })
+    return NextResponse.json({ results: combined, count: combined.length }, {
+      headers: getUserDataCacheHeaders()
+    })
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 })
   }

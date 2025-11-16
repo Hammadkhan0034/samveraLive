@@ -1,6 +1,29 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 import { getStableDataCacheHeaders } from '@/lib/cacheConfig'
+import { z } from 'zod'
+import { validateQuery, validateBody, orgIdSchema, classIdSchema, userIdSchema, titleSchema, captionSchema, futureDateSchema, uuidSchema, storyIdSchema, isoDateTimeSchema, positiveNumberSchema } from '@/lib/validation'
+
+// GET query parameter schema
+const getStoriesQuerySchema = z.object({
+  orgId: orgIdSchema,
+  classId: classIdSchema.optional(),
+  includeDeleted: z.string().transform((val) => val === 'true').optional(),
+  onlyPublic: z.string().transform((val) => val === 'true').optional(),
+  audience: z.enum(['principal', 'teacher', 'parent']).optional(),
+  teacherClassId: uuidSchema.nullable().optional(),
+  teacherClassIds: z.string().optional(), // comma-separated class ids
+  teacherAuthorId: userIdSchema.optional(),
+  parentClassIds: z.string().optional(), // comma-separated class ids
+  parentUserId: userIdSchema.optional(),
+  principalAuthorId: userIdSchema.optional(),
+}).refine((data) => {
+  // If audience is teacher, either teacherClassIds or teacherAuthorId should be provided
+  if (data.audience === 'teacher' && !data.teacherClassIds && !data.teacherAuthorId) {
+    return false;
+  }
+  return true;
+}, { message: 'For teacher audience, either teacherClassIds or teacherAuthorId must be provided' });
 
 export async function GET(request: Request) {
   try {
@@ -9,20 +32,11 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url)
-    const orgId = searchParams.get('orgId')
-    const classId = searchParams.get('classId')
-    const includeDeleted = searchParams.get('includeDeleted') === 'true'
-    const onlyPublic = searchParams.get('onlyPublic') === 'true'
-    const audience = searchParams.get('audience') // 'principal' | 'teacher' | 'parent'
-    const teacherClassId = searchParams.get('teacherClassId')
-    const teacherClassIdsCsv = searchParams.get('teacherClassIds') // comma-separated class ids for teacher
-    const teacherAuthorId = searchParams.get('teacherAuthorId') // teacher's user ID to see their own stories
-    const parentClassIdsCsv = searchParams.get('parentClassIds') // comma-separated class ids
-    const parentUserId = searchParams.get('parentUserId') // parent's user ID to fetch their children's classes
-
-    if (!orgId) {
-      return NextResponse.json({ error: 'orgId is required' }, { status: 400 })
+    const queryValidation = validateQuery(getStoriesQuerySchema, searchParams)
+    if (!queryValidation.success) {
+      return queryValidation.error
     }
+    const { orgId, classId, includeDeleted, onlyPublic, audience, teacherClassIds, teacherAuthorId, parentClassIds, parentUserId, principalAuthorId } = queryValidation.data
 
     const nowIso = new Date().toISOString()
 
@@ -47,22 +61,22 @@ export async function GET(request: Request) {
       // Teachers should see:
       // 1. ALL org-wide stories (principal's stories) - class_id is null
       // 2. Class-specific stories ONLY for their assigned classes (strict filtering)
-      const teacherClassIds = (teacherClassIdsCsv || '')
+      const teacherClassIdsArray = (teacherClassIds || '')
         .split(',')
         .map(s => s.trim())
         .filter(Boolean)
       
       console.log('🔍 Teacher story filtering:', {
-        teacherClassIdsCsv,
         teacherClassIds,
+        teacherClassIdsArray,
         teacherAuthorId
       })
       
-      if (teacherClassIds.length > 0) {
+      if (teacherClassIdsArray.length > 0) {
         // Show org-wide stories (class_id is null) OR stories for teacher's assigned classes only
         // Strict filtering: only show class-specific stories if teacher is assigned to that class
         // Using Supabase PostgREST filter syntax: class_id.is.null,class_id.in.(id1,id2,...)
-        const filterString = `class_id.is.null,class_id.in.(${teacherClassIds.join(',')})`
+        const filterString = `class_id.is.null,class_id.in.(${teacherClassIdsArray.join(',')})`
         console.log('📝 Applying teacher filter:', filterString)
         query = query.or(filterString)
       } else {
@@ -75,18 +89,18 @@ export async function GET(request: Request) {
       // Parents should see:
       // 1. ALL org-wide stories (principal's stories) - not just public ones
       // 2. Class-specific stories for their children (teacher's class stories)
-      let parentClassIds: string[] = []
+      let parentClassIdsArray: string[] = []
       
       // First try to get from query params (from frontend metadata)
-      if (parentClassIdsCsv) {
-        parentClassIds = parentClassIdsCsv
+      if (parentClassIds) {
+        parentClassIdsArray = parentClassIds
           .split(',')
           .map(s => s.trim())
           .filter(Boolean)
       }
       
       // If no class IDs from params but we have parentUserId, fetch from database
-      if (parentClassIds.length === 0 && parentUserId) {
+      if (parentClassIdsArray.length === 0 && parentUserId) {
         try {
           // Get all students linked to this guardian
           const { data: relationships, error: relError } = await supabaseAdmin
@@ -106,7 +120,7 @@ export async function GET(request: Request) {
                 .not('class_id', 'is', null)
               
               if (!studentsError && students) {
-                parentClassIds = students
+                parentClassIdsArray = students
                   .map(s => s.class_id)
                   .filter((id): id is string => !!id && typeof id === 'string')
                   // Remove duplicates
@@ -119,9 +133,9 @@ export async function GET(request: Request) {
         }
       }
       
-      if (parentClassIds.length > 0) {
+      if (parentClassIdsArray.length > 0) {
         // Show ALL org-wide stories (class_id is null) OR class-specific stories for their children
-        query = query.or(`class_id.is.null,class_id.in.(${parentClassIds.join(',')})`)
+        query = query.or(`class_id.is.null,class_id.in.(${parentClassIdsArray.join(',')})`)
       } else {
         // If we don't know class ids, show all org-wide stories (principal's stories)
         query = query.is('class_id', null)
@@ -131,7 +145,6 @@ export async function GET(request: Request) {
       // 1. All org-wide stories they created (class_id is null)
       // 2. All class-specific stories they created (for any class)
       // Get principal's user ID from request if available
-      const principalAuthorId = searchParams.get('principalAuthorId')
       if (principalAuthorId) {
         // Show all stories created by this principal (both org-wide and class-specific)
         query = query.eq('author_id', principalAuthorId)
@@ -159,14 +172,14 @@ export async function GET(request: Request) {
 
     // Post-process for teachers: STRICT filtering to ensure only assigned class stories are shown
     if (audience === 'teacher' && data) {
-      const teacherClassIds = (teacherClassIdsCsv || '')
+      const teacherClassIdsArray = (teacherClassIds || '')
         .split(',')
         .map(s => s.trim())
         .filter(Boolean)
       
       console.log('🔍 Post-processing teacher stories:', {
-        teacherClassIdsCsv,
         teacherClassIds,
+        teacherClassIdsArray,
         totalStoriesBeforeFilter: data.length,
         storiesBeforeFilter: data.map((s: any) => ({
           id: s.id,
@@ -175,7 +188,7 @@ export async function GET(request: Request) {
         }))
       })
       
-      if (teacherClassIds.length > 0) {
+      if (teacherClassIdsArray.length > 0) {
         // STRICTLY filter: only show org-wide stories OR stories from teacher's assigned classes
         // This is a double-check to ensure no stories from unassigned classes slip through
         const filteredStories = data.filter((story: any) => {
@@ -185,13 +198,13 @@ export async function GET(request: Request) {
           }
           // STRICT: Only show class-specific stories if teacher is EXACTLY assigned to that class
           // Use strict equality check to ensure exact match
-          const isAssigned = teacherClassIds.some(classId => classId === story.class_id)
+          const isAssigned = teacherClassIdsArray.some(classId => classId === story.class_id)
           
           if (!isAssigned) {
             console.log('❌ Filtering out story - teacher not assigned to class:', {
               storyId: story.id,
               storyClassId: story.class_id,
-              teacherClassIds,
+              teacherClassIdsArray,
               title: story.title
             })
           }
@@ -202,7 +215,7 @@ export async function GET(request: Request) {
         console.log('✅ Teacher story filtering result:', {
           totalStoriesBefore: data.length,
           filteredStories: filteredStories.length,
-          teacherClassIds,
+          teacherClassIdsArray,
           storiesAfterFilter: filteredStories.map((s: any) => ({
             id: s.id,
             class_id: s.class_id,
@@ -217,12 +230,12 @@ export async function GET(request: Request) {
             return true
           }
           // Verify class_id is in teacher's assigned classes
-          const isValid = teacherClassIds.includes(story.class_id)
+          const isValid = teacherClassIdsArray.includes(story.class_id)
           if (!isValid) {
             console.error('❌ VALIDATION FAILED: Story from unassigned class found:', {
               storyId: story.id,
               storyClassId: story.class_id,
-              teacherClassIds,
+              teacherClassIdsArray,
               title: story.title
             })
           }
@@ -256,6 +269,24 @@ export async function GET(request: Request) {
   }
 }
 
+// POST body schema
+const postStoryBodySchema = z.object({
+  org_id: orgIdSchema,
+  class_id: classIdSchema.optional(),
+  author_id: userIdSchema.nullable().optional(),
+  title: titleSchema,
+  caption: captionSchema,
+  is_public: z.boolean().default(false),
+  expires_at: futureDateSchema,
+  items: z.array(z.object({
+    url: z.string().url().nullable().optional(),
+    order_index: z.number().int().nonnegative().optional(),
+    duration_ms: positiveNumberSchema.optional(),
+    caption: captionSchema,
+    mime_type: z.string().max(100).nullable().optional(),
+  })).optional().default([]),
+});
+
 export async function POST(request: Request) {
   try {
     if (!supabaseAdmin) {
@@ -263,11 +294,11 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { org_id, class_id, author_id, title, caption, is_public = false, expires_at, items } = body || {}
-
-    if (!org_id || !expires_at) {
-      return NextResponse.json({ error: 'Missing required fields: org_id, expires_at' }, { status: 400 })
+    const bodyValidation = validateBody(postStoryBodySchema, body)
+    if (!bodyValidation.success) {
+      return bodyValidation.error
     }
+    const { org_id, class_id, author_id, title, caption, is_public, expires_at, items } = bodyValidation.data
 
     const finalClassId = class_id && String(class_id).trim() !== '' ? class_id : null
 
@@ -385,6 +416,22 @@ export async function POST(request: Request) {
   }
 }
 
+// PUT query parameter schema
+const putStoryQuerySchema = z.object({
+  id: storyIdSchema,
+});
+
+// PUT body schema
+const putStoryBodySchema = z.object({
+  org_id: orgIdSchema.optional(),
+  class_id: classIdSchema.optional(),
+  title: titleSchema,
+  caption: captionSchema,
+  is_public: z.boolean().optional(),
+  expires_at: isoDateTimeSchema.optional(),
+  author_id: userIdSchema,
+});
+
 export async function PUT(request: Request) {
   try {
     if (!supabaseAdmin) {
@@ -392,17 +439,18 @@ export async function PUT(request: Request) {
     }
 
     const { searchParams } = new URL(request.url)
-    const storyId = searchParams.get('id')
+    const queryValidation = validateQuery(putStoryQuerySchema, searchParams)
+    if (!queryValidation.success) {
+      return queryValidation.error
+    }
+    const { id: storyId } = queryValidation.data
+
     const body = await request.json()
-    const { org_id, class_id, title, caption, is_public, expires_at, author_id } = body || {}
-
-    if (!storyId) {
-      return NextResponse.json({ error: 'Story ID is required' }, { status: 400 })
+    const bodyValidation = validateBody(putStoryBodySchema, body)
+    if (!bodyValidation.success) {
+      return bodyValidation.error
     }
-
-    if (!author_id) {
-      return NextResponse.json({ error: 'author_id is required' }, { status: 400 })
-    }
+    const { org_id, class_id, title, caption, is_public, expires_at, author_id } = bodyValidation.data
 
     // First, verify the story exists and belongs to the author
     const { data: existingStory, error: fetchError } = await supabaseAdmin
@@ -459,6 +507,12 @@ export async function PUT(request: Request) {
   }
 }
 
+// DELETE query parameter schema
+const deleteStoryQuerySchema = z.object({
+  id: storyIdSchema,
+  authorId: userIdSchema,
+});
+
 export async function DELETE(request: Request) {
   try {
     if (!supabaseAdmin) {
@@ -466,16 +520,11 @@ export async function DELETE(request: Request) {
     }
 
     const { searchParams } = new URL(request.url)
-    const storyId = searchParams.get('id')
-    const authorId = searchParams.get('authorId') // User ID of the requester
-
-    if (!storyId) {
-      return NextResponse.json({ error: 'Story ID is required' }, { status: 400 })
+    const queryValidation = validateQuery(deleteStoryQuerySchema, searchParams)
+    if (!queryValidation.success) {
+      return queryValidation.error
     }
-
-    if (!authorId) {
-      return NextResponse.json({ error: 'authorId is required' }, { status: 400 })
-    }
+    const { id: storyId, authorId } = queryValidation.data
 
     // First, verify the story exists and belongs to the author
     const { data: existingStory, error: fetchError } = await supabaseAdmin

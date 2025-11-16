@@ -1,5 +1,13 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
+import { getUserDataCacheHeaders } from '@/lib/cacheConfig'
+import { z } from 'zod'
+import { validateQuery, userIdSchema } from '@/lib/validation'
+
+// GET query parameter schema
+const getUserOrgIdQuerySchema = z.object({
+  user_id: userIdSchema,
+});
 
 export async function GET(request: Request) {
   try {
@@ -11,11 +19,11 @@ export async function GET(request: Request) {
     }
     
     const { searchParams } = new URL(request.url)
-    const userId = searchParams.get('user_id')
-    
-    if (!userId) {
-      return NextResponse.json({ error: 'user_id is required' }, { status: 400 })
+    const queryValidation = validateQuery(getUserOrgIdQuerySchema, searchParams)
+    if (!queryValidation.success) {
+      return queryValidation.error
     }
+    const { user_id: userId } = queryValidation.data
 
     // Get user's org_id from the database
     const { data: userData, error } = await supabaseAdmin
@@ -35,7 +43,10 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ 
       org_id: userData.org_id
-    }, { status: 200 })
+    }, { 
+      status: 200,
+      headers: getUserDataCacheHeaders()
+    })
 
   } catch (err: any) {
     console.error('❌ Error in user-org-id GET:', err)

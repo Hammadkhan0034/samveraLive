@@ -1,17 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { z } from 'zod';
+import { validateBody, userIdSchema, classIdSchema } from '@/lib/validation';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabaseAdmin = createClient(supabaseUrl, supabaseKey);
 
+// POST body schema
+const assignTeacherClassBodySchema = z.object({
+  userId: userIdSchema,
+  classId: classIdSchema,
+});
+
 export async function POST(request: NextRequest) {
   try {
-    const { userId, classId } = await request.json();
-
-    if (!userId || !classId) {
-      return NextResponse.json({ error: 'User ID and Class ID are required' }, { status: 400 });
+    const body = await request.json();
+    const bodyValidation = validateBody(assignTeacherClassBodySchema, body);
+    if (!bodyValidation.success) {
+      return bodyValidation.error;
     }
+    const { userId, classId } = bodyValidation.data;
 
     console.log('🔧 Assigning teacher to class:', { userId, classId });
 

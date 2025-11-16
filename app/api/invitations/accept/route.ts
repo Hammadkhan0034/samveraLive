@@ -1,16 +1,24 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
+import { z } from 'zod'
+import { validateBody, userIdSchema } from '@/lib/validation'
+
+// POST body schema
+const acceptInvitationBodySchema = z.object({
+  token: z.string().min(1, { message: 'Token is required' }),
+  user_id: userIdSchema,
+});
 
 export async function POST(request: Request) {
   try {
     if (!supabaseAdmin) return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 })
     
     const body = await request.json()
-    const { token, user_id } = body || {}
-    
-    if (!token || !user_id) {
-      return NextResponse.json({ error: 'Token and user_id are required' }, { status: 400 })
+    const bodyValidation = validateBody(acceptInvitationBodySchema, body)
+    if (!bodyValidation.success) {
+      return bodyValidation.error
     }
+    const { token, user_id } = bodyValidation.data
 
     // Get invitation details
     const { data: invitation, error: invitationError } = await supabaseAdmin

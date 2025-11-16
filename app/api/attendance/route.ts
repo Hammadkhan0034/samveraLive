@@ -1,6 +1,16 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 import { getNoCacheHeaders } from '@/lib/cacheConfig'
+import { z } from 'zod'
+import { validateQuery, validateBody, orgIdSchema, classIdSchema, studentIdSchema, dateSchema, attendanceStatusSchema, notesSchema, userIdSchema, uuidSchema } from '@/lib/validation'
+
+// GET query parameter schema
+const getAttendanceQuerySchema = z.object({
+  orgId: orgIdSchema,
+  classId: classIdSchema.optional(),
+  studentId: studentIdSchema.optional(),
+  date: dateSchema.optional(),
+});
 
 export async function GET(request: Request) {
   try {
@@ -12,14 +22,11 @@ export async function GET(request: Request) {
     }
     
     const { searchParams } = new URL(request.url)
-    const orgId = searchParams.get('orgId')
-    const classId = searchParams.get('classId')
-    const studentId = searchParams.get('studentId')
-    const date = searchParams.get('date') // Format: YYYY-MM-DD
-    
-    if (!orgId) {
-      return NextResponse.json({ error: 'orgId is required' }, { status: 400 })
+    const queryValidation = validateQuery(getAttendanceQuerySchema, searchParams)
+    if (!queryValidation.success) {
+      return queryValidation.error
     }
+    const { orgId, classId, studentId, date } = queryValidation.data
 
     // Build query based on filters
     let query = supabaseAdmin
@@ -98,38 +105,22 @@ export async function POST(request: Request) {
     }
     
     const body = await request.json()
-    const { 
-      org_id,
-      class_id,
-      student_id,
-      date,
-      status = 'present',
-      notes,
-      recorded_by
-    } = body || {}
+    // POST body schema
+    const postAttendanceBodySchema = z.object({
+      org_id: orgIdSchema,
+      class_id: classIdSchema.optional(),
+      student_id: studentIdSchema,
+      date: dateSchema,
+      status: attendanceStatusSchema.default('present'),
+      notes: notesSchema,
+      recorded_by: userIdSchema.optional(),
+    });
     
-    // Validate required fields
-    if (!org_id || !student_id || !date) {
-      return NextResponse.json({ 
-        error: 'Missing required fields: org_id, student_id, date' 
-      }, { status: 400 })
+    const bodyValidation = validateBody(postAttendanceBodySchema, body)
+    if (!bodyValidation.success) {
+      return bodyValidation.error
     }
-
-    // Validate date format
-    const dateRegex = /^\d{4}-\d{2}-\d{2}$/
-    if (!dateRegex.test(date)) {
-      return NextResponse.json({ 
-        error: 'Invalid date format. Expected YYYY-MM-DD' 
-      }, { status: 400 })
-    }
-
-    // Validate status
-    const validStatuses = ['present', 'absent', 'late', 'excused']
-    if (!validStatuses.includes(status)) {
-      return NextResponse.json({ 
-        error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` 
-      }, { status: 400 })
-    }
+    const { org_id, class_id, student_id, date, status, notes, recorded_by } = bodyValidation.data
 
     console.log('📋 Creating attendance record:', { org_id, class_id, student_id, date, status, recorded_by })
 
@@ -183,28 +174,19 @@ export async function PUT(request: Request) {
     }
     
     const body = await request.json()
-    const { 
-      id,
-      status,
-      notes,
-      recorded_by
-    } = body || {}
+    // PUT body schema
+    const putAttendanceBodySchema = z.object({
+      id: uuidSchema,
+      status: attendanceStatusSchema.optional(),
+      notes: notesSchema,
+      recorded_by: userIdSchema.optional(),
+    });
     
-    if (!id) {
-      return NextResponse.json({ 
-        error: 'Missing required field: id' 
-      }, { status: 400 })
+    const bodyValidation = validateBody(putAttendanceBodySchema, body)
+    if (!bodyValidation.success) {
+      return bodyValidation.error
     }
-
-    // Validate status if provided
-    if (status) {
-      const validStatuses = ['present', 'absent', 'late', 'excused']
-      if (!validStatuses.includes(status)) {
-        return NextResponse.json({ 
-          error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` 
-        }, { status: 400 })
-      }
-    }
+    const { id, status, notes, recorded_by } = bodyValidation.data
 
     console.log('📋 Updating attendance record:', { id, status, notes })
 

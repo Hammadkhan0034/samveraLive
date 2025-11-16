@@ -1,17 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { z } from 'zod';
+import { validateBody, orgIdSchema } from '@/lib/validation';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabaseAdmin = createClient(supabaseUrl, supabaseKey);
 
+// POST body schema
+const syncClassMembershipsBodySchema = z.object({
+  orgId: orgIdSchema,
+});
+
 export async function POST(request: NextRequest) {
   try {
-    const { orgId } = await request.json();
-
-    if (!orgId) {
-      return NextResponse.json({ error: 'Organization ID is required' }, { status: 400 });
+    const body = await request.json();
+    const bodyValidation = validateBody(syncClassMembershipsBodySchema, body);
+    if (!bodyValidation.success) {
+      return bodyValidation.error;
     }
+    const { orgId } = bodyValidation.data;
 
     console.log('🔄 Syncing class memberships for organization:', orgId);
 

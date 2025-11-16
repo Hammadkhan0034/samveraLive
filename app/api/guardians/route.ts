@@ -1,9 +1,16 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 import { getUserDataCacheHeaders } from '@/lib/cacheConfig'
+import { z } from 'zod'
+import { validateQuery, validateBody, orgIdSchema, userIdSchema, firstNameSchema, lastNameSchema, emailSchema, phoneSchema, addressSchema, ssnSchema } from '@/lib/validation'
 
 // Guardian role ID
 const GUARDIAN_ROLE_ID = 10
+
+// GET query parameter schema
+const getGuardiansQuerySchema = z.object({
+  orgId: orgIdSchema,
+});
 
 export async function GET(request: Request) {
   try {
@@ -15,11 +22,11 @@ export async function GET(request: Request) {
     }
     
     const { searchParams } = new URL(request.url)
-    const orgId = searchParams.get('orgId')
-    
-    if (!orgId) {
-      return NextResponse.json({ error: 'orgId is required' }, { status: 400 })
+    const queryValidation = validateQuery(getGuardiansQuerySchema, searchParams)
+    if (!queryValidation.success) {
+      return queryValidation.error
     }
+    const { orgId } = queryValidation.data
 
     // Query guardians for this specific org only
     const { data: guardians, error } = await supabaseAdmin
@@ -47,6 +54,18 @@ export async function GET(request: Request) {
   }
 }
 
+// POST body schema
+const postGuardianBodySchema = z.object({
+  first_name: firstNameSchema,
+  last_name: lastNameSchema,
+  email: emailSchema,
+  phone: phoneSchema,
+  ssn: ssnSchema,
+  address: addressSchema,
+  org_id: orgIdSchema.refine((id) => id !== "1", { message: 'Organization ID is required for guardian creation' }),
+  student_id: userIdSchema.optional(),
+});
+
 export async function POST(request: Request) {
   try {
     if (!supabaseAdmin) {
@@ -57,29 +76,11 @@ export async function POST(request: Request) {
     }
     
     const body = await request.json()
-    const { first_name, last_name, email, phone, ssn, address, org_id, student_id } = body || {}
-    
-    if (!email || !first_name) {
-      return NextResponse.json({ 
-        error: `Missing required fields: ${!email ? 'email' : ''} ${!first_name ? 'first_name' : ''}`.trim()
-      }, { status: 400 })
+    const bodyValidation = validateBody(postGuardianBodySchema, body)
+    if (!bodyValidation.success) {
+      return bodyValidation.error
     }
-    
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json({ 
-        error: 'Please enter a valid email address' 
-      }, { status: 400 })
-    }
-    
-    // Use the provided org_id or reject if not provided
-    let actualOrgId = org_id;
-    if (!org_id || org_id === "1") {
-      return NextResponse.json({ 
-        error: 'Organization ID is required for guardian creation' 
-      }, { status: 400 })
-    }
+    const { first_name, last_name, email, phone, ssn, address, org_id: actualOrgId, student_id } = bodyValidation.data
 
     // Check if user already exists in public.users table
     const { data: existingPublicUser } = await supabaseAdmin
@@ -230,6 +231,19 @@ export async function POST(request: Request) {
   }
 }
 
+// PUT body schema
+const putGuardianBodySchema = z.object({
+  id: userIdSchema,
+  first_name: firstNameSchema,
+  last_name: lastNameSchema,
+  email: emailSchema,
+  phone: phoneSchema,
+  ssn: ssnSchema,
+  address: addressSchema,
+  org_id: orgIdSchema,
+  is_active: z.boolean().optional(),
+});
+
 export async function PUT(request: Request) {
   try {
     if (!supabaseAdmin) {
@@ -240,37 +254,11 @@ export async function PUT(request: Request) {
     }
     
     const body = await request.json()
-    const { id, first_name, last_name, email, phone, ssn, address, org_id, is_active } = body || {}
-    
-    if (!id || !email || !first_name) {
-      return NextResponse.json({ 
-        error: `Missing required fields: ${!id ? 'id' : ''} ${!email ? 'email' : ''} ${!first_name ? 'first_name' : ''}`.trim()
-      }, { status: 400 })
+    const bodyValidation = validateBody(putGuardianBodySchema, body)
+    if (!bodyValidation.success) {
+      return bodyValidation.error
     }
-    
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return NextResponse.json({ 
-        error: 'Please enter a valid email address' 
-      }, { status: 400 })
-    }
-    
-    // Resolve org_id if it's "1" to a proper UUID
-    let actualOrgId = org_id;
-    if (org_id === "1") {
-      const { data: firstOrg } = await supabaseAdmin
-        .from('orgs')
-        .select('id')
-        .limit(1)
-        .single();
-      
-      if (firstOrg?.id) {
-        actualOrgId = firstOrg.id;
-      } else {
-        actualOrgId = '00000000-0000-0000-0000-000000000001'; // Default UUID for testing
-      }
-    }
+    const { id, first_name, last_name, email, phone, ssn, address, org_id: actualOrgId, is_active } = bodyValidation.data
     
     // Update guardian record in users table
     const { data: updatedGuardian, error: updateError } = await supabaseAdmin
@@ -307,6 +295,11 @@ export async function PUT(request: Request) {
   }
 }
 
+// DELETE query parameter schema
+const deleteGuardianQuerySchema = z.object({
+  id: userIdSchema,
+});
+
 export async function DELETE(request: Request) {
   try {
     if (!supabaseAdmin) {
@@ -317,11 +310,11 @@ export async function DELETE(request: Request) {
     }
     
     const { searchParams } = new URL(request.url)
-    const id = searchParams.get('id')
-    
-    if (!id) {
-      return NextResponse.json({ error: 'id is required' }, { status: 400 })
+    const queryValidation = validateQuery(deleteGuardianQuerySchema, searchParams)
+    if (!queryValidation.success) {
+      return queryValidation.error
     }
+    const { id } = queryValidation.data
 
     // Delete guardian from users table
     const { error } = await supabaseAdmin

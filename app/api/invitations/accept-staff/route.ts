@@ -1,8 +1,18 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 import { createSupabaseServer } from '@/lib/supabaseServer'
+import { z } from 'zod'
+import { validateBody, userIdSchema, orgIdSchema } from '@/lib/validation'
 
 const STAFF_ROLE_ID = 20
+
+// POST body schema
+const acceptStaffInvitationBodySchema = z.object({
+  token: z.string().min(1, { message: 'Token is required' }),
+  user_id: userIdSchema,
+  org_id: orgIdSchema,
+  role: z.string().optional(),
+});
 
 export async function POST(request: Request) {
   try {
@@ -11,14 +21,11 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json()
-    const { token, user_id, org_id, role } = body
-
-    if (!token || !user_id || !org_id) {
-      return NextResponse.json(
-        { error: 'token, user_id, and org_id are required' },
-        { status: 400 }
-      )
+    const bodyValidation = validateBody(acceptStaffInvitationBodySchema, body)
+    if (!bodyValidation.success) {
+      return bodyValidation.error
     }
+    const { token, user_id, org_id, role } = bodyValidation.data
 
     // Get the current authenticated user
     const supabase = await createSupabaseServer()

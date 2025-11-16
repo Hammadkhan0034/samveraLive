@@ -2691,9 +2691,14 @@ function MediaPanel({
             <div key={i} className="aspect-square rounded-xl border border-slate-200 bg-slate-100 dark:border-slate-600 dark:bg-slate-700" />
           ))
           : uploads.map((src, i) => (
-            <div key={i} className="aspect-square overflow-hidden rounded-xl border border-slate-200 dark:border-slate-600">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={src} alt={`Upload ${i + 1}`} className="h-full w-full object-cover" />
+            <div key={i} className="relative aspect-square overflow-hidden rounded-xl border border-slate-200 dark:border-slate-600">
+              <Image 
+                src={src} 
+                alt={`Upload ${i + 1}`} 
+                fill
+                sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
+                className="object-cover" 
+              />
             </div>
           ))}
       </div>

@@ -1,19 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getUserDataCacheHeaders } from '@/lib/cacheConfig';
+import { z } from 'zod';
+import { validateQuery, userIdSchema } from '@/lib/validation';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabaseAdmin = createClient(supabaseUrl, supabaseKey);
 
+// GET query parameter schema
+const getTeacherClassesQuerySchema = z.object({
+  userId: userIdSchema,
+});
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-
-    if (!userId) {
-      return NextResponse.json({ error: 'User ID is required' }, { status: 400 });
+    const queryValidation = validateQuery(getTeacherClassesQuerySchema, searchParams);
+    if (!queryValidation.success) {
+      return queryValidation.error;
     }
+    const { userId } = queryValidation.data;
 
     console.log('🔍 Fetching classes for teacher:', userId);
 

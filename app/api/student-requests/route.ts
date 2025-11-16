@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getUserDataCacheHeaders } from '@/lib/cacheConfig';
+import { z } from 'zod';
+import { validateQuery, validateBody, orgIdSchema, classIdSchema, userIdSchema, firstNameSchema, lastNameSchema, studentDobSchema, genderSchema, studentLanguageSchema, barngildiSchema, dateSchema, notesSchema, phoneSchema, addressSchema, ssnSchema } from '@/lib/validation';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -9,14 +12,19 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseKey);
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const classId = searchParams.get('classId');
-    const classIds = searchParams.get('classIds'); // Multiple class IDs for teachers
-    const orgId = searchParams.get('orgId');
-    const status = searchParams.get('status'); // 'pending', 'approved', 'rejected'
-
-    if (!orgId) {
-      return NextResponse.json({ error: 'Organization ID is required' }, { status: 400 });
+    // GET query parameter schema
+    const getStudentRequestsQuerySchema = z.object({
+      classId: classIdSchema.optional(),
+      classIds: z.string().optional(), // comma-separated
+      orgId: orgIdSchema,
+      status: z.enum(['pending', 'approved', 'rejected']).optional(),
+    });
+    
+    const queryValidation = validateQuery(getStudentRequestsQuerySchema, searchParams);
+    if (!queryValidation.success) {
+      return queryValidation.error;
     }
+    const { classId, classIds, orgId, status } = queryValidation.data;
 
     // First fetch student requests
     // Select all available columns (barngildi, ssn, address might not exist)
@@ -79,7 +87,9 @@ export async function GET(request: NextRequest) {
       };
     }));
 
-    return NextResponse.json({ student_requests: transformedData });
+    return NextResponse.json({ student_requests: transformedData }, {
+      headers: getUserDataCacheHeaders()
+    });
   } catch (error: any) {
     console.error('Error in GET /api/student-requests:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -92,6 +102,31 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log('📝 Student request body:', body);
     
+    // POST body schema
+    const postStudentRequestBodySchema = z.object({
+      first_name: firstNameSchema,
+      last_name: lastNameSchema.optional(),
+      dob: studentDobSchema.nullable().optional(),
+      gender: genderSchema.optional(),
+      class_id: classIdSchema,
+      org_id: orgIdSchema,
+      requested_by: userIdSchema,
+      medical_notes: notesSchema,
+      allergies: notesSchema,
+      emergency_contact: notesSchema,
+      guardian_ids: z.array(userIdSchema).optional(),
+      barngildi: barngildiSchema.optional(),
+      ssn: ssnSchema,
+      address: addressSchema,
+      phone: phoneSchema,
+      registration_time: z.string().nullable().optional(),
+      start_date: dateSchema.nullable().optional(),
+    });
+    
+    const bodyValidation = validateBody(postStudentRequestBodySchema, body);
+    if (!bodyValidation.success) {
+      return bodyValidation.error;
+    }
     const { 
       first_name, 
       last_name, 
@@ -110,15 +145,9 @@ export async function POST(request: NextRequest) {
       phone,
       registration_time,
       start_date
-    } = body;
+    } = bodyValidation.data;
 
     console.log('🔍 Validating fields:', { first_name, class_id, org_id, requested_by });
-
-    // Validate required fields
-    if (!first_name || !class_id || !org_id || !requested_by) {
-      console.error('❌ Missing required fields');
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
 
     // Verify org_id exists in orgs table
     const { data: orgExists, error: orgError } = await supabaseAdmin
@@ -202,11 +231,26 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { id, status, approved_by, rejected_by, barngildi, ssn, address, phone, registration_time, start_date, class_id } = body;
-
-    if (!id || !status) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    // PUT body schema
+    const putStudentRequestBodySchema = z.object({
+      id: uuidSchema,
+      status: z.enum(['pending', 'approved', 'rejected']),
+      approved_by: userIdSchema.optional(),
+      rejected_by: userIdSchema.optional(),
+      barngildi: barngildiSchema.optional(),
+      ssn: ssnSchema,
+      address: addressSchema,
+      phone: phoneSchema,
+      registration_time: z.string().nullable().optional(),
+      start_date: dateSchema.nullable().optional(),
+      class_id: classIdSchema.optional(),
+    });
+    
+    const bodyValidation = validateBody(putStudentRequestBodySchema, body);
+    if (!bodyValidation.success) {
+      return bodyValidation.error;
     }
+    const { id, status, approved_by, rejected_by, barngildi, ssn, address, phone, registration_time, start_date, class_id } = bodyValidation.data;
 
     const updateData: any = {
       status,
@@ -489,11 +533,16 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
-
-    if (!id) {
-      return NextResponse.json({ error: 'Student request ID is required' }, { status: 400 });
+    // DELETE query parameter schema
+    const deleteStudentRequestQuerySchema = z.object({
+      id: uuidSchema,
+    });
+    
+    const queryValidation = validateQuery(deleteStudentRequestQuerySchema, searchParams);
+    if (!queryValidation.success) {
+      return queryValidation.error;
     }
+    const { id } = queryValidation.data;
 
     const { error } = await supabaseAdmin
       .from('student_requests')

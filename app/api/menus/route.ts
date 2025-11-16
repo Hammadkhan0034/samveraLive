@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 import { getStableDataCacheHeaders } from '@/lib/cacheConfig'
+import { z } from 'zod'
+import { validateQuery, validateBody, orgIdSchema, classIdSchema, userIdSchema, dateSchema, notesSchema, uuidSchema } from '@/lib/validation'
 
 export async function GET(request: Request) {
   try {
@@ -12,14 +14,19 @@ export async function GET(request: Request) {
     }
     
     const { searchParams } = new URL(request.url)
-    const orgId = searchParams.get('orgId')
-    const classId = searchParams.get('classId')
-    const day = searchParams.get('day')
-    const createdBy = searchParams.get('createdBy') // Filter by creator for teachers
+    // GET query parameter schema
+    const getMenusQuerySchema = z.object({
+      orgId: orgIdSchema,
+      classId: classIdSchema.optional(),
+      day: dateSchema.optional(),
+      createdBy: userIdSchema.optional(),
+    });
     
-    if (!orgId) {
-      return NextResponse.json({ error: 'orgId is required' }, { status: 400 })
+    const queryValidation = validateQuery(getMenusQuerySchema, searchParams)
+    if (!queryValidation.success) {
+      return queryValidation.error
     }
+    const { orgId, classId, day, createdBy } = queryValidation.data
 
     let query = supabaseAdmin
       .from('menus')
@@ -74,13 +81,24 @@ export async function POST(request: Request) {
     }
     
     const body = await request.json()
-    const { org_id, class_id, day, breakfast, lunch, snack, notes, is_public = true, created_by } = body || {}
+    // POST body schema
+    const postMenuBodySchema = z.object({
+      org_id: orgIdSchema,
+      class_id: classIdSchema.optional(),
+      day: dateSchema,
+      breakfast: z.string().max(1000).nullable().optional(),
+      lunch: z.string().max(1000).nullable().optional(),
+      snack: z.string().max(1000).nullable().optional(),
+      notes: notesSchema,
+      is_public: z.boolean().default(true),
+      created_by: userIdSchema.optional(),
+    });
     
-    if (!org_id || !day) {
-      return NextResponse.json({ 
-        error: 'Missing required fields: org_id, day' 
-      }, { status: 400 })
+    const bodyValidation = validateBody(postMenuBodySchema, body)
+    if (!bodyValidation.success) {
+      return bodyValidation.error
     }
+    const { org_id, class_id, day, breakfast, lunch, snack, notes, is_public, created_by } = bodyValidation.data
     
     // Ensure class_id is null if not provided or empty string
     const finalClassId = class_id && class_id.trim() !== '' ? class_id : null
@@ -183,13 +201,21 @@ export async function PUT(request: Request) {
     }
     
     const body = await request.json()
-    const { id, breakfast, lunch, snack, notes, is_public } = body || {}
+    // PUT body schema
+    const putMenuBodySchema = z.object({
+      id: uuidSchema,
+      breakfast: z.string().max(1000).nullable().optional(),
+      lunch: z.string().max(1000).nullable().optional(),
+      snack: z.string().max(1000).nullable().optional(),
+      notes: notesSchema,
+      is_public: z.boolean().optional(),
+    });
     
-    if (!id) {
-      return NextResponse.json({ 
-        error: 'Missing required field: id' 
-      }, { status: 400 })
+    const bodyValidation = validateBody(putMenuBodySchema, body)
+    if (!bodyValidation.success) {
+      return bodyValidation.error
     }
+    const { id, breakfast, lunch, snack, notes, is_public } = bodyValidation.data
 
     console.log('📋 Updating menu:', id);
 
@@ -239,11 +265,16 @@ export async function DELETE(request: Request) {
     }
     
     const { searchParams } = new URL(request.url)
-    const id = searchParams.get('id')
+    // DELETE query parameter schema
+    const deleteMenuQuerySchema = z.object({
+      id: uuidSchema,
+    });
     
-    if (!id) {
-      return NextResponse.json({ error: 'id is required' }, { status: 400 })
+    const queryValidation = validateQuery(deleteMenuQuerySchema, searchParams)
+    if (!queryValidation.success) {
+      return queryValidation.error
     }
+    const { id } = queryValidation.data
 
     console.log('🗑️ Soft deleting menu:', id)
 

@@ -2,6 +2,15 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { createServerClient } from '@supabase/ssr'
 import { supabaseAdmin } from '@/lib/supabaseClient'
+import { z } from 'zod'
+import { validateBody, orgIdSchema, nameSchema } from '@/lib/validation'
+
+// POST body schema
+const provisionClassBodySchema = z.object({
+  className: nameSchema,
+  orgId: orgIdSchema.optional(),
+  orgSlug: z.string().min(1).max(100).optional(),
+});
 
 export async function POST(request: Request) {
   try {
@@ -37,12 +46,11 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json().catch(() => ({} as any))
-    const className: string | undefined = body.className
-    const orgIdBody: string | undefined = body.orgId
-    const orgSlug: string | undefined = body.orgSlug
-    if (!className || className.trim().length === 0) {
-      return NextResponse.json({ error: 'className is required' }, { status: 400 })
+    const bodyValidation = validateBody(provisionClassBodySchema, body)
+    if (!bodyValidation.success) {
+      return bodyValidation.error
     }
+    const { className, orgId: orgIdBody, orgSlug } = bodyValidation.data
 
     // Resolve orgId: body.orgId -> auth metadata -> org by slug
     let orgId: string | undefined = orgIdBody

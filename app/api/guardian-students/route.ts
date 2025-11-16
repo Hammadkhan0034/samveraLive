@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
+import { getUserDataCacheHeaders } from '@/lib/cacheConfig'
+import { z } from 'zod'
+import { validateQuery, validateBody, studentIdSchema, userIdSchema, uuidSchema } from '@/lib/validation'
 
 export async function GET(request: Request) {
   try {
@@ -11,8 +14,17 @@ export async function GET(request: Request) {
     }
     
     const { searchParams } = new URL(request.url)
-    const studentId = searchParams.get('studentId')
-    const guardianId = searchParams.get('guardianId')
+    // GET query parameter schema
+    const getGuardianStudentsQuerySchema = z.object({
+      studentId: studentIdSchema.optional(),
+      guardianId: userIdSchema.optional(),
+    });
+    
+    const queryValidation = validateQuery(getGuardianStudentsQuerySchema, searchParams)
+    if (!queryValidation.success) {
+      return queryValidation.error
+    }
+    const { studentId, guardianId } = queryValidation.data
     
     // Simplified query - just get the relationships without user join
     // The join can fail if the foreign key doesn't exist or if full_name column doesn't exist
@@ -49,7 +61,10 @@ export async function GET(request: Request) {
     return NextResponse.json({ 
       relationships: relationships || [],
       total_relationships: relationships?.length || 0
-    }, { status: 200 })
+    }, { 
+      status: 200,
+      headers: getUserDataCacheHeaders()
+    })
 
   } catch (err: any) {
     console.error('❌ Error in guardian-students GET:', err)
@@ -67,13 +82,18 @@ export async function POST(request: Request) {
     }
     
     const body = await request.json()
-    const { guardian_id, student_id, relation = 'parent' } = body || {}
+    // POST body schema
+    const postGuardianStudentBodySchema = z.object({
+      guardian_id: userIdSchema,
+      student_id: studentIdSchema,
+      relation: z.enum(['parent', 'guardian', 'other']).default('parent'),
+    });
     
-    if (!guardian_id || !student_id) {
-      return NextResponse.json({ 
-        error: 'Missing required fields: guardian_id, student_id' 
-      }, { status: 400 })
+    const bodyValidation = validateBody(postGuardianStudentBodySchema, body)
+    if (!bodyValidation.success) {
+      return bodyValidation.error
     }
+    const { guardian_id, student_id, relation } = bodyValidation.data
     
     // Fetch org_id from student row
     const { data: studentRow, error: studentErr } = await supabaseAdmin
@@ -127,13 +147,20 @@ export async function DELETE(request: Request) {
     }
     
     const { searchParams } = new URL(request.url)
-    const id = searchParams.get('id')
-    const guardianId = searchParams.get('guardianId')
-    const studentId = searchParams.get('studentId')
+    // DELETE query parameter schema
+    const deleteGuardianStudentQuerySchema = z.object({
+      id: uuidSchema.optional(),
+      guardianId: userIdSchema.optional(),
+      studentId: studentIdSchema.optional(),
+    }).refine((data) => data.id || (data.guardianId && data.studentId), {
+      message: 'id or (guardianId and studentId) is required',
+    });
     
-    if (!id && !(guardianId && studentId)) {
-      return NextResponse.json({ error: 'id or (guardianId and studentId) is required' }, { status: 400 })
+    const queryValidation = validateQuery(deleteGuardianStudentQuerySchema, searchParams)
+    if (!queryValidation.success) {
+      return queryValidation.error
     }
+    const { id, guardianId, studentId } = queryValidation.data
 
     let deleteQuery = supabaseAdmin
       .from('guardian_students')

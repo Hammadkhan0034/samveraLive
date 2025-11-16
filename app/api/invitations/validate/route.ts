@@ -1,16 +1,23 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
+import { z } from 'zod'
+import { validateQuery } from '@/lib/validation'
+
+// GET query parameter schema
+const validateInvitationQuerySchema = z.object({
+  token: z.string().min(1, { message: 'Token is required' }),
+});
 
 export async function GET(request: Request) {
   try {
     if (!supabaseAdmin) return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 })
     
     const { searchParams } = new URL(request.url)
-    const token = searchParams.get('token')
-    
-    if (!token) {
-      return NextResponse.json({ error: 'Token is required' }, { status: 400 })
+    const queryValidation = validateQuery(validateInvitationQuerySchema, searchParams)
+    if (!queryValidation.success) {
+      return queryValidation.error
     }
+    const { token } = queryValidation.data
 
     // Get invitation details
     const { data: invitation, error } = await supabaseAdmin

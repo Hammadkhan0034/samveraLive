@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 import { getUserDataCacheHeaders } from '@/lib/cacheConfig'
+// Admin dashboard GET doesn't need query params validation - it returns all orgs
 
 const PRINCIPAL_ROLE_ID = 30
 const GUARDIAN_ROLE_ID = 10

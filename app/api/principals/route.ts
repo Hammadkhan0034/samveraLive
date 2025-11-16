@@ -1,10 +1,46 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 import { createUserAuthEntry } from 'app/core/createAuthEntry'
+import { getUserDataCacheHeaders } from '@/lib/cacheConfig'
+import { z } from 'zod'
+import { validateQuery, validateBody, orgIdSchema, uuidSchema, firstNameSchema, lastNameSchema, emailSchema, phoneSchema } from '@/lib/validation'
 
 // Note: Some databases may not have a dedicated role_id column on public.users
 // We'll avoid relying on role_id in this route
 const PRINCIPAL_ROLE_ID = 30
+
+// GET query parameter schema
+const getPrincipalsQuerySchema = z.object({
+  orgId: orgIdSchema.optional(),
+});
+
+// POST body schema
+const postPrincipalBodySchema = z.object({
+  id: uuidSchema.optional(),
+  email: emailSchema.optional(),
+  phone: phoneSchema,
+  first_name: firstNameSchema,
+  last_name: lastNameSchema.optional(),
+  org_id: orgIdSchema,
+  is_active: z.boolean().optional(),
+  created_by: uuidSchema.optional(),
+});
+
+// PUT body schema
+const putPrincipalBodySchema = z.object({
+  id: uuidSchema,
+  first_name: firstNameSchema.optional(),
+  last_name: lastNameSchema.optional(),
+  org_id: orgIdSchema.optional(),
+  is_active: z.boolean().optional(),
+  email: emailSchema.optional(),
+  phone: phoneSchema,
+});
+
+// DELETE query parameter schema
+const deletePrincipalQuerySchema = z.object({
+  id: uuidSchema,
+});
 
 const usersColumnCache: Record<string, boolean> = {}
 async function hasUsersColumn(columnName: string): Promise<boolean> {
@@ -43,7 +79,11 @@ export async function GET(request: Request) {
     }
     
     const { searchParams } = new URL(request.url)
-    const orgId = searchParams.get('orgId') || undefined
+    const queryValidation = validateQuery(getPrincipalsQuerySchema, searchParams)
+    if (!queryValidation.success) {
+      return queryValidation.error
+    }
+    const { orgId } = queryValidation.data
     
     const roleExists = await hasUsersColumn('role')
     const roleIdExists = await hasUsersColumn('role_id')
@@ -207,7 +247,10 @@ export async function GET(request: Request) {
     }))
     
     console.log('✅ Returning principals:', principals.length, 'principals')
-    return NextResponse.json({ principals }, { status: 200 })
+    return NextResponse.json({ principals }, { 
+      status: 200,
+      headers: getUserDataCacheHeaders()
+    })
   } catch (err: any) {
     const errorMessage = err?.message || (typeof err === 'string' ? err : 'Unknown error');
     const isFetchError = errorMessage.includes('fetch failed') || errorMessage.includes('TypeError: fetch failed');
@@ -238,6 +281,10 @@ export async function POST(request: Request) {
   try {
     if (!supabaseAdmin) return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 })
     const body = await request.json()
+    const bodyValidation = validateBody(postPrincipalBodySchema, body)
+    if (!bodyValidation.success) {
+      return bodyValidation.error
+    }
     const { 
       id, 
       email, 
@@ -247,14 +294,7 @@ export async function POST(request: Request) {
       org_id, 
       is_active,
       created_by 
-    } = body || {}
-    
-    if (!org_id) {
-      return NextResponse.json({ error: 'org_id is required' }, { status: 400 })
-    }
-    if (!first_name) {
-      return NextResponse.json({ error: 'first_name is required' }, { status: 400 })
-    }
+    } = bodyValidation.data
 
     // Create user auth entry
     const displayName = [first_name, last_name].filter(Boolean).join(' ').trim() || undefined
@@ -387,11 +427,13 @@ export async function PUT(request: Request) {
   try {
     if (!supabaseAdmin) return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 })
     const body = await request.json()
-    const { id, first_name, last_name, org_id, is_active, email, phone } = body || {}
+    const bodyValidation = validateBody(putPrincipalBodySchema, body)
+    if (!bodyValidation.success) {
+      return bodyValidation.error
+    }
+    const { id, first_name, last_name, org_id, is_active, email, phone } = bodyValidation.data
     const roleExists = await hasUsersColumn('role')
     const roleIdExists = await hasUsersColumn('role_id')
-    
-    if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 })
     
     const patch: any = {
       updated_at: new Date().toISOString()
@@ -450,9 +492,11 @@ export async function DELETE(request: Request) {
   try {
     if (!supabaseAdmin) return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 })
     const { searchParams } = new URL(request.url)
-    const id = searchParams.get('id')
-    
-    if (!id) return NextResponse.json({ error: 'id is required' }, { status: 400 })
+    const queryValidation = validateQuery(deletePrincipalQuerySchema, searchParams)
+    if (!queryValidation.success) {
+      return queryValidation.error
+    }
+    const { id } = queryValidation.data
     
     console.log('🗑️ Soft deleting principal:', id)
     

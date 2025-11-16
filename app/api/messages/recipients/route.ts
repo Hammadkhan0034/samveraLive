@@ -1,5 +1,15 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseClient';
+import { getUserDataCacheHeaders } from '@/lib/cacheConfig';
+import { z } from 'zod';
+import { validateQuery, orgIdSchema } from '@/lib/validation';
+
+// GET query parameter schema
+const getRecipientsQuerySchema = z.object({
+  org_id: orgIdSchema,
+  user_role: z.enum(['principal', 'teacher', 'guardian', 'parent']),
+  search: z.string().optional().default(''),
+});
 
 export async function GET(request: Request) {
   try {
@@ -8,13 +18,11 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const org_id = searchParams.get('org_id');
-    const user_role = searchParams.get('user_role');
-    const search = searchParams.get('search') || '';
-
-    if (!org_id || !user_role) {
-      return NextResponse.json({ error: 'Missing org_id or user_role' }, { status: 400 });
+    const queryValidation = validateQuery(getRecipientsQuerySchema, searchParams);
+    if (!queryValidation.success) {
+      return queryValidation.error;
     }
+    const { org_id, user_role, search } = queryValidation.data;
 
     // Determine which roles the current user can message
     let allowedRoles: string[] = [];
@@ -68,7 +76,10 @@ export async function GET(request: Request) {
     }, {});
 
     console.log('✅ Fetched recipients:', recipients.length);
-    return NextResponse.json({ recipients, grouped }, { status: 200 });
+    return NextResponse.json({ recipients, grouped }, { 
+      status: 200,
+      headers: getUserDataCacheHeaders()
+    });
   } catch (err: any) {
     console.error('💥 Error in GET /api/messages/recipients:', err);
     return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 });
