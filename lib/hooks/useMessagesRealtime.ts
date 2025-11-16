@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { MessageItem, MessageThreadWithParticipants, MessageParticipant } from '@/lib/types/messages';
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
@@ -25,13 +25,14 @@ export function useMessagesRealtime({
   onUpdatedThread,
 }: UseMessagesRealtimeOptions) {
   const channelRef = useRef<any>(null);
-  const isSubscribedRef = useRef(false);
+  // Convert ref to state to avoid accessing refs during render
+  const [isSubscribed, setIsSubscribed] = useState(false);
 
   const cleanup = useCallback(() => {
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current);
       channelRef.current = null;
-      isSubscribedRef.current = false;
+      setIsSubscribed(false);
     }
   }, []);
 
@@ -40,8 +41,10 @@ export function useMessagesRealtime({
       return;
     }
 
-    // Cleanup existing subscription if any
-    cleanup();
+    // Cleanup existing subscription if any - wrap in requestAnimationFrame to avoid synchronous setState
+    const cleanupId = requestAnimationFrame(() => {
+      cleanup();
+    });
 
     // Create a unique channel name for this user
     const channelName = `messages:${userId}:${orgId}`;
@@ -217,11 +220,13 @@ export function useMessagesRealtime({
     // Subscribe to the channel
     channel.subscribe((status) => {
       if (status === 'SUBSCRIBED') {
-        isSubscribedRef.current = true;
+        setIsSubscribed(true);
         console.log('✅ Realtime messages subscription active');
       } else if (status === 'CHANNEL_ERROR') {
+        setIsSubscribed(false);
         console.error('❌ Realtime channel error');
       } else if (status === 'TIMED_OUT') {
+        setIsSubscribed(false);
         console.warn('⚠️ Realtime subscription timed out');
       }
     });
@@ -230,12 +235,13 @@ export function useMessagesRealtime({
 
     // Cleanup on unmount
     return () => {
+      cancelAnimationFrame(cleanupId);
       cleanup();
     };
   }, [userId, orgId, threadIds.join(','), onNewMessage, onUpdatedParticipant, onNewThread, onUpdatedThread, cleanup]);
 
   return {
-    isSubscribed: isSubscribedRef.current,
+    isSubscribed,
     cleanup,
   };
 }

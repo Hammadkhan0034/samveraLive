@@ -99,53 +99,62 @@ export function StudentForm({
   asPage,
   translations: t
 }: StudentFormProps) {
-  const [formData, setFormData] = useState<StudentFormData>({
-    first_name: '',
-    last_name: '',
-    dob: '',
-    gender: 'unknown',
-    class_id: '',
-    status: 'pending',
-    phone: '',
-    address: '',
-    registration_time: '',
-    start_date: '',
-    barngildi: 0,
-    student_language: 'english',
-    social_security_number: '',
-    medical_notes: '',
-    allergies: '',
-    org_id: orgId,
-    emergency_contact: '',
-    guardian_ids: []
+  // Use lazy initialization to avoid setState in effect
+  const [formData, setFormData] = useState<StudentFormData>(() => {
+    if (initialData) {
+      return initialData;
+    }
+    return {
+      first_name: '',
+      last_name: '',
+      dob: '',
+      gender: 'unknown',
+      class_id: '',
+      status: 'pending',
+      phone: '',
+      address: '',
+      registration_time: '',
+      start_date: '',
+      barngildi: 0,
+      student_language: 'english',
+      social_security_number: '',
+      medical_notes: '',
+      allergies: '',
+      org_id: orgId,
+      emergency_contact: '',
+      guardian_ids: []
+    };
   });
 
-  // Update form data when initialData changes
+  // Update form data when initialData changes - wrap in requestAnimationFrame to avoid synchronous setState
   useEffect(() => {
-    if (initialData) {
-      setFormData(initialData);
-    } else {
-      setFormData({
-        first_name: '',
-        last_name: '',
-        dob: '',
-        gender: 'unknown',
-        class_id: '',
-        status: 'pending',
-        phone: '',
-        address: '',
-        registration_time: '',
-        start_date: '',
-        barngildi: 0,
-        student_language: 'english',
-        social_security_number: '',
-        medical_notes: '',
-        allergies: '',
-        org_id: orgId,
-        emergency_contact: '',
-        guardian_ids: []
-      });
-    }
+    const id = requestAnimationFrame(() => {
+      if (initialData) {
+        setFormData(initialData);
+      } else {
+        setFormData({
+          first_name: '',
+          last_name: '',
+          dob: '',
+          gender: 'unknown',
+          class_id: '',
+          status: 'pending',
+          phone: '',
+          address: '',
+          registration_time: '',
+          start_date: '',
+          barngildi: 0,
+          student_language: 'english',
+          social_security_number: '',
+          medical_notes: '',
+          allergies: '',
+          org_id: orgId,
+          emergency_contact: '',
+          guardian_ids: []
+        });
+      }
+    });
+    return () => cancelAnimationFrame(id);
   }, [initialData, orgId]);
 
   // Validate student age

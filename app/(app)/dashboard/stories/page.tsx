@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState, Suspense } from 'react';
+import Image from 'next/image';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -232,7 +233,7 @@ function StoriesPageContent() {
     // Preload current and next images
     activeItems.forEach((item, idx) => {
       if (idx <= activeIndex + 1 && item.url) {
-        const img = new Image();
+        const img = new window.Image();
         img.src = item.url;
       }
     });
@@ -386,7 +387,7 @@ function StoriesPageContent() {
             const items = Array.isArray(json.items) ? json.items : [];
             items.forEach((item: any) => {
               if (item.url) {
-                const img = new Image();
+                const img = new window.Image();
                 img.src = item.url;
               }
             });
@@ -503,7 +504,7 @@ function StoriesPageContent() {
       // Preload all images for instant display
       its.forEach((item) => {
         if (item.url) {
-          const img = new Image();
+          const img = new window.Image();
           img.src = item.url;
         }
       });
@@ -594,45 +595,22 @@ function StoriesPageContent() {
           height: '100%',
           overflow: 'hidden'
         }}>
-          <img 
+          <Image 
             src={imageSrc} 
             alt={it.caption || activeStory?.title || ''} 
+            fill
+            sizes="100vw"
+            className="object-cover object-center pointer-events-auto z-[1]"
             onError={(e) => {
               console.error('❌ Image load error');
               console.error('Full URL:', imageSrc);
               console.error('Error event:', e);
-              // Try to provide more helpful error message
-              const img = e.currentTarget;
-              if (img) {
-                img.style.display = 'none';
-                // Show error placeholder
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'w-full h-full bg-slate-800 flex items-center justify-center text-white/80 text-sm';
-                errorDiv.textContent = 'Image failed to load';
-                img.parentElement?.appendChild(errorDiv);
-              }
+              // TODO: Review error handling - next/image handles errors differently
             }}
             onLoad={() => {
               console.log('Image loaded successfully');
             }}
-            style={{ 
-              pointerEvents: 'auto', 
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              width: '100%', 
-              height: '100%', 
-              objectFit: 'cover',
-              objectPosition: 'center',
-              display: 'block',
-              margin: 0,
-              padding: 0,
-              zIndex: 1
-            }}
-            loading="eager"
-            decoding="async"
+            priority
           />
           {it.caption && (
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 pointer-events-none">

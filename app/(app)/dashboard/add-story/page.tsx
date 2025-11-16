@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useMemo, useState } from 'react';
+import Image from 'next/image';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
 import { useRouter } from 'next/navigation';
@@ -389,7 +390,7 @@ export default function AddStoryPage() {
                         />
                         {it.imagePreview && (
                           <div className="relative w-32 h-32 rounded-lg overflow-hidden border border-slate-300 dark:border-slate-600">
-                            <img src={it.imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                            <Image src={it.imagePreview} alt="Preview" fill sizes="128px" className="object-cover" />
                           </div>
                         )}
                       </div>

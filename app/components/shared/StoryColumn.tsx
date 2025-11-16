@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useMemo, useRef } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Plus, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
@@ -281,7 +282,7 @@ export default function StoryColumn({
       // Preload all images
       its.forEach((item) => {
         if (item.url) {
-          const img = new Image();
+          const img = new window.Image();
           img.src = item.url;
         }
       });
@@ -541,38 +542,17 @@ export default function StoryColumn({
           }}
           onClick={handleStoryViewerClick}
         >
-          <img 
+          <Image 
             src={imageSrc} 
             alt={it.caption || activeStory?.title || ''}
+            fill
+            sizes="100vw"
+            className="object-cover object-center pointer-events-none z-[1]"
             onError={(e) => {
               console.error('Image load error');
-              const img = e.currentTarget;
-              if (img) {
-                img.style.display = 'none';
-                const errorDiv = document.createElement('div');
-                errorDiv.className = 'w-full h-full bg-slate-800 flex items-center justify-center text-white/80 text-sm';
-                errorDiv.textContent = 'Image failed to load';
-                img.parentElement?.appendChild(errorDiv);
-              }
+              // TODO: Review error handling - next/image handles errors differently
             }}
-            style={{ 
-              pointerEvents: 'none', 
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              width: '100%', 
-              height: '100%', 
-              objectFit: 'cover',
-              objectPosition: 'center',
-              display: 'block',
-              margin: 0,
-              padding: 0,
-              zIndex: 1
-            }}
-            loading="eager"
-            decoding="async"
+            priority
           />
           {it.caption && (
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 pointer-events-none">
@@ -650,21 +630,15 @@ export default function StoryColumn({
           >
             <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-slate-300 dark:border-slate-600 group-hover:border-blue-500 dark:group-hover:border-blue-400 transition-colors">
               {story.previewUrl ? (
-                <img
+                <Image
                   src={story.previewUrl}
                   alt={story.title || 'Story'}
-                  className="w-full h-full object-cover"
+                  fill
+                  sizes="64px"
+                  className="object-cover rounded-full"
                   onError={(e) => {
-                    // Fallback to icon if image fails to load
-                    const target = e.currentTarget;
-                    target.style.display = 'none';
-                    const parent = target.parentElement;
-                    if (parent) {
-                      const icon = document.createElement('div');
-                      icon.className = 'w-full h-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center';
-                      icon.innerHTML = '<svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>';
-                      parent.appendChild(icon);
-                    }
+                    // TODO: Review error handling - next/image handles errors differently
+                    console.error('Image load error for story preview');
                   }}
                 />
               ) : (

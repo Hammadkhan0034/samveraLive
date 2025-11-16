@@ -1,5 +1,6 @@
 'use client';
 import React, { useMemo, useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Users, CalendarDays, Plus, Send, Paperclip, Bell, X, Search, ChevronLeft, ChevronRight, Edit, Trash2, Link as LinkIcon, Mail, Utensils, Menu } from 'lucide-react';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import { useAuth } from '@/lib/hooks/useAuth';
@@ -2880,7 +2881,7 @@ function StoriesPanel({ t, router, session, orgId, teacherClasses, isActive = fa
       // Preload all images
       its.forEach((item) => {
         if (item.url) {
-          const img = new Image();
+          const img = new window.Image();
           img.src = item.url;
         }
       });
@@ -2912,31 +2913,17 @@ function StoriesPanel({ t, router, session, orgId, teacherClasses, isActive = fa
     if (isImage && imageSrc) {
       return (
         <>
-          <img 
+          <Image 
             src={imageSrc} 
             alt={it.caption || activeStory?.title || ''} 
+            fill
+            sizes="100vw"
+            className="object-cover object-center pointer-events-auto z-[1]"
             onClick={(e) => {
               e.stopPropagation();
               togglePause();
             }}
-            style={{ 
-              pointerEvents: 'auto', 
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              width: '100vw', 
-              height: '100vh', 
-              objectFit: 'cover',
-              objectPosition: 'center',
-              display: 'block',
-              margin: 0,
-              padding: 0,
-              zIndex: 1
-            }}
-            loading="eager"
-            decoding="async"
+            priority
           />
         </>
       );

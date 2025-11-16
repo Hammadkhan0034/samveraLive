@@ -65,33 +65,42 @@ export function GuardianForm({
   asPage,
   translations: t
 }: GuardianFormProps) {
-  const [formData, setFormData] = useState<GuardianFormData>({
-    first_name: '',
-    last_name: '',
-    email: '',
-    phone: '',
-    ssn: '',
-    address: '',
-    org_id: '',
-    is_active: true
+  // Use lazy initialization to avoid setState in effect
+  const [formData, setFormData] = useState<GuardianFormData>(() => {
+    if (initialData) {
+      return initialData;
+    }
+    return {
+      first_name: '',
+      last_name: '',
+      email: '',
+      phone: '',
+      ssn: '',
+      address: '',
+      org_id: orgs.length > 0 ? orgs[0].id : '',
+      is_active: true
+    };
   });
 
-  // Update form data when initialData changes
+  // Update form data when initialData changes - wrap in requestAnimationFrame to avoid synchronous setState
   useEffect(() => {
-    if (initialData) {
-      setFormData(initialData);
-    } else {
-      setFormData({
-        first_name: '',
-        last_name: '',
-        email: '',
-        phone: '',
-        ssn: '',
-        address: '',
-        org_id: orgs.length > 0 ? orgs[0].id : '',
-        is_active: true
-      });
-    }
+    const id = requestAnimationFrame(() => {
+      if (initialData) {
+        setFormData(initialData);
+      } else {
+        setFormData({
+          first_name: '',
+          last_name: '',
+          email: '',
+          phone: '',
+          ssn: '',
+          address: '',
+          org_id: orgs.length > 0 ? orgs[0].id : '',
+          is_active: true
+        });
+      }
+    });
+    return () => cancelAnimationFrame(id);
   }, [initialData, orgs]);
 
   const handleSubmit = async (e: React.FormEvent) => {

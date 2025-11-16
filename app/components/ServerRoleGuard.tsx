@@ -48,6 +48,8 @@ export async function ServerRoleGuard({
   minimumRole?: SamveraRole;
   fallback?: React.ReactNode;
 }): Promise<JSX.Element> {
+  // Perform async operations before JSX construction to avoid JSX in try/catch
+  let hasError = false;
   try {
     if (requiredRole) {
       await requireServerRole(requiredRole);
@@ -58,12 +60,17 @@ export async function ServerRoleGuard({
     } else {
       await requireServerAuth();
     }
-    
-    return <>{children}</>;
   } catch (error) {
     console.error('ServerRoleGuard error:', error);
+    hasError = true;
+  }
+  
+  // Construct JSX outside try/catch - use conditional rendering instead
+  if (hasError) {
     return <>{fallback || null}</>;
   }
+  
+  return <>{children}</>;
 }
 
 // Server component that conditionally renders based on permissions

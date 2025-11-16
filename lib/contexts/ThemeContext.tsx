@@ -23,19 +23,14 @@ interface ThemeProviderProps {
 }
 
 export const ThemeProvider = ({ children }: ThemeProviderProps) => {
-  const [isDark, setIsDark] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  // Initialize theme from localStorage or system preference
-  useEffect(() => {
-    setMounted(true);
-    const savedTheme = typeof window !== "undefined" ? localStorage.getItem("theme") : null;
-    const prefersDark = typeof window !== "undefined" 
-      ? window.matchMedia("(prefers-color-scheme: dark)").matches 
-      : false;
-    const shouldUseDark = savedTheme ? savedTheme === "dark" : prefersDark;
-    setIsDark(shouldUseDark);
-  }, []);
+  // Use lazy initialization to avoid setState in effect
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof window === "undefined") return false;
+    const savedTheme = localStorage.getItem("theme");
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    return savedTheme ? savedTheme === "dark" : prefersDark;
+  });
+  const [mounted] = useState(() => typeof window !== 'undefined');
 
   // Apply theme to document when it changes
   useEffect(() => {

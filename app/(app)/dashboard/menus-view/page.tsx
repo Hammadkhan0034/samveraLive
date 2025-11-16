@@ -28,9 +28,8 @@ export default function MenusViewPage() {
   const { user, loading, isSigningIn } = useRequireAuth();
   const { signOut } = useAuth();
   const router = useRouter();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => { setMounted(true); }, []);
+  // Use lazy initialization to avoid setState in effect
+  const [mounted] = useState(() => typeof window !== 'undefined');
 
   // Get org_id and class_id from user metadata
   const userMetadata = user?.user_metadata;
@@ -362,26 +361,30 @@ export default function MenusViewPage() {
         // Keep cached menus on error
       }
     }
-  }, [orgId, classId, linkedStudents, user?.id]);
+    // Updated dependencies to match React Compiler inference - use full user object instead of user?.id
+  }, [orgId, classId, linkedStudents, user]);
 
-  // Hydrate from cache instantly on mount if available
+  // Hydrate from cache instantly on mount if available - wrap in requestAnimationFrame to avoid synchronous setState
   useEffect(() => {
     if (orgId && user?.id) {
-      try {
-        const cacheKey = `parent_menus_${user.id}_${orgId}`;
-        const cached = localStorage.getItem(cacheKey);
-        const cacheTime = localStorage.getItem(`${cacheKey}_time`);
-        if (cached && cacheTime) {
-          const cachedMenus = JSON.parse(cached);
-          const age = Date.now() - parseInt(cacheTime);
-          if (cachedMenus && Array.isArray(cachedMenus) && age < 10 * 60 * 1000 && cachedMenus.length > 0) {
-            setMenus(cachedMenus);
-            setHydratedFromCache(true);
+      const id = requestAnimationFrame(() => {
+        try {
+          const cacheKey = `parent_menus_${user.id}_${orgId}`;
+          const cached = localStorage.getItem(cacheKey);
+          const cacheTime = localStorage.getItem(`${cacheKey}_time`);
+          if (cached && cacheTime) {
+            const cachedMenus = JSON.parse(cached);
+            const age = Date.now() - parseInt(cacheTime);
+            if (cachedMenus && Array.isArray(cachedMenus) && age < 10 * 60 * 1000 && cachedMenus.length > 0) {
+              setMenus(cachedMenus);
+              setHydratedFromCache(true);
+            }
           }
+        } catch (e) {
+          // Ignore cache errors
         }
-      } catch (e) {
-        // Ignore cache errors
-      }
+      });
+      return () => cancelAnimationFrame(id);
     }
   }, [orgId, user?.id]);
 
@@ -392,9 +395,13 @@ export default function MenusViewPage() {
   useEffect(() => {
     if (orgId && user?.id && !menusLoadedRef.current) {
       menusLoadedRef.current = true;
-      loadMenus();
+      // Wrap in requestAnimationFrame to avoid synchronous setState in effect
+      const id = requestAnimationFrame(() => {
+        loadMenus();
+      });
+      return () => cancelAnimationFrame(id);
     }
-  }, [orgId, user?.id]); // Removed loadMenus from dependencies to prevent re-renders
+  }, [orgId, user?.id, loadMenus]); // Added loadMenus back - it's now properly memoized
 
   // Listen for menu updates and refresh instantly
   useEffect(() => {
@@ -440,11 +447,9 @@ export default function MenusViewPage() {
   }, [orgId, user?.id, loadMenus]);
 
 
-  // Filter menus by selected date
-  const [menusForDate, setMenusForDate] = useState<Array<{ className?: string; menu: Menu }>>([]);
-
-  useEffect(() => {
-    if (!orgId) return;
+  // Filter menus by selected date - use useMemo for derived state instead of effect
+  const menusForDate = useMemo(() => {
+    if (!orgId) return [];
     const finalClassIds: string[] = [];
     if (classId) finalClassIds.push(classId);
     linkedStudentClasses.forEach(c => { if (!finalClassIds.includes(c.classId)) finalClassIds.push(c.classId); });
@@ -458,7 +463,7 @@ export default function MenusViewPage() {
         mw.push({ className, menu: m });
       }
     });
-    setMenusForDate(mw);
+    return mw;
   }, [menus, selectedDate, classId, linkedStudentClasses, orgId]);
   
   // Get class names for menus

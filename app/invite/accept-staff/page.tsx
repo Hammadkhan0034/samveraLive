@@ -146,9 +146,9 @@ function AcceptStaffInvitationContent() {
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6">
         <div className="text-center">
           <div className="text-green-500 text-4xl mb-4">📧</div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">You're Invited!</h1>
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">You&apos;re Invited!</h1>
           <p className="text-slate-600 mb-4">
-            You've been invited to join as a <strong>teacher/staff</strong>
+            You&apos;ve been invited to join as a <strong>teacher/staff</strong>
           </p>
           <p className="text-sm text-slate-500 mb-6">
             Please sign in to accept this invitation

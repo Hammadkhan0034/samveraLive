@@ -21,20 +21,20 @@ type Props = {
 export default function ProfileSwitcher({ className = '', labelIs, labelEn }: Props) {
   const router = useRouter();
   const pathname = usePathname();
-  const [roles, setRoles] = useState<SamveraRole[]>([]);
-  const [active, setActive] = useState<SamveraRole | ''>('');
-
-  // Load roles + active from cookies once on mount
-  useEffect(() => {
+  // Load roles + active from cookies using lazy initialization to avoid setState in effect
+  const [roles, setRoles] = useState<SamveraRole[]>(() => {
+    const auth = getAuth();
+    return auth.roles || [];
+  });
+  const [active, setActive] = useState<SamveraRole | ''>(() => {
     const auth = getAuth();
     const rs = auth.roles || [];
     const a =
       (auth.active as SamveraRole | null) && rs.includes(auth.active as SamveraRole)
         ? (auth.active as SamveraRole)
         : (rs[0] as SamveraRole | undefined) || '';
-    setRoles(rs);
-    setActive(a || '');
-  }, []);
+    return a || '';
+  });
 
   const label = useMemo(() => {
     // very light i18n: use document lang or fall back to en
