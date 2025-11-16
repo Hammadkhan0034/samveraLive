@@ -26,7 +26,7 @@ const PROTECTED_ROUTES = [
   { path: '/dashboard/admin', roles: ['admin'] },
 ] as const;
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   try {
     const { pathname, searchParams } = req.nextUrl;
 
@@ -117,7 +117,7 @@ export async function middleware(req: NextRequest) {
 
     return res;
   } catch (error) {
-    console.error('Middleware error:', error);
+    console.error('Proxy error:', error);
     
     // On error, redirect to signin
     const url = req.nextUrl.clone();
@@ -127,6 +127,7 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = { 
-  // Apply middleware to all dashboard routes
+  // Apply proxy to all dashboard routes
   matcher: ['/dashboard/:path*']
 };
+
