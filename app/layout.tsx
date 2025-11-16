@@ -1,6 +1,5 @@
 import './globals.css';
 import type { Metadata } from 'next';
-import { testSupabaseConnection } from "@/lib/testSupabaseConnection"
 import { AuthProvider } from '@/lib/auth-context';
 import { LanguageProvider } from '@/lib/contexts/LanguageContext';
 import { ThemeProvider } from '@/lib/contexts/ThemeContext';
@@ -12,9 +11,6 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-
-  // Run the connection test once when server starts
-  await testSupabaseConnection()
   return (
 
     <html lang="en" suppressHydrationWarning>
