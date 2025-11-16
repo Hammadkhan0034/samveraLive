@@ -3,14 +3,14 @@ import { supabaseAdmin } from '@/lib/supabaseClient'
 
 export async function POST(
   request: Request,
-  { params }: { params: { storyId: string } }
+  { params }: { params: Promise<{ storyId: string }> }
 ) {
   try {
     if (!supabaseAdmin) {
       return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 })
     }
 
-    const { storyId } = params
+    const { storyId } = await params
     const body = await request.json()
     const { items } = body || {}
 
@@ -85,14 +85,14 @@ export async function POST(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { storyId: string } }
+  { params }: { params: Promise<{ storyId: string }> }
 ) {
   try {
     if (!supabaseAdmin) {
       return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 })
     }
 
-    const { storyId } = params
+    const { storyId } = await params
 
     if (!storyId) {
       return NextResponse.json({ error: 'storyId is required' }, { status: 400 })

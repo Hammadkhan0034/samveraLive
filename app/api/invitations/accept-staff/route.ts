@@ -21,7 +21,7 @@ export async function POST(request: Request) {
     }
 
     // Get the current authenticated user
-    const supabase = createSupabaseServer()
+    const supabase = await createSupabaseServer()
     const { data: { user } } = await supabase.auth.getUser()
     
     if (!user) {

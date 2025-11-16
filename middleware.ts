@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
+import { createServerClient } from '@supabase/ssr';
 import { type SamveraRole } from '@/lib/auth';
 
 const ROLE_PATHS: Record<SamveraRole, string> = {
@@ -37,7 +37,23 @@ export async function middleware(req: NextRequest) {
 
     // Create a Supabase client configured to use cookies
     const res = NextResponse.next();
-    const supabase = createMiddlewareClient({ req, res });
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return req.cookies.getAll();
+          },
+          setAll(cookiesToSet) {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              req.cookies.set(name, value);
+              res.cookies.set(name, value, options);
+            });
+          },
+        },
+      }
+    );
 
     // Get the current session
     const { data: { session }, error } = await supabase.auth.getSession();

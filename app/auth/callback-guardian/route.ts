@@ -1,4 +1,4 @@
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
+import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
@@ -12,7 +12,27 @@ export async function GET(request: Request) {
   const code = requestUrl.searchParams.get('code')
 
   if (code) {
-    const supabase = createRouteHandlerClient({ cookies })
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) => {
+                cookieStore.set(name, value, options);
+              });
+            } catch {
+              // The `setAll` method was called from a Route Handler.
+            }
+          },
+        },
+      }
+    );
     const { data: sessionData, error: sessionError } = await supabase.auth.exchangeCodeForSession(code)
     
     if (sessionError) {
@@ -21,7 +41,7 @@ export async function GET(request: Request) {
     }
 
     // If guardian_id is provided, set default password and redirect to signin
-    if (guardian_id && sessionData?.user) {
+    if (guardian_id && sessionData?.user && supabaseAdmin) {
       try {
         // Set default password for the guardian
         const defaultPassword = 'test123456'

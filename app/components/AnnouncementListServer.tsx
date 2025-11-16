@@ -61,7 +61,7 @@ export default async function AnnouncementListServer({
   }
 
   try {
-    const supabase = supabaseAdmin || createSupabaseServer();
+    const supabase = supabaseAdmin || await createSupabaseServer();
 
     // Build query - simplified for server component (show latest 5 org-wide or class-specific)
     let query = supabase

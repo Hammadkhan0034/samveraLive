@@ -3,14 +3,14 @@ import { supabaseAdmin } from '@/lib/supabaseClient';
 
 export async function GET(
   request: Request,
-  { params }: { params: { messageId: string } }
+  { params }: { params: Promise<{ messageId: string }> }
 ) {
   try {
     if (!supabaseAdmin) {
       return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 });
     }
 
-    const { messageId } = params;
+    const { messageId } = await params;
     const { searchParams } = new URL(request.url);
     const user_id = searchParams.get('user_id');
     const limit = parseInt(searchParams.get('limit') || '50');
@@ -97,14 +97,14 @@ export async function GET(
 
 export async function POST(
   request: Request,
-  { params }: { params: { messageId: string } }
+  { params }: { params: Promise<{ messageId: string }> }
 ) {
   try {
     if (!supabaseAdmin) {
       return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 });
     }
 
-    const { messageId } = params;
+    const { messageId } = await params;
     const body = await request.json();
     const { user_id, org_id, body: messageBody, attachments = [] } = body;
 

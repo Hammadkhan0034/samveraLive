@@ -1,8 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    experimental: {
-      serverActions: true,
-    },
     webpack: (config) => {
       // Ignore "Critical dependency: the request of a dependency is an expression" warnings
       config.ignoreWarnings = [
@@ -13,6 +10,8 @@ const nextConfig = {
       ]
       return config
     },
+    // Turbopack config - empty for now, using webpack for Supabase warning suppression
+    turbopack: {},
   }
   
   module.exports = nextConfig

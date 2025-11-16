@@ -3,14 +3,14 @@ import { supabaseAdmin } from '@/lib/supabaseClient'
 
 export async function GET(
   request: Request,
-  { params }: { params: { storyId: string } }
+  { params }: { params: Promise<{ storyId: string }> }
 ) {
   try {
     if (!supabaseAdmin) {
       return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 })
     }
 
-    const { storyId } = params
+    const { storyId } = await params
     const { searchParams } = new URL(request.url)
     const authorId = searchParams.get('authorId') // Optional: to verify ownership
     const orgId = searchParams.get('orgId') // Optional: to verify org access

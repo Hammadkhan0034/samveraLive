@@ -25,7 +25,7 @@ export async function createAnnouncement(data: {
   // Only teachers, principals, and admins can create announcements
   const { user, session } = await requireServerRoles(['teacher', 'principal', 'admin']);
   
-  const supabase = supabaseAdmin ?? createSupabaseServer();
+  const supabase = supabaseAdmin ?? await createSupabaseServer();
   // Priority: explicit orgId -> user metadata -> admin users table -> class fallback
   let orgId = data.orgId || (user.user_metadata?.org_id as string | undefined) || (user.user_metadata?.organization_id as string | undefined);
   if (!orgId && supabaseAdmin) {
@@ -156,7 +156,7 @@ export async function updateUserRole(userId: string, newRoles: SamveraRole[], ac
   // Only admins can update user roles
   const { user } = await requireServerRole('admin');
   
-  const supabase = createSupabaseServer();
+  const supabase = await createSupabaseServer();
   
   const { error } = await supabase.auth.admin.updateUserById(userId, {
     user_metadata: {
@@ -181,7 +181,7 @@ export async function updateAnnouncement(announcementId: string, data: {
   // Only admins and the author can update announcements
   const { user } = await requireServerAuth();
   
-  const supabase = supabaseAdmin ?? createSupabaseServer();
+  const supabase = supabaseAdmin ?? await createSupabaseServer();
   
   // First check if user is admin or the author
   const { data: announcement } = await supabase
@@ -239,7 +239,7 @@ export async function deleteAnnouncement(announcementId: string) {
   // Only admins and the author can delete announcements
   const { user } = await requireServerAuth();
   
-  const supabase = createSupabaseServer();
+  const supabase = await createSupabaseServer();
   
   // First check if user is admin or the author
   const { data: announcement } = await supabase
@@ -278,7 +278,7 @@ export async function getClassData(classId: string) {
   // Teachers, principals, and admins can access class data
   const { user, session } = await requireServerClassAccess(classId);
   
-  const supabase = createSupabaseServer();
+  const supabase = await createSupabaseServer();
   
   const { data: classData, error } = await supabase
     .from('classes')
@@ -310,7 +310,7 @@ export async function createMenu(data: {
   // Only teachers, principals, and admins can create menus
   const { user } = await requireServerRoles(['teacher', 'principal', 'admin']);
   
-  const supabase = createSupabaseServer();
+  const supabase = await createSupabaseServer();
   
   const { data: menu, error } = await supabase
     .from('menus')
@@ -339,7 +339,7 @@ export async function getOrgUsers(orgId: string) {
   // Only principals and admins can view org users
   const { user } = await requireServerRoleLevel('principal');
   
-  const supabase = createSupabaseServer();
+  const supabase = await createSupabaseServer();
   
   const { data: users, error } = await supabase
     .from('users')
@@ -363,7 +363,7 @@ export async function switchUserRole(newRole: SamveraRole) {
     throw new Error(`You don't have the '${newRole}' role`);
   }
   
-  const supabase = createSupabaseServer();
+  const supabase = await createSupabaseServer();
   
   const { error } = await supabase.auth.updateUser({
     data: {

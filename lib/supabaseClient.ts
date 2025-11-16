@@ -1,4 +1,4 @@
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { createBrowserClient } from '@supabase/ssr'
 import { createClient } from "@supabase/supabase-js"
 
 // Load environment variables from .env.local only on server side
@@ -15,11 +15,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables. Please check your .env.local file.')
 }
 
-// Client-side Supabase client using auth-helpers (sets cookies for server access)
-export const supabase = createClientComponentClient({
+// Client-side Supabase client using @supabase/ssr
+export const supabase = createBrowserClient(
   supabaseUrl,
-  supabaseKey: supabaseAnonKey,
-})
+  supabaseAnonKey
+)
 
 // Server-side Supabase client with service role key (only if service role key is available)
 export const supabaseAdmin = process.env.SUPABASE_SERVICE_ROLE_KEY 
