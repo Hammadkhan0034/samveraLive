@@ -3,7 +3,7 @@
 import React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { X } from 'lucide-react';
-import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Bell, Users } from 'lucide-react';
+import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Bell, Users, Shield } from 'lucide-react';
 
 // Small helper
 function clsx(...xs: Array<string | false | undefined>) {
@@ -58,6 +58,10 @@ export interface TeacherSidebarProps {
     title: string;
     desc: string;
   };
+  guardiansTile?: {
+    title: string;
+    desc: string;
+  };
 }
 
 export default function TeacherSidebar({
@@ -74,6 +78,7 @@ export default function TeacherSidebar({
   storiesTile,
   announcementsTile,
   studentsTile,
+  guardiansTile,
 }: TeacherSidebarProps) {
   const router = useRouter();
 
@@ -116,6 +121,9 @@ export default function TeacherSidebar({
     }
     if (tileId === 'students') {
       return pathname === '/dashboard/teacher/students';
+    }
+    if (tileId === 'guardians') {
+      return pathname === '/dashboard/teacher/guardians';
     }
     return false;
   };
@@ -190,6 +198,14 @@ export default function TeacherSidebar({
     onSidebarClose();
   };
 
+  // Handle guardians tile click
+  const handleGuardiansClick = () => {
+    if (pathname !== '/dashboard/teacher/guardians') {
+      router.replace('/dashboard/teacher/guardians');
+    }
+    onSidebarClose();
+  };
+
   const isAttendanceActive = pathname === '/dashboard/teacher/attendance';
   const isDiapersActive = pathname === '/dashboard/teacher/diapers';
   const isMessagesActive = pathname === '/dashboard/teacher/messages';
@@ -197,6 +213,7 @@ export default function TeacherSidebar({
   const isStoriesActive = pathname === '/dashboard/teacher/stories';
   const isAnnouncementsActive = pathname === '/dashboard/teacher/announcements';
   const isStudentsActive = pathname === '/dashboard/teacher/students';
+  const isGuardiansActive = pathname === '/dashboard/teacher/guardians';
 
   return (
     <>
@@ -484,6 +501,42 @@ export default function TeacherSidebar({
                     </span>
                   </div>
                   <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{studentsTile.desc}</p>
+                </div>
+              </button>
+            )}
+
+            {/* Guardians tile - always route-based */}
+            {guardiansTile && (
+              <button
+                onClick={handleGuardiansClick}
+                className={clsx(
+                  'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                  'hover:bg-slate-800 dark:hover:bg-slate-700',
+                  isGuardiansActive
+                    ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
+                    : 'border-l-4 border-transparent'
+                )}
+              >
+                <span className={clsx(
+                  'flex-shrink-0 rounded-lg p-2',
+                  isGuardiansActive
+                    ? 'bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900'
+                    : 'bg-slate-800 dark:bg-slate-700 text-slate-200 dark:text-slate-300'
+                )}>
+                  <Shield className="h-5 w-5" />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={clsx(
+                      'font-medium truncate',
+                      isGuardiansActive
+                        ? 'text-slate-100 dark:text-slate-100'
+                        : 'text-slate-200 dark:text-slate-300'
+                    )}>
+                      {guardiansTile.title}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{guardiansTile.desc}</p>
                 </div>
               </button>
             )}

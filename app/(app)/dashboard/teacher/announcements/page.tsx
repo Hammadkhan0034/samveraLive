@@ -143,7 +143,6 @@ export default function TeacherAnnouncementsPage() {
     badge?: string | number;
     route?: string;
   }> = useMemo(() => [
-      { id: 'guardians', title: t.tile_guardians || 'Guardians', desc: t.tile_guardians_desc || 'Manage guardians', Icon: Users, route: '/dashboard/teacher?tab=guardians' },
       { id: 'link_student', title: t.tile_link_student || 'Link Student', desc: t.tile_link_student_desc || 'Link a guardian to a student', Icon: LinkIcon, route: '/dashboard/teacher?tab=link_student' },
       { id: 'menus', title: t.tile_menus || 'Menus', desc: t.tile_menus_desc || 'Manage daily menus', Icon: Utensils, route: '/dashboard/teacher?tab=menus' },
     ], [t]);
@@ -204,6 +203,10 @@ export default function TeacherAnnouncementsPage() {
           studentsTile={{
             title: t.tile_students,
             desc: t.tile_students_desc,
+          }}
+          guardiansTile={{
+            title: t.tile_guardians,
+            desc: t.tile_guardians_desc,
           }}
         />
         <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900">
