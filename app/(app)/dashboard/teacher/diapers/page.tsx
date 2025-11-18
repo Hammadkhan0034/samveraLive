@@ -102,6 +102,10 @@ export default function TeacherDiapersPage() {
             title: t.tile_stories,
             desc: t.tile_stories_desc,
           }}
+          announcementsTile={{
+            title: t.tile_announcements,
+            desc: t.tile_announcements_desc,
+          }}
         />
 
         {/* Main content area */}

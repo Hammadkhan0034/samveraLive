@@ -552,6 +552,10 @@ export default function TeacherStoriesPage() {
             title: t.tile_stories,
             desc: t.tile_stories_desc,
           }}
+          announcementsTile={{
+            title: t.tile_announcements,
+            desc: t.tile_announcements_desc,
+          }}
         />
         <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900">
           <div className="p-2 md:p-6 lg:p-8">

@@ -4,8 +4,6 @@ import Image from 'next/image';
 import { SquareCheck as CheckSquare, Baby, MessageSquare, Users, CalendarDays, Plus, Send, Paperclip, Bell, X, Search, ChevronLeft, ChevronRight, Edit, Trash2, Link as LinkIcon, Mail, Utensils, Menu, Eye, MessageSquarePlus } from 'lucide-react';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import { useAuth } from '@/lib/hooks/useAuth';
-import AnnouncementForm from './AnnouncementForm';
-import AnnouncementList from './AnnouncementList';
 import { supabase } from '@/lib/supabaseClient';
 import { option } from 'framer-motion/client';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
@@ -19,7 +17,7 @@ import LinkStudentGuardian from './LinkStudentGuardian';
 import TeacherSidebar from '@/app/components/shared/TeacherSidebar';
 
 type Lang = 'is' | 'en';
-type TileId = 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
+type TileId = 'students' | 'guardians' | 'link_student' | 'menus';
 
 // Small helpers
 function clsx(...xs: Array<string | false | undefined>) {
@@ -29,7 +27,7 @@ const uid = () => Math.random().toString(36).slice(2, 9);
 
 export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
   const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
-  const [active, setActive] = useState<TileId>('announcements');
+  const [active, setActive] = useState<TileId>('students');
   const { session } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -41,7 +39,7 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
   // Set active tab from query parameter
   useEffect(() => {
     const tabParam = searchParams?.get('tab');
-    if (tabParam && ['announcements', 'students', 'guardians', 'link_student', 'menus'].includes(tabParam)) {
+    if (tabParam && ['students', 'guardians', 'link_student', 'menus'].includes(tabParam)) {
       setActive(tabParam as TileId);
     }
   }, [searchParams]);
@@ -151,7 +149,6 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
     badge?: string | number;
     route?: string;
   }> = useMemo(() => [
-      { id: 'announcements', title: t.tile_announcements, desc: t.tile_announcements_desc, Icon: Bell },
       { id: 'students', title: t.tile_students, desc: t.tile_students_desc, Icon: Users },
       { id: 'guardians', title: t.tile_guardians || 'Guardians', desc: t.tile_guardians_desc || 'Manage guardians', Icon: Users },
       { id: 'link_student', title: t.tile_link_student || 'Link Student', desc: t.tile_link_student_desc || 'Link a guardian to a student', Icon: LinkIcon },
@@ -842,6 +839,10 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
             title: t.tile_stories,
             desc: t.tile_stories_desc,
           }}
+          announcementsTile={{
+            title: t.tile_announcements,
+            desc: t.tile_announcements_desc,
+          }}
         />
 
         {/* Main content area */}
@@ -885,7 +886,6 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
             {/* Active panel */}
             
             <section>
-              {active === 'announcements' && <AnnouncementsPanel t={t} lang={lang} teacherClasses={teacherClasses} />}
               {active === 'students' && <StudentsPanel t={t} studentRequests={studentRequests} loadingRequests={loadingRequests} students={students} loadingStudents={loadingStudents} studentError={studentError} onAddStudent={() => router.push('/dashboard/add-student')} onEditStudent={openEditStudentModal} onDeleteStudent={openDeleteConfirm} teacherClasses={teacherClasses} />}
               {active === 'guardians' && <GuardiansPanel t={t} lang={lang} orgId={finalOrgId} />}
               {active === 'link_student' && <LinkStudentPanel t={t} lang={lang} />}
@@ -1391,45 +1391,7 @@ type="text"
 // MessagesPanel removed - now in /dashboard/teacher/messages page
 // MediaPanel removed - now in /dashboard/teacher/media page
 // StoriesPanel removed - now in /dashboard/teacher/stories page
-
-function AnnouncementsPanel({ t, lang, teacherClasses }: { t: typeof enText; lang: 'is' | 'en'; teacherClasses?: any[] }) {
-  const { session } = useAuth();
-  const classId = (session?.user?.user_metadata as any)?.class_id as string | undefined;
-  const orgId = (session?.user?.user_metadata as any)?.org_id as string | undefined;
-  
-  // Get all teacher class IDs for filtering announcements
-  const teacherClassIds = teacherClasses && teacherClasses.length > 0 
-    ? teacherClasses.map(c => c.id).filter(Boolean) 
-    : (classId ? [classId] : []);
-
-  return (
-    <div className="space-y-6">
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-        <h2 className="text-lg font-medium mb-4 text-slate-900 dark:text-slate-100">{t.announcements_title}</h2>
-        <AnnouncementForm
-          classId={classId}
-          orgId={orgId}
-          lang={lang}
-          showClassSelector={true}
-          onSuccess={() => {
-            // Trigger refresh event instead of reload
-            if (typeof window !== 'undefined') {
-              window.dispatchEvent(new Event('announcements-refresh'));
-            }
-          }}
-        />
-      </div>
-
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-        <AnnouncementList
-          teacherClassIds={teacherClassIds}
-          orgId={orgId}
-          lang={lang}
-        />
-      </div>
-    </div>
-  );
-}
+// AnnouncementsPanel removed - now in /dashboard/teacher/announcements page
 
 function StudentsPanel({
   t,
