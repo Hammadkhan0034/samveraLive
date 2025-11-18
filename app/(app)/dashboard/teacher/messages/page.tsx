@@ -746,6 +746,10 @@ export default function TeacherMessagesPage() {
             title: t.tile_media,
             desc: t.tile_media_desc,
           }}
+          storiesTile={{
+            title: t.tile_stories,
+            desc: t.tile_stories_desc,
+          }}
         />
 
         {/* Main content area */}

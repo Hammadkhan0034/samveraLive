@@ -3,7 +3,7 @@
 import React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { X } from 'lucide-react';
-import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera } from 'lucide-react';
+import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer } from 'lucide-react';
 
 // Small helper
 function clsx(...xs: Array<string | false | undefined>) {
@@ -46,6 +46,10 @@ export interface TeacherSidebarProps {
     desc: string;
     badge?: string | number;
   };
+  storiesTile?: {
+    title: string;
+    desc: string;
+  };
 }
 
 export default function TeacherSidebar({
@@ -59,6 +63,7 @@ export default function TeacherSidebar({
   diapersTile,
   messagesTile,
   mediaTile,
+  storiesTile,
 }: TeacherSidebarProps) {
   const router = useRouter();
 
@@ -92,6 +97,9 @@ export default function TeacherSidebar({
     }
     if (tileId === 'media') {
       return pathname === '/dashboard/teacher/media';
+    }
+    if (tileId === 'stories') {
+      return pathname === '/dashboard/teacher/stories';
     }
     return false;
   };
@@ -142,10 +150,19 @@ export default function TeacherSidebar({
     onSidebarClose();
   };
 
+  // Handle stories tile click
+  const handleStoriesClick = () => {
+    if (pathname !== '/dashboard/teacher/stories') {
+      router.replace('/dashboard/teacher/stories');
+    }
+    onSidebarClose();
+  };
+
   const isAttendanceActive = pathname === '/dashboard/teacher/attendance';
   const isDiapersActive = pathname === '/dashboard/teacher/diapers';
   const isMessagesActive = pathname === '/dashboard/teacher/messages';
   const isMediaActive = pathname === '/dashboard/teacher/media';
+  const isStoriesActive = pathname === '/dashboard/teacher/stories';
 
   return (
     <>
@@ -325,6 +342,42 @@ export default function TeacherSidebar({
                     )}
                   </div>
                   <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{mediaTile.desc}</p>
+                </div>
+              </button>
+            )}
+
+            {/* Stories tile - always route-based */}
+            {storiesTile && (
+              <button
+                onClick={handleStoriesClick}
+                className={clsx(
+                  'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                  'hover:bg-slate-800 dark:hover:bg-slate-700',
+                  isStoriesActive
+                    ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
+                    : 'border-l-4 border-transparent'
+                )}
+              >
+                <span className={clsx(
+                  'flex-shrink-0 rounded-lg p-2',
+                  isStoriesActive
+                    ? 'bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900'
+                    : 'bg-slate-800 dark:bg-slate-700 text-slate-200 dark:text-slate-300'
+                )}>
+                  <Timer className="h-5 w-5" />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={clsx(
+                      'font-medium truncate',
+                      isStoriesActive
+                        ? 'text-slate-100 dark:text-slate-100'
+                        : 'text-slate-200 dark:text-slate-300'
+                    )}>
+                      {storiesTile.title}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{storiesTile.desc}</p>
                 </div>
               </button>
             )}

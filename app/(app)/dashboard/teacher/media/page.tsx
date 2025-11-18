@@ -148,6 +148,10 @@ export default function TeacherMediaPage() {
             desc: t.tile_media_desc,
             badge: uploads.length > 0 ? uploads.length : undefined,
           }}
+          storiesTile={{
+            title: t.tile_stories,
+            desc: t.tile_stories_desc,
+          }}
         />
         <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900">
           <div className="p-2 md:p-6 lg:p-8">
