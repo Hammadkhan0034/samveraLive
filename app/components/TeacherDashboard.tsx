@@ -19,7 +19,7 @@ import LinkStudentGuardian from './LinkStudentGuardian';
 import TeacherSidebar from '@/app/components/shared/TeacherSidebar';
 
 type Lang = 'is' | 'en';
-type TileId = 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
+type TileId = 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
 
 // Small helpers
 function clsx(...xs: Array<string | false | undefined>) {
@@ -29,7 +29,7 @@ const uid = () => Math.random().toString(36).slice(2, 9);
 
 export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
   const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
-  const [active, setActive] = useState<TileId>('messages');
+  const [active, setActive] = useState<TileId>('media');
   const { session } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -41,7 +41,7 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
   // Set active tab from query parameter
   useEffect(() => {
     const tabParam = searchParams?.get('tab');
-    if (tabParam && ['messages', 'media', 'stories', 'announcements', 'students', 'guardians', 'link_student', 'menus'].includes(tabParam)) {
+    if (tabParam && ['media', 'stories', 'announcements', 'students', 'guardians', 'link_student', 'menus'].includes(tabParam)) {
       setActive(tabParam as TileId);
     }
   }, [searchParams]);
@@ -84,7 +84,7 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
   // Final org_id to use - from metadata, database, or default
   const finalOrgId = orgIdFromMetadata || dbOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID || '1db3c97c-de42-4ad2-bb72-cc0b6cda69f7';
 
-  // Messages state removed - now managed inside MessagesPanel component
+  // Messages count for sidebar badge
   const [messagesCount, setMessagesCount] = useState(0);
 
   const [uploads, setUploads] = useState<string[]>([]); // data URLs for image previews
@@ -153,7 +153,6 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
     badge?: string | number;
     route?: string;
   }> = useMemo(() => [
-      { id: 'messages', title: t.tile_msg, desc: t.tile_msg_desc, Icon: MessageSquare, badge: messagesCount > 0 ? messagesCount : undefined },
       { id: 'media', title: t.tile_media, desc: t.tile_media_desc, Icon: Camera, badge: uploads.length || undefined },
       { id: 'stories', title: t.tile_stories, desc: t.tile_stories_desc, Icon: Timer },
       { id: 'announcements', title: t.tile_announcements, desc: t.tile_announcements_desc, Icon: Bell },
@@ -161,7 +160,7 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
       { id: 'guardians', title: t.tile_guardians || 'Guardians', desc: t.tile_guardians_desc || 'Manage guardians', Icon: Users },
       { id: 'link_student', title: t.tile_link_student || 'Link Student', desc: t.tile_link_student_desc || 'Link a guardian to a student', Icon: LinkIcon },
       { id: 'menus', title: t.tile_menus || 'Menus', desc: t.tile_menus_desc || 'Manage daily menus', Icon: Utensils },
-    ], [t, uploads, messagesCount]);
+    ], [t, uploads]);
 
 
   // ---- Media actions (mock) ----
@@ -451,12 +450,12 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
     }
   }
 
-  // Load messages count for badge when messages tab becomes active
+  // Load messages count for sidebar badge
   React.useEffect(() => {
-    if (active === 'messages' && session?.user?.id) {
+    if (session?.user?.id) {
       loadMessagesForKPI();
     }
-  }, [active, session?.user?.id]);
+  }, [session?.user?.id]);
 
   // Load data immediately on mount and refresh when session is available
   React.useEffect(() => {
@@ -891,7 +890,6 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
               {active === 'media' && <MediaPanel t={t} uploads={uploads} onFiles={handleFiles} />}
               {active === 'stories' && <StoriesPanel t={t} router={router} session={session} orgId={finalOrgId} teacherClasses={teacherClasses} isActive={active === 'stories'} />}
               {active === 'announcements' && <AnnouncementsPanel t={t} lang={lang} teacherClasses={teacherClasses} />}
-              {active === 'messages' && <MessagesPanel t={t} lang={lang} teacherClasses={teacherClasses} students={students} isActive={active === 'messages'} />}
               {active === 'students' && <StudentsPanel t={t} studentRequests={studentRequests} loadingRequests={loadingRequests} students={students} loadingStudents={loadingStudents} studentError={studentError} onAddStudent={() => router.push('/dashboard/add-student')} onEditStudent={openEditStudentModal} onDeleteStudent={openDeleteConfirm} teacherClasses={teacherClasses} />}
               {active === 'guardians' && <GuardiansPanel t={t} lang={lang} orgId={finalOrgId} />}
               {active === 'link_student' && <LinkStudentPanel t={t} lang={lang} />}
@@ -1394,923 +1392,7 @@ type="text"
 
 /* -------------------- Panels -------------------- */
 
-function MessagesPanel({ t, lang = 'en', teacherClasses = [], students = [], isActive = false }: { t: typeof enText; lang?: Lang; teacherClasses?: any[]; students?: Array<{ id: string; class_id: string | null }>; isActive?: boolean }) {
-  const { session } = useAuth();
-  const [threads, setThreads] = useState<MessageThreadWithParticipants[]>([]);
-  const [selectedThread, setSelectedThread] = useState<MessageThreadWithParticipants | null>(null);
-  const [messages, setMessages] = useState<MessageItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [sending, setSending] = useState(false);
-  const [recipientId, setRecipientId] = useState('');
-  const [messageBody, setMessageBody] = useState('');
-  const [sent, setSent] = useState(false);
-  const [principals, setPrincipals] = useState<Array<{ id: string; first_name: string; last_name: string | null; email: string; role: string }>>([]);
-  const [teachers, setTeachers] = useState<Array<{ id: string; first_name: string; last_name: string | null; email: string; role: string }>>([]);
-  const [guardians, setGuardians] = useState<Array<{ id: string; first_name: string; last_name: string | null; email: string }>>([]);
-  const [loadingRecipients, setLoadingRecipients] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [allowedGuardianIds, setAllowedGuardianIds] = useState<Set<string>>(new Set());
-  const [showNewConversation, setShowNewConversation] = useState(false);
-  const [chatMessageBody, setChatMessageBody] = useState('');
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const userMetadata = session?.user?.user_metadata;
-  const orgId = userMetadata?.org_id || userMetadata?.organization_id || userMetadata?.orgId;
-
-  // Load guardians linked to teacher's students - ONLY when panel is active
-  useEffect(() => {
-    if (!isActive || !orgId || students.length === 0) {
-      setAllowedGuardianIds(new Set());
-      return;
-    }
-
-    async function loadAllowedGuardians() {
-      try {
-        const studentIds = students.map(s => s.id).filter(Boolean);
-        if (studentIds.length === 0) {
-          setAllowedGuardianIds(new Set());
-          return;
-        }
-
-        // Get guardians for all teacher's students
-        const guardianIdsSet = new Set<string>();
-        
-        // Fetch guardian-student relationships for each student
-        for (const studentId of studentIds) {
-          try {
-            const res = await fetch(`/api/guardian-students?studentId=${studentId}&t=${Date.now()}`, { cache: 'no-store' });
-            const data = await res.json();
-            if (res.ok && data.relationships) {
-              data.relationships.forEach((rel: any) => {
-                if (rel.guardian_id) {
-                  guardianIdsSet.add(rel.guardian_id);
-                }
-              });
-            }
-          } catch (error) {
-            console.error(`Error loading guardians for student ${studentId}:`, error);
-          }
-        }
-
-        setAllowedGuardianIds(guardianIdsSet);
-      } catch (error) {
-        console.error('Error loading allowed guardians:', error);
-        setAllowedGuardianIds(new Set());
-      }
-    }
-
-    loadAllowedGuardians();
-  }, [isActive, orgId, students]);
-
-  // Load recipients (principals, teachers, and guardians) - ONLY when panel is active
-  useEffect(() => {
-    if (!isActive || !orgId) return;
-
-    async function loadRecipients() {
-      setLoadingRecipients(true);
-      try {
-        // Load principals - this should always load regardless of other dependencies
-        const principalsRes = await fetch(`/api/principals?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
-        const principalsData = await principalsRes.json();
-        if (principalsRes.ok && principalsData.principals) {
-          const principalsList = principalsData.principals.map((p: any) => ({
-            id: p.id,
-            first_name: p.first_name || '',
-            last_name: p.last_name || null,
-            email: p.email || '',
-            role: 'principal'
-          }));
-          setPrincipals(principalsList);
-          console.log('✅ Loaded principals for teacher:', principalsList.length, principalsList.map((p: any) => p.first_name));
-        } else {
-          console.warn('⚠️ Failed to load principals:', {
-            ok: principalsRes.ok,
-            status: principalsRes.status,
-            data: principalsData
-          });
-          setPrincipals([]);
-        }
-
-        // Load teachers (excluding current user)
-        const teachersRes = await fetch(`/api/staff-management?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
-        const teachersData = await teachersRes.json();
-        if (teachersRes.ok && teachersData.staff) {
-          // Filter to only teachers (not principals) and exclude current user
-          const teacherRoleStaff = teachersData.staff
-            .filter((t: any) => (t.role || 'teacher') === 'teacher' && t.id !== session?.user?.id)
-            .map((t: any) => ({
-              id: t.id,
-              first_name: t.first_name || '',
-              last_name: t.last_name || null,
-              email: t.email || '',
-              role: t.role || 'teacher'
-            }));
-          setTeachers(teacherRoleStaff);
-          console.log('✅ Loaded teachers for teacher-to-teacher messaging:', teacherRoleStaff.length);
-        } else {
-          console.warn('⚠️ Failed to load teachers:', teachersData);
-          setTeachers([]);
-        }
-
-        // Load guardians - only those linked to teacher's students
-        if (allowedGuardianIds.size > 0) {
-          const guardianIdsArray = Array.from(allowedGuardianIds);
-          // Fetch guardian details for allowed guardian IDs
-          const guardiansRes = await fetch(`/api/guardians?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
-          const guardiansData = await guardiansRes.json();
-          if (guardiansRes.ok && guardiansData.guardians) {
-            // Filter to only include guardians linked to teacher's students
-            const filteredGuardians = guardiansData.guardians
-              .filter((g: any) => guardianIdsArray.includes(g.id))
-              .map((g: any) => ({
-                id: g.id,
-                first_name: g.first_name || '',
-                last_name: g.last_name || null,
-                email: g.email || ''
-              }));
-            setGuardians(filteredGuardians);
-          }
-        } else {
-          setGuardians([]);
-        }
-      } catch (error) {
-        console.error('❌ Error loading recipients:', error);
-      } finally {
-        setLoadingRecipients(false);
-      }
-    }
-
-    loadRecipients();
-  }, [isActive, orgId, allowedGuardianIds, session?.user?.id]);
-
-  // Load principals separately - ONLY when panel is active
-  useEffect(() => {
-    if (!isActive || !orgId) return;
-
-    async function loadPrincipalsOnly() {
-      console.log('🔄 Loading principals for orgId:', orgId);
-      try {
-        const principalsRes = await fetch(`/api/principals?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
-        const principalsData = await principalsRes.json();
-        console.log('📡 Principals API response:', {
-          ok: principalsRes.ok,
-          status: principalsRes.status,
-          hasPrincipals: !!principalsData.principals,
-          count: principalsData.principals?.length || 0,
-          data: principalsData
-        });
-        
-        if (principalsRes.ok && principalsData.principals && Array.isArray(principalsData.principals)) {
-          const principalsList = principalsData.principals.map((p: any) => ({
-            id: p.id,
-            first_name: p.first_name || '',
-            last_name: p.last_name || null,
-            email: p.email || '',
-            role: 'principal'
-          }));
-          setPrincipals(principalsList);
-          console.log('✅ Principals loaded (separate effect):', principalsList.length, principalsList);
-        } else {
-          console.warn('⚠️ Principals API returned invalid data:', principalsData);
-          setPrincipals([]);
-        }
-      } catch (error) {
-        console.error('❌ Error loading principals (separate effect):', error);
-        setPrincipals([]);
-      }
-    }
-
-    loadPrincipalsOnly();
-  }, [isActive, orgId]);
-
-  // Load message threads - ONLY when panel is active
-  useEffect(() => {
-    if (!isActive || !session?.user?.id) return;
-
-    async function loadThreads() {
-      if (!session?.user?.id) return;
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/messages?userId=${session.user.id}&t=${Date.now()}`, { cache: 'no-store' });
-        const json = await res.json();
-        if (res.ok && json.threads) {
-          // Filter threads for teacher role - only show principals, allowed guardians, and other teachers
-          let filteredThreads = json.threads.filter((thread: MessageThreadWithParticipants) => {
-            const otherParticipant = thread.other_participant;
-            if (!otherParticipant) {
-              console.log('⚠️ Thread has no other_participant:', thread.id);
-              return false;
-            }
-
-            // ALWAYS show principals - check role field first (most reliable)
-            // Don't rely on principals list being loaded, as it might be empty initially
-            if (otherParticipant.role === 'principal') {
-              console.log('✅ Including principal thread (by role):', {
-                id: otherParticipant.id,
-                name: otherParticipant.first_name,
-                email: otherParticipant.email,
-                role: otherParticipant.role
-              });
-              return true;
-            }
-
-            // Also check if participant ID is in principals list (backup check)
-            const isPrincipal = principals.length > 0 && principals.some((p: any) => p.id === otherParticipant.id);
-            if (isPrincipal) {
-              console.log('✅ Including principal thread (by ID match):', {
-                id: otherParticipant.id,
-                name: otherParticipant.first_name,
-                email: otherParticipant.email
-              });
-              return true;
-            }
-
-            // Show other teachers
-            if (otherParticipant.role === 'teacher') {
-              return true;
-            }
-
-            // For guardians, only show if they're linked to teacher's students
-            if (otherParticipant.role === 'guardian' || !otherParticipant.role) {
-              const isAllowedGuardian = allowedGuardianIds.has(otherParticipant.id);
-              if (!isAllowedGuardian) {
-                console.log('⚠️ Guardian thread filtered out:', otherParticipant.id, otherParticipant.email);
-              }
-              return isAllowedGuardian;
-            }
-
-            console.log('⚠️ Thread filtered out - unknown role:', {
-              id: otherParticipant.id,
-              role: otherParticipant.role,
-              email: otherParticipant.email
-            });
-            return false;
-          });
-
-          console.log('📬 Loaded threads for teacher:', {
-            total: json.threads.length,
-            filtered: filteredThreads.length,
-            principals: filteredThreads.filter((t: MessageThreadWithParticipants) => t.other_participant?.role === 'principal').length,
-            teachers: filteredThreads.filter((t: MessageThreadWithParticipants) => t.other_participant?.role === 'teacher').length,
-            guardians: filteredThreads.filter((t: MessageThreadWithParticipants) => t.other_participant?.role === 'guardian').length
-          });
-
-          setThreads(filteredThreads);
-          // Auto-select first thread if available
-          if (filteredThreads.length > 0 && !selectedThread) {
-            setSelectedThread(filteredThreads[0]);
-          }
-        }
-      } catch (error) {
-        console.error('❌ Error loading threads:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadThreads();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isActive, session?.user?.id, Array.from(allowedGuardianIds).sort().join(','), principals.length]);
-
-  // Load messages for selected thread - ONLY when panel is active
-  useEffect(() => {
-    if (!isActive || !selectedThread || !session?.user?.id) {
-      setMessages([]);
-      return;
-    }
-
-    async function loadMessages() {
-      if (!selectedThread) return;
-      try {
-        const res = await fetch(`/api/message-items?messageId=${selectedThread.id}&t=${Date.now()}`, { cache: 'no-store' });
-        const json = await res.json();
-        if (res.ok && json.items) {
-          setMessages(json.items);
-        }
-
-        // Mark thread as read
-        if (selectedThread.unread && session?.user?.id) {
-          try {
-            // First get the participant ID
-            const participantRes = await fetch(`/api/message-participants?messageId=${selectedThread.id}`, { cache: 'no-store' });
-            const participantData = await participantRes.json();
-            if (participantRes.ok && participantData.participants) {
-              const userParticipant = participantData.participants.find((p: any) => p.user_id === session.user.id);
-              if (userParticipant?.id) {
-                // Update unread status
-                const updateRes = await fetch('/api/message-participants', {
-                  method: 'PUT',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    id: userParticipant.id,
-                    unread: false
-                  })
-                });
-                if (updateRes.ok) {
-                  // Update local state
-                  setThreads(prev => prev.map(t => 
-                    t.id === selectedThread.id ? { ...t, unread: false } : t
-                  ));
-                  setSelectedThread(prev => prev ? { ...prev, unread: false } : null);
-                }
-              }
-            }
-          } catch (error) {
-            console.error('Error marking thread as read:', error);
-          }
-        }
-      } catch (error) {
-        console.error('Error loading messages:', error);
-      }
-    }
-
-    loadMessages();
-  }, [isActive, selectedThread, session?.user?.id]);
-
-  // Set up Realtime subscriptions for messages
-  const threadIds = useMemo(() => threads.map(t => t.id), [threads]);
-  
-  useMessagesRealtime({
-    userId: session?.user?.id || '',
-    orgId: orgId || '',
-    threadIds,
-    onNewMessage: (newMessage) => {
-      // If the new message is for the currently selected thread, add it to messages
-      if (selectedThread?.id === newMessage.message_id) {
-        setMessages(prev => {
-          // Check if message already exists (avoid duplicates)
-          if (prev.some(m => m.id === newMessage.id)) {
-            return prev;
-          }
-          return [...prev, newMessage];
-        });
-      }
-      
-      // Update the thread's latest_item and move it to top
-      setThreads(prev => {
-        const threadIndex = prev.findIndex(t => t.id === newMessage.message_id);
-        if (threadIndex >= 0) {
-          const updatedThreads = [...prev];
-          const thread = updatedThreads[threadIndex];
-          const updatedThread = {
-            ...thread,
-            latest_item: newMessage,
-            updated_at: newMessage.created_at,
-          };
-          // Move updated thread to top
-          updatedThreads.splice(threadIndex, 1);
-          updatedThreads.unshift(updatedThread);
-          return updatedThreads;
-        }
-        return prev;
-      });
-    },
-    onUpdatedParticipant: (updatedParticipant) => {
-      // Update unread status for the thread
-      setThreads(prev => prev.map(t => 
-        t.id === updatedParticipant.message_id 
-          ? { ...t, unread: updatedParticipant.unread, unread_count: updatedParticipant.unread ? 1 : 0 }
-          : t
-      ));
-      
-      // Update selected thread if it matches
-      if (selectedThread?.id === updatedParticipant.message_id) {
-        setSelectedThread(prev => prev ? { ...prev, unread: updatedParticipant.unread } : null);
-      }
-    },
-    onNewThread: (newThread) => {
-      // Filter thread for teacher role - only show principals, other teachers, and allowed guardians
-      let shouldAdd = true;
-      const otherParticipant = newThread.other_participant;
-      if (!otherParticipant) {
-        shouldAdd = false;
-      } else if (otherParticipant.role === 'principal') {
-        // ALWAYS show principals - check role field first (most reliable)
-        shouldAdd = true;
-      } else if (principals.length > 0 && principals.some((p: any) => p.id === otherParticipant.id)) {
-        // Backup check: if participant ID is in principals list
-        shouldAdd = true;
-      } else if (otherParticipant.role === 'teacher') {
-        shouldAdd = true;
-      } else if (otherParticipant.role === 'guardian' || !otherParticipant.role) {
-        shouldAdd = allowedGuardianIds.has(otherParticipant.id);
-      } else {
-        shouldAdd = false;
-      }
-      
-      if (shouldAdd) {
-        setThreads(prev => {
-          // Check if thread already exists (avoid duplicates)
-          if (prev.some(t => t.id === newThread.id)) {
-            return prev;
-          }
-          // Add new thread at the beginning
-          return [newThread, ...prev];
-        });
-      }
-    },
-    onUpdatedThread: (updatedThread) => {
-      // Update thread in the list
-      setThreads(prev => prev.map(t => 
-        t.id === updatedThread.id ? updatedThread : t
-      ));
-      
-      // Update selected thread if it matches
-      if (selectedThread?.id === updatedThread.id) {
-        setSelectedThread(updatedThread);
-      }
-    },
-  });
-
-  // Filter threads by search query and guardian-student relationships
-  const filteredThreads = useMemo(() => {
-    let filtered = threads;
-
-    // Filter by guardian-student relationships: only show principals, other teachers, and guardians linked to teacher's students
-    filtered = filtered.filter(thread => {
-      const otherParticipant = thread.other_participant;
-      if (!otherParticipant) return false;
-
-      // ALWAYS show principals - check role field first (most reliable)
-      if (otherParticipant.role === 'principal') {
-        return true;
-      }
-
-      // Backup check: if participant ID is in principals list
-      if (principals.length > 0 && principals.some((p: any) => p.id === otherParticipant.id)) {
-        return true;
-      }
-
-      // Show other teachers
-      if (otherParticipant.role === 'teacher') {
-        return true;
-      }
-
-      // For guardians, only show if they're linked to teacher's students
-      if (otherParticipant.role === 'guardian' || !otherParticipant.role) {
-        // Check if this guardian is in the allowed list
-        return allowedGuardianIds.has(otherParticipant.id);
-      }
-
-      return false;
-    });
-
-    // Apply search query filter
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(thread => {
-        const otherParticipant = thread.other_participant;
-        if (!otherParticipant) return false;
-        const name = `${otherParticipant.first_name} ${otherParticipant.last_name || ''}`.toLowerCase();
-        const email = otherParticipant.email?.toLowerCase() || '';
-        return name.includes(query) || email.includes(query);
-      });
-    }
-
-    return filtered;
-  }, [threads, searchQuery, allowedGuardianIds, principals]);
-
-  // Combined recipients list
-  const allRecipients = useMemo(() => {
-    const principalList = principals.map(p => ({ ...p, type: 'principal' as const }));
-    const guardianList = guardians.map(g => ({ ...g, type: 'guardian' as const }));
-    return [...principalList, ...guardianList];
-  }, [principals, guardians]);
-
-  // Send message from chat view
-  async function sendChatMessage() {
-    if (!chatMessageBody.trim() || !selectedThread || !session?.user?.id) return;
-
-    setSending(true);
-    try {
-      const messageRes = await fetch('/api/message-items', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message_id: selectedThread.id,
-          body: chatMessageBody.trim()
-        })
-      });
-
-      const messageData = await messageRes.json();
-      if (!messageRes.ok) {
-        throw new Error(messageData.error || 'Failed to send message');
-      }
-
-      setChatMessageBody('');
-      
-      // Reset textarea height
-      const textarea = document.querySelector('textarea[placeholder*="msg_ph"]') as HTMLTextAreaElement;
-      if (textarea) {
-        textarea.style.height = 'auto';
-      }
-      
-      // Add message to local state immediately for better UX
-      if (messageData.item) {
-        setMessages(prev => [...prev, messageData.item]);
-      }
-    } catch (error: any) {
-      console.error('Error sending message:', error);
-      alert(error.message || 'Failed to send message');
-    } finally {
-      setSending(false);
-    }
-  }
-
-  // Create new conversation and send first message
-  async function sendMessage() {
-    if (!messageBody.trim() || !recipientId || !session?.user?.id) return;
-
-    setSending(true);
-    try {
-      let threadId = selectedThread?.id;
-      
-      // Check if thread already exists with this recipient
-      if (!threadId || selectedThread?.other_participant?.id !== recipientId) {
-        // First, check if a thread already exists in the current threads list
-        const existingThread = threads.find(
-          (t) => t.other_participant?.id === recipientId
-        );
-        
-        if (existingThread) {
-          threadId = existingThread.id;
-          // Select the existing thread
-          setSelectedThread(existingThread);
-        } else {
-          // Create new thread
-          const threadRes = await fetch('/api/messages', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              thread_type: 'dm',
-              recipient_id: recipientId
-            })
-          });
-
-          const threadData = await threadRes.json();
-          if (!threadRes.ok) {
-            throw new Error(threadData.error || 'Failed to create thread');
-          }
-          threadId = threadData.message.id;
-        }
-      }
-
-      // Send message
-      const messageRes = await fetch('/api/message-items', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message_id: threadId,
-          body: messageBody.trim()
-        })
-      });
-
-      const messageData = await messageRes.json();
-      if (!messageRes.ok) {
-        throw new Error(messageData.error || 'Failed to send message');
-      }
-
-      setSent(true);
-      setTimeout(() => setSent(false), 1200);
-      setMessageBody('');
-      setRecipientId('');
-      setShowNewConversation(false);
-
-      // Reload threads and messages
-      const threadsRes = await fetch(`/api/messages?userId=${session.user.id}&t=${Date.now()}`, { cache: 'no-store' });
-      const threadsData = await threadsRes.json();
-      if (threadsRes.ok && threadsData.threads) {
-        // Filter threads for teacher role - only show principals, allowed guardians, and other teachers
-        let filteredThreads = threadsData.threads.filter((t: MessageThreadWithParticipants) => {
-          const otherParticipant = t.other_participant;
-          if (!otherParticipant) return false;
-
-          // ALWAYS show principals - check role field first (most reliable)
-          if (otherParticipant.role === 'principal') {
-            return true;
-          }
-
-          // Backup check: if participant ID is in principals list
-          if (principals.length > 0 && principals.some((p: any) => p.id === otherParticipant.id)) {
-            return true;
-          }
-
-          // Show other teachers
-          if (otherParticipant.role === 'teacher') {
-            return true;
-          }
-
-          // For guardians, only show if they're linked to teacher's students
-          if (otherParticipant.role === 'guardian' || !otherParticipant.role) {
-            return allowedGuardianIds.has(otherParticipant.id);
-          }
-
-          return false;
-        });
-
-        setThreads(filteredThreads);
-        const newThread = filteredThreads.find((t: any) => t.id === threadId);
-        if (newThread) {
-          setSelectedThread(newThread);
-        }
-      }
-    } catch (error: any) {
-      console.error('Error sending message:', error);
-      alert(error.message || 'Failed to send message');
-    } finally {
-      setSending(false);
-    }
-  }
-
-  // Auto-scroll to bottom when messages change
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages]);
-
-  return (
-    <div className="flex h-[calc(100vh-200px)] rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800 overflow-hidden">
-      {/* Left Sidebar - Conversations List */}
-      <div className="w-1/3 border-r border-slate-200 dark:border-slate-700 flex flex-col">
-        {/* Header with New Conversation Button */}
-        <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t.msg_title}</h2>
-            <button
-              onClick={() => {
-                setShowNewConversation(!showNewConversation);
-                setSelectedThread(null);
-              }}
-              className="p-2 rounded-lg bg-black hover:bg-gray-800 text-white transition-colors"
-              title={t.new_message}
-            >
-              <MessageSquarePlus className="h-5 w-5" />
-            </button>
-          </div>
-          
-          {/* New Conversation Form */}
-          {showNewConversation && (
-            <div className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 mb-3">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-slate-900 dark:text-slate-100">{t.new_message}</span>
-                <button
-                  onClick={() => {
-                    setShowNewConversation(false);
-                    setRecipientId('');
-                    setMessageBody('');
-                  }}
-                  className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-              <label className="block text-xs text-slate-700 dark:text-slate-300 mb-1">
-                {t.to}
-                <select
-                  value={recipientId}
-                  onChange={(e) => setRecipientId(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1.5 text-sm dark:text-slate-200"
-                >
-                  <option value="">{t.select_recipient}</option>
-                  {principals.length > 0 && (
-                    <optgroup label={t.principal}>
-                      {principals.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.first_name} {p.last_name || ''} ({p.email})
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
-                  {teachers.length > 0 && (
-                    <optgroup label={(t as any).teacher || 'Teacher'}>
-                      {teachers.map((t) => (
-                        <option key={t.id} value={t.id}>
-                          {t.first_name} {t.last_name || ''} ({t.email})
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
-                  {guardians.length > 0 && (
-                    <optgroup label={t.guardian}>
-                      {guardians
-                        .filter((g) => {
-                          if (allowedGuardianIds.size > 0) {
-                            return allowedGuardianIds.has(g.id);
-                          }
-                          return true;
-                        })
-                        .map((g) => (
-                          <option key={g.id} value={g.id}>
-                            {g.first_name} {g.last_name || ''} ({g.email})
-                          </option>
-                        ))}
-                    </optgroup>
-                  )}
-                </select>
-              </label>
-              <label className="block text-xs text-slate-700 dark:text-slate-300 mt-2 mb-2">
-                {t.message}
-                <textarea
-                  rows={2}
-                  value={messageBody}
-                  onChange={(e) => setMessageBody(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1.5 text-sm dark:text-slate-200 dark:placeholder-slate-400 resize-none"
-                  placeholder={t.msg_ph}
-                />
-              </label>
-              <button
-                onClick={sendMessage}
-                disabled={sending || !messageBody.trim() || !recipientId}
-                className="w-full rounded-lg bg-black px-3 py-1.5 text-sm text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
-              >
-                <Send className="h-4 w-4" /> {t.send}
-              </button>
-              {sent && <span className="text-xs text-emerald-600 dark:text-emerald-400 mt-1 block text-center">✓ {t.sent}</span>}
-            </div>
-          )}
-
-          {/* Search Bar */}
-          <div className="flex items-center gap-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2">
-            <Search className="h-4 w-4 text-slate-400" />
-            <input
-              type="text"
-              placeholder={t.search_placeholder}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400 dark:text-slate-200"
-            />
-          </div>
-        </div>
-
-        {/* Conversations List */}
-        <div className="flex-1 overflow-y-auto">
-          {loading ? (
-            <div className="p-4 text-center text-sm text-slate-500">{(t as any).loading || 'Loading...'}</div>
-          ) : filteredThreads.length === 0 ? (
-            <div className="p-4 text-center text-sm text-slate-500">{t.no_threads}</div>
-          ) : (
-            <ul className="divide-y divide-slate-200 dark:divide-slate-700">
-              {filteredThreads.map((thread) => (
-                <li
-                  key={thread.id}
-                  onClick={() => {
-                    setSelectedThread(thread);
-                    setShowNewConversation(false);
-                    setChatMessageBody('');
-                  }}
-                  className={`cursor-pointer p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors ${
-                    selectedThread?.id === thread.id ? 'bg-slate-100 dark:bg-slate-800/50 border-l-4 border-black' : ''
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className="font-semibold text-slate-900 dark:text-slate-100 truncate">
-                          {thread.other_participant
-                            ? `${thread.other_participant.first_name} ${thread.other_participant.last_name || ''}`.trim() || thread.other_participant.email
-                            : 'Unknown'}
-                        </div>
-                        {thread.unread && (
-                          <span className="flex-shrink-0 w-2 h-2 rounded-full bg-black"></span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-1">
-                        <span>
-                          {thread.other_participant?.role === 'principal' ? t.principal : 
-                           thread.other_participant?.role === 'teacher' ? ((t as any).teacher || 'Teacher') : t.guardian}
-                        </span>
-                      </div>
-                      {thread.latest_item && (
-                        <p className="text-sm text-slate-600 dark:text-slate-400 truncate line-clamp-1">
-                          {thread.latest_item.body}
-                        </p>
-                      )}
-                      {thread.latest_item && (
-                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                          {new Date(thread.latest_item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </div>
-
-      {/* Right Side - Chat View */}
-      <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900">
-        {selectedThread ? (
-          <>
-            {/* Chat Header */}
-            <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center text-white font-semibold">
-                  {selectedThread.other_participant
-                    ? (selectedThread.other_participant.first_name?.[0] || selectedThread.other_participant.email?.[0] || '?').toUpperCase()
-                    : '?'}
-                </div>
-                <div className="flex-1">
-                  <div className="font-semibold text-slate-900 dark:text-slate-100">
-                    {selectedThread.other_participant
-                      ? `${selectedThread.other_participant.first_name} ${selectedThread.other_participant.last_name || ''}`.trim() || selectedThread.other_participant.email
-                      : 'Unknown'}
-                  </div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400">
-                    {selectedThread.other_participant?.role === 'principal' ? t.principal : 
-                     selectedThread.other_participant?.role === 'teacher' ? ((t as any).teacher || 'Teacher') : t.guardian}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {messages.length === 0 ? (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center">
-                    <p className="text-slate-500 dark:text-slate-400">{t.no_messages}</p>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  {messages.map((msg) => {
-                    const isOwn = msg.author_id === session?.user?.id;
-                    return (
-                      <div
-                        key={msg.id}
-                        className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
-                      >
-                        <div
-                          className={`max-w-[70%] rounded-2xl px-4 py-2 ${
-                            isOwn
-                              ? 'bg-black text-white rounded-br-sm'
-                              : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-bl-sm border border-slate-200 dark:border-slate-700'
-                          }`}
-                        >
-                          <p className="text-sm whitespace-pre-wrap break-words">{msg.body}</p>
-                          <p className={`text-xs mt-1 ${isOwn ? 'text-white' : 'text-slate-400 dark:text-slate-500'}`}>
-                            {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                  <div ref={messagesEndRef} />
-                </>
-              )}
-            </div>
-
-            {/* Message Input */}
-            <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-              <div className="flex items-end gap-2">
-                <button className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-colors">
-                  <Paperclip className="h-5 w-5" />
-                </button>
-                <div className="flex-1 relative">
-                  <textarea
-                    value={chatMessageBody}
-                    onChange={(e) => {
-                      setChatMessageBody(e.target.value);
-                      // Auto-resize textarea
-                      e.target.style.height = 'auto';
-                      e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        sendChatMessage();
-                      }
-                    }}
-                    placeholder={t.msg_ph}
-                    rows={1}
-                    className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 py-2 pr-12 text-sm dark:text-slate-200 dark:placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent max-h-[120px] overflow-y-auto"
-                  />
-                </div>
-                <button
-                  onClick={sendChatMessage}
-                  disabled={sending || !chatMessageBody.trim()}
-                  className="p-2 rounded-lg bg-black hover:bg-gray-800 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  <Send className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <MessageSquarePlus className="h-16 w-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
-              <p className="text-slate-500 dark:text-slate-400">{t.select_recipient}</p>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
+// MessagesPanel removed - now in /dashboard/teacher/messages page
 
 function MediaPanel({
   t,
@@ -2332,22 +1414,57 @@ function MediaPanel({
         </label>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-        {uploads.length === 0
-          ? Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="aspect-square rounded-xl border border-slate-200 bg-slate-100 dark:border-slate-600 dark:bg-slate-700" />
-          ))
-          : uploads.map((src, i) => (
-            <div key={i} className="relative aspect-square overflow-hidden rounded-xl border border-slate-200 dark:border-slate-600">
-              <Image 
-                src={src} 
-                alt={`Upload ${i + 1}`} 
-                fill
-                sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
-                className="object-cover" 
-              />
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        {uploads.length === 0 ? (
+          <div className="col-span-full text-center text-slate-500 dark:text-slate-400">
+            {'No media uploaded yet'}
+          </div>
+        ) : (
+          uploads.map((url, idx) => (
+            <div key={idx} className="relative aspect-square overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-700">
+              <img src={url} alt={`Upload ${idx + 1}`} className="h-full w-full object-cover" />
             </div>
-          ))}
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+function AnnouncementsPanel({ t, lang, teacherClasses }: { t: typeof enText; lang: 'is' | 'en'; teacherClasses?: any[] }) {
+  const { session } = useAuth();
+  const classId = (session?.user?.user_metadata as any)?.class_id as string | undefined;
+  const orgId = (session?.user?.user_metadata as any)?.org_id as string | undefined;
+  
+  // Get all teacher class IDs for filtering announcements
+  const teacherClassIds = teacherClasses && teacherClasses.length > 0 
+    ? teacherClasses.map(c => c.id).filter(Boolean) 
+    : (classId ? [classId] : []);
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        <h2 className="text-lg font-medium mb-4 text-slate-900 dark:text-slate-100">{t.announcements_title}</h2>
+        <AnnouncementForm
+          classId={classId}
+          orgId={orgId}
+          lang={lang}
+          showClassSelector={true}
+          onSuccess={() => {
+            // Trigger refresh event instead of reload
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new Event('announcements-refresh'));
+            }
+          }}
+        />
+      </div>
+
+      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        <AnnouncementList
+          teacherClassIds={teacherClassIds}
+          orgId={orgId}
+          lang={lang}
+        />
       </div>
     </div>
   );
@@ -3585,52 +2702,6 @@ const isText = {
 };
 
 // Announcements Panel Component
-function AnnouncementsPanel({ t, lang, teacherClasses }: { t: typeof enText; lang: 'is' | 'en'; teacherClasses?: any[] }) {
-  const { session } = useAuth();
-  const classId = (session?.user?.user_metadata as any)?.class_id as string | undefined;
-  const orgId = (session?.user?.user_metadata as any)?.org_id as string | undefined;
-  
-  // Get all teacher class IDs for filtering announcements
-  const teacherClassIds = teacherClasses && teacherClasses.length > 0 
-    ? teacherClasses.map(c => c.id).filter(Boolean) 
-    : (classId ? [classId] : []);
-
-  return (
-    <div className="space-y-6">
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-        <h2 className="text-lg font-medium mb-4 text-slate-900 dark:text-slate-100">{t.announcements_title}</h2>
-        <AnnouncementForm
-          classId={classId}
-          orgId={orgId}
-          lang={lang}
-          showClassSelector={true}
-          onSuccess={() => {
-            // Trigger refresh event instead of reload
-            if (typeof window !== 'undefined') {
-              window.dispatchEvent(new Event('announcements-refresh'));
-            }
-          }}
-        />
-      </div>
-
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-        <h3 className="text-lg font-medium mb-4 text-slate-900 dark:text-slate-100">{t.announcements_list}</h3>
-        <AnnouncementList
-          classId={classId}
-          orgId={orgId}
-          userId={session?.user?.id}
-          userRole={(session?.user?.user_metadata as any)?.role || (session?.user?.user_metadata as any)?.activeRole || 'teacher'}
-          teacherClassIds={teacherClassIds.length > 0 ? teacherClassIds : undefined}
-          showAuthor={true}
-          limit={5}
-          lang={lang}
-        />
-      </div>
-    </div>
-  );
-}
-
-// Menu Panel Component
 function MenuPanel({ t, lang }: { t: typeof enText; lang: 'is' | 'en' }) {
   const { session } = useAuth();
   const [menu, setMenu] = useState<{ breakfast?: string | null; lunch?: string | null; snack?: string | null; notes?: string | null } | null>(null);

@@ -28,22 +28,6 @@ export default function TeacherAttendancePage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   useEffect(() => { setMounted(true); }, []);
 
-  // Show loading state while checking authentication
-  if (loading || (isSigningIn && !user)) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-600 mx-auto mb-4"></div>
-            <p className="text-slate-600 dark:text-slate-400">
-              Loading attendance page...
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // Try to get org_id from multiple possible locations
   const userMetadata = session?.user?.user_metadata;
   const orgIdFromMetadata = userMetadata?.org_id || userMetadata?.organization_id || userMetadata?.orgId;
@@ -98,17 +82,26 @@ export default function TeacherAttendancePage() {
     badge?: string | number;
     route?: string;
   }> = useMemo(() => [
-      { id: 'messages', title: t.tile_msg, desc: t.tile_msg_desc, Icon: MessageSquare, route: '/dashboard/teacher' },
-      { id: 'media', title: t.tile_media, desc: t.tile_media_desc, Icon: Camera, route: '/dashboard/teacher' },
-      { id: 'stories', title: t.tile_stories, desc: t.tile_stories_desc, Icon: Timer, route: '/dashboard/teacher' },
-      { id: 'announcements', title: t.tile_announcements, desc: t.tile_announcements_desc, Icon: Bell, route: '/dashboard/teacher' },
-      { id: 'students', title: t.tile_students, desc: t.tile_students_desc, Icon: Users, route: '/dashboard/teacher' },
-      { id: 'guardians', title: t.tile_guardians || 'Guardians', desc: t.tile_guardians_desc || 'Manage guardians', Icon: Users, route: '/dashboard/teacher' },
-      { id: 'link_student', title: t.tile_link_student || 'Link Student', desc: t.tile_link_student_desc || 'Link a guardian to a student', Icon: LinkIcon, route: '/dashboard/teacher' },
-      { id: 'menus', title: t.tile_menus || 'Menus', desc: t.tile_menus_desc || 'Manage daily menus', Icon: Utensils, route: '/dashboard/teacher' },
+      { id: 'messages', title: t.tile_msg, desc: t.tile_msg_desc, Icon: MessageSquare, route: '/dashboard/teacher/messages' },
+      { id: 'media', title: t.tile_media, desc: t.tile_media_desc, Icon: Camera, route: '/dashboard/teacher?tab=media' },
+      { id: 'stories', title: t.tile_stories, desc: t.tile_stories_desc, Icon: Timer, route: '/dashboard/teacher?tab=stories' },
+      { id: 'announcements', title: t.tile_announcements, desc: t.tile_announcements_desc, Icon: Bell, route: '/dashboard/teacher?tab=announcements' },
+      { id: 'students', title: t.tile_students, desc: t.tile_students_desc, Icon: Users, route: '/dashboard/teacher?tab=students' },
+      { id: 'guardians', title: t.tile_guardians || 'Guardians', desc: t.tile_guardians_desc || 'Manage guardians', Icon: Users, route: '/dashboard/teacher?tab=guardians' },
+      { id: 'link_student', title: t.tile_link_student || 'Link Student', desc: t.tile_link_student_desc || 'Link a guardian to a student', Icon: LinkIcon, route: '/dashboard/teacher?tab=link_student' },
+      { id: 'menus', title: t.tile_menus || 'Menus', desc: t.tile_menus_desc || 'Manage daily menus', Icon: Utensils, route: '/dashboard/teacher?tab=menus' },
     ], [t]);
 
-  // Load teacher classes
+  // Check if there are unsaved changes
+  const hasUnsavedChanges = React.useMemo(() => {
+    return students.some(student => {
+      const currentStatus = attendance[student.id] || false;
+      const savedStatus = savedAttendance[student.id] || false;
+      return currentStatus !== savedStatus;
+    });
+  }, [attendance, savedAttendance, students]);
+
+  // Load teacher classes - moved before early return
   async function loadTeacherClasses(showLoading = true) {
     try {
       if (showLoading) setLoadingClasses(true);
@@ -138,7 +131,7 @@ export default function TeacherAttendancePage() {
     }
   }
 
-  // Load students from assigned classes
+  // Load students from assigned classes - moved before early return
   async function loadStudents(showLoading = true) {
     try {
       if (showLoading) setLoadingStudents(true);
@@ -237,7 +230,39 @@ export default function TeacherAttendancePage() {
     }
   }
 
-  // Load data on mount
+  // Load attendance for today - moved before early return
+  async function loadAttendanceForToday() {
+    if (!finalOrgId || students.length === 0) return;
+
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const classIds = teacherClasses.map(c => c.id).filter(Boolean);
+      
+      const allAttendance: Record<string, boolean> = {};
+      
+      for (const classId of classIds) {
+        const response = await fetch(
+          `/api/attendance?orgId=${finalOrgId}&classId=${classId}&date=${today}&t=${Date.now()}`,
+          { cache: 'no-store' }
+        );
+        const data = await response.json();
+        
+        if (response.ok && data.attendance) {
+          data.attendance.forEach((record: any) => {
+            allAttendance[record.student_id] = record.status === 'present';
+          });
+        }
+      }
+      
+      setAttendance(allAttendance);
+      setSavedAttendance(allAttendance);
+      console.log('✅ Attendance loaded for today:', allAttendance);
+    } catch (error) {
+      console.error('❌ Error loading attendance:', error);
+    }
+  }
+
+  // Load data on mount - moved before early return to maintain hook order
   React.useEffect(() => {
     const loadAllData = async () => {
       try {
@@ -272,7 +297,7 @@ export default function TeacherAttendancePage() {
     loadAllData();
   }, [session?.user?.id, finalOrgId]);
 
-  // Load students when teacher classes are loaded
+  // Load students when teacher classes are loaded - moved before early return
   React.useEffect(() => {
     if (teacherClasses.length > 0) {
       console.log('Teacher classes loaded, fetching students...', teacherClasses);
@@ -285,38 +310,30 @@ export default function TeacherAttendancePage() {
     }
   }, [teacherClasses, session?.user?.id, loadingClasses]);
 
-  // ---- Attendance actions ----
-  // Load attendance for today
-  async function loadAttendanceForToday() {
-    if (!finalOrgId || students.length === 0) return;
-
-    try {
-      const today = new Date().toISOString().split('T')[0];
-      const classIds = teacherClasses.map(c => c.id).filter(Boolean);
-      
-      const allAttendance: Record<string, boolean> = {};
-      
-      for (const classId of classIds) {
-        const response = await fetch(
-          `/api/attendance?orgId=${finalOrgId}&classId=${classId}&date=${today}&t=${Date.now()}`,
-          { cache: 'no-store' }
-        );
-        const data = await response.json();
-        
-        if (response.ok && data.attendance) {
-          data.attendance.forEach((record: any) => {
-            allAttendance[record.student_id] = record.status === 'present';
-          });
-        }
-      }
-      
-      setAttendance(allAttendance);
-      setSavedAttendance(allAttendance);
-      console.log('✅ Attendance loaded for today:', allAttendance);
-    } catch (error) {
-      console.error('❌ Error loading attendance:', error);
+  // Load attendance when students are loaded - moved before early return
+  React.useEffect(() => {
+    if (students.length > 0 && finalOrgId && session?.user?.id && teacherClasses.length > 0) {
+      loadAttendanceForToday();
     }
+  }, [students.length, finalOrgId, session?.user?.id, teacherClasses.length]);
+
+  // Show loading state while checking authentication
+  if (loading || (isSigningIn && !user)) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-600 mx-auto mb-4"></div>
+            <p className="text-slate-600 dark:text-slate-400">
+              Loading attendance page...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
   }
+
+  // ---- Attendance actions ----
 
   // Save single attendance record to database
   async function saveAttendanceRecord(studentId: string, isPresent: boolean, classId?: string | null) {
@@ -419,22 +436,6 @@ export default function TeacherAttendancePage() {
     });
     setAttendance(newAttendance);
   }
-
-  // Check if there are unsaved changes
-  const hasUnsavedChanges = React.useMemo(() => {
-    return students.some(student => {
-      const currentStatus = attendance[student.id] || false;
-      const savedStatus = savedAttendance[student.id] || false;
-      return currentStatus !== savedStatus;
-    });
-  }, [attendance, savedAttendance, students]);
-
-  // Load attendance when students are loaded
-  React.useEffect(() => {
-    if (students.length > 0 && finalOrgId && session?.user?.id && teacherClasses.length > 0) {
-      loadAttendanceForToday();
-    }
-  }, [students.length, finalOrgId, session?.user?.id, teacherClasses.length]);
 
   // Determine active tile based on pathname
   const activeTile = pathname === '/dashboard/teacher/attendance' ? 'attendance' : null;
