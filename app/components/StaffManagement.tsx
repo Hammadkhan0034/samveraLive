@@ -128,14 +128,20 @@ export default function StaffManagement({ lang = 'en' }: StaffManagementProps) {
         }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to create staff');
+      if (!response.ok) {
+        // Extract error message from response
+        const errorMsg = data.details || data.error || 'Failed to create staff';
+        throw new Error(errorMsg);
+      }
       setNewStaff({ first_name: '', last_name: '', email: '', address: '', ssn: '', phone: '', education_level: '', union_membership: false, class_id: '' });
       setIsStaffModalOpen(false);
+      setStaffError(null);
       await loadStaff();
       alert(`✅ ${t.staff_created_success}`);
     } catch (error: any) {
-      setStaffError(error.message);
-      alert(`${t.staff_creation_error}: ${error.message}`);
+      const errorMsg = error.message || 'Failed to create staff';
+      setStaffError(errorMsg);
+      console.error('❌ Staff creation error:', errorMsg);
     } finally {
       setLoadingStaff(false);
     }
@@ -190,13 +196,19 @@ export default function StaffManagement({ lang = 'en' }: StaffManagementProps) {
         body: JSON.stringify(editingStaff),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to update staff member');
+      if (!response.ok) {
+        // Extract error message from response
+        const errorMsg = data.details || data.error || 'Failed to update staff member';
+        throw new Error(errorMsg);
+      }
       setIsEditStaffModalOpen(false);
       setEditingStaff(null);
+      setStaffError(null);
       await loadStaff();
     } catch (error: any) {
-      setStaffError(error.message);
-      console.error('Error updating staff:', error);
+      const errorMsg = error.message || 'Failed to update staff member';
+      setStaffError(errorMsg);
+      console.error('❌ Error updating staff:', errorMsg);
     } finally {
       setLoadingStaff(false);
     }
@@ -221,7 +233,10 @@ export default function StaffManagement({ lang = 'en' }: StaffManagementProps) {
         </div>
         <div className="flex flex-wrap gap-2">
           <button
-            onClick={() => setIsStaffModalOpen(true)}
+            onClick={() => {
+              setStaffError(null);
+              setIsStaffModalOpen(true);
+            }}
             className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
           >
             <Users className="h-4 w-4" /> {t.create_staff}
@@ -321,6 +336,11 @@ export default function StaffManagement({ lang = 'en' }: StaffManagementProps) {
                 <X className="h-5 w-5" />
               </button>
             </div>
+            {staffError && (
+              <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+                {staffError}
+              </div>
+            )}
             <form onSubmit={handleAddStaff} className="space-y-3">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>

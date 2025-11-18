@@ -138,34 +138,13 @@ export default function TeacherMessagesPage() {
   const orgIdFromMetadata = userMetadata?.org_id || userMetadata?.organization_id || userMetadata?.orgId;
   const orgId = orgIdFromMetadata || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID || '1db3c97c-de42-4ad2-bb72-cc0b6cda69f7';
 
-  // Show loading state while checking authentication
-  if (loading || (isSigningIn && !user)) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-600 mx-auto mb-4"></div>
-            <p className="text-slate-600 dark:text-slate-400">
-              Loading messages page...
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Safety check: if user is still not available after loading, don't render
-  if (!loading && !isSigningIn && !user) {
-    return null;
-  }
-
-  // Load teacher classes
+  // Load teacher classes - MUST be called before any conditional returns
   useEffect(() => {
     if (!session?.user?.id || !orgId) return;
 
     async function loadTeacherClasses() {
       try {
-        const response = await fetch(`/api/teacher-classes?teacherId=${session?.user.id}&orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
+        const response = await fetch(`/api/teacher-classes?userId=${session?.user.id}&t=${Date.now()}`, { cache: 'no-store' });
         const data = await response.json();
         if (response.ok && data.classes) {
           setTeacherClasses(data.classes);
@@ -194,7 +173,7 @@ export default function TeacherMessagesPage() {
     loadTeacherClasses();
   }, [session?.user?.id, orgId]);
 
-  // Load guardians linked to teacher's students
+  // Load guardians linked to teacher's students - MUST be called before any conditional returns
   useEffect(() => {
     if (!orgId || students.length === 0) {
       setAllowedGuardianIds(new Set());
@@ -259,12 +238,12 @@ export default function TeacherMessagesPage() {
           setPrincipals([]);
         }
 
-        // Load teachers (excluding current user)
+        // Load teachers
         const teachersRes = await fetch(`/api/staff-management?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
         const teachersData = await teachersRes.json();
         if (teachersRes.ok && teachersData.staff) {
           const teacherRoleStaff = teachersData.staff
-            .filter((t: any) => (t.role || 'teacher') === 'teacher' && t.id !== session?.user?.id)
+            .filter((t: any) => (t.role || 'teacher') === 'teacher')
             .map((t: any) => ({
               id: t.id,
               first_name: t.first_name || '',
@@ -277,22 +256,17 @@ export default function TeacherMessagesPage() {
           setTeachers([]);
         }
 
-        // Load guardians - only those linked to teacher's students
-        if (allowedGuardianIds.size > 0) {
-          const guardianIdsArray = Array.from(allowedGuardianIds);
-          const guardiansRes = await fetch(`/api/guardians?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
-          const guardiansData = await guardiansRes.json();
-          if (guardiansRes.ok && guardiansData.guardians) {
-            const filteredGuardians = guardiansData.guardians
-              .filter((g: any) => guardianIdsArray.includes(g.id))
-              .map((g: any) => ({
-                id: g.id,
-                first_name: g.first_name || '',
-                last_name: g.last_name || null,
-                email: g.email || ''
-              }));
-            setGuardians(filteredGuardians);
-          }
+        // Load all guardians
+        const guardiansRes = await fetch(`/api/guardians?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
+        const guardiansData = await guardiansRes.json();
+        if (guardiansRes.ok && guardiansData.guardians) {
+          const allGuardians = guardiansData.guardians.map((g: any) => ({
+            id: g.id,
+            first_name: g.first_name || '',
+            last_name: g.last_name || null,
+            email: g.email || ''
+          }));
+          setGuardians(allGuardians);
         } else {
           setGuardians([]);
         }
@@ -554,12 +528,13 @@ export default function TeacherMessagesPage() {
     return filtered;
   }, [threads, searchQuery, allowedGuardianIds, principals]);
 
-  // Combined recipients list
+  // Combined recipients list - Show principals, teachers, and guardians (including current user)
   const allRecipients = useMemo(() => {
     const principalList = principals.map(p => ({ ...p, type: 'principal' as const }));
+    const teacherList = teachers.map(t => ({ ...t, type: 'teacher' as const }));
     const guardianList = guardians.map(g => ({ ...g, type: 'guardian' as const }));
-    return [...principalList, ...guardianList];
-  }, [principals, guardians]);
+    return [...principalList, ...teacherList, ...guardianList];
+  }, [principals, teachers, guardians]);
 
   // Send message from chat view
   async function sendChatMessage() {
@@ -712,6 +687,27 @@ export default function TeacherMessagesPage() {
       { id: 'link_student', title: t.tile_link_student || 'Link Student', desc: t.tile_link_student_desc || 'Link a guardian to a student', Icon: LinkIcon, route: '/dashboard/teacher?tab=link_student' },
       { id: 'menus', title: t.tile_menus || 'Menus', desc: t.tile_menus_desc || 'Manage daily menus', Icon: Utensils, route: '/dashboard/teacher?tab=menus' },
     ], [t]);
+
+  // Show loading state while checking authentication - MUST be after all hooks
+  if (loading || (isSigningIn && !user)) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-600 mx-auto mb-4"></div>
+            <p className="text-slate-600 dark:text-slate-400">
+              Loading messages page...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Safety check: if user is still not available after loading, don't render - MUST be after all hooks
+  if (!loading && !isSigningIn && !user) {
+    return null;
+  }
 
   return (
     <div className="flex flex-col h-screen overflow-hidden md:pt-14">

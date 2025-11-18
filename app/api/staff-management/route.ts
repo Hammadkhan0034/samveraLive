@@ -325,7 +325,11 @@ export async function POST(request: Request) {
       address: addressSchema,
       ssn: ssnSchema,
       education_level: z.string().max(100).nullable().optional(),
-      union_membership: z.string().max(100).nullable().optional(),
+      union_membership: z.union([
+        z.boolean().transform((val) => val ? 'Yes' : null),
+        z.string().max(100),
+        z.null()
+      ]).optional(),
     });
     
     const bodyValidation = validateBody(postStaffBodySchema, body)
@@ -530,7 +534,11 @@ export async function PUT(request: Request) {
       is_active: z.boolean().optional(),
       class_id: classIdSchema.optional(),
       education_level: z.string().max(100).nullable().optional(),
-      union_membership: z.string().max(100).nullable().optional(),
+      union_membership: z.union([
+        z.boolean().transform((val) => val ? 'Yes' : null),
+        z.string().max(100),
+        z.null()
+      ]).optional(),
     });
     
     const bodyValidation = validateBody(putStaffBodySchema, body)
