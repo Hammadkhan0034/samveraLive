@@ -423,8 +423,8 @@ export default function MenusListPage() {
   const isTeacher = role === 'teacher' || (userMetadata?.roles && Array.isArray(userMetadata.roles) && userMetadata.roles.includes('teacher'));
 
   const content = (
-      <div className="h-full bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-        <div className="mx-auto max-w-6xl px-4 py-6 md:px-6">
+      <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+        <div className="mx-auto max-w-6xl px-4 pt-6 pb-0 md:px-6 mt-14">
           {/* Header with Back button */}
           <div className="mb-6 flex items-center gap-3 flex-wrap">
             <button
@@ -484,7 +484,7 @@ export default function MenusListPage() {
           )}
 
           {/* Menus Table */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <div className="rounded-2xl border border-slate-200 bg-white pt-6 px-6 pb-0 shadow-sm dark:border-slate-700 dark:bg-slate-800">
             {paginatedMenus.length === 0 ? (
               <div className="text-center py-12">
                 <Utensils className="h-12 w-12 mx-auto text-slate-400 dark:text-slate-500 mb-4" />
@@ -545,7 +545,7 @@ export default function MenusListPage() {
 
                 {/* Pagination */}
                 {totalPages > 1 && (
-                  <div className="mt-4 flex items-center justify-end gap-2">
+                  <div className="mt-4 mb-0 pb-4 flex items-center justify-end gap-2">
                     <button
                       onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                       disabled={currentPage === 1}

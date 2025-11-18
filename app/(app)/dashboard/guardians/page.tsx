@@ -262,7 +262,7 @@ export default function GuardiansPage() {
 
   const content = (
       <div className="h-full bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 overflow-y-auto">
-        <div className="mx-auto max-w-6xl px-4 py-8 md:px-6">
+        <div className="mx-auto max-w-6xl px-4 pt-8 pb-0 md:px-6 mt-14">
           {/* Header with Back button */}
           <div className="mb-6 flex items-center gap-3 flex-wrap">
             <button
@@ -283,7 +283,7 @@ export default function GuardiansPage() {
           </div>
 
       {/* Guardians Table */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+      <div className="rounded-2xl border border-slate-200 bg-white pt-6 px-6 pb-0 shadow-sm dark:border-slate-700 dark:bg-slate-800">
         <div className="flex items-center justify-between mb-4 gap-3">
           <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">{t.guardians}</h2>
           <div className="relative">
@@ -339,7 +339,7 @@ export default function GuardiansPage() {
           }}
         />
         {/* Pagination controls */}
-        <div className="mt-4 w-full flex justify-end gap-2">
+        <div className="mt-4 mb-0 pb-24 w-full flex justify-end gap-2">
           <button
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
             disabled={currentPage === 1}

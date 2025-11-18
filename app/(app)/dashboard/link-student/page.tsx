@@ -35,7 +35,7 @@ export default function LinkStudentPage() {
 
   const content = (
     <div className="h-full bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 overflow-y-auto">
-      <div className="mx-auto max-w-6xl px-4 py-8 md:px-6">
+      <div className="mx-auto max-w-6xl px-4 py-8 md:px-6 mt-14">
         {/* Header with Back button */}
         <div className="mb-6 flex items-center gap-3 flex-wrap">
           <button
