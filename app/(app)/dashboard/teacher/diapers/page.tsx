@@ -90,6 +90,14 @@ export default function TeacherDiapersPage() {
             title: t.tile_diaper,
             desc: t.tile_diaper_desc,
           }}
+          messagesTile={{
+            title: t.tile_msg,
+            desc: t.tile_msg_desc,
+          }}
+          mediaTile={{
+            title: t.tile_media,
+            desc: t.tile_media_desc,
+          }}
         />
 
         {/* Main content area */}

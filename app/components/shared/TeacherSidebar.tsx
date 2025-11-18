@@ -3,7 +3,7 @@
 import React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { X } from 'lucide-react';
-import { SquareCheck as CheckSquare, Baby, MessageSquare } from 'lucide-react';
+import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera } from 'lucide-react';
 
 // Small helper
 function clsx(...xs: Array<string | false | undefined>) {
@@ -41,6 +41,11 @@ export interface TeacherSidebarProps {
     desc: string;
     badge?: string | number;
   };
+  mediaTile?: {
+    title: string;
+    desc: string;
+    badge?: string | number;
+  };
 }
 
 export default function TeacherSidebar({
@@ -53,6 +58,7 @@ export default function TeacherSidebar({
   attendanceTile,
   diapersTile,
   messagesTile,
+  mediaTile,
 }: TeacherSidebarProps) {
   const router = useRouter();
 
@@ -83,6 +89,9 @@ export default function TeacherSidebar({
     }
     if (tileId === 'messages') {
       return pathname === '/dashboard/teacher/messages';
+    }
+    if (tileId === 'media') {
+      return pathname === '/dashboard/teacher/media';
     }
     return false;
   };
@@ -125,9 +134,18 @@ export default function TeacherSidebar({
     onSidebarClose();
   };
 
+  // Handle media tile click
+  const handleMediaClick = () => {
+    if (pathname !== '/dashboard/teacher/media') {
+      router.replace('/dashboard/teacher/media');
+    }
+    onSidebarClose();
+  };
+
   const isAttendanceActive = pathname === '/dashboard/teacher/attendance';
   const isDiapersActive = pathname === '/dashboard/teacher/diapers';
   const isMessagesActive = pathname === '/dashboard/teacher/messages';
+  const isMediaActive = pathname === '/dashboard/teacher/media';
 
   return (
     <>
@@ -266,6 +284,47 @@ export default function TeacherSidebar({
                     )}
                   </div>
                   <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{messagesTile.desc}</p>
+                </div>
+              </button>
+            )}
+
+            {/* Media tile - always route-based */}
+            {mediaTile && (
+              <button
+                onClick={handleMediaClick}
+                className={clsx(
+                  'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                  'hover:bg-slate-800 dark:hover:bg-slate-700',
+                  isMediaActive
+                    ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
+                    : 'border-l-4 border-transparent'
+                )}
+              >
+                <span className={clsx(
+                  'flex-shrink-0 rounded-lg p-2',
+                  isMediaActive
+                    ? 'bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900'
+                    : 'bg-slate-800 dark:bg-slate-700 text-slate-200 dark:text-slate-300'
+                )}>
+                  <Camera className="h-5 w-5" />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={clsx(
+                      'font-medium truncate',
+                      isMediaActive
+                        ? 'text-slate-100 dark:text-slate-100'
+                        : 'text-slate-200 dark:text-slate-300'
+                    )}>
+                      {mediaTile.title}
+                    </span>
+                    {mediaTile.badge !== undefined && mediaTile.badge !== null && mediaTile.badge !== 0 && (
+                      <span className="flex-shrink-0 rounded-full bg-slate-700 dark:bg-slate-600 px-2 py-0.5 text-xs font-medium text-slate-100 dark:text-slate-300" suppressHydrationWarning>
+                        {mediaTile.badge}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{mediaTile.desc}</p>
                 </div>
               </button>
             )}

@@ -83,7 +83,7 @@ export default function TeacherAttendancePage() {
     route?: string;
   }> = useMemo(() => [
       { id: 'messages', title: t.tile_msg, desc: t.tile_msg_desc, Icon: MessageSquare, route: '/dashboard/teacher/messages' },
-      { id: 'media', title: t.tile_media, desc: t.tile_media_desc, Icon: Camera, route: '/dashboard/teacher?tab=media' },
+      { id: 'media', title: t.tile_media, desc: t.tile_media_desc, Icon: Camera, route: '/dashboard/teacher/media' },
       { id: 'stories', title: t.tile_stories, desc: t.tile_stories_desc, Icon: Timer, route: '/dashboard/teacher?tab=stories' },
       { id: 'announcements', title: t.tile_announcements, desc: t.tile_announcements_desc, Icon: Bell, route: '/dashboard/teacher?tab=announcements' },
       { id: 'students', title: t.tile_students, desc: t.tile_students_desc, Icon: Users, route: '/dashboard/teacher?tab=students' },
@@ -464,6 +464,14 @@ export default function TeacherAttendancePage() {
           diapersTile={{
             title: t.tile_diaper,
             desc: t.tile_diaper_desc,
+          }}
+          messagesTile={{
+            title: t.tile_msg,
+            desc: t.tile_msg_desc,
+          }}
+          mediaTile={{
+            title: t.tile_media,
+            desc: t.tile_media_desc,
           }}
         />
 

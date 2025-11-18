@@ -1,7 +1,7 @@
 'use client';
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Users, CalendarDays, Plus, Send, Paperclip, Bell, X, Search, ChevronLeft, ChevronRight, Edit, Trash2, Link as LinkIcon, Mail, Utensils, Menu, Eye, MessageSquarePlus } from 'lucide-react';
+import { SquareCheck as CheckSquare, Baby, MessageSquare, Timer, Users, CalendarDays, Plus, Send, Paperclip, Bell, X, Search, ChevronLeft, ChevronRight, Edit, Trash2, Link as LinkIcon, Mail, Utensils, Menu, Eye, MessageSquarePlus } from 'lucide-react';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import { useAuth } from '@/lib/hooks/useAuth';
 import AnnouncementForm from './AnnouncementForm';
@@ -19,7 +19,7 @@ import LinkStudentGuardian from './LinkStudentGuardian';
 import TeacherSidebar from '@/app/components/shared/TeacherSidebar';
 
 type Lang = 'is' | 'en';
-type TileId = 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
+type TileId = 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
 
 // Small helpers
 function clsx(...xs: Array<string | false | undefined>) {
@@ -29,7 +29,7 @@ const uid = () => Math.random().toString(36).slice(2, 9);
 
 export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
   const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
-  const [active, setActive] = useState<TileId>('media');
+  const [active, setActive] = useState<TileId>('stories');
   const { session } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -41,7 +41,7 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
   // Set active tab from query parameter
   useEffect(() => {
     const tabParam = searchParams?.get('tab');
-    if (tabParam && ['media', 'stories', 'announcements', 'students', 'guardians', 'link_student', 'menus'].includes(tabParam)) {
+    if (tabParam && ['stories', 'announcements', 'students', 'guardians', 'link_student', 'menus'].includes(tabParam)) {
       setActive(tabParam as TileId);
     }
   }, [searchParams]);
@@ -86,8 +86,6 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
 
   // Messages count for sidebar badge
   const [messagesCount, setMessagesCount] = useState(0);
-
-  const [uploads, setUploads] = useState<string[]>([]); // data URLs for image previews
 
   // Student request states - initialize empty to avoid hydration mismatch
   const [studentRequests, setStudentRequests] = useState<any[]>([]);
@@ -153,25 +151,13 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
     badge?: string | number;
     route?: string;
   }> = useMemo(() => [
-      { id: 'media', title: t.tile_media, desc: t.tile_media_desc, Icon: Camera, badge: uploads.length || undefined },
       { id: 'stories', title: t.tile_stories, desc: t.tile_stories_desc, Icon: Timer },
       { id: 'announcements', title: t.tile_announcements, desc: t.tile_announcements_desc, Icon: Bell },
       { id: 'students', title: t.tile_students, desc: t.tile_students_desc, Icon: Users },
       { id: 'guardians', title: t.tile_guardians || 'Guardians', desc: t.tile_guardians_desc || 'Manage guardians', Icon: Users },
       { id: 'link_student', title: t.tile_link_student || 'Link Student', desc: t.tile_link_student_desc || 'Link a guardian to a student', Icon: LinkIcon },
       { id: 'menus', title: t.tile_menus || 'Menus', desc: t.tile_menus_desc || 'Manage daily menus', Icon: Utensils },
-    ], [t, uploads]);
-
-
-  // ---- Media actions (mock) ----
-  function handleFiles(files: FileList | null) {
-    if (!files?.length) return;
-    Array.from(files).slice(0, 12).forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = () => setUploads((prev) => [...prev, String(reader.result)]);
-      reader.readAsDataURL(file);
-    });
-  }
+    ], [t]);
 
   // ---- Student request actions ----
   async function loadTeacherClasses(showLoading = true) {
@@ -844,6 +830,15 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
             title: t.tile_diaper,
             desc: t.tile_diaper_desc,
           }}
+          messagesTile={{
+            title: t.tile_msg,
+            desc: t.tile_msg_desc,
+            badge: messagesCount > 0 ? messagesCount : undefined,
+          }}
+          mediaTile={{
+            title: t.tile_media,
+            desc: t.tile_media_desc,
+          }}
         />
 
         {/* Main content area */}
@@ -887,7 +882,6 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
             {/* Active panel */}
             
             <section>
-              {active === 'media' && <MediaPanel t={t} uploads={uploads} onFiles={handleFiles} />}
               {active === 'stories' && <StoriesPanel t={t} router={router} session={session} orgId={finalOrgId} teacherClasses={teacherClasses} isActive={active === 'stories'} />}
               {active === 'announcements' && <AnnouncementsPanel t={t} lang={lang} teacherClasses={teacherClasses} />}
               {active === 'students' && <StudentsPanel t={t} studentRequests={studentRequests} loadingRequests={loadingRequests} students={students} loadingStudents={loadingStudents} studentError={studentError} onAddStudent={() => router.push('/dashboard/add-student')} onEditStudent={openEditStudentModal} onDeleteStudent={openDeleteConfirm} teacherClasses={teacherClasses} />}
@@ -1393,43 +1387,7 @@ type="text"
 /* -------------------- Panels -------------------- */
 
 // MessagesPanel removed - now in /dashboard/teacher/messages page
-
-function MediaPanel({
-  t,
-  uploads,
-  onFiles,
-}: {
-  t: typeof enText;
-  uploads: string[];
-  onFiles: (files: FileList | null) => void;
-}) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">{t.media_title}</h2>
-        <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600">
-          <Plus className="h-4 w-4" />
-          {t.upload}
-          <input type="file" accept="image/*" multiple className="hidden" onChange={(e) => onFiles(e.target.files)} />
-        </label>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-        {uploads.length === 0 ? (
-          <div className="col-span-full text-center text-slate-500 dark:text-slate-400">
-            {'No media uploaded yet'}
-          </div>
-        ) : (
-          uploads.map((url, idx) => (
-            <div key={idx} className="relative aspect-square overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-700">
-              <img src={url} alt={`Upload ${idx + 1}`} className="h-full w-full object-cover" />
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  );
-}
+// MediaPanel removed - now in /dashboard/teacher/media page
 
 function AnnouncementsPanel({ t, lang, teacherClasses }: { t: typeof enText; lang: 'is' | 'en'; teacherClasses?: any[] }) {
   const { session } = useAuth();

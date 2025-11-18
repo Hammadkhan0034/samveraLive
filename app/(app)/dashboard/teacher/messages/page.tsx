@@ -742,6 +742,10 @@ export default function TeacherMessagesPage() {
             desc: t.tile_msg_desc,
             badge: messagesCount > 0 ? messagesCount : undefined,
           }}
+          mediaTile={{
+            title: t.tile_media,
+            desc: t.tile_media_desc,
+          }}
         />
 
         {/* Main content area */}
