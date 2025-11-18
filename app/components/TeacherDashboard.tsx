@@ -4445,9 +4445,14 @@ function LinkStudentPanel({ t, lang }: { t: typeof enText; lang: Lang }) {
 }
 
 function MenusPanel({ t, lang, orgId, userId }: { t: typeof enText; lang: Lang; orgId: string | undefined; userId: string | undefined }) {
-  const [menus, setMenus] = useState<Array<{ id: string; org_id: string; class_id?: string | null; day: string; breakfast?: string | null; lunch?: string | null; snack?: string | null; notes?: string | null; created_at?: string }>>([]);
+  const [menus, setMenus] = useState<Array<{ id: string; org_id: string; class_id?: string | null; day: string; breakfast?: string | null; lunch?: string | null; snack?: string | null; notes?: string | null; created_at?: string; classes?: { id: string; name: string } }>>([]);
   const [loadingMenus, setLoadingMenus] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [menuToDelete, setMenuToDelete] = useState<string | null>(null);
+  const [deletingMenu, setDeletingMenu] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [teacherClasses, setTeacherClasses] = useState<Array<{ id: string; name: string }>>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -4463,21 +4468,28 @@ function MenusPanel({ t, lang, orgId, userId }: { t: typeof enText; lang: Lang; 
       setError(null);
       const teacherClassesRes = await fetch(`/api/teacher-classes?userId=${userId}&t=${Date.now()}`, { cache: 'no-store' });
       const teacherClassesData = await teacherClassesRes.json();
-      const teacherClasses = teacherClassesData.classes || [];
+      const classes = teacherClassesData.classes || [];
+      setTeacherClasses(classes);
       
       let allMenus: any[] = [];
-      if (teacherClasses.length > 0) {
-        const classIds = teacherClasses.map((c: any) => c.id);
+      if (classes.length > 0) {
+        const classIds = classes.map((c: any) => c.id);
         const menuPromises = classIds.map((cid: string) => 
           fetch(`/api/menus?orgId=${orgId}&classId=${cid}&createdBy=${userId}`, { cache: 'no-store' })
             .then(res => res.json())
-            .then(json => json.menus || [])
+            .then(json => (json.menus || []).map((m: any) => ({
+              ...m,
+              classes: classes.find((c: any) => c.id === m.class_id) || null
+            })))
             .catch(() => [])
         );
         menuPromises.push(
           fetch(`/api/menus?orgId=${orgId}&createdBy=${userId}`, { cache: 'no-store' })
             .then(res => res.json())
-            .then(json => (json.menus || []).filter((m: any) => !m.class_id))
+            .then(json => (json.menus || []).filter((m: any) => !m.class_id).map((m: any) => ({
+              ...m,
+              classes: null
+            })))
             .catch(() => [])
         );
         const menuArrays = await Promise.all(menuPromises);
@@ -4488,7 +4500,10 @@ function MenusPanel({ t, lang, orgId, userId }: { t: typeof enText; lang: Lang; 
       } else {
         const res = await fetch(`/api/menus?orgId=${orgId}&createdBy=${userId}`, { cache: 'no-store' });
         const json = await res.json();
-        allMenus = (json.menus || []).filter((m: any) => !m.class_id);
+        allMenus = (json.menus || []).filter((m: any) => !m.class_id).map((m: any) => ({
+          ...m,
+          classes: null
+        }));
       }
       setMenus(allMenus);
     } catch (e: any) {
@@ -4496,6 +4511,46 @@ function MenusPanel({ t, lang, orgId, userId }: { t: typeof enText; lang: Lang; 
       setError(e.message || 'Failed to load menus');
     } finally {
       setLoadingMenus(false);
+    }
+  }
+
+  function openDeleteModal(menuId: string) {
+    setMenuToDelete(menuId);
+    setIsDeleteModalOpen(true);
+    setDeleteError(null);
+  }
+
+  function closeDeleteModal() {
+    setIsDeleteModalOpen(false);
+    setMenuToDelete(null);
+    setDeleteError(null);
+  }
+
+  async function confirmDelete() {
+    if (!menuToDelete) return;
+    
+    setDeletingMenu(true);
+    setDeleteError(null);
+    
+    try {
+      const res = await fetch(`/api/menus?id=${menuToDelete}`, {
+        method: 'DELETE',
+      });
+      
+      const json = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(json.error || `Failed to delete menu: ${res.status}`);
+      }
+      
+      // Remove from local state
+      setMenus(prev => prev.filter(m => m.id !== menuToDelete));
+      
+      closeDeleteModal();
+    } catch (e: any) {
+      setDeleteError(e.message);
+    } finally {
+      setDeletingMenu(false);
     }
   }
 
@@ -4523,30 +4578,114 @@ function MenusPanel({ t, lang, orgId, userId }: { t: typeof enText; lang: Lang; 
           <p className="text-slate-600 dark:text-slate-400">{lang === 'is' ? 'Engir matseðillar fundust. Smelltu á "Bæta við matseðli" til að búa til einn.' : 'No menus found. Click "Add Menu" to create one.'}</p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {menus.map((menu) => (
-            <div key={menu.id} className="p-4 rounded-lg border border-slate-200 dark:border-slate-700">
-              <div className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">
-                {menu.created_at ? new Date(menu.created_at).toLocaleDateString(lang === 'is' ? 'is-IS' : 'en-US') : '—'}
-              </div>
-              <div className="grid gap-2 sm:grid-cols-3">
-                {menu.breakfast && <div><span className="text-xs text-slate-500 dark:text-slate-400">{lang === 'is' ? 'Morgunmatur' : 'Breakfast'}:</span> <div className="text-sm">{menu.breakfast}</div></div>}
-                {menu.lunch && <div><span className="text-xs text-slate-500 dark:text-slate-400">{lang === 'is' ? 'Hádegismatur' : 'Lunch'}:</span> <div className="text-sm">{menu.lunch}</div></div>}
-                {menu.snack && <div><span className="text-xs text-slate-500 dark:text-slate-400">{lang === 'is' ? 'Kvöldmatur' : 'Snack'}:</span> <div className="text-sm">{menu.snack}</div></div>}
-              </div>
-              {menu.notes && <div className="mt-2 text-sm text-slate-600 dark:text-slate-400">{menu.notes}</div>}
-              <div className="mt-2 flex gap-2">
-                <button
-                  onClick={() => router.push(`/dashboard/add-menu?id=${menu.id}`)}
-                  className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2 py-1 text-xs hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
-                >
-                  <Edit className="h-3 w-3" /> {lang === 'is' ? 'Breyta' : 'Edit'}
-                </button>
-              </div>
-            </div>
-          ))}
+        <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="bg-black">
+                <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                  {lang === 'is' ? 'Dagur' : 'Date'}
+                </th>
+                <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                  {lang === 'is' ? 'Hópur' : 'Class'}
+                </th>
+                <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                  {lang === 'is' ? 'Morgunmatur' : 'Breakfast'}
+                </th>
+                <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                  {lang === 'is' ? 'Hádegismatur' : 'Lunch'}
+                </th>
+                <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                  {lang === 'is' ? 'Kvöldmatur' : 'Snack'}
+                </th>
+                <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                  {lang === 'is' ? 'Athugasemdir' : 'Notes'}
+                </th>
+                <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                  {t.actions || 'Actions'}
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
+              {menus.map((menu) => (
+                <tr key={menu.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                  <td className="py-2 px-4 text-sm text-slate-900 dark:text-slate-100">
+                    {menu.day ? (
+                      <span suppressHydrationWarning>
+                        {typeof window !== 'undefined' ? new Date(menu.day).toLocaleDateString(lang === 'is' ? 'is-IS' : 'en-US', {
+                          weekday: 'short',
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric'
+                        }) : ''}
+                      </span>
+                    ) : (
+                      menu.created_at ? (
+                        <span suppressHydrationWarning>
+                          {typeof window !== 'undefined' ? new Date(menu.created_at).toLocaleDateString(lang === 'is' ? 'is-IS' : 'en-US') : ''}
+                        </span>
+                      ) : (
+                        '—'
+                      )
+                    )}
+                  </td>
+                  <td className="py-2 px-4 text-sm text-slate-600 dark:text-slate-400">
+                    {menu.classes?.name || (menu.class_id ? `Class ${menu.class_id.substring(0, 8)}...` : lang === 'is' ? 'Allir hópar' : 'All Classes')}
+                  </td>
+                  <td className="py-2 px-4 text-sm text-slate-600 dark:text-slate-400">
+                    {menu.breakfast || '—'}
+                  </td>
+                  <td className="py-2 px-4 text-sm text-slate-600 dark:text-slate-400">
+                    {menu.lunch || '—'}
+                  </td>
+                  <td className="py-2 px-4 text-sm text-slate-600 dark:text-slate-400">
+                    {menu.snack || '—'}
+                  </td>
+                  <td className="py-2 px-4 text-sm text-slate-600 dark:text-slate-400">
+                    {menu.notes ? (
+                      <span className="line-clamp-2" title={menu.notes}>{menu.notes}</span>
+                    ) : (
+                      '—'
+                    )}
+                  </td>
+                  <td className="py-2 px-4">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => router.push(`/dashboard/add-menu?id=${menu.id}`)}
+                        className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2 py-1 text-[13px] hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                        title={t.edit || 'Edit'}
+                      >
+                        <Edit className="h-3.5 w-3.5" />
+                        {t.edit || 'Edit'}
+                      </button>
+                      <button
+                        onClick={() => openDeleteModal(menu.id)}
+                        className="inline-flex items-center gap-1 rounded-lg border border-red-300 px-2 py-1 text-[13px] text-red-600 hover:bg-red-50 dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20"
+                        title={t.delete || 'Delete'}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        {t.delete || 'Delete'}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={closeDeleteModal}
+        onConfirm={confirmDelete}
+        title={lang === 'is' ? 'Eyða matseðli' : 'Delete Menu'}
+        message={lang === 'is' ? 'Ertu viss um að þú viljir eyða þessum matseðli? Þessa aðgerð er ekki hægt að afturkalla.' : 'Are you sure you want to delete this menu? This action cannot be undone.'}
+        loading={deletingMenu}
+        error={deleteError}
+        confirmButtonText={t.delete || 'Delete'}
+        cancelButtonText={t.cancel || 'Cancel'}
+      />
     </div>
   );
 }
