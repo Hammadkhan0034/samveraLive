@@ -41,25 +41,40 @@ export function useRequireAuth(requiredRole?: SamveraRole | SamveraRole[]) {
 
     if (user && requiredRole) {
       // Check user metadata from user object first, then session
-      const userRoles = user.user_metadata?.roles || session?.user?.user_metadata?.roles;
+      const userRoles = user.user_metadata?.roles || session?.user?.user_metadata?.roles || [];
       const activeRole = user.user_metadata?.activeRole || session?.user?.user_metadata?.activeRole;
       
-      if (userRoles) {
+      // If we have roles or activeRole, check them
+      if (userRoles.length > 0 || activeRole) {
         const required = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
-        const hasAnyRequired = required.some((r) => (userRoles as SamveraRole[]).includes(r));
-        if (!hasAnyRequired) {
+        
+        // Check if user has any of the required roles
+        const hasAnyRequired = userRoles.length > 0 
+          ? required.some((r) => (userRoles as SamveraRole[]).includes(r))
+          : false;
+        
+        // Also check activeRole as fallback
+        const hasActiveRole = activeRole && required.includes(activeRole as SamveraRole);
+        
+        if (!hasAnyRequired && !hasActiveRole) {
           // If user doesn't have required role, redirect to their default dashboard
-          const defaultRole = activeRole || userRoles[0];
-          const path = defaultRole === 'principal'
-            ? '/dashboard/principal'
-            : defaultRole === 'teacher'
-            ? '/dashboard/teacher'
-            : defaultRole === 'admin'
-            ? '/dashboard/admin'
-            : '/dashboard/parent';
-          router.push(path);
-          return;
+          const defaultRole = activeRole || (userRoles.length > 0 ? userRoles[0] : null);
+          if (defaultRole) {
+            const path = defaultRole === 'principal'
+              ? '/dashboard/principal'
+              : defaultRole === 'teacher'
+              ? '/dashboard/teacher'
+              : defaultRole === 'admin'
+              ? '/dashboard/admin'
+              : '/dashboard/parent';
+            router.push(path);
+            return;
+          }
         }
+      } else {
+        // If no roles are set yet, but user exists, allow access (roles might be loading)
+        // This prevents premature redirects when metadata is still being fetched
+        console.log('⚠️ User exists but roles not yet loaded, allowing access temporarily');
       }
     }
   }, [user, loading, requiredRole, router, session, isSigningIn]);

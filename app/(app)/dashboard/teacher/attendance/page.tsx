@@ -22,10 +22,26 @@ export default function TeacherAttendancePage() {
   const { session } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const { user } = useRequireAuth('teacher');
+  const { user, loading, isSigningIn } = useRequireAuth('teacher');
   const [mounted, setMounted] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   useEffect(() => { setMounted(true); }, []);
+
+  // Show loading state while checking authentication
+  if (loading || (isSigningIn && !user)) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-600 mx-auto mb-4"></div>
+            <p className="text-slate-600 dark:text-slate-400">
+              Loading attendance page...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Try to get org_id from multiple possible locations
   const userMetadata = session?.user?.user_metadata;
@@ -424,7 +440,11 @@ export default function TeacherAttendancePage() {
   // Determine active tile based on pathname
   const activeTile = pathname === '/dashboard/teacher/attendance' ? 'attendance' : null;
 
-  if (!user) return null;
+  // Safety check: if user is still not available after loading, don't render
+  // (useRequireAuth hook should have redirected by now)
+  if (!loading && !isSigningIn && !user) {
+    return null;
+  }
 
   return (
     <div className="flex flex-col h-screen overflow-hidden md:pt-14">

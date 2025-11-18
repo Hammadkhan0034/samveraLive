@@ -18,7 +18,7 @@ import { GuardianForm, type GuardianFormData } from '@/app/components/shared/Gua
 import LinkStudentGuardian from './LinkStudentGuardian';
 
 type Lang = 'is' | 'en';
-type TileId = 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
+type TileId = 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
 
 // Small helpers
 function clsx(...xs: Array<string | false | undefined>) {
@@ -28,7 +28,7 @@ const uid = () => Math.random().toString(36).slice(2, 9);
 
 export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
   const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
-  const [active, setActive] = useState<TileId>('diapers');
+  const [active, setActive] = useState<TileId>('messages');
   const { session } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -40,7 +40,7 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
   // Set active tab from query parameter
   useEffect(() => {
     const tabParam = searchParams?.get('tab');
-    if (tabParam && ['diapers', 'messages', 'media', 'stories', 'announcements', 'students', 'guardians', 'link_student', 'menus'].includes(tabParam)) {
+    if (tabParam && ['messages', 'media', 'stories', 'announcements', 'students', 'guardians', 'link_student', 'menus'].includes(tabParam)) {
       setActive(tabParam as TileId);
     }
   }, [searchParams]);
@@ -152,7 +152,6 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
     badge?: string | number;
     route?: string;
   }> = useMemo(() => [
-      { id: 'diapers', title: t.tile_diaper, desc: t.tile_diaper_desc, Icon: Baby },
       { id: 'messages', title: t.tile_msg, desc: t.tile_msg_desc, Icon: MessageSquare, badge: messagesCount > 0 ? messagesCount : undefined },
       { id: 'media', title: t.tile_media, desc: t.tile_media_desc, Icon: Camera, badge: uploads.length || undefined },
       { id: 'stories', title: t.tile_stories, desc: t.tile_stories_desc, Icon: Timer },
@@ -886,6 +885,42 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
                   <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{t.tile_att_desc}</p>
                 </div>
               </button>
+              {/* Diapers tile - navigate to separate page */}
+              <button
+                onClick={() => {
+                  router.push('/dashboard/teacher/diapers');
+                  setSidebarOpen(false);
+                }}
+                className={clsx(
+                  'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                  'hover:bg-slate-800 dark:hover:bg-slate-700',
+                  pathname === '/dashboard/teacher/diapers'
+                    ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
+                    : 'border-l-4 border-transparent'
+                )}
+              >
+                <span className={clsx(
+                  'flex-shrink-0 rounded-lg p-2',
+                  pathname === '/dashboard/teacher/diapers'
+                    ? 'bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900'
+                    : 'bg-slate-800 dark:bg-slate-700 text-slate-200 dark:text-slate-300'
+                )}>
+                  <Baby className="h-5 w-5" />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={clsx(
+                      'font-medium truncate',
+                      pathname === '/dashboard/teacher/diapers'
+                        ? 'text-slate-100 dark:text-slate-100'
+                        : 'text-slate-200 dark:text-slate-300'
+                    )}>
+                      {t.tile_diaper}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{t.tile_diaper_desc}</p>
+                </div>
+              </button>
               {tiles.map(({ id, title, desc, Icon, badge }) => (
                 <button
                   key={id}
@@ -983,7 +1018,6 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
             {/* Active panel */}
             
             <section>
-              {active === 'diapers' && <DiaperPanel t={t} />}
               {active === 'media' && <MediaPanel t={t} uploads={uploads} onFiles={handleFiles} />}
               {active === 'stories' && <StoriesPanel t={t} router={router} session={session} orgId={finalOrgId} teacherClasses={teacherClasses} isActive={active === 'stories'} />}
               {active === 'announcements' && <AnnouncementsPanel t={t} lang={lang} teacherClasses={teacherClasses} />}
@@ -1489,83 +1523,6 @@ type="text"
 }
 
 /* -------------------- Panels -------------------- */
-
-function DiaperPanel({ t }: { t: typeof enText }) {
-  const [child, setChild] = useState('');
-  const [kind, setKind] = useState<'wet' | 'dirty' | 'mixed'>('wet');
-  const [time, setTime] = useState('');
-  const [notes, setNotes] = useState('');
-  const [saved, setSaved] = useState(false);
-
-  function save(e: React.FormEvent) {
-    e.preventDefault();
-    // mock save
-    setSaved(true);
-    setTimeout(() => setSaved(false), 1500);
-    setChild('');
-    setKind('wet');
-    setTime('');
-    setNotes('');
-  }
-
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-      <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">{t.di_title}</h2>
-      <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{t.di_hint}</p>
-
-      <form onSubmit={save} className="mt-4 grid gap-3 md:grid-cols-3">
-        <label className="text-sm text-slate-700 dark:text-slate-300">
-          {t.child}
-          <input
-            value={child}
-            onChange={(e) => setChild(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-slate-300 p-2 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
-            placeholder={`${t.child} 1`}
-            required
-          />
-        </label>
-        <label className="text-sm text-slate-700 dark:text-slate-300">
-          {t.di_type}
-          <select
-            value={kind}
-            onChange={(e) => setKind(e.target.value as any)}
-            className="mt-1 w-full rounded-xl border border-slate-300 p-2 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
-          >
-            <option value="wet">{t.di_wet}</option>
-            <option value="dirty">{t.di_dirty}</option>
-            <option value="mixed">{t.di_mixed}</option>
-          </select>
-        </label>
-        <label className="text-sm text-slate-700 dark:text-slate-300">
-          {t.time}
-          <input
-            type="time"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-slate-300 p-2 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
-            required
-          />
-        </label>
-        <label className="text-sm md:col-span-3 text-slate-700 dark:text-slate-300">
-          {t.notes}
-          <textarea
-            rows={3}
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            className="mt-1 w-full rounded-xl border border-slate-300 p-2 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
-            placeholder={t.di_notes_ph}
-          />
-        </label>
-        <div className="md:col-span-3 flex items-center gap-3">
-          <button type="submit" className="rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600">
-            {t.save}
-          </button>
-          {saved && <span className="text-sm text-emerald-700 dark:text-emerald-400">✓ {t.saved}</span>}
-        </div>
-      </form>
-    </div>
-  );
-}
 
 function MessagesPanel({ t, lang = 'en', teacherClasses = [], students = [], isActive = false }: { t: typeof enText; lang?: Lang; teacherClasses?: any[]; students?: Array<{ id: string; class_id: string | null }>; isActive?: boolean }) {
   const { session } = useAuth();
