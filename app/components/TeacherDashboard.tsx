@@ -1,7 +1,7 @@
 'use client';
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { SquareCheck as CheckSquare, Baby, MessageSquare, Users, CalendarDays, Plus, Send, Paperclip, Bell, X, Search, ChevronLeft, ChevronRight, Edit, Trash2, Link as LinkIcon, Mail, Utensils, Menu, Eye, MessageSquarePlus } from 'lucide-react';
+import { SquareCheck as CheckSquare, Baby, MessageSquare, Users, CalendarDays, Plus, Send, Paperclip, Bell, X, Search, ChevronLeft, ChevronRight, Edit, Trash2, Mail, Utensils, Menu, Eye, MessageSquarePlus } from 'lucide-react';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { supabase } from '@/lib/supabaseClient';
@@ -11,11 +11,10 @@ import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmat
 import StoryColumn from './shared/StoryColumn';
 import { MessageThreadWithParticipants, MessageItem } from '@/lib/types/messages';
 import { useMessagesRealtime } from '@/lib/hooks/useMessagesRealtime';
-import LinkStudentGuardian from './LinkStudentGuardian';
 import TeacherSidebar from '@/app/components/shared/TeacherSidebar';
 
 type Lang = 'is' | 'en';
-type TileId = 'link_student' | 'menus';
+type TileId = 'menus';
 
 // Small helpers
 function clsx(...xs: Array<string | false | undefined>) {
@@ -25,7 +24,7 @@ const uid = () => Math.random().toString(36).slice(2, 9);
 
 export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
   const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
-  const [active, setActive] = useState<TileId>('link_student');
+  const [active, setActive] = useState<TileId>('menus');
   const { session } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -37,7 +36,7 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
   // Set active tab from query parameter
   useEffect(() => {
     const tabParam = searchParams?.get('tab');
-    if (tabParam && ['link_student', 'menus'].includes(tabParam)) {
+    if (tabParam && ['menus'].includes(tabParam)) {
       setActive(tabParam as TileId);
     }
   }, [searchParams]);
@@ -92,7 +91,6 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
     badge?: string | number;
     route?: string;
   }> = useMemo(() => [
-      { id: 'link_student', title: t.tile_link_student || 'Link Student', desc: t.tile_link_student_desc || 'Link a guardian to a student', Icon: LinkIcon },
       { id: 'menus', title: t.tile_menus || 'Menus', desc: t.tile_menus_desc || 'Manage daily menus', Icon: Utensils },
     ], [t]);
 
@@ -187,7 +185,6 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
             {/* Active panel */}
             
             <section>
-              {active === 'link_student' && <LinkStudentPanel t={t} lang={lang} />}
               {active === 'menus' && <MenusPanel t={t} lang={lang} orgId={finalOrgId} userId={session?.user?.id} isActive={active === 'menus'} />}
             </section>
           </div>
@@ -606,14 +603,6 @@ function MenuPanel({ t, lang }: { t: typeof enText; lang: 'is' | 'en' }) {
           ))}
         </div>
       )}
-    </div>
-  );
-}
-
-function LinkStudentPanel({ t, lang }: { t: typeof enText; lang: Lang }) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-      <LinkStudentGuardian lang={lang} />
     </div>
   );
 }

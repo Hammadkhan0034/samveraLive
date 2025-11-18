@@ -3,7 +3,7 @@
 import React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { X } from 'lucide-react';
-import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Bell, Users, Shield } from 'lucide-react';
+import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Bell, Users, Shield, Link as LinkIcon } from 'lucide-react';
 
 // Small helper
 function clsx(...xs: Array<string | false | undefined>) {
@@ -62,6 +62,10 @@ export interface TeacherSidebarProps {
     title: string;
     desc: string;
   };
+  linkStudentTile?: {
+    title: string;
+    desc: string;
+  };
 }
 
 export default function TeacherSidebar({
@@ -79,6 +83,7 @@ export default function TeacherSidebar({
   announcementsTile,
   studentsTile,
   guardiansTile,
+  linkStudentTile,
 }: TeacherSidebarProps) {
   const router = useRouter();
 
@@ -124,6 +129,9 @@ export default function TeacherSidebar({
     }
     if (tileId === 'guardians') {
       return pathname === '/dashboard/teacher/guardians';
+    }
+    if (tileId === 'link_student') {
+      return pathname === '/dashboard/teacher/link-student';
     }
     return false;
   };
@@ -206,6 +214,14 @@ export default function TeacherSidebar({
     onSidebarClose();
   };
 
+  // Handle link student tile click
+  const handleLinkStudentClick = () => {
+    if (pathname !== '/dashboard/teacher/link-student') {
+      router.replace('/dashboard/teacher/link-student');
+    }
+    onSidebarClose();
+  };
+
   const isAttendanceActive = pathname === '/dashboard/teacher/attendance';
   const isDiapersActive = pathname === '/dashboard/teacher/diapers';
   const isMessagesActive = pathname === '/dashboard/teacher/messages';
@@ -214,6 +230,7 @@ export default function TeacherSidebar({
   const isAnnouncementsActive = pathname === '/dashboard/teacher/announcements';
   const isStudentsActive = pathname === '/dashboard/teacher/students';
   const isGuardiansActive = pathname === '/dashboard/teacher/guardians';
+  const isLinkStudentActive = pathname === '/dashboard/teacher/link-student';
 
   return (
     <>
@@ -537,6 +554,42 @@ export default function TeacherSidebar({
                     </span>
                   </div>
                   <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{guardiansTile.desc}</p>
+                </div>
+              </button>
+            )}
+
+            {/* Link Student tile - always route-based */}
+            {linkStudentTile && (
+              <button
+                onClick={handleLinkStudentClick}
+                className={clsx(
+                  'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                  'hover:bg-slate-800 dark:hover:bg-slate-700',
+                  isLinkStudentActive
+                    ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
+                    : 'border-l-4 border-transparent'
+                )}
+              >
+                <span className={clsx(
+                  'flex-shrink-0 rounded-lg p-2',
+                  isLinkStudentActive
+                    ? 'bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900'
+                    : 'bg-slate-800 dark:bg-slate-700 text-slate-200 dark:text-slate-300'
+                )}>
+                  <LinkIcon className="h-5 w-5" />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={clsx(
+                      'font-medium truncate',
+                      isLinkStudentActive
+                        ? 'text-slate-100 dark:text-slate-100'
+                        : 'text-slate-200 dark:text-slate-300'
+                    )}>
+                      {linkStudentTile.title}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{linkStudentTile.desc}</p>
                 </div>
               </button>
             )}
