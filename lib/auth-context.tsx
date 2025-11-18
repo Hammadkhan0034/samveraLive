@@ -34,10 +34,64 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
     });
 
+    // Track the last valid session to prevent sign-out on rate limit errors
+    // Store in a ref-like variable that persists across renders
+    let lastValidSession: Session | null = null;
+    let rateLimitBackoff = false;
+    let rateLimitBackoffTimeout: ReturnType<typeof setTimeout> | null = null;
+
     // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // Handle TOKEN_REFRESHED event - check for rate limit errors
+      if (event === 'TOKEN_REFRESHED') {
+        if (session) {
+          // Token refresh successful, update last valid session
+          lastValidSession = session;
+          rateLimitBackoff = false;
+          if (rateLimitBackoffTimeout) {
+            clearTimeout(rateLimitBackoffTimeout);
+            rateLimitBackoffTimeout = null;
+          }
+          setSession(session);
+          setUser(session?.user ?? null);
+          console.log('✅ Token refreshed successfully');
+        } else {
+          // Token refresh failed - likely a rate limit error
+          // If we have a last valid session, keep using it instead of signing out
+          if (lastValidSession && lastValidSession.expires_at) {
+            const expiresAt = new Date(lastValidSession.expires_at * 1000);
+            const now = new Date();
+            
+            // Only keep session if it hasn't expired
+            if (expiresAt > now) {
+              console.warn('⚠️ Token refresh failed (likely rate limited), keeping existing valid session');
+              rateLimitBackoff = true;
+              setSession(lastValidSession);
+              setUser(lastValidSession.user ?? null);
+              
+              // Set a backoff period - don't try to refresh again for 5 minutes
+              if (rateLimitBackoffTimeout) {
+                clearTimeout(rateLimitBackoffTimeout);
+              }
+              rateLimitBackoffTimeout = setTimeout(() => {
+                rateLimitBackoff = false;
+                console.log('✅ Rate limit backoff period ended, token refresh will resume');
+              }, 5 * 60 * 1000); // 5 minutes
+              
+              return; // Don't update state, keep existing session
+            }
+          }
+        }
+        return;
+      }
+
+      // Update last valid session when we have one
+      if (session) {
+        lastValidSession = session;
+      }
+
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -73,8 +127,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setIsSigningIn(false);
         }
       } else if (event === 'SIGNED_OUT') {
+        // Check if we have a last valid session - if so, this might be a rate limit error
+        // Don't sign out if we have a valid session cached
+        if (lastValidSession && lastValidSession.expires_at) {
+          const expiresAt = new Date(lastValidSession.expires_at * 1000);
+          const now = new Date();
+          
+          // If session hasn't expired yet, keep it (rate limit error on refresh)
+          // Also check if we're in a rate limit backoff period
+          if (expiresAt > now || rateLimitBackoff) {
+            console.warn('⚠️ SIGNED_OUT event received but session is still valid (likely rate limit). Keeping session.');
+            setSession(lastValidSession);
+            setUser(lastValidSession.user ?? null);
+            setLoading(false);
+            return; // Don't sign out
+          }
+        }
+
         console.log('🔄 SIGNED_OUT event received');
         setIsSigningIn(false);
+        lastValidSession = null; // Clear cached session
+        rateLimitBackoff = false;
+        if (rateLimitBackoffTimeout) {
+          clearTimeout(rateLimitBackoffTimeout);
+          rateLimitBackoffTimeout = null;
+        }
+        
         // Immediately redirect to signin to avoid any delay or flicker
         if (typeof window !== 'undefined' && window.location.pathname !== '/signin') {
           window.location.replace('/signin');
@@ -82,7 +160,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      if (rateLimitBackoffTimeout) {
+        clearTimeout(rateLimitBackoffTimeout);
+      }
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
