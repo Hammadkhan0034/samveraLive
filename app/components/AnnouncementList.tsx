@@ -52,6 +52,13 @@ export default function AnnouncementList({
       // Fresh data loads silently in background
       setError('');
 
+      // Check if user is authenticated before making request
+      if (!user) {
+        console.warn('User not authenticated, skipping announcements load');
+        // Keep existing announcements from cache, don't show error
+        return;
+      }
+
       const params = new URLSearchParams();
       if (classId) params.set('classId', classId);
       if (userId) params.set('userId', userId);
@@ -61,9 +68,22 @@ export default function AnnouncementList({
       }
       params.set('limit', String(limit));
 
-      const res = await fetch(`/api/announcements?${params.toString()}`, { cache: 'no-store' });
+      const res = await fetch(`/api/announcements?${params.toString()}`, { 
+        cache: 'no-store',
+        credentials: 'include' // Ensure cookies are sent
+      });
+      
       if (!res.ok) {
         const err = await res.json().catch(() => ({} as any));
+        
+        // Handle authentication errors gracefully - don't show error, just keep cached data
+        if (res.status === 401) {
+          console.warn('Authentication required for announcements, using cached data if available');
+          // Don't set error, just return - keep existing announcements from cache
+          return;
+        }
+        
+        // For other errors, throw to show error message
         throw new Error(err.error || `Failed with ${res.status}`);
       }
       const { announcements: data } = await res.json();
@@ -92,11 +112,14 @@ export default function AnnouncementList({
       }
     } catch (err: any) {
       console.error('Failed to load announcements:', err);
-      setError(t.failed_to_load);
+      // Only set error for non-authentication errors
+      if (err.message && !err.message.includes('Authentication required') && !err.message.includes('401')) {
+        setError(t.failed_to_load);
+      }
     } finally {
       setLoading(false);
     }
-  }, [classId, orgId, userId, userRole, limit, t, user]);
+  }, [classId, orgId, userId, userRole, teacherClassIds, limit, t, user]);
 
   useEffect(() => {
     // Instant render from cache (no skeleton) and then refresh in background
@@ -120,9 +143,12 @@ export default function AnnouncementList({
       }
     }
 
-    // Load fresh data in background without showing loading
-    loadAnnouncements();
-  }, [classId, orgId, userId, userRole, loadAnnouncements]);
+    // Only load fresh data if user is authenticated
+    if (user) {
+      // Load fresh data in background without showing loading
+      loadAnnouncements();
+    }
+  }, [classId, orgId, userId, userRole, loadAnnouncements, user]);
   
   // Listen for custom event to refresh announcements
   useEffect(() => {

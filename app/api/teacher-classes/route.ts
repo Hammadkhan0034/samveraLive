@@ -27,23 +27,25 @@ export async function GET(request: NextRequest) {
     const supabase = supabaseAdmin;
 
     // Get teacher's assigned classes from the users table
+    // Try to fetch user data, but don't fail if user doesn't exist yet
     const { data: userData, error: userError } = await supabase
       .from('users')
       .select('*')
       .eq('id', userId)
-      .single();
+      .maybeSingle();
+    
     if (userError) {
       console.error('❌ Error fetching user data:', userError);
-      return NextResponse.json({ error: 'Failed to fetch user data' }, { status: 500 });
+      // Continue anyway - user might exist in auth but not in users table yet
+      console.log('⚠️ Continuing without user data - will try to fetch classes directly');
     }
 
-    if (!userData) {
-      console.error('❌ User not found');
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    if (userData) {
+      console.log('👤 User data:', userData);
+      console.log('👤 User org_id:', userData.org_id);
+    } else {
+      console.log('⚠️ User not found in users table - continuing with class memberships lookup');
     }
-
-    console.log('👤 User data:', userData);
-    console.log('👤 User org_id:', userData.org_id);
 
     // Get teacher's assigned classes from class_memberships table
     console.log('🔍 Looking for class memberships for user:', userId);

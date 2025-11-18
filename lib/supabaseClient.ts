@@ -65,7 +65,39 @@ if (typeof window !== 'undefined') {
       lastRefreshApiCall = now;
     }
 
-    return originalFetch.apply(this, args);
+    try {
+      const response = await originalFetch.apply(this, args);
+      
+      // Handle refresh token errors gracefully
+      if (url.includes('/auth/v1/token') && url.includes('grant_type=refresh_token')) {
+        if (!response.ok) {
+          const clonedResponse = response.clone();
+          try {
+            const errorData = await clonedResponse.json();
+            if (errorData?.error === 'refresh_token_already_used' || errorData?.code === 'refresh_token_already_used') {
+              // This is a non-critical error - Supabase will handle it on next request
+              // Silently handle it to avoid console noise
+              console.debug('🔄 Refresh token already used (non-critical, will retry on next request)');
+              // Return a response that won't break the app
+              return response;
+            }
+          } catch (e) {
+            // If we can't parse the error, just return the original response
+            return response;
+          }
+        }
+      }
+      
+      return response;
+    } catch (error: any) {
+      // Handle network errors or other fetch errors
+      if (error?.message?.includes('refresh_token') || error?.code === 'refresh_token_already_used') {
+        console.debug('🔄 Refresh token error (non-critical):', error.message);
+        // Re-throw to let Supabase handle it
+        throw error;
+      }
+      throw error;
+    }
   };
 }
 

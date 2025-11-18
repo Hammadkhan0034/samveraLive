@@ -1,17 +1,17 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import LinkStudentGuardian from '../../../components/LinkStudentGuardian';
-import { useRequireAuth, useAuth } from '../../../../lib/hooks/useAuth';
+import { useRequireAuth } from '../../../../lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
+import TeacherLayout from '@/app/components/shared/TeacherLayout';
 
 export default function LinkStudentPage() {
-  const router = useRouter();
   const { user, loading, isSigningIn } = useRequireAuth(['teacher', 'principal']);
   const { lang } = useLanguage();
-
+  const router = useRouter();
 
   if (loading && !user && isSigningIn) {
     return (
@@ -27,9 +27,11 @@ export default function LinkStudentPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-        <main className="mx-auto max-w-6xl px-4 py-8 md:px-6 mt-10">
-          <div className="mb-6 flex items-center gap-3">
+    <TeacherLayout hideHeader={true}>
+      <div className="h-full bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 overflow-y-auto">
+        <div className="mx-auto max-w-6xl px-4 py-8 md:px-6">
+          {/* Header with Back button */}
+          <div className="mb-6 flex items-center gap-3 flex-wrap">
             <button
               onClick={() => router.back()}
               className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
@@ -41,8 +43,9 @@ export default function LinkStudentPage() {
             </h1>
           </div>
           <LinkStudentGuardian lang={lang} />
-      </main>
-    </div>
+        </div>
+      </div>
+    </TeacherLayout>
   );
 }
 

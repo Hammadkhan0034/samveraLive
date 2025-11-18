@@ -49,117 +49,130 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      // Handle SIGNED_IN event first - always allow session update
-      if (event === 'SIGNED_IN' && session) {
-        // Reset refresh tracking on new login
-        lastRefreshTime.current = Date.now();
-        refreshBlocked.current = false;
-        
-        // Mark login in supabase client to allow immediate refresh
-        markUserLoggedIn();
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-        
-        // Handle sign in success logic
-        try {
-          const hasRoles = Array.isArray(session.user.user_metadata?.roles) && session.user.user_metadata?.roles.length > 0;
-          if (!hasRoles && typeof window !== 'undefined') {
-            const pendingRole = (localStorage.getItem('samvera_pending_role') || '') as SamveraRole | '';
-            if (pendingRole) {
-              await supabase.auth.updateUser({ data: { roles: [pendingRole], activeRole: pendingRole } });
-              localStorage.removeItem('samvera_pending_role');
-            }
-          }
-        } catch (e) {
-          // swallow; not critical for redirect
-        }
-
-        // Redirect to appropriate dashboard based on user role
-        const userRole = session.user.user_metadata?.activeRole || session.user.user_metadata?.roles?.[0];
-        if (userRole) {
-          const path = getRolePath(userRole);
-          if (path && typeof window !== 'undefined') {
-            // Only redirect if we're not already on the correct path
-            if (window.location.pathname !== path) {
-              // Use replace instead of href to avoid adding to history
-              window.location.replace(path);
-            }
-          }
-        } else {
-          setIsSigningIn(false);
-        }
-        return; // Don't process further
-      } else if (event === 'TOKEN_REFRESHED') {
-        // Block TOKEN_REFRESHED events if they're happening too frequently
-        const now = Date.now();
-        const timeSinceLastRefresh = now - lastRefreshTime.current;
-
-        // Always allow first refresh or refresh right after login
-        if (lastRefreshTime.current === 0 || timeSinceLastRefresh < 60000) {
-          // First refresh or within 1 minute (likely after login)
-          lastRefreshTime.current = now;
+      // Handle errors gracefully - catch refresh token errors
+      try {
+        // Handle SIGNED_IN event first - always allow session update
+        if (event === 'SIGNED_IN' && session) {
+          // Reset refresh tracking on new login
+          lastRefreshTime.current = Date.now();
           refreshBlocked.current = false;
           
-          setSession((prevSession) => {
-            if (!prevSession || !session) return session;
-            if (prevSession.access_token !== session.access_token) {
-              return session;
-            }
-            return prevSession;
-          });
-          return;
-        }
-
-        // Block refresh if it happened too recently (within 5 minutes)
-        if (timeSinceLastRefresh < MIN_REFRESH_INTERVAL) {
-          console.log('🚫 Blocking frequent token refresh (too soon after last refresh)');
-          refreshBlocked.current = true;
-          return; // Block this refresh
-        }
-
-        // Check if token actually needs refresh
-        if (session?.expires_at) {
-          const expiresAt = session.expires_at * 1000;
-          const timeUntilExpiry = expiresAt - now;
+          // Mark login in supabase client to allow immediate refresh
+          markUserLoggedIn();
           
-          // If token is still valid for more than 10 minutes, block the refresh
-          if (timeUntilExpiry > 600000) { // 10 minutes
-            console.log('🚫 Blocking unnecessary token refresh (token still valid)');
+          setSession(session);
+          setUser(session?.user ?? null);
+          setLoading(false);
+          
+          // Handle sign in success logic
+          try {
+            const hasRoles = Array.isArray(session.user.user_metadata?.roles) && session.user.user_metadata?.roles.length > 0;
+            if (!hasRoles && typeof window !== 'undefined') {
+              const pendingRole = (localStorage.getItem('samvera_pending_role') || '') as SamveraRole | '';
+              if (pendingRole) {
+                await supabase.auth.updateUser({ data: { roles: [pendingRole], activeRole: pendingRole } });
+                localStorage.removeItem('samvera_pending_role');
+              }
+            }
+          } catch (e) {
+            // swallow; not critical for redirect
+          }
+
+          // Redirect to appropriate dashboard based on user role
+          const userRole = session.user.user_metadata?.activeRole || session.user.user_metadata?.roles?.[0];
+          if (userRole) {
+            const path = getRolePath(userRole);
+            if (path && typeof window !== 'undefined') {
+              // Only redirect if we're not already on the correct path
+              if (window.location.pathname !== path) {
+                // Use replace instead of href to avoid adding to history
+                window.location.replace(path);
+              }
+            }
+          } else {
+            setIsSigningIn(false);
+          }
+          return; // Don't process further
+        } else if (event === 'TOKEN_REFRESHED') {
+          // Block TOKEN_REFRESHED events if they're happening too frequently
+          const now = Date.now();
+          const timeSinceLastRefresh = now - lastRefreshTime.current;
+
+          // Always allow first refresh or refresh right after login
+          if (lastRefreshTime.current === 0 || timeSinceLastRefresh < 60000) {
+            // First refresh or within 1 minute (likely after login)
+            lastRefreshTime.current = now;
+            refreshBlocked.current = false;
+            
+            setSession((prevSession) => {
+              if (!prevSession || !session) return session;
+              if (prevSession.access_token !== session.access_token) {
+                return session;
+              }
+              return prevSession;
+            });
+            return;
+          }
+
+          // Block refresh if it happened too recently (within 5 minutes)
+          if (timeSinceLastRefresh < MIN_REFRESH_INTERVAL) {
+            console.log('🚫 Blocking frequent token refresh (too soon after last refresh)');
             refreshBlocked.current = true;
             return; // Block this refresh
           }
-        }
 
-        // Allow refresh - update timestamp and session
-        lastRefreshTime.current = now;
-        refreshBlocked.current = false;
-        
-        // Silently update session without triggering re-renders
-        setSession((prevSession) => {
-          if (!prevSession || !session) return session;
-          // Only update if token actually changed
-          if (prevSession.access_token !== session.access_token) {
-            return session;
+          // Check if token actually needs refresh
+          if (session?.expires_at) {
+            const expiresAt = session.expires_at * 1000;
+            const timeUntilExpiry = expiresAt - now;
+            
+            // If token is still valid for more than 10 minutes, block the refresh
+            if (timeUntilExpiry > 600000) { // 10 minutes
+              console.log('🚫 Blocking unnecessary token refresh (token still valid)');
+              refreshBlocked.current = true;
+              return; // Block this refresh
+            }
           }
-          return prevSession; // No change, keep previous session
-        });
-        return; // Don't process further
-      }
 
-      // For all other events (SIGNED_OUT, etc.), update state normally
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-
-      if (event === 'SIGNED_OUT') {
-        console.log('🔄 SIGNED_OUT event received');
-        setIsSigningIn(false);
-        // Immediately redirect to signin to avoid any delay or flicker
-        if (typeof window !== 'undefined' && window.location.pathname !== '/signin') {
-          window.location.replace('/signin');
+          // Allow refresh - update timestamp and session
+          lastRefreshTime.current = now;
+          refreshBlocked.current = false;
+          
+          // Silently update session without triggering re-renders
+          setSession((prevSession) => {
+            if (!prevSession || !session) return session;
+            // Only update if token actually changed
+            if (prevSession.access_token !== session.access_token) {
+              return session;
+            }
+            return prevSession; // No change, keep previous session
+          });
+          return; // Don't process further
         }
+
+        // For all other events (SIGNED_OUT, etc.), update state normally
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+
+        if (event === 'SIGNED_OUT') {
+          console.log('🔄 SIGNED_OUT event received');
+          setIsSigningIn(false);
+          // Immediately redirect to signin to avoid any delay or flicker
+          if (typeof window !== 'undefined' && window.location.pathname !== '/signin') {
+            window.location.replace('/signin');
+          }
+        }
+      } catch (error: any) {
+        // Handle refresh token errors gracefully
+        if (error?.code === 'refresh_token_already_used' || error?.message?.includes('refresh_token_already_used')) {
+          // This is a non-critical error - Supabase will handle it automatically
+          // Just log it at debug level and continue
+          console.debug('🔄 Refresh token already used (non-critical, Supabase will handle)');
+          return;
+        }
+        // For other errors, log them but don't break the app
+        console.error('❌ Auth state change error:', error);
       }
     });
 

@@ -13,6 +13,9 @@ import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmat
 import StoryColumn from './shared/StoryColumn';
 import { MessageThreadWithParticipants, MessageItem } from '@/lib/types/messages';
 import { useMessagesRealtime } from '@/lib/hooks/useMessagesRealtime';
+import { GuardianTable } from '@/app/components/shared/GuardianTable';
+import { GuardianForm, type GuardianFormData } from '@/app/components/shared/GuardianForm';
+import LinkStudentGuardian from './LinkStudentGuardian';
 
 type Lang = 'is' | 'en';
 type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
@@ -345,7 +348,7 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
       if (response.ok) {
         const classesData = data.classes || [];
         setTeacherClasses(classesData);
-        console.log('Teacher classes loaded:', classesData);
+        console.log('✅ Teacher classes loaded:', classesData);
 
         // Cache the data
         if (typeof window !== 'undefined') {
@@ -354,10 +357,16 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
 
         // If no classes found, show a message
         if (classesData.length === 0) {
-          console.warn('No classes assigned to this teacher');
+          console.warn('⚠️ No classes assigned to this teacher');
         }
       } else {
-        console.error('Error loading teacher classes:', data.error);
+        // Only log error if it's not a "no classes" scenario
+        if (data.error && !data.error.includes('not found') && !data.error.includes('No class')) {
+          console.error('❌ Error loading teacher classes:', data.error);
+        } else {
+          console.warn('⚠️ No classes found for teacher');
+          setTeacherClasses([]);
+        }
       }
     } catch (error) {
       console.error('Error loading teacher classes:', error);
@@ -425,48 +434,88 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
         return;
       }
 
-      const classIds = teacherClasses.map(cls => cls.id);
-      console.log('Loading students for classes:', classIds);
+      // Validate orgId before making requests
+      if (!finalOrgId) {
+        console.warn('⚠️ No orgId available, skipping students load');
+        setStudents([]);
+        return;
+      }
 
-      // Get org_id from session or use default
+      const classIds = teacherClasses.map(cls => cls.id);
+      console.log('Loading students for classes:', classIds, 'Org ID:', finalOrgId);
+
       // Load students for each class
       const allStudents = [];
       for (const classId of classIds) {
-        const response = await fetch(`/api/students?orgId=${finalOrgId}&classId=${classId}&t=${Date.now()}`, { cache: 'no-store' });
-        const data = await response.json();
+        try {
+          const url = `/api/students?orgId=${finalOrgId}&classId=${classId}&t=${Date.now()}`;
+          console.log(`📋 Fetching students for class ${classId}:`, url);
+          
+          const response = await fetch(url, { cache: 'no-store' });
+          
+          // Check if fetch succeeded before trying to parse JSON
+          if (!response.ok) {
+            const errorText = await response.text().catch(() => 'Unknown error');
+            let errorData;
+            try {
+              errorData = JSON.parse(errorText);
+            } catch {
+              errorData = { error: errorText || `HTTP ${response.status}` };
+            }
+            console.error(`❌ Error loading students for class ${classId}:`, errorData.error || `HTTP ${response.status}`);
+            continue; // Skip this class and continue with others
+          }
 
-        if (response.ok) {
-          // Enhance students with class names
-          const enhancedStudents = (data.students || []).map((student: any) => {
-            const classInfo = teacherClasses.find(cls => cls.id === student.class_id);
-            return {
-              ...student,
-              classes: {
-                id: student.class_id,
-                name: classInfo?.name || `Class ${student.class_id?.slice(0, 8)}...`
-              }
-            };
-          });
-          allStudents.push(...enhancedStudents);
-        } else {
-          console.error(`Error loading students for class ${classId}:`, data.error);
+          const data = await response.json();
+
+          if (data.students && Array.isArray(data.students)) {
+            // Enhance students with class names
+            const enhancedStudents = (data.students || []).map((student: any) => {
+              const classInfo = teacherClasses.find(cls => cls.id === student.class_id);
+              return {
+                ...student,
+                classes: {
+                  id: student.class_id,
+                  name: classInfo?.name || `Class ${student.class_id?.slice(0, 8)}...`
+                }
+              };
+            });
+            allStudents.push(...enhancedStudents);
+            console.log(`✅ Loaded ${enhancedStudents.length} student(s) for class ${classId}`);
+          } else {
+            console.warn(`⚠️ No students array in response for class ${classId}`);
+          }
+        } catch (fetchError: any) {
+          // Handle network errors, JSON parsing errors, etc.
+          console.error(`❌ Fetch error loading students for class ${classId}:`, fetchError.message || fetchError);
+          // Continue with other classes instead of failing completely
+          continue;
         }
       }
 
       setStudents(allStudents);
-      console.log('Students loaded:', allStudents);
-      // Log guardian info for debugging
-      allStudents.forEach((student: any) => {
-        // guardians logging removed
-      });
+      console.log(`✅ Total students loaded: ${allStudents.length}`);
       
       // Cache the data
       if (typeof window !== 'undefined') {
         localStorage.setItem('teacher_students_cache', JSON.stringify(allStudents));
       }
-    } catch (error) {
-      console.error('Error loading students:', error);
-      setStudentError('Failed to load students');
+    } catch (error: any) {
+      console.error('❌ Error loading students:', error);
+      setStudentError(error.message || 'Failed to load students');
+      // Don't clear students on error - keep cached data if available
+      if (typeof window !== 'undefined') {
+        try {
+          const cached = localStorage.getItem('teacher_students_cache');
+          if (cached) {
+            const cachedStudents = JSON.parse(cached);
+            setStudents(cachedStudents);
+            console.log('📦 Using cached students data due to error');
+          }
+        } catch (e) {
+          // Ignore cache errors
+        }
+      }
     } finally {
       if (showLoading) setLoadingStudents(false);
     }
@@ -647,16 +696,11 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
     }
   }, [active, students.length, finalOrgId, session?.user?.id, teacherClasses.length]);
 
-  // Load guardians immediately when student request modal opens (without showing loading state)
   React.useEffect(() => {
     if (isStudentRequestModalOpen && session?.user?.id) {
-      // Load guardians in background without showing loading state in dropdown
-      // guardians loading removed
     }
   }, [isStudentRequestModalOpen, session?.user?.id, finalOrgId]);
 
- 
-//   async function debugTeacherData() {
 //     try {
 //       const userId = session?.user?.id;
 //       if (!userId) return;
@@ -817,8 +861,6 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
     }
   }
 
-  // loadGuardians removed: guardians not shown in existing students UI anymore
-
   // Edit and Delete handlers
   function openEditStudentModal(student: any) {
     setEditingStudent(student);
@@ -953,80 +995,24 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
   }
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
-      {/* Dashboard header - spans full width */}
-      <div className="flex-shrink-0 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-4 md:px-6">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-3">
-            {/* Mobile menu button */}
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
-              aria-label="Toggle sidebar"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.title}</h1>
-          </div>
-
-          {/* Switch profile control (only shows if the user has multiple roles) */}
-          <div className="flex items-center gap-3">
-            <ProfileSwitcher />
-            <div className="hidden md:flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-              <Users className="h-4 w-4" />
-              <span>
-                {t.kids_checked_in}:{' '}
-                <span className="font-medium">{kidsIn}</span> / {students.length}
-              </span>
-              <span className="mx-2 text-slate-300 dark:text-slate-600">•</span>
-              <CalendarDays className="h-4 w-4" />
-              <span>{t.today_hint}</span>
-            </div>
-          </div>
-
-          {/* Small-screen stats row */}
-          <div className="md:hidden flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-            <Users className="h-4 w-4" />
-            <span>
-              {t.kids_checked_in}:{' '}
-              <span className="font-medium">{kidsIn}</span> / {students.length}
-            </span>
-            <span className="mx-2 text-slate-300 dark:text-slate-600">•</span>
-            <CalendarDays className="h-4 w-4" />
-            <span>{t.today_hint}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Stories Column - spans full width */}
-      <div className="flex-shrink-0 px-4 py-4 md:px-6 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
-        <StoryColumn
-          lang={lang}
-          orgId={finalOrgId}
-          userId={session?.user?.id}
-          userRole="teacher"
-          teacherClassIds={teacherClasses.map(c => c.id).filter(Boolean)}
-        />
-      </div>
-
-      {/* Main content area with sidebar and content */}
-      <div className="flex flex-1 overflow-hidden">
+    <div className="flex flex-col h-screen overflow-hidden md:pt-14">
+      {/* Main content area with sidebar and content - starts below navbar */}
+      <div className="flex flex-1 overflow-hidden h-full">
         {/* Sidebar */}
         <aside
           className={clsx(
-            'flex-shrink-0 w-72 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 overflow-y-auto transition-transform duration-300 ease-in-out',
-            'md:relative',
+            'flex-shrink-0 w-72 bg-slate-900 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 overflow-y-auto transition-transform duration-300 ease-in-out',
             sidebarOpen 
-              ? 'fixed inset-y-0 left-0 z-50 translate-x-0 md:translate-x-0' 
-              : 'fixed inset-y-0 left-0 z-50 -translate-x-full md:relative md:translate-x-0'
+              ? 'fixed top-14 bottom-0 left-0 z-50 translate-x-0 md:relative md:top-0 md:translate-x-0' 
+              : 'fixed top-14 bottom-0 left-0 z-50 -translate-x-full md:relative md:top-0 md:translate-x-0'
           )}
         >
           <div className="p-4">
             <div className="mb-4 flex items-center justify-between md:hidden">
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Menu</h2>
+              <h2 className="text-lg font-semibold text-slate-100 dark:text-slate-100">Menu</h2>
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300"
+                className="p-2 rounded-lg hover:bg-slate-800 dark:hover:bg-slate-700 text-slate-200 dark:text-slate-300"
                 aria-label="Close sidebar"
               >
                 <X className="h-5 w-5" />
@@ -1037,42 +1023,22 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
                 <button
                   key={id}
                   onClick={() => {
-                    if (id === 'guardians') {
-                      router.push('/dashboard/guardians');
-                      setSidebarOpen(false);
-                      return;
-                    }
-                    if (id === 'link_student') {
-                      router.push('/dashboard/link-student');
-                      setSidebarOpen(false);
-                      return;
-                    }
-                    if (id === 'menus') {
-                      router.push('/dashboard/menus-list');
-                      setSidebarOpen(false);
-                      return;
-                    }
-                    if (id === 'messages') {
-                      router.push('/dashboard/teacher/messages');
-                      setSidebarOpen(false);
-                      return;
-                    }
                     setActive(id);
                     setSidebarOpen(false);
                   }}
                   className={clsx(
                     'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
-                    'hover:bg-slate-100 dark:hover:bg-slate-700',
+                    'hover:bg-slate-800 dark:hover:bg-slate-700',
                     active === id
-                      ? 'bg-slate-100 dark:bg-slate-700 border-l-4 border-slate-900 dark:border-slate-100'
+                      ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
                       : 'border-l-4 border-transparent'
                   )}
                 >
                   <span className={clsx(
                     'flex-shrink-0 rounded-lg p-2',
                     active === id
-                      ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900'
-                      : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+                      ? 'bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900'
+                      : 'bg-slate-800 dark:bg-slate-700 text-slate-200 dark:text-slate-300'
                   )}>
                     <Icon className="h-5 w-5" />
                   </span>
@@ -1081,18 +1047,18 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
                       <span className={clsx(
                         'font-medium truncate',
                         active === id
-                          ? 'text-slate-900 dark:text-slate-100'
-                          : 'text-slate-700 dark:text-slate-300'
+                          ? 'text-slate-100 dark:text-slate-100'
+                          : 'text-slate-200 dark:text-slate-300'
                       )}>
                         {title}
                       </span>
                       {badge !== undefined && badge !== null && badge !== 0 && (
-                        <span className="flex-shrink-0 rounded-full bg-slate-200 dark:bg-slate-600 px-2 py-0.5 text-xs font-medium text-slate-700 dark:text-slate-300" suppressHydrationWarning>
+                        <span className="flex-shrink-0 rounded-full bg-slate-700 dark:bg-slate-600 px-2 py-0.5 text-xs font-medium text-slate-100 dark:text-slate-300" suppressHydrationWarning>
                           {badge}
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{desc}</p>
+                    <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{desc}</p>
                   </div>
                 </button>
               ))}
@@ -1103,7 +1069,7 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
         {/* Mobile overlay */}
         {sidebarOpen && (
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+            className="fixed top-14 bottom-0 left-0 right-0 bg-black bg-opacity-50 z-40 md:hidden"
             onClick={() => setSidebarOpen(false)}
             aria-hidden="true"
           />
@@ -1111,8 +1077,44 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
 
         {/* Main content area */}
         <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900">
-          <div className="p-4 md:p-6 lg:p-8">
+          <div className="p-2 md:p-6 lg:p-8">
+            {/* Content Header */}
+            <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="flex items-center gap-3">
+                {/* Mobile menu button */}
+                <button
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+                  aria-label="Toggle sidebar"
+                >
+                  <Menu className="h-5 w-5" />
+                </button>
+                <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.title}</h2>
+              </div>
+              <div className="flex items-center gap-3">
+                <ProfileSwitcher />
+                <div className="hidden md:flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+                  <Users className="h-4 w-4" />
+                  <span>
+                    {t.kids_checked_in}:{' '}
+                    <span className="font-medium">{kidsIn}</span> / {students.length}
+                  </span>
+                  <span className="mx-2 text-slate-300 dark:text-slate-600">•</span>
+                  <CalendarDays className="h-4 w-4" />
+                  <span>{t.today_hint}</span>
+                </div>
+                {/* Small-screen stats row */}
+                <div className="md:hidden flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+                  <Users className="h-4 w-4" />
+                  <span>
+                    {t.kids_checked_in}:{' '}
+                    <span className="font-medium">{kidsIn}</span> / {students.length}
+                  </span>
+                </div>
+              </div>
+            </div>
             {/* Active panel */}
+            
             <section>
               {active === 'attendance' && (
                 <AttendancePanel 
@@ -1134,13 +1136,14 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
               {active === 'announcements' && <AnnouncementsPanel t={t} lang={lang} teacherClasses={teacherClasses} />}
               {active === 'messages' && <MessagesPanel t={t} lang={lang} teacherClasses={teacherClasses} students={students} isActive={active === 'messages'} />}
               {active === 'students' && <StudentsPanel t={t} studentRequests={studentRequests} loadingRequests={loadingRequests} students={students} loadingStudents={loadingStudents} studentError={studentError} onAddStudent={() => router.push('/dashboard/add-student')} onEditStudent={openEditStudentModal} onDeleteStudent={openDeleteConfirm} teacherClasses={teacherClasses} />}
+              {active === 'guardians' && <GuardiansPanel t={t} lang={lang} orgId={finalOrgId} />}
+              {active === 'link_student' && <LinkStudentPanel t={t} lang={lang} />}
+              {active === 'menus' && <MenusPanel t={t} lang={lang} orgId={finalOrgId} userId={session?.user?.id} />}
             </section>
           </div>
         </main>
       </div>
-
-      {/* Today's Menu removed per requirements */}
-
+      
       {/* Student Request Modal (disabled) */}
       {false && isStudentRequestModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -4077,6 +4080,367 @@ function MenuPanel({ t, lang }: { t: typeof enText; lang: 'is' | 'en' }) {
                   <div className="text-sm text-slate-700 dark:text-slate-300">{menu.notes}</div>
                 </div>
               )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function GuardiansPanel({ t, lang, orgId }: { t: typeof enText; lang: Lang; orgId: string | undefined }) {
+  const [guardians, setGuardians] = useState<Array<any>>([]);
+  const [loadingGuardians, setLoadingGuardians] = useState(false);
+  const [guardianError, setGuardianError] = useState<string | null>(null);
+  const [isGuardianModalOpen, setIsGuardianModalOpen] = useState(false);
+  const [isDeleteGuardianModalOpen, setIsDeleteGuardianModalOpen] = useState(false);
+  const [guardianToDelete, setGuardianToDelete] = useState<string | null>(null);
+  const [deletingGuardian, setDeletingGuardian] = useState(false);
+  const [submittingGuardian, setSubmittingGuardian] = useState(false);
+  const [guardianForm, setGuardianForm] = useState<GuardianFormData>({ first_name: '', last_name: '', email: '', phone: '', org_id: orgId || '', is_active: true });
+  const [orgs, setOrgs] = useState<Array<{ id: string; name: string; slug: string; timezone: string }>>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+  const router = useRouter();
+
+  useEffect(() => {
+    if (orgId) {
+      loadGuardians();
+      loadOrgs();
+    }
+  }, [orgId]);
+
+  async function loadGuardians() {
+    if (!orgId) return;
+    try {
+      setLoadingGuardians(true);
+      setGuardianError(null);
+      const res = await fetch(`/api/guardians?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
+      setGuardians(json.guardians || []);
+    } catch (e: any) {
+      console.error('❌ Error loading guardians:', e.message);
+      setGuardianError(e.message);
+    } finally {
+      setLoadingGuardians(false);
+    }
+  }
+
+  async function loadOrgs() {
+    try {
+      const res = await fetch('/api/orgs', { cache: 'no-store' });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
+      setOrgs(json.orgs || []);
+    } catch (e: any) {
+      console.error('❌ Error loading organizations:', e.message);
+    }
+  }
+
+  async function submitGuardian(data: GuardianFormData) {
+    try {
+      setGuardianError(null);
+      setSubmittingGuardian(true);
+      const res = await fetch('/api/guardians', {
+        method: data.id ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
+      setIsGuardianModalOpen(false);
+      setGuardianForm({ first_name: '', last_name: '', email: '', phone: '', org_id: orgId || '', is_active: true });
+      await loadGuardians();
+    } catch (e: any) {
+      console.error('❌ Error submitting guardian:', e.message);
+      setGuardianError(e.message);
+    } finally {
+      setSubmittingGuardian(false);
+    }
+  }
+
+  function openCreateGuardianModal() {
+    setGuardianForm({ first_name: '', last_name: '', email: '', phone: '', org_id: orgId || '', is_active: true });
+    setIsGuardianModalOpen(true);
+  }
+
+  function openEditGuardianModal(guardian: any) {
+    setGuardianForm({
+      id: guardian.id,
+      first_name: guardian.first_name ?? ((guardian.full_name || '').split(/\s+/)[0] || ''),
+      last_name: guardian.last_name ?? ((guardian.full_name || '').split(/\s+/).slice(1).join(' ') || ''),
+      email: guardian.email ?? '',
+      phone: guardian.phone ?? '',
+      org_id: guardian.org_id || orgId || '',
+      is_active: guardian.is_active ?? true
+    });
+    setIsGuardianModalOpen(true);
+  }
+
+  function openDeleteGuardianModal(id: string) {
+    setGuardianToDelete(id);
+    setIsDeleteGuardianModalOpen(true);
+  }
+
+  async function confirmDeleteGuardian() {
+    if (!guardianToDelete) return;
+    try {
+      setGuardianError(null);
+      setDeletingGuardian(true);
+      const res = await fetch(`/api/guardians?id=${encodeURIComponent(guardianToDelete)}`, { method: 'DELETE' });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
+      setIsDeleteGuardianModalOpen(false);
+      setGuardianToDelete(null);
+      await loadGuardians();
+    } catch (e: any) {
+      setGuardianError(e.message);
+    } finally {
+      setDeletingGuardian(false);
+    }
+  }
+
+  const filteredGuardians = searchQuery ? guardians.filter((g: any) => {
+    const q = searchQuery.trim().toLowerCase();
+    const first = ((g.first_name ?? ((g.full_name || '').split(/\s+/)[0] || ''))).toLowerCase();
+    const last = ((g.last_name ?? (((g.full_name || '').split(/\s+/).slice(1).join(' ')) || ''))).toLowerCase();
+    const email = ((g.email || '')).toLowerCase();
+    return first.includes(q) || last.includes(q) || `${first} ${last}`.includes(q) || email.includes(q);
+  }) : guardians;
+
+  const paginatedGuardians = filteredGuardians.slice((currentPage-1)*itemsPerPage, (currentPage-1)*itemsPerPage + itemsPerPage);
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">{t.tile_guardians || 'Guardians'}</h2>
+        <button
+          onClick={openCreateGuardianModal}
+          className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
+        >
+          <Plus className="h-4 w-4" /> {lang === 'is' ? 'Bæta við forráðamanni' : 'Add Guardian'}
+        </button>
+      </div>
+      <div className="mb-4">
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
+          placeholder={lang === 'is' ? 'Leita...' : 'Search guardians...'}
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+        />
+      </div>
+      <GuardianTable
+        guardians={paginatedGuardians.map((g: any) => ({
+          id: g.id,
+          first_name: g.first_name ?? ((g.full_name || '').trim().split(/\s+/)[0] || ''),
+          last_name: g.last_name ?? ((g.full_name || '').trim().split(/\s+/).slice(1).join(' ') || ''),
+          email: g.email ?? null,
+          phone: g.phone ?? null,
+          is_active: g.is_active ?? true,
+        }))}
+        error={guardianError}
+        onEdit={openEditGuardianModal}
+        onDelete={openDeleteGuardianModal}
+        onCreate={openCreateGuardianModal}
+        translations={{
+          guardians: t.tile_guardians || 'Guardians',
+          first_name: lang === 'is' ? 'Fornafn' : 'First Name',
+          last_name: lang === 'is' ? 'Eftirnafn' : 'Last Name',
+          email: lang === 'is' ? 'Netfang' : 'Email',
+          phone: lang === 'is' ? 'Sími' : 'Phone',
+          status: lang === 'is' ? 'Staða' : 'Status',
+          active: lang === 'is' ? 'Virkur' : 'Active',
+          inactive: lang === 'is' ? 'Óvirkur' : 'Inactive',
+          actions: lang === 'is' ? 'Aðgerðir' : 'Actions',
+          create: lang === 'is' ? 'Búa til' : 'Create',
+          no_guardians: lang === 'is' ? 'Engir forráðamenn' : 'No guardians',
+          no_guardians_loading: lang === 'is' ? 'Hleður...' : 'Loading...',
+          edit: lang === 'is' ? 'Breyta' : 'Edit',
+          delete: lang === 'is' ? 'Eyða' : 'Delete',
+          send_magic_link: lang === 'is' ? 'Senda töfraslóð' : 'Send Magic Link',
+          sending: lang === 'is' ? 'Sendi...' : 'Sending...',
+          magic_link_sent: lang === 'is' ? 'Töfraslóð send' : 'Magic link sent',
+          magic_link_send_failed: lang === 'is' ? 'Tókst ekki að senda töfraslóð' : 'Failed to send magic link',
+          no_students_linked: lang === 'is' ? 'Engir nemendur tengdir' : 'No students linked',
+        }}
+      />
+      {filteredGuardians.length > itemsPerPage && (
+        <div className="mt-4 flex justify-end gap-2">
+          <button
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="rounded-lg border border-slate-400 px-3 py-1.5 text-sm disabled:opacity-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+          >
+            {lang === 'is' ? 'Fyrri' : 'Prev'}
+          </button>
+          <span className="px-3 py-1.5 text-sm">{currentPage} / {Math.ceil(filteredGuardians.length / itemsPerPage)}</span>
+          <button
+            onClick={() => setCurrentPage(p => p + 1)}
+            disabled={currentPage >= Math.ceil(filteredGuardians.length / itemsPerPage)}
+            className="rounded-lg border border-slate-400 px-3 py-1.5 text-sm disabled:opacity-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+          >
+            {lang === 'is' ? 'Næsta' : 'Next'}
+          </button>
+        </div>
+      )}
+      <GuardianForm
+        isOpen={isGuardianModalOpen}
+        onClose={() => setIsGuardianModalOpen(false)}
+        onSubmit={submitGuardian}
+        initialData={guardianForm}
+        loading={submittingGuardian}
+        error={guardianError}
+        orgs={orgs}
+        translations={{
+          create_guardian: lang === 'is' ? 'Búa til forráðamann' : 'Create Guardian',
+          edit_guardian: lang === 'is' ? 'Breyta forráðamanni' : 'Edit Guardian',
+          first_name: lang === 'is' ? 'Fornafn' : 'First Name',
+          last_name: lang === 'is' ? 'Eftirnafn' : 'Last Name',
+          email: lang === 'is' ? 'Netfang' : 'Email',
+          phone: lang === 'is' ? 'Sími' : 'Phone',
+          organization: lang === 'is' ? 'Stofnun' : 'Organization',
+          status: lang === 'is' ? 'Staða' : 'Status',
+          active: lang === 'is' ? 'Virkur' : 'Active',
+          inactive: lang === 'is' ? 'Óvirkur' : 'Inactive',
+          create: lang === 'is' ? 'Búa til' : 'Create',
+          update: lang === 'is' ? 'Uppfæra' : 'Update',
+          cancel: lang === 'is' ? 'Hætta við' : 'Cancel',
+          creating: lang === 'is' ? 'Býr til...' : 'Creating...',
+          updating: lang === 'is' ? 'Uppfærir...' : 'Updating...',
+          first_name_placeholder: lang === 'is' ? 'Sláðu inn fornafn' : 'Enter first name',
+          last_name_placeholder: lang === 'is' ? 'Sláðu inn eftirnafn' : 'Enter last name',
+          email_placeholder: lang === 'is' ? 'Sláðu inn netfang' : 'Enter email address',
+          phone_placeholder: lang === 'is' ? 'Sláðu inn símanúmer' : 'Enter phone number',
+          status_placeholder: lang === 'is' ? 'Veldu stöðu' : 'Select status',
+        }}
+      />
+      <DeleteConfirmationModal
+        isOpen={isDeleteGuardianModalOpen}
+        onClose={() => setIsDeleteGuardianModalOpen(false)}
+        onConfirm={confirmDeleteGuardian}
+        title={lang === 'is' ? 'Eyða forráðamanni' : 'Delete Guardian'}
+        message={lang === 'is' ? 'Ertu viss um að þú viljir eyða þessum forráðamanni?' : 'Are you sure you want to delete this guardian?'}
+        loading={deletingGuardian}
+        error={guardianError}
+        translations={{
+          confirm_delete: lang === 'is' ? 'Eyða' : 'Delete',
+          cancel: lang === 'is' ? 'Hætta við' : 'Cancel',
+        }}
+      />
+    </div>
+  );
+}
+
+function LinkStudentPanel({ t, lang }: { t: typeof enText; lang: Lang }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+      <LinkStudentGuardian lang={lang} />
+    </div>
+  );
+}
+
+function MenusPanel({ t, lang, orgId, userId }: { t: typeof enText; lang: Lang; orgId: string | undefined; userId: string | undefined }) {
+  const [menus, setMenus] = useState<Array<{ id: string; org_id: string; class_id?: string | null; day: string; breakfast?: string | null; lunch?: string | null; snack?: string | null; notes?: string | null; created_at?: string }>>([]);
+  const [loadingMenus, setLoadingMenus] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (orgId && userId) {
+      loadMenus();
+    }
+  }, [orgId, userId]);
+
+  async function loadMenus() {
+    if (!orgId || !userId) return;
+    try {
+      setLoadingMenus(true);
+      setError(null);
+      const teacherClassesRes = await fetch(`/api/teacher-classes?userId=${userId}&t=${Date.now()}`, { cache: 'no-store' });
+      const teacherClassesData = await teacherClassesRes.json();
+      const teacherClasses = teacherClassesData.classes || [];
+      
+      let allMenus: any[] = [];
+      if (teacherClasses.length > 0) {
+        const classIds = teacherClasses.map((c: any) => c.id);
+        const menuPromises = classIds.map((cid: string) => 
+          fetch(`/api/menus?orgId=${orgId}&classId=${cid}&createdBy=${userId}`, { cache: 'no-store' })
+            .then(res => res.json())
+            .then(json => json.menus || [])
+            .catch(() => [])
+        );
+        menuPromises.push(
+          fetch(`/api/menus?orgId=${orgId}&createdBy=${userId}`, { cache: 'no-store' })
+            .then(res => res.json())
+            .then(json => (json.menus || []).filter((m: any) => !m.class_id))
+            .catch(() => [])
+        );
+        const menuArrays = await Promise.all(menuPromises);
+        allMenus = menuArrays.flat();
+        const uniqueMenus = new Map();
+        allMenus.forEach(menu => uniqueMenus.set(menu.id, menu));
+        allMenus = Array.from(uniqueMenus.values());
+      } else {
+        const res = await fetch(`/api/menus?orgId=${orgId}&createdBy=${userId}`, { cache: 'no-store' });
+        const json = await res.json();
+        allMenus = (json.menus || []).filter((m: any) => !m.class_id);
+      }
+      setMenus(allMenus);
+    } catch (e: any) {
+      console.error('❌ Error loading menus:', e);
+      setError(e.message || 'Failed to load menus');
+    } finally {
+      setLoadingMenus(false);
+    }
+  }
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">{t.tile_menus || 'Menus'}</h2>
+        <button
+          onClick={() => router.push('/dashboard/add-menu')}
+          className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
+        >
+          <Plus className="h-4 w-4" /> {lang === 'is' ? 'Bæta við matseðli' : 'Add Menu'}
+        </button>
+      </div>
+      {error && (
+        <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+          {error}
+        </div>
+      )}
+      {loadingMenus ? (
+        <div className="text-center py-8 text-slate-600 dark:text-slate-400">{lang === 'is' ? 'Hleður...' : 'Loading...'}</div>
+      ) : menus.length === 0 ? (
+        <div className="text-center py-12">
+          <Utensils className="h-12 w-12 mx-auto text-slate-400 dark:text-slate-500 mb-4" />
+          <p className="text-slate-600 dark:text-slate-400">{lang === 'is' ? 'Engir matseðillar fundust. Smelltu á "Bæta við matseðli" til að búa til einn.' : 'No menus found. Click "Add Menu" to create one.'}</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {menus.map((menu) => (
+            <div key={menu.id} className="p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+              <div className="mb-2 text-sm font-medium text-slate-700 dark:text-slate-300">
+                {menu.created_at ? new Date(menu.created_at).toLocaleDateString(lang === 'is' ? 'is-IS' : 'en-US') : '—'}
+              </div>
+              <div className="grid gap-2 sm:grid-cols-3">
+                {menu.breakfast && <div><span className="text-xs text-slate-500 dark:text-slate-400">{lang === 'is' ? 'Morgunmatur' : 'Breakfast'}:</span> <div className="text-sm">{menu.breakfast}</div></div>}
+                {menu.lunch && <div><span className="text-xs text-slate-500 dark:text-slate-400">{lang === 'is' ? 'Hádegismatur' : 'Lunch'}:</span> <div className="text-sm">{menu.lunch}</div></div>}
+                {menu.snack && <div><span className="text-xs text-slate-500 dark:text-slate-400">{lang === 'is' ? 'Kvöldmatur' : 'Snack'}:</span> <div className="text-sm">{menu.snack}</div></div>}
+              </div>
+              {menu.notes && <div className="mt-2 text-sm text-slate-600 dark:text-slate-400">{menu.notes}</div>}
+              <div className="mt-2 flex gap-2">
+                <button
+                  onClick={() => router.push(`/dashboard/add-menu?id=${menu.id}`)}
+                  className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2 py-1 text-xs hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                >
+                  <Edit className="h-3 w-3" /> {lang === 'is' ? 'Breyta' : 'Edit'}
+                </button>
+              </div>
             </div>
           ))}
         </div>

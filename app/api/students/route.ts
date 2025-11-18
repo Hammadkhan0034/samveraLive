@@ -221,12 +221,6 @@ export async function POST(request: Request) {
       social_security_number,
       guardian_ids
     } = bodyValidation.data
-    const normalizedLanguage =
-    student_language === 'english' ? 'english' :
-    student_language === 'icelandic' ? 'icelandic' :
-    student_language === 'en' ? 'english' :
-    student_language === 'is' ? 'icelandic' :
-      'english'
     
     if (!first_name) {
       return NextResponse.json({ 
@@ -234,16 +228,9 @@ export async function POST(request: Request) {
       }, { status: 400 })
     }
     
-    console.log('📋 Creating student:', { first_name, last_name, class_id, registration_time, student_language:normalizedLanguage, guardian_ids,barngildi });
-
-
-    
-
-    // Validate date of birth if provided
-    let validatedDob = null;
-    if (dob) {
-      // Ensure the date is in ISO format (YYYY-MM-DD)
-      const birthDate = new Date(dob);
+    // Validate age if date of birth is provided
+    if (validatedDob) {
+      const birthDate = new Date(validatedDob);
       
       // Check if the date is valid
       if (isNaN(birthDate.getTime())) {
@@ -267,26 +254,9 @@ export async function POST(request: Request) {
           error: 'Student age must be between 0 and 18 years old' 
         }, { status: 400 })
       }
-      
-      // Convert to ISO format for database storage
-      validatedDob = birthDate.toISOString().split('T')[0];
     }
-
-    // Validate start_date if provided
-    let validatedStartDate = null;
-    if (start_date) {
-      const startDate = new Date(start_date);
-      
-      // Check if the date is valid
-      if (isNaN(startDate.getTime())) {
-        return NextResponse.json({ 
-          error: 'Invalid date format for start date' 
-        }, { status: 400 })
-      }
-      
-      // Convert to ISO format for database storage
-      validatedStartDate = startDate.toISOString().split('T')[0];
-    }
+    
+    console.log('📋 Creating student:', { first_name, last_name, class_id, registration_time, student_language: normalizedLanguage, guardian_ids, barngildi: normalizedBarngildi });
 
     // First create a user record for the student
     let createdUser, userError;

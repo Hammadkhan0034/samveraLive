@@ -1,11 +1,12 @@
 'use client';
 
 import React from 'react';
+import { ArrowLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
 import MessagesPanel from '@/app/components/shared/MessagesPanel';
+import TeacherLayout from '@/app/components/shared/TeacherLayout';
 
 export default function TeacherMessagesPage() {
   const { user, loading } = useRequireAuth('teacher');
@@ -78,19 +79,23 @@ export default function TeacherMessagesPage() {
       };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      <main className="mx-auto max-w-7xl px-4 py-8 md:px-6 mt-10">
-        <div className="mb-6">
-          <button
-            onClick={() => router.back()}
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-          >
-            <ArrowLeft className="h-4 w-4" /> {lang === 'is' ? 'Til baka' : 'Back'}
-          </button>
+    <TeacherLayout hideHeader={true}>
+      <div className="h-full bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 overflow-y-auto">
+        <div className="mx-auto max-w-6xl px-4 py-8 md:px-6">
+          {/* Header with Back button */}
+          <div className="mb-6 flex items-center gap-3 flex-wrap">
+            <button
+              onClick={() => router.back()}
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            >
+              <ArrowLeft className="h-4 w-4" /> {lang === 'is' ? 'Til baka' : 'Back'}
+            </button>
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.msg_title}</h1>
+          </div>
+          <MessagesPanel t={t} lang={lang} role="teacher" />
         </div>
-        <MessagesPanel t={t} lang={lang} role="teacher" />
-      </main>
-    </div>
+      </div>
+    </TeacherLayout>
   );
 }
 

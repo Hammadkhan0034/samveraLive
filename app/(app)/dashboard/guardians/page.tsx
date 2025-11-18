@@ -2,12 +2,13 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { Plus, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useRequireAuth } from '@/lib/hooks/useAuth';
 import { type GuardianFormData } from '@/app/components/shared/GuardianForm';
 import { GuardianTable } from '@/app/components/shared/GuardianTable';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
+import TeacherLayout from '@/app/components/shared/TeacherLayout';
 
 type Lang = 'is' | 'en';
 
@@ -256,32 +257,27 @@ export default function GuardiansPage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-        <main className="mx-auto max-w-7xl px-4 py-8 md:px-6 mt-10">
-      {/* Header */}
-      <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => router.back()}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-          >
-            <ArrowLeft className="h-4 w-4" /> {t.back}
-          </button>
-          <div>
+    <TeacherLayout hideHeader={true}>
+      <div className="h-full bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 overflow-y-auto">
+        <div className="mx-auto max-w-6xl px-4 py-8 md:px-6">
+          {/* Header with Back button */}
+          <div className="mb-6 flex items-center gap-3 flex-wrap">
+            <button
+              onClick={() => router.back()}
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            >
+              <ArrowLeft className="h-4 w-4" /> {lang === 'is' ? 'Til baka' : 'Back'}
+            </button>
             <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.title}</h1>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.subtitle}</p>
+            <div className="flex items-center gap-2 ml-auto">
+              <button
+                onClick={openCreateGuardianModal}
+                className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
+              >
+                <Plus className="h-4 w-4" /> {t.add_guardian}
+              </button>
+            </div>
           </div>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={openCreateGuardianModal}
-            className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
-          >
-            <Plus className="h-4 w-4" /> {t.add_guardian}
-          </button>
-        </div>
-      </div>
 
       {/* Guardians Table */}
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
@@ -395,8 +391,9 @@ export default function GuardiansPage() {
           cancel: t.cancel
         }}
         />
-      </main>
-    </div>
+        </div>
+      </div>
+    </TeacherLayout>
   );
 }
 
