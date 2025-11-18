@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 
 interface StudentFormProps {
@@ -69,7 +69,6 @@ export interface StudentFormData {
   dob: string;
   gender: string;
   class_id: string;
-  status?: 'pending' | 'approved' | 'rejected' | string;
   medical_notes: string;
   allergies: string;
   emergency_contact: string;
@@ -110,7 +109,6 @@ export function StudentForm({
       dob: '',
       gender: 'unknown',
       class_id: '',
-      status: 'pending',
       phone: '',
       address: '',
       registration_time: '',
@@ -126,36 +124,63 @@ export function StudentForm({
     };
   });
 
-  // Update form data when initialData changes - wrap in requestAnimationFrame to avoid synchronous setState
+  // Use ref to track previous initialData ID to avoid unnecessary resets
+  const prevInitialDataIdRef = useRef<string | undefined>(initialData?.id);
+  const isInitialMount = useRef(true);
+  const hasUserInputRef = useRef(false);
+
+  // Track when user starts typing to prevent form resets
   useEffect(() => {
-    const id = requestAnimationFrame(() => {
+    const hasInput = formData.first_name || formData.last_name || formData.dob || formData.phone || formData.address;
+    if (hasInput) {
+      hasUserInputRef.current = true;
+    }
+  }, [formData.first_name, formData.last_name, formData.dob, formData.phone, formData.address]);
+
+  // Update form data when initialData changes - but preserve user input
+  useEffect(() => {
+    // On initial mount, set form data from initialData if provided
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
       if (initialData) {
         setFormData(initialData);
-      } else {
-        setFormData({
-          first_name: '',
-          last_name: '',
-          dob: '',
-          gender: 'unknown',
-          class_id: '',
-          status: 'pending',
-          phone: '',
-          address: '',
-          registration_time: '',
-          start_date: '',
-          barngildi: 0,
-          student_language: 'english',
-          social_security_number: '',
-          medical_notes: '',
-          allergies: '',
-          org_id: orgId,
-          emergency_contact: '',
-          guardian_ids: []
-        });
+        prevInitialDataIdRef.current = initialData.id;
       }
+      return;
+    }
+
+    // Only update if we're switching to edit a different student (ID changed)
+    // AND user hasn't typed anything yet
+    const currentId = initialData?.id;
+    const prevId = prevInitialDataIdRef.current;
+    
+    if (initialData && currentId && currentId !== prevId && !hasUserInputRef.current) {
+      // Switching to edit a different student - update form only if no user input
+      setFormData(initialData);
+      prevInitialDataIdRef.current = currentId;
+      hasUserInputRef.current = false; // Reset flag after loading new student
+    } else if (initialData && currentId === prevId) {
+      // Same student - don't update, preserve user input
+      // This prevents reset when the same initialData object reference changes
+    } else if (!initialData && prevId) {
+      // initialData was cleared (switching from edit to create mode)
+      // Don't reset if user has input
+      if (!hasUserInputRef.current) {
+        // Only reset if form is empty
+        prevInitialDataIdRef.current = undefined;
+      }
+    }
+  }, [initialData?.id]); // Only depend on the ID, not the whole object
+
+  // Update org_id when orgId changes, but preserve other form data
+  useEffect(() => {
+    setFormData(prev => {
+      if (prev.org_id !== orgId) {
+        return { ...prev, org_id: orgId };
+      }
+      return prev;
     });
-    return () => cancelAnimationFrame(id);
-  }, [initialData, orgId]);
+  }, [orgId]);
 
   // Validate student age
   const validateStudentAge = (dob: string): boolean => {
@@ -192,7 +217,6 @@ export function StudentForm({
       dob: '',
       gender: 'unknown',
       class_id: '',
-      status: 'pending',
       phone: '',
       address: '',
       registration_time: '',
@@ -206,6 +230,9 @@ export function StudentForm({
       emergency_contact: '',
       guardian_ids: []
     });
+    hasUserInputRef.current = false; // Reset flag when closing
+    prevInitialDataIdRef.current = undefined; // Reset previous data
+    isInitialMount.current = true; // Allow re-initialization if form reopens
     onClose();
   };
 
@@ -342,21 +369,6 @@ export function StudentForm({
               className="w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
               rows={2}
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-              {t.student_status || 'Status'}
-            </label>
-            <select
-              value={formData.status || 'pending'}
-              onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value }))}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-slate-700 dark:text-slate-200"
-            >
-              <option value="pending">{t.status_pending || 'Pending'}</option>
-              <option value="approved">{t.status_approved || 'Approved'}</option>
-              <option value="rejected">{t.status_rejected || 'Rejected'}</option>
-            </select>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

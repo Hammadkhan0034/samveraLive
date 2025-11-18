@@ -167,11 +167,11 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
       { id: 'media', title: t.tile_media, desc: t.tile_media_desc, Icon: Camera, badge: uploads.length || undefined },
       { id: 'stories', title: t.tile_stories, desc: t.tile_stories_desc, Icon: Timer },
       { id: 'announcements', title: t.tile_announcements, desc: t.tile_announcements_desc, Icon: Bell },
-      { id: 'students', title: t.tile_students, desc: t.tile_students_desc, Icon: Users, badge: studentRequests.filter(r => r.status === 'pending').length || undefined },
+      { id: 'students', title: t.tile_students, desc: t.tile_students_desc, Icon: Users },
       { id: 'guardians', title: t.tile_guardians || 'Guardians', desc: t.tile_guardians_desc || 'Manage guardians', Icon: Users },
       { id: 'link_student', title: t.tile_link_student || 'Link Student', desc: t.tile_link_student_desc || 'Link a guardian to a student', Icon: LinkIcon },
       { id: 'menus', title: t.tile_menus || 'Menus', desc: t.tile_menus_desc || 'Manage daily menus', Icon: Utensils },
-    ], [t, kidsIn, uploads, studentRequests, messagesCount]);
+    ], [t, kidsIn, uploads, messagesCount]);
 
   // ---- Attendance actions ----
   // Load attendance for today
@@ -374,14 +374,12 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
 
       // Get teacher's assigned classes first
       if (teacherClasses.length === 0) {
-        console.log('No classes assigned to teacher, skipping student requests load');
         setStudentRequests([]);
         return;
       }
 
-      // Load student requests for all assigned classes
+      // Load student requests for all assigned classes (for approved/rejected history only)
       const classIds = teacherClasses.map(cls => cls.id).join(',');
-      console.log('Loading student requests for classes:', classIds, 'Org ID:', finalOrgId);
 
       const response = await fetch(`/api/student-requests?classIds=${classIds}&orgId=${finalOrgId}&t=${Date.now()}`, { cache: 'no-store' });
       const data = await response.json();
@@ -405,10 +403,12 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
           localStorage.setItem('teacher_student_requests_cache', JSON.stringify(enhancedRequests));
         }
       } else {
-        console.error('Error loading student requests:', data.error);
+        // Silently handle errors - student requests are optional (only for history)
+        setStudentRequests([]);
       }
     } catch (error) {
-      console.error('Error loading student requests:', error);
+      // Silently handle errors - student requests are optional (only for history)
+      setStudentRequests([]);
     } finally {
       if (showLoading) setLoadingRequests(false);
     }
@@ -444,7 +444,10 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
           const url = `/api/students?orgId=${finalOrgId}&classId=${classId}&t=${Date.now()}`;
           console.log(`📋 Fetching students for class ${classId}:`, url);
           
-          const response = await fetch(url, { cache: 'no-store' });
+          const response = await fetch(url, { 
+            cache: 'no-store',
+            credentials: 'include' // Include cookies for authentication
+          });
           
           // Check if fetch succeeded before trying to parse JSON
           if (!response.ok) {
@@ -455,7 +458,13 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
             } catch {
               errorData = { error: errorText || `HTTP ${response.status}` };
             }
-            console.error(`❌ Error loading students for class ${classId}:`, errorData.error || `HTTP ${response.status}`);
+            
+            // Handle authentication errors gracefully
+            if (response.status === 401 || errorData.error?.includes('Authentication')) {
+              console.warn(`⚠️ Authentication required for class ${classId}. Skipping...`);
+            } else {
+              console.error(`❌ Error loading students for class ${classId}:`, errorData.error || `HTTP ${response.status}`);
+            }
             continue; // Skip this class and continue with others
           }
 
@@ -575,7 +584,7 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
           guardian_ids: []
         });
         setIsStudentRequestModalOpen(false);
-        loadStudentRequests(false);
+        // loadStudentRequests removed - teachers now create students directly
       } else {
         setSuccessMessage(`Error: ${data.error}`);
         setIsSuccessModalOpen(true);
@@ -658,7 +667,6 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
     if (teacherClasses.length > 0 && active === 'students') {
       console.log('Teacher classes loaded, fetching students...', teacherClasses);
       Promise.allSettled([
-        loadStudentRequests(false),
         loadStudents(false)
       ]);
     } else if (session?.user?.id && !loadingClasses && teacherClasses.length === 0) {
@@ -675,7 +683,6 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
       createTableAndLoadData(true);
       
       // Load immediately when tab becomes active
-      loadStudentRequests(false);
       loadStudents(false);
     }
   }, [session?.user?.id, teacherClasses.length, active]);
@@ -842,7 +849,7 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
         console.log('✅ Table created successfully');
         // Only load data if requested (when students tab is active)
         if (shouldLoadData) {
-          loadStudentRequests(false);
+          // loadStudentRequests removed - teachers now create students directly
         }
       } else {
         console.error('❌ Failed to create table:', createData.error);
@@ -976,7 +983,7 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
 
       if (updateResponse.ok) {
         console.log('✅ Metadata updated successfully');
-        loadStudentRequests();
+        // loadStudentRequests removed - teachers now create students directly
       } else {
         console.error('❌ Failed to update metadata:', updateData.error);
       }
@@ -3261,7 +3268,7 @@ function StudentsPanel({
   onDeleteStudent?: (studentId: string) => void;
   teacherClasses?: any[];
 }) {
-  const pendingRequests = studentRequests.filter(r => r.status === 'pending');
+  // Pending requests removed - teachers now create students directly
   const approvedRequests = studentRequests.filter(r => r.status === 'approved');
   const [approvedSearch, setApprovedSearch] = React.useState('');
   const [approvedPage, setApprovedPage] = React.useState(1);
@@ -3364,7 +3371,9 @@ function StudentsPanel({
                   <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
                     {t.student_class}
                   </th>
-                  {/* Guardians column removed */}
+                  <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                    {t.guardians || 'Guardians'}
+                  </th>
                   <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
                     {t.actions || 'Actions'}
                   </th>
@@ -3393,7 +3402,25 @@ function StudentsPanel({
                     <td className="py-2 px-4 text-sm text-black dark:text-slate-400">
                       {student.classes?.name || '-'}
                     </td>
-                    {/* Guardians cell removed */}
+                    <td className="py-2 px-4 text-sm text-black dark:text-slate-400">
+                      {((student as any).guardians && Array.isArray((student as any).guardians) && (student as any).guardians.length > 0) ? (
+                        <div className="flex flex-col gap-1">
+                          {(student as any).guardians.map((guardian: any, idx: number) => {
+                            const guardianName = guardian.users 
+                              ? `${guardian.users.first_name || ''} ${guardian.users.last_name || ''}`.trim()
+                              : null;
+                            return guardianName ? (
+                              <span key={guardian.id || idx} className="text-xs">
+                                {guardianName}
+                                {guardian.relation ? ` (${guardian.relation})` : ''}
+                              </span>
+                            ) : null;
+                          })}
+                        </div>
+                      ) : (
+                        <span className="text-slate-400">-</span>
+                      )}
+                    </td>
                     <td className="py-2 px-4">
                       <div className="flex items-center gap-2">
                         <button
@@ -3462,83 +3489,6 @@ function StudentsPanel({
       </div>
 
       
-
-      {/* Pending Requests Table */}
-      <div className="mb-6">
-        <h3 className="text-md font-medium mb-3 text-slate-900 dark:text-slate-100">{t.pending_requests}</h3>
-        {loadingRequests ? (
-          <div className="text-center py-4 text-slate-600 dark:text-slate-400">{t.loading}</div>
-        ) : pendingRequests.length === 0 ? (
-          <div className="text-center py-4 text-slate-500 dark:text-slate-400">{t.no_pending_requests}</div>
-        ) : (
-          <div className="overflow-x-auto rounded-t-lg rounded-r-lg">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-black border-b border-slate-200 dark:bg-slate-800">
-                  <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-white">
-                    {t.student_name}
-                  </th>
-                  <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-white">
-                    {t.student_dob}
-                  </th>
-                  <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-white">
-                    {t.student_gender}
-                  </th>
-                  <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-white">
-                    {t.student_class}
-                  </th>
-                  <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-white">
-                    {t.student_medical_notes}
-                  </th>
-                  <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-white">
-                    {t.status}
-                  </th>
-                  <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-white">
-                    {t.requested_date}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {pendingRequests.map((request) => (
-                  <tr key={request.id} className="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                    <td className="py-3 px-4">
-                      <div className="font-medium text-slate-900 dark:text-slate-100">
-                        {request.first_name} {request.last_name}
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400">
-                      <span suppressHydrationWarning>{typeof window !== 'undefined' && request.dob ? new Date(request.dob).toLocaleDateString() : '-'}</span>
-                    </td>
-                    <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400">
-                      {request.gender || '-'}
-                    </td>
-                    <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400">
-                      {request.class_name || '-'}
-                    </td>
-                    <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400">
-                      {request.medical_notes ? (
-                        <span className="truncate max-w-xs block" title={request.medical_notes}>
-                          {request.medical_notes.length > 30 
-                            ? `${request.medical_notes.substring(0, 30)}...` 
-                            : request.medical_notes}
-                        </span>
-                      ) : '-'}
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300">
-                        {t.pending}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-sm text-slate-600 dark:text-slate-400">
-                      <span suppressHydrationWarning>{typeof window !== 'undefined' && request.created_at ? new Date(request.created_at).toLocaleDateString() : '-'}</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
 
       {/* Approved Requests */}
       {approvedRequests.length > 0 && (

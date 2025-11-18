@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useEffect, useState, Suspense } from 'react';
+import React, { useMemo, useEffect, useState, Suspense, useRef } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useRequireAuth } from '@/lib/hooks/useAuth';
@@ -17,11 +17,8 @@ function AddStudentPageContent() {
   // Try to get org_id from multiple possible locations
   const userMetadata = user?.user_metadata;
   const orgId = userMetadata?.org_id || userMetadata?.organization_id || userMetadata?.orgId;
-  const role = (userMetadata?.role || userMetadata?.user_role || userMetadata?.app_role || '').toString().toLowerCase();
-  const rolesArr: any[] = Array.isArray(userMetadata?.roles) ? userMetadata?.roles : [];
-  const activeRole = (userMetadata?.activeRole || '').toString().toLowerCase();
-  const isPrincipal = [role, activeRole, ...rolesArr].some((r) => typeof r === 'string' && r.toLowerCase() === 'principal');
-  const defaultStatus: 'pending' | 'approved' = isPrincipal ? 'approved' : 'pending';
+  // All users (teachers and principals) create students directly with approved status
+  const defaultStatus: 'pending' | 'approved' = 'approved';
 
   const [dbOrgId, setDbOrgId] = useState<string | null>(null);
 
@@ -134,47 +131,15 @@ function AddStudentPageContent() {
       setError(null);
       setLoadingSubmit(true);
 
-      // If principal → create student directly; otherwise create a student request
-      const isPrincipalNow = isPrincipal;
-
-      let res: Response;
-      if (isPrincipalNow) {
-        // Strip guardian_ids and ensure status defaults to approved
-        const { guardian_ids, ...studentOnly } = data as any;
-        if (!studentOnly.status) studentOnly.status = defaultStatus;
-        res = await fetch('/api/students', {
-          method: data.id ? 'PUT' : 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(studentOnly),
-        });
-      } else {
-        // Teacher: create a student request (pending)
-        const requestPayload: any = {
-          first_name: data.first_name,
-          last_name: data.last_name,
-          dob: data.dob || null,
-          gender: data.gender || 'unknown',
-          medical_notes: data.medical_notes || '',
-          allergies: data.allergies || '',
-          emergency_contact: data.emergency_contact || '',
-          status: 'pending',
-          class_id: data.class_id || null,
-          barngildi: data.barngildi ?? 0,
-          ssn: data.social_security_number || '',
-          address: data.address || '',
-          phone: data.phone || '',
-          registration_time: data.registration_time || '',
-          start_date: data.start_date || '',
-          guardian_ids: data.guardian_ids || [],
-          requested_by: user?.id,
-          org_id: finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID || '',
-        };
-        res = await fetch('/api/student-requests', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(requestPayload),
-        });
-      }
+      // Both teachers and principals create students directly
+      // Strip guardian_ids
+      const { guardian_ids, ...studentOnly } = data as any;
+      
+      const res = await fetch('/api/students', {
+        method: data.id ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(studentOnly),
+      });
 
       let json: any = {};
       try {
@@ -194,7 +159,8 @@ function AddStudentPageContent() {
       if (typeof window !== 'undefined') {
         try { localStorage.setItem('students_data_changed', String(Date.now())); } catch {}
       }
-      router.back();
+      // Redirect back to teacher dashboard with students tab active
+      router.push('/dashboard/teacher?tab=students');
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -243,26 +209,7 @@ function AddStudentPageContent() {
             isOpen={true}
             onClose={() => router.back()}
             onSubmit={submitStudent}
-            initialData={editingStudent || {
-              first_name: '',
-              last_name: '',
-              dob: '',
-              gender: 'unknown',
-              class_id: '',
-              status: defaultStatus,
-              phone: '',
-              address: '',
-              registration_time: '',
-              start_date: '',
-              barngildi: 0,
-              student_language: 'english',
-              social_security_number: '',
-              medical_notes: '',
-              allergies: '',
-              emergency_contact: '',
-              guardian_ids: [],
-              org_id: finalOrgId || ''
-            }}
+            initialData={editingStudent || undefined}
             loading={loadingSubmit}
             error={error}
             guardians={guardians}
@@ -289,10 +236,6 @@ function AddStudentPageContent() {
               student_child_value: t.student_child_value,
               student_child_value_placeholder: t.student_child_value_placeholder,
               student_language: t.student_language,
-              student_status: 'Status',
-              status_pending: 'Pending',
-              status_approved: 'Approved',
-              status_rejected: 'Rejected',
               student_social_security_number: t.student_social_security_number,
               student_social_security_number_placeholder: t.student_social_security_number_placeholder,
               student_phone_placeholder: t.student_phone_placeholder,
