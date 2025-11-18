@@ -127,8 +127,13 @@ export default function AnnouncementForm({
           body: body.trim(),
         };
         // Use selectedClassId if showClassSelector is enabled, otherwise use propClassId
-        const finalClassId = showClassSelector ? (selectedClassId || undefined) : (propClassId || undefined);
-        if (finalClassId) payload.classId = finalClassId;
+        // For org-wide announcements (empty string), explicitly set to null to distinguish from undefined
+        const finalClassId = showClassSelector 
+          ? (selectedClassId && selectedClassId.trim() !== '' ? selectedClassId : null)
+          : (propClassId || null);
+        // Always set classId (null for org-wide, or the class ID for class-specific)
+        // This allows createAnnouncement to distinguish between "not provided" and "explicitly org-wide"
+        payload.classId = finalClassId;
         if (effectiveOrgId) payload.orgId = effectiveOrgId;
 
         await createAnnouncement(payload);

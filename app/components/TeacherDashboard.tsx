@@ -1,14 +1,14 @@
 'use client';
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Users, CalendarDays, Plus, Send, Paperclip, Bell, X, Search, ChevronLeft, ChevronRight, Edit, Trash2, Link as LinkIcon, Mail, Utensils, Menu } from 'lucide-react';
+import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Users, CalendarDays, Plus, Send, Paperclip, Bell, X, Search, ChevronLeft, ChevronRight, Edit, Trash2, Link as LinkIcon, Mail, Utensils, Menu, Eye } from 'lucide-react';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import { useAuth } from '@/lib/hooks/useAuth';
 import AnnouncementForm from './AnnouncementForm';
 import AnnouncementList from './AnnouncementList';
 import { supabase } from '@/lib/supabaseClient';
 import { option } from 'framer-motion/client';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import StoryColumn from './shared/StoryColumn';
 import { MessageThreadWithParticipants, MessageItem } from '@/lib/types/messages';
@@ -31,9 +31,18 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
   const [active, setActive] = useState<TileId>('attendance');
   const { session } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [mounted, setMounted] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   useEffect(() => { setMounted(true); }, []);
+
+  // Set active tab from query parameter
+  useEffect(() => {
+    const tabParam = searchParams?.get('tab');
+    if (tabParam && ['attendance', 'diapers', 'messages', 'media', 'stories', 'announcements', 'students', 'guardians', 'link_student', 'menus'].includes(tabParam)) {
+      setActive(tabParam as TileId);
+    }
+  }, [searchParams]);
 
   // Prefetch routes for instant navigation
   useEffect(() => {
@@ -2708,6 +2717,12 @@ function StoriesPanel({ t, router, session, orgId, teacherClasses, isActive = fa
   const startTimeRef = useRef<number>(0);
   const pausedTimeRef = useRef<number>(0);
   const itemStartTimeRef = useRef<number>(0);
+  
+  // Delete modal state
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [storyToDelete, setStoryToDelete] = useState<any>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Load stories ONLY when panel is active
   useEffect(() => {
@@ -2956,6 +2971,61 @@ function StoriesPanel({ t, router, session, orgId, teacherClasses, isActive = fa
     };
   }, [viewerOpen, activeItems, activeIndex, isPaused]);
 
+  function openDeleteModal(story: any) {
+    setStoryToDelete(story);
+    setIsDeleteModalOpen(true);
+    setDeleteError(null);
+  }
+
+  function closeDeleteModal() {
+    setIsDeleteModalOpen(false);
+    setStoryToDelete(null);
+    setDeleteError(null);
+  }
+
+  async function confirmDelete() {
+    if (!storyToDelete || !session?.user?.id) return;
+    
+    setDeleting(true);
+    setDeleteError(null);
+    
+    try {
+      const res = await fetch(`/api/stories?id=${storyToDelete.id}&authorId=${session.user.id}`, {
+        method: 'DELETE',
+      });
+      
+      const json = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(json.error || `Failed to delete story: ${res.status}`);
+      }
+      
+      // Remove from local state
+      setStories(prev => prev.filter(s => s.id !== storyToDelete.id));
+      
+      // Update storiesByClass
+      setStoriesByClass(prev => {
+        const updated = { ...prev };
+        Object.keys(updated).forEach(key => {
+          updated[key].stories = updated[key].stories.filter((s: any) => s.id !== storyToDelete.id);
+        });
+        // Remove empty groups
+        Object.keys(updated).forEach(key => {
+          if (updated[key].stories.length === 0) {
+            delete updated[key];
+          }
+        });
+        return updated;
+      });
+      
+      closeDeleteModal();
+    } catch (e: any) {
+      setDeleteError(e.message);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
       <div className="mb-4 flex items-center justify-between">
@@ -3010,6 +3080,71 @@ function StoriesPanel({ t, router, session, orgId, teacherClasses, isActive = fa
         )}
       </div>
       <p className="mt-4 text-sm text-slate-600 dark:text-slate-400">{t.stories_hint}</p>
+      
+      {/* Stories Table */}
+      <div className="mt-6 rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        {loading && stories.length === 0 ? (
+          <div className="p-6 text-slate-600 dark:text-slate-400">{t.loading_stories || 'Loading stories…'}</div>
+        ) : stories.length === 0 ? (
+          <div className="p-6 text-center text-slate-600 dark:text-slate-400">{t.empty_stories || 'No stories yet.'}</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-black text-white">
+                <tr>
+                  <th className="px-4 py-2 text-left text-sm font-semibold text-white">{t.col_title}</th>
+                  <th className="px-4 py-2 text-left text-sm font-semibold text-white">{t.col_scope}</th>
+                  <th className="px-4 py-2 text-left text-sm font-semibold text-white">{t.col_caption}</th>
+                  <th className="px-4 py-2 text-left text-sm font-semibold text-white">{t.actions || 'Actions'}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
+                {stories.map((s) => (
+                  <tr key={s.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/30">
+                    <td className="px-4 py-2 text-sm text-slate-900 dark:text-slate-100">
+                      {s.title || '—'}
+                    </td>
+                    <td className="px-4 py-2 text-sm text-slate-600 dark:text-slate-400">
+                      {s.class_id ? t.class_label : t.org_wide}
+                    </td>
+                    <td className="px-4 py-2 text-sm text-slate-600 dark:text-slate-400">
+                      {s.caption || t.no_caption}
+                    </td>
+                    <td className="px-4 py-2">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => openStory(s)}
+                          className="inline-flex items-center gap-1 rounded-md border border-slate-300 px-2 py-1 text-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                          title={t.view}
+                        >
+                          <Eye className="h-3.5 w-3.5" />
+                          <span>{t.view}</span>
+                        </button>
+                        <button
+                          onClick={() => router.push(`/dashboard/edit-story/${s.id}`)}
+                          className="inline-flex items-center gap-1 rounded-md border border-slate-300 px-2 py-1 text-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                          title={t.edit || 'Edit'}
+                        >
+                          <Edit className="h-3.5 w-3.5" />
+                          <span>{t.edit || 'Edit'}</span>
+                        </button>
+                        <button
+                          onClick={() => openDeleteModal(s)}
+                          className="inline-flex items-center gap-1 rounded-md border border-red-300 px-2 py-1 text-sm text-red-600 hover:bg-red-50 dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20"
+                          title={t.delete || 'Delete'}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                          <span>{t.delete || 'Delete'}</span>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
       
       {/* Story Viewer - Direct in Teacher Dashboard */}
       {viewerOpen && activeStory && (
@@ -3086,6 +3221,19 @@ function StoriesPanel({ t, router, session, orgId, teacherClasses, isActive = fa
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={closeDeleteModal}
+        onConfirm={confirmDelete}
+        title={t.delete_story || 'Delete Story'}
+        message={t.delete_story_confirm || 'Are you sure you want to delete this story? This action cannot be undone.'}
+        loading={deleting}
+        error={deleteError}
+        confirmButtonText={t.delete || 'Delete'}
+        cancelButtonText={t.cancel || 'Cancel'}
+      />
     </div>
   );
 }
@@ -3577,6 +3725,17 @@ const enText = {
   add: 'Add',
   stories_hint:
     'Stories are only visible to guardians of enrolled children in this class and expire after 24 hours.',
+  col_title: 'Title',
+  col_scope: 'Scope',
+  col_caption: 'Caption',
+  no_caption: 'No Caption Added',
+  view: 'View',
+  delete_story: 'Delete Story',
+  delete_story_confirm: 'Are you sure you want to delete this story? This action cannot be undone.',
+  class_label: 'Class',
+  org_wide: 'Organization-wide',
+  loading_stories: 'Loading stories…',
+  empty_stories: 'No stories yet.',
 
   // Announcements
   announcements_title: 'Announcements',
@@ -3733,6 +3892,17 @@ const isText = {
   add: 'Bæta við',
   stories_hint:
     'Sögur eru einungis sýnilegar forráðafólki barna í hópnum og hverfa eftir 24 klst.',
+  col_title: 'Titill',
+  col_scope: 'Svið',
+  col_caption: 'Lýsing',
+  no_caption: 'Engin lýsing bætt við',
+  view: 'Skoða',
+  delete_story: 'Eyða sögu',
+  delete_story_confirm: 'Ertu viss um að þú viljir eyða þessari sögu? Þessa aðgerð er ekki hægt að afturkalla.',
+  class_label: 'Hópur',
+  org_wide: 'Stofnunarvítt',
+  loading_stories: 'Hleður sögum…',
+  empty_stories: 'Engar sögur fundust.',
 
   // Announcements
   tile_announcements: 'Tilkynningar',

@@ -142,14 +142,8 @@ export default function AddStoryPage() {
       return;
     }
 
-    // For teachers: ensure class_id is set (required for class-based stories)
+    // Class selection is optional
     const finalClassId = form.class_id && form.class_id !== '' ? form.class_id : null;
-    
-    // Teachers must select a class
-    if (isTeacher && !finalClassId) {
-      setError('Please select a class for your story');
-      return;
-    }
 
     setSubmitting(true);
     setError(null);
@@ -247,7 +241,8 @@ export default function AddStoryPage() {
         window.dispatchEvent(new Event('stories-refresh'));
       }
       
-      router.push('/dashboard/stories');
+      // Redirect back to teacher dashboard with stories tab active
+      router.push('/dashboard/teacher?tab=stories');
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -280,14 +275,13 @@ export default function AddStoryPage() {
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
             <div className="grid gap-3 md:grid-cols-2">
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">{t.class_label} {isTeacher && '*'}</label>
+                <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">{t.class_label}</label>
                 <select
                   value={form.class_id || ''}
                   onChange={(e)=>setForm(f=>({...f, class_id: e.target.value}))}
                   className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                  required={isTeacher}
                 >
-                  {!isTeacher && <option value="">{t.org_wide}</option>}
+                  <option value="">{t.org_wide}</option>
                   {classes.length === 0 ? (
                     <option value="" disabled>{isTeacher ? 'Loading your classes...' : 'No classes available'}</option>
                   ) : (
@@ -296,9 +290,6 @@ export default function AddStoryPage() {
                     ))
                   )}
                 </select>
-                {isTeacher && !form.class_id && (
-                  <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">Please select a class for your story</p>
-                )}
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">{t.expires_label}</label>

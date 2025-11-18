@@ -321,18 +321,21 @@ export async function GET(request: Request) {
       query = query.or(`and(class_id.is.null),and(author_id.eq.${userId})`)
     } else if (userRole === 'teacher') {
       // For teachers: show principal's org-wide announcements AND class-specific announcements for ALL their assigned classes
+      // Also show org-wide announcements created by the teacher themselves
       // Principal announcements are org-wide (class_id is null) and show to everyone
       const teacherClassIds = teacherClassIdsCsv 
         ? teacherClassIdsCsv.split(',').map(s => s.trim()).filter(Boolean)
         : (classId ? [classId] : []);
       
       if (teacherClassIds.length > 0) {
-        // Show org-wide announcements OR announcements for any of the teacher's assigned classes
+        // Show org-wide announcements (all org-wide) OR announcements for any of the teacher's assigned classes
+        // This includes org-wide announcements created by principals AND by the teacher themselves
         query = query.or(`class_id.is.null,class_id.in.(${teacherClassIds.join(',')})`)
       } else if (classId) {
+        // Show org-wide announcements OR class-specific announcements for the class
         query = query.or(`class_id.is.null,class_id.eq.${classId}`)
       } else {
-        // If no classId, show org-wide announcements only (principal announcements)
+        // If no classId, show org-wide announcements only (principal announcements and teacher's own org-wide)
         query = query.is('class_id', null)
       }
     } else if (classId) {

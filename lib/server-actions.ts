@@ -97,10 +97,26 @@ export async function createAnnouncement(data: {
   }
 
   // Resolve class_id and week_start
-  let classIdResolved = data.classId || (user.user_metadata?.class_id as string | undefined) || null;
+  // If classId is explicitly provided as null, use null (org-wide announcement)
+  // If classId is provided as a string, use it (class-specific announcement)
+  // If classId is undefined, check metadata and potentially auto-provision
+  let classIdResolved: string | null = null;
+  if (data.classId !== undefined && data.classId !== null) {
+    // classId was explicitly provided as a string (class-specific)
+    classIdResolved = data.classId && data.classId.trim() !== '' ? data.classId : null;
+  } else if (data.classId === null) {
+    // classId was explicitly set to null (org-wide announcement)
+    classIdResolved = null;
+  } else {
+    // classId was not provided (undefined), check metadata as fallback
+    classIdResolved = (user.user_metadata?.class_id as string | undefined) || null;
+  }
+  
+  // Only auto-provision a default class if classId was undefined (not provided) AND user is a teacher
+  // This allows teachers to create org-wide announcements by explicitly setting classId to null
   const userRoles: string[] = Array.isArray(user.user_metadata?.roles) ? user.user_metadata.roles : [];
-  if (userRoles.includes('teacher') && !classIdResolved) {
-    // Auto-provision a default class for this org and use it
+  if (userRoles.includes('teacher') && !classIdResolved && data.classId === undefined) {
+    // Auto-provision a default class for this org and use it (only if classId wasn't explicitly provided)
     const defaultClassName = 'Default Class';
     const { data: clsRow, error: clsErr } = await (supabaseAdmin ?? supabase)
       .from('classes')
