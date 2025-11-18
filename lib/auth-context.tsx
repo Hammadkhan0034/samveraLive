@@ -116,7 +116,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           // Block refresh if it happened too recently (within 5 minutes)
           if (timeSinceLastRefresh < MIN_REFRESH_INTERVAL) {
-            console.log('🚫 Blocking frequent token refresh (too soon after last refresh)');
             refreshBlocked.current = true;
             return; // Block this refresh
           }
@@ -128,7 +127,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             
             // If token is still valid for more than 10 minutes, block the refresh
             if (timeUntilExpiry > 600000) { // 10 minutes
-              console.log('🚫 Blocking unnecessary token refresh (token still valid)');
               refreshBlocked.current = true;
               return; // Block this refresh
             }

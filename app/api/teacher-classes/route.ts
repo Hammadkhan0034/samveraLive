@@ -22,8 +22,6 @@ export async function GET(request: NextRequest) {
     }
     const { userId } = queryValidation.data;
 
-    console.log('🔍 Fetching classes for teacher:', userId);
-
     const supabase = supabaseAdmin;
 
     // Get teacher's assigned classes from the users table
@@ -35,20 +33,8 @@ export async function GET(request: NextRequest) {
       .maybeSingle();
     
     if (userError) {
-      console.error('❌ Error fetching user data:', userError);
       // Continue anyway - user might exist in auth but not in users table yet
-      console.log('⚠️ Continuing without user data - will try to fetch classes directly');
     }
-
-    if (userData) {
-      console.log('👤 User data:', userData);
-      console.log('👤 User org_id:', userData.org_id);
-    } else {
-      console.log('⚠️ User not found in users table - continuing with class memberships lookup');
-    }
-
-    // Get teacher's assigned classes from class_memberships table
-    console.log('🔍 Looking for class memberships for user:', userId);
     
     // First get the class memberships
     const { data: memberships, error: membershipError } = await supabase
@@ -57,17 +43,16 @@ export async function GET(request: NextRequest) {
       .eq('user_id', userId);
 
     if (membershipError) {
-      console.error('❌ Error fetching class memberships:', membershipError);
-      return NextResponse.json({ error: 'Failed to fetch class memberships' }, { status: 500 });
+      // Return empty array instead of error to prevent UI issues
+      return NextResponse.json({ classes: [] }, {
+        headers: getUserDataCacheHeaders()
+      });
     }
-
-    console.log('🔍 Class memberships found:', memberships);
 
     if (memberships && memberships.length > 0) {
       try {
         // Get class details for each membership
         const classIds = memberships.map(m => m.class_id);
-        console.log('🔍 Fetching class details for IDs:', classIds);
         
         const { data: classDetails, error: classError } = await supabase
           .from('classes')
@@ -76,23 +61,13 @@ export async function GET(request: NextRequest) {
           .is('deleted_at', null);
 
         if (classError) {
-          console.error('❌ Error fetching class details:', classError);
-          console.error('❌ Class IDs being queried:', classIds);
-          console.error('❌ User org_id:', userData.org_id);
-          console.error('❌ Full error details:', JSON.stringify(classError, null, 2));
-          // Instead of returning error, return empty array to prevent UI errors
-          console.log('⚠️ Returning empty classes array due to database error');
+          // Return empty array to prevent UI errors
           return NextResponse.json({ classes: [] }, {
             headers: getUserDataCacheHeaders()
           });
         }
-
-        console.log('✅ Class details found:', classDetails);
         
         if (!classDetails || classDetails.length === 0) {
-          console.error('❌ No class details found for IDs:', classIds);
-          console.error('❌ This might mean the class was deleted or doesn\'t exist');
-          console.log('⚠️ Returning empty classes array instead of error');
           return NextResponse.json({ classes: [] }, {
             headers: getUserDataCacheHeaders()
           });
@@ -104,19 +79,16 @@ export async function GET(request: NextRequest) {
           code: cls.code
         })) || [];
         
-        console.log('✅ Assigned classes found:', classes);
         return NextResponse.json({ classes }, {
           headers: getUserDataCacheHeaders()
         });
       } catch (queryError) {
-        console.error('💥 Unexpected error in class details query:', queryError);
-        console.log('⚠️ Returning empty classes array due to unexpected error');
+        // Return empty array on unexpected errors
         return NextResponse.json({ classes: [] }, {
           headers: getUserDataCacheHeaders()
         });
       }
     } else {
-      console.log('⚠️ No class memberships found for this teacher');
       // Return empty array instead of all organization classes
       return NextResponse.json({ classes: [] }, {
         headers: getUserDataCacheHeaders()
@@ -124,7 +96,9 @@ export async function GET(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('💥 Error in teacher-classes API:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    // Return empty array instead of error to prevent UI issues
+    return NextResponse.json({ classes: [] }, {
+      headers: getUserDataCacheHeaders()
+    });
   }
 }

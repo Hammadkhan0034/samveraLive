@@ -28,7 +28,17 @@ const getStoriesQuerySchema = z.object({
 
 export async function GET(request: Request) {
   try {
-    await requireServerAuth()
+    const { user } = await requireServerAuth()
+    
+    // Check if user has a valid role (principal, admin, teacher, or parent)
+    const userRoles = user.user_metadata?.roles || [];
+    const hasAccess = userRoles.some((role: string) => ['principal', 'admin', 'teacher', 'parent'].includes(role));
+    
+    if (!hasAccess) {
+      return NextResponse.json({ 
+        error: 'Access denied. Valid role required.' 
+      }, { status: 403 });
+    }
   } catch (authError: any) {
     if (authError.message === 'Authentication required') {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })

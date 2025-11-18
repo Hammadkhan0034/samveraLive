@@ -169,7 +169,7 @@ export default function AnnouncementList({
     if (!effectiveOrgId) return;
     (async () => {
       try {
-        const res = await fetch(`/api/orgs?ids=${encodeURIComponent(effectiveOrgId)}`, { cache: 'no-store' });
+        const res = await fetch(`/api/orgs?ids=${encodeURIComponent(effectiveOrgId)}`, { cache: 'no-store', credentials: 'include' });
         if (res.ok) {
           const { orgs } = await res.json();
           const found = Array.isArray(orgs) && orgs[0] ? orgs[0] : null;

@@ -332,44 +332,28 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
       const userId = session?.user?.id;
 
       if (!userId) {
-        console.error('No user ID available');
         return;
       }
-
-      console.log('Loading classes for teacher:', userId);
-      console.log('Session user metadata:', session?.user?.user_metadata);
 
       // Fetch teacher's assigned classes
       const response = await fetch(`/api/teacher-classes?userId=${userId}&t=${Date.now()}`, { cache: 'no-store' });
       const data = await response.json();
 
-      console.log('API Response:', data);
-
       if (response.ok) {
         const classesData = data.classes || [];
         setTeacherClasses(classesData);
-        console.log('✅ Teacher classes loaded:', classesData);
 
         // Cache the data
         if (typeof window !== 'undefined') {
           localStorage.setItem('teacher_classes_cache', JSON.stringify(classesData));
         }
-
-        // If no classes found, show a message
-        if (classesData.length === 0) {
-          console.warn('⚠️ No classes assigned to this teacher');
-        }
       } else {
-        // Only log error if it's not a "no classes" scenario
-        if (data.error && !data.error.includes('not found') && !data.error.includes('No class')) {
-          console.error('❌ Error loading teacher classes:', data.error);
-        } else {
-          console.warn('⚠️ No classes found for teacher');
-          setTeacherClasses([]);
-        }
+        // Set empty array on error
+        setTeacherClasses([]);
       }
     } catch (error) {
-      console.error('Error loading teacher classes:', error);
+      // Set empty array on error
+      setTeacherClasses([]);
     } finally {
       if (showLoading) setLoadingClasses(false);
     }
@@ -593,8 +577,6 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
       setLoadingRequests(false);
     }
   }
-
-  // Message threads loading removed - now handled inside MessagesPanel
 
   // Load messages count for KPI badge - only when messages tab is active or on initial mount
   async function loadMessagesForKPI() {
@@ -1089,7 +1071,7 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
                 >
                   <Menu className="h-5 w-5" />
                 </button>
-                <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.title}</h2>
+                <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.title}</h2>
               </div>
               <div className="flex items-center gap-3">
                 <ProfileSwitcher />

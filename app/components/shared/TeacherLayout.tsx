@@ -293,7 +293,7 @@ export default function TeacherLayout({
         )}
 
         {/* Main content area */}
-        <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900">
+        <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900 min-h-0">
           {children}
         </main>
       </div>

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 import { getUserDataCacheHeaders } from '@/lib/cacheConfig'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import { z } from 'zod'
 import { validateQuery, validateBody, orgIdSchema, classIdSchema, studentIdSchema, firstNameSchema, lastNameSchema, studentDobSchema, genderSchema, studentLanguageSchema, barngildiSchema, phoneSchema, addressSchema, ssnSchema, medicalNotesSchema, allergiesSchema, emergencyContactSchema, guardianIdsSchema, dateSchema } from '@/lib/validation'
 
@@ -17,6 +19,44 @@ export async function GET(request: Request) {
       return NextResponse.json({ 
         error: 'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local' 
       }, { status: 500 })
+    }
+
+    // Authenticate and check role
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) => {
+                cookieStore.set(name, value, options);
+              });
+            } catch {
+              // Ignore cookie setting errors in route handlers
+            }
+          },
+        },
+      }
+    );
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    // Check if user has principal, admin, or teacher role
+    const userRoles = user.user_metadata?.roles || [];
+    const hasAccess = userRoles.some((role: string) => ['principal', 'admin', 'teacher'].includes(role));
+    
+    if (!hasAccess) {
+      return NextResponse.json({ 
+        error: 'Access denied. Principal, admin, or teacher role required.' 
+      }, { status: 403 });
     }
     
     const { searchParams } = new URL(request.url)

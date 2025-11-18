@@ -38,8 +38,37 @@ export async function GET(request: Request) {
     );
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
-    if (authError || !user) {
+    // Handle network errors gracefully
+    if (authError) {
+      const isNetworkError = authError.message?.includes('fetch failed') || 
+                            authError.message?.includes('timeout') ||
+                            authError.name === 'AuthRetryableFetchError' ||
+                            authError.status === 0;
+      
+      if (isNetworkError) {
+        console.error('❌ Network error during authentication:', authError);
+        return NextResponse.json({ 
+          error: 'Database connection failed. Please check your connection and try again.',
+          retryable: true
+        }, { status: 503 });
+      }
+      
+      console.error('❌ Authentication error:', authError);
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+    
+    if (!user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    // Check if user has a valid role (principal, admin, teacher, or parent)
+    const userRoles = user.user_metadata?.roles || [];
+    const hasAccess = userRoles.some((role: string) => ['principal', 'admin', 'teacher', 'parent'].includes(role));
+    
+    if (!hasAccess) {
+      return NextResponse.json({ 
+        error: 'Access denied. Valid role required.' 
+      }, { status: 403 });
     }
 
     const { searchParams } = new URL(request.url)

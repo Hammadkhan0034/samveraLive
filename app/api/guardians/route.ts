@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 import { getUserDataCacheHeaders } from '@/lib/cacheConfig'
+import { requireServerAuth } from '@/lib/supabaseServer'
 import { z } from 'zod'
 import { validateQuery, validateBody, orgIdSchema, userIdSchema, firstNameSchema, lastNameSchema, emailSchema, phoneSchema, addressSchema, ssnSchema } from '@/lib/validation'
 
@@ -14,8 +15,20 @@ const getGuardiansQuerySchema = z.object({
 
 export async function GET(request: Request) {
   try {
+    // Authenticate and check role
+    const { user } = await requireServerAuth()
+    
+    // Check if user has principal, admin, or teacher role
+    const userRoles = user.user_metadata?.roles || [];
+    const hasAccess = userRoles.some((role: string) => ['principal', 'admin', 'teacher'].includes(role));
+    
+    if (!hasAccess) {
+      return NextResponse.json({ 
+        error: 'Access denied. Principal, admin, or teacher role required.' 
+      }, { status: 403 });
+    }
+
     if (!supabaseAdmin) {
-      console.error('❌ Supabase admin client not configured. Missing SUPABASE_SERVICE_ROLE_KEY in .env.local')
       return NextResponse.json({ 
         error: 'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local' 
       }, { status: 500 })
@@ -37,7 +50,6 @@ export async function GET(request: Request) {
       .order('created_at', { ascending: false })
 
     if (error) {
-      console.error('❌ Error fetching guardians:', error);
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
@@ -69,7 +81,6 @@ const postGuardianBodySchema = z.object({
 export async function POST(request: Request) {
   try {
     if (!supabaseAdmin) {
-      console.error('❌ Supabase admin client not configured. Missing SUPABASE_SERVICE_ROLE_KEY in .env.local')
       return NextResponse.json({ 
         error: 'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local' 
       }, { status: 500 })
@@ -96,7 +107,6 @@ export async function POST(request: Request) {
     }
 
     // Create auth user with default password
-    console.log('👤 Checking if auth user exists...')
     const { data: existingAuthUsers } = await supabaseAdmin.auth.admin.listUsers()
     const existingAuthUser = existingAuthUsers?.users.find(u => u.email === email)
 
@@ -104,7 +114,6 @@ export async function POST(request: Request) {
 
     // Create auth user if it doesn't exist
     if (!existingAuthUser) {
-      console.log('📝 Creating new auth user with default password...')
       const defaultPassword = 'test123456'
       const { data: newAuthUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
         email,
@@ -122,7 +131,6 @@ export async function POST(request: Request) {
       })
 
       if (createError) {
-        console.error('❌ Failed to create auth user:', createError)
         return NextResponse.json({ error: createError.message }, { status: 500 })
       }
 
@@ -131,9 +139,6 @@ export async function POST(request: Request) {
       }
 
       authUser = newAuthUser.user
-      console.log('✅ Auth user created successfully')
-    } else {
-      console.log('ℹ️ Auth user already exists, using existing user')
     }
 
     // Ensure authUser is defined before proceeding
@@ -164,7 +169,6 @@ export async function POST(request: Request) {
       .insert(userData)
 
     if (publicUserError) {
-      console.error('❌ Failed to create guardian:', publicUserError)
       return NextResponse.json({ error: `Failed to create guardian: ${publicUserError.message}` }, { status: 500 })
     }
     // Optionally link to a specific student
@@ -173,7 +177,7 @@ export async function POST(request: Request) {
     if (student_id) {
       const { data: relationship, error: linkError } = await supabaseAdmin
         .from('guardian_students')
-        .insert({ guardian_id: guardianId, student_id, relation: 'parent', org_id })
+        .insert({ guardian_id: guardianId, student_id, relation: 'parent', org_id: actualOrgId })
         .select('id')
         .single()
       if (!linkError) createdRelationship = relationship
@@ -198,7 +202,7 @@ export async function POST(request: Request) {
         },
       })
     } catch (e) {
-      console.warn('Unable to update guardian auth metadata', e)
+      // Continue - metadata update is non-critical
     }
 
     // Let's verify the guardian was actually created by querying it back
@@ -247,7 +251,6 @@ const putGuardianBodySchema = z.object({
 export async function PUT(request: Request) {
   try {
     if (!supabaseAdmin) {
-      console.error('❌ Supabase admin client not configured. Missing SUPABASE_SERVICE_ROLE_KEY in .env.local')
       return NextResponse.json({ 
         error: 'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local' 
       }, { status: 500 })
@@ -280,7 +283,6 @@ export async function PUT(request: Request) {
       .single()
 
     if (updateError) {
-      console.error('❌ Failed to update guardian:', updateError)
       return NextResponse.json({ error: `Failed to update guardian: ${updateError.message}` }, { status: 500 })
     }
 
@@ -290,7 +292,6 @@ export async function PUT(request: Request) {
     }, { status: 200 })
 
   } catch (err: any) {
-    console.error('❌ Error in guardians PUT:', err)
     return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 })
   }
 }
@@ -303,7 +304,6 @@ const deleteGuardianQuerySchema = z.object({
 export async function DELETE(request: Request) {
   try {
     if (!supabaseAdmin) {
-      console.error('❌ Supabase admin client not configured. Missing SUPABASE_SERVICE_ROLE_KEY in .env.local')
       return NextResponse.json({ 
         error: 'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local' 
       }, { status: 500 })

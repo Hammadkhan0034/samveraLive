@@ -51,9 +51,39 @@ export async function GET(request: Request) {
     );
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
-    if (authError || !user) {
+    // Handle network errors gracefully
+    if (authError) {
+      const isNetworkError = authError.message?.includes('fetch failed') || 
+                            authError.message?.includes('timeout') ||
+                            authError.name === 'AuthRetryableFetchError' ||
+                            authError.status === 0;
+      
+      if (isNetworkError) {
+        console.error('❌ Network error during authentication:', authError);
+        return NextResponse.json({ 
+          error: 'Database connection failed. Please check your connection and try again.',
+          retryable: true
+        }, { status: 503 });
+      }
+      
+      console.error('❌ Authentication error:', authError);
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
+    
+    if (!user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
+    // Check if user has a valid role (principal, admin, teacher, or parent)
+    const userRoles = user.user_metadata?.roles || [];
+    const hasAccess = userRoles.some((role: string) => ['principal', 'admin', 'teacher', 'parent'].includes(role));
+    
+    if (!hasAccess) {
+      return NextResponse.json({ 
+        error: 'Access denied. Valid role required.' 
+      }, { status: 403 });
+    }
+
     const orgId = await getRequesterOrgId(user.id);
     
     if (!orgId) {
@@ -227,7 +257,26 @@ export async function POST(request: Request) {
     );
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
-    if (authError || !user) {
+    // Handle network errors gracefully
+    if (authError) {
+      const isNetworkError = authError.message?.includes('fetch failed') || 
+                            authError.message?.includes('timeout') ||
+                            authError.name === 'AuthRetryableFetchError' ||
+                            authError.status === 0;
+      
+      if (isNetworkError) {
+        console.error('❌ Network error during authentication:', authError);
+        return NextResponse.json({ 
+          error: 'Database connection failed. Please check your connection and try again.',
+          retryable: true
+        }, { status: 503 });
+      }
+      
+      console.error('❌ Authentication error:', authError);
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+    
+    if (!user) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
     const orgId = await getRequesterOrgId(user.id);
@@ -239,7 +288,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     // POST body schema
     const postMessageBodySchema = z.object({
-      thread_type: threadTypeSchema.default('dm'),
+      thread_type: threadTypeSchema.default('individual'),
       subject: z.string().max(500).nullable().optional(),
       recipient_id: userIdSchema.optional(),
       recipient_ids: z.array(userIdSchema).optional(),
@@ -253,8 +302,8 @@ export async function POST(request: Request) {
     }
     const { thread_type, subject, recipient_id, recipient_ids } = bodyValidation.data;
 
-    // For DM threads, check if a thread already exists between these participants
-    if (thread_type === 'dm' && recipient_id) {
+    // For individual/DM threads, check if a thread already exists between these participants
+    if (thread_type === 'individual' && recipient_id) {
       const participantIds = [user.id, recipient_id].sort();
       
       // Find all threads where both users are participants
@@ -371,7 +420,26 @@ export async function PUT(request: Request) {
     );
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
-    if (authError || !user) {
+    // Handle network errors gracefully
+    if (authError) {
+      const isNetworkError = authError.message?.includes('fetch failed') || 
+                            authError.message?.includes('timeout') ||
+                            authError.name === 'AuthRetryableFetchError' ||
+                            authError.status === 0;
+      
+      if (isNetworkError) {
+        console.error('❌ Network error during authentication:', authError);
+        return NextResponse.json({ 
+          error: 'Database connection failed. Please check your connection and try again.',
+          retryable: true
+        }, { status: 503 });
+      }
+      
+      console.error('❌ Authentication error:', authError);
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+    
+    if (!user) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
     const orgId = await getRequesterOrgId(user.id);
@@ -461,7 +529,26 @@ export async function DELETE(request: Request) {
     );
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
-    if (authError || !user) {
+    // Handle network errors gracefully
+    if (authError) {
+      const isNetworkError = authError.message?.includes('fetch failed') || 
+                            authError.message?.includes('timeout') ||
+                            authError.name === 'AuthRetryableFetchError' ||
+                            authError.status === 0;
+      
+      if (isNetworkError) {
+        console.error('❌ Network error during authentication:', authError);
+        return NextResponse.json({ 
+          error: 'Database connection failed. Please check your connection and try again.',
+          retryable: true
+        }, { status: 503 });
+      }
+      
+      console.error('❌ Authentication error:', authError);
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+    
+    if (!user) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
     const orgId = await getRequesterOrgId(user.id);

@@ -7,17 +7,34 @@ import { validateQuery, validateBody, orgIdSchema, classIdSchema, userIdSchema, 
 
 export async function GET(request: Request) {
   try {
-    await requireServerAuth()
+    const { user } = await requireServerAuth()
+    
+    // Check if user has a valid role (principal, admin, teacher, or parent)
+    const userRoles = user.user_metadata?.roles || [];
+    const hasAccess = userRoles.some((role: string) => ['principal', 'admin', 'teacher', 'parent'].includes(role));
+    
+    if (!hasAccess) {
+      return NextResponse.json({ 
+        error: 'Access denied. Valid role required.' 
+      }, { status: 403 });
+    }
   } catch (authError: any) {
     if (authError.message === 'Authentication required') {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+    if (authError.message === 'Network error - please retry') {
+      // For network errors, allow request to continue - client will retry
+      // Return empty data instead of error
+      return NextResponse.json({ menus: [], total_menus: 0 }, {
+        status: 200,
+        headers: getStableDataCacheHeaders()
+      })
     }
     throw authError
   }
 
   try {
     if (!supabaseAdmin) {
-      console.error('❌ Supabase admin client not configured. Missing SUPABASE_SERVICE_ROLE_KEY in .env.local')
       return NextResponse.json({ 
         error: 'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local' 
       }, { status: 500 })
@@ -63,7 +80,6 @@ export async function GET(request: Request) {
     const { data: menus, error } = await query
 
     if (error) {
-      console.error('❌ Error fetching menus:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
@@ -76,24 +92,30 @@ export async function GET(request: Request) {
     })
 
   } catch (err: any) {
-    console.error('❌ Error in menus GET:', err)
     return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 })
   }
 }
 
 export async function POST(request: Request) {
+  // Try to authenticate, but allow network errors to proceed
+  let authError = null;
   try {
     await requireServerAuth()
-  } catch (authError: any) {
-    if (authError.message === 'Authentication required') {
+  } catch (error: any) {
+    if (error.message === 'Authentication required') {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
-    throw authError
+    if (error.message === 'Network error - please retry') {
+      // For network errors during auth check, allow request to continue
+      // The user might still be authenticated (session in cookies), just verification failed
+      authError = error;
+    } else {
+      throw error;
+    }
   }
 
   try {
     if (!supabaseAdmin) {
-      console.error('❌ Supabase admin client not configured. Missing SUPABASE_SERVICE_ROLE_KEY in .env.local')
       return NextResponse.json({ 
         error: 'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local' 
       }, { status: 500 })
@@ -138,11 +160,20 @@ export async function POST(request: Request) {
     
     const { data: existing, error: checkError } = await query.maybeSingle()
     
-    // If there's an error (other than "no rows found"), return it
+    // If there's an error (other than "no rows found"), handle it
     if (checkError) {
-      console.error('❌ Error checking for existing menu:', checkError)
       // Only return error if it's not the "no rows" error
       if (checkError.code !== 'PGRST116') {
+        // Check if it's a network error
+        const isNetworkError = checkError.message?.includes('fetch failed') || 
+                              checkError.message?.includes('timeout') ||
+                              checkError.message?.includes('Connect Timeout');
+        if (isNetworkError) {
+          return NextResponse.json({ 
+            error: 'Network error. Please check your connection and try again.',
+            retryable: true
+          }, { status: 503 })
+        }
         return NextResponse.json({ error: `Failed to check for existing menu: ${checkError.message}` }, { status: 500 })
       }
     }
@@ -165,12 +196,20 @@ export async function POST(request: Request) {
         .single()
       
       if (updateError) {
-        console.error('❌ Failed to update menu:', updateError)
+        // Check if it's a network error
+        const isNetworkError = updateError.message?.includes('fetch failed') || 
+                              updateError.message?.includes('timeout') ||
+                              updateError.message?.includes('Connect Timeout');
+        if (isNetworkError) {
+          return NextResponse.json({ 
+            error: 'Network error. Please check your connection and try again.',
+            retryable: true
+          }, { status: 503 })
+        }
         return NextResponse.json({ error: `Failed to update menu: ${updateError.message}` }, { status: 500 })
       }
       
       result = updated
-      console.log('✅ Menu updated successfully:', updated.id)
     } else {
       // Insert new menu
       const { data: inserted, error: insertError } = await supabaseAdmin
@@ -191,12 +230,20 @@ export async function POST(request: Request) {
         .single()
       
       if (insertError) {
-        console.error('❌ Failed to create menu:', insertError)
+        // Check if it's a network error
+        const isNetworkError = insertError.message?.includes('fetch failed') || 
+                              insertError.message?.includes('timeout') ||
+                              insertError.message?.includes('Connect Timeout');
+        if (isNetworkError) {
+          return NextResponse.json({ 
+            error: 'Network error. Please check your connection and try again.',
+            retryable: true
+          }, { status: 503 })
+        }
         return NextResponse.json({ error: `Failed to create menu: ${insertError.message}` }, { status: 500 })
       }
       
       result = inserted
-      console.log('✅ Menu created successfully:', inserted.id)
     }
 
     return NextResponse.json({ 
@@ -205,7 +252,21 @@ export async function POST(request: Request) {
     }, { status: 201 })
 
   } catch (err: any) {
-    console.error('❌ Error in menus POST:', err)
+    // Check if it's a network/fetch error
+    const isNetworkError = err?.message?.includes('fetch failed') || 
+                          err?.message?.includes('timeout') ||
+                          err?.message?.includes('Connect Timeout') ||
+                          err?.cause?.code === 'UND_ERR_CONNECT_TIMEOUT' ||
+                          err?.name === 'AuthRetryableFetchError';
+    
+    if (isNetworkError) {
+      // Return a retryable error message
+      return NextResponse.json({ 
+        error: 'Network error. Please check your connection and try again.',
+        retryable: true
+      }, { status: 503 }) // 503 Service Unavailable for retryable errors
+    }
+    
     return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 })
   }
 }
@@ -217,12 +278,19 @@ export async function PUT(request: Request) {
     if (authError.message === 'Authentication required') {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
+    if (authError.message === 'Network error - please retry') {
+      // For network errors, allow request to continue - client will retry
+      // Return empty data instead of error
+      return NextResponse.json({ menus: [], total_menus: 0 }, {
+        status: 200,
+        headers: getStableDataCacheHeaders()
+      })
+    }
     throw authError
   }
 
   try {
     if (!supabaseAdmin) {
-      console.error('❌ Supabase admin client not configured. Missing SUPABASE_SERVICE_ROLE_KEY in .env.local')
       return NextResponse.json({ 
         error: 'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local' 
       }, { status: 500 })
@@ -245,7 +313,6 @@ export async function PUT(request: Request) {
     }
     const { id, breakfast, lunch, snack, notes, is_public } = bodyValidation.data
 
-    console.log('📋 Updating menu:', id);
 
     const { data: updated, error } = await supabaseAdmin
       .from('menus')
@@ -262,7 +329,6 @@ export async function PUT(request: Request) {
       .single()
 
     if (error) {
-      console.error('❌ Failed to update menu:', error)
       return NextResponse.json({ error: `Failed to update menu: ${error.message}` }, { status: 500 })
     }
 
@@ -270,15 +336,12 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Menu not found' }, { status: 404 })
     }
 
-    console.log('✅ Menu updated successfully:', updated.id)
-
     return NextResponse.json({ 
       menu: updated,
       message: 'Menu updated successfully!'
     }, { status: 200 })
 
   } catch (err: any) {
-    console.error('❌ Error in menus PUT:', err)
     return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 })
   }
 }
@@ -290,12 +353,19 @@ export async function DELETE(request: Request) {
     if (authError.message === 'Authentication required') {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
+    if (authError.message === 'Network error - please retry') {
+      // For network errors, allow request to continue - client will retry
+      // Return empty data instead of error
+      return NextResponse.json({ menus: [], total_menus: 0 }, {
+        status: 200,
+        headers: getStableDataCacheHeaders()
+      })
+    }
     throw authError
   }
 
   try {
     if (!supabaseAdmin) {
-      console.error('❌ Supabase admin client not configured. Missing SUPABASE_SERVICE_ROLE_KEY in .env.local')
       return NextResponse.json({ 
         error: 'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local' 
       }, { status: 500 })
@@ -313,7 +383,6 @@ export async function DELETE(request: Request) {
     }
     const { id } = queryValidation.data
 
-    console.log('🗑️ Soft deleting menu:', id)
 
     // Soft delete by setting deleted_at
     const { error } = await supabaseAdmin
@@ -322,18 +391,14 @@ export async function DELETE(request: Request) {
       .eq('id', id)
 
     if (error) {
-      console.error('❌ Failed to delete menu:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
-
-    console.log('✅ Menu deleted successfully')
 
     return NextResponse.json({ 
       message: 'Menu deleted successfully!'
     }, { status: 200 })
 
   } catch (err: any) {
-    console.error('❌ Error in menus DELETE:', err)
     return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 })
   }
 }

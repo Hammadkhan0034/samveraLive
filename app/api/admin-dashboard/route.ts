@@ -9,13 +9,10 @@ const GUARDIAN_ROLE_ID = 10
 export async function GET(request: Request) {
   try {
     if (!supabaseAdmin) {
-      console.error('❌ Supabase admin client not configured')
       return NextResponse.json({ 
         error: 'Admin client not configured. Please check SUPABASE_SERVICE_ROLE_KEY in .env.local' 
       }, { status: 500 })
     }
-
-    console.log('🔄 Loading admin dashboard data...')
 
     // Fetch all organizations
     const { data: orgs, error: orgsError } = await supabaseAdmin
@@ -24,7 +21,6 @@ export async function GET(request: Request) {
       .order('created_at', { ascending: false })
 
     if (orgsError) {
-      console.error('❌ Error fetching organizations:', orgsError)
       return NextResponse.json({ error: orgsError.message }, { status: 500 })
     }
 
@@ -40,7 +36,7 @@ export async function GET(request: Request) {
       .is('deleted_at', null)
 
     if (usersCountError) {
-      console.warn('⚠️ Error counting total users:', usersCountError)
+      // Continue with count = 0
     }
 
     // Total teachers (count where role='teacher')
@@ -51,7 +47,7 @@ export async function GET(request: Request) {
       .is('deleted_at', null)
 
     if (teachersCountError) {
-      console.warn('⚠️ Error counting teachers:', teachersCountError)
+      // Continue with count = 0
     }
 
     // Total students (count from students table)
@@ -61,7 +57,7 @@ export async function GET(request: Request) {
       .is('deleted_at', null)
 
     if (studentsCountError) {
-      console.warn('⚠️ Error counting students:', studentsCountError)
+      // Continue with count = 0
     }
 
     // Total guardians/parents (count where role='guardian' or role='parent')
@@ -72,7 +68,7 @@ export async function GET(request: Request) {
       .is('deleted_at', null)
 
     if (guardiansCountError) {
-      console.warn('⚠️ Error counting guardians:', guardiansCountError)
+      // Continue with count = 0
     }
 
     // Active users (count where is_active=true, plus all students)
@@ -83,7 +79,7 @@ export async function GET(request: Request) {
       .is('deleted_at', null)
 
     if (activeUsersError) {
-      console.warn('⚠️ Error counting active users:', activeUsersError)
+      // Continue with count = 0
     }
 
     // New registrations (count where created_at > 7 days ago)
@@ -98,7 +94,7 @@ export async function GET(request: Request) {
       .is('deleted_at', null)
 
     if (newRegistrationsError) {
-      console.warn('⚠️ Error counting new registrations:', newRegistrationsError)
+      // Continue with count = 0
     }
 
     // Also count new students from last week
@@ -109,7 +105,7 @@ export async function GET(request: Request) {
       .is('deleted_at', null)
 
     if (newStudentsError) {
-      console.warn('⚠️ Error counting new students:', newStudentsError)
+      // Continue with count = 0
     }
 
     // Calculate active users: active principals + active teachers + active guardians + all students
@@ -135,7 +131,7 @@ export async function GET(request: Request) {
       .order('created_at', { ascending: false })
 
     if (principalsError) {
-      console.warn('⚠️ Error fetching principals:', principalsError)
+      // Continue with empty array
     }
 
     const principals = (principalsData || []).map((p: any) => ({
@@ -161,7 +157,7 @@ export async function GET(request: Request) {
       .order('created_at', { ascending: false })
 
     if (teachersError) {
-      console.warn('⚠️ Error fetching teachers:', teachersError)
+      // Continue with empty array
     }
 
     const teachers = (teachersData || []).map((t: any) => ({
@@ -185,7 +181,7 @@ export async function GET(request: Request) {
       .order('created_at', { ascending: false })
 
     if (guardiansError) {
-      console.warn('⚠️ Error fetching guardians:', guardiansError)
+      // Continue with empty array
     }
 
     const guardians = (guardiansData || []).map((g: any) => ({
@@ -230,7 +226,7 @@ export async function GET(request: Request) {
       .order('created_at', { ascending: false })
 
     if (studentsError) {
-      console.warn('⚠️ Error fetching students:', studentsError)
+      // Continue with empty array
     }
 
     const students = (studentsData || []).map((s: any) => ({
@@ -252,14 +248,6 @@ export async function GET(request: Request) {
       org_name: orgMap.get(s.org_id) || null
     }))
 
-    console.log('✅ Admin dashboard data loaded:', {
-      stats,
-      orgs: orgsList.length,
-      principals: principals.length,
-      teachers: teachers.length,
-      guardians: guardians.length,
-      students: students.length
-    })
 
     return NextResponse.json({
       stats,
@@ -274,7 +262,6 @@ export async function GET(request: Request) {
     })
 
   } catch (err: any) {
-    console.error('❌ Error in admin-dashboard GET:', err)
     return NextResponse.json({ 
       error: err.message || 'Unknown error',
       details: err?.details || ''

@@ -58,9 +58,31 @@ export async function proxy(req: NextRequest) {
     // Get the current session
     const { data: { session }, error } = await supabase.auth.getSession();
 
-    // If not signed in → /signin (preserve ?next)
-    if (error || !session?.user) {
-      console.log('No session found, redirecting to signin');
+    // Handle fetch/network errors differently from authentication errors
+    if (error) {
+      // Check if it's a network/fetch error (retryable) vs auth error
+      const isNetworkError = error.message?.includes('fetch failed') || 
+                           error.message?.includes('timeout') ||
+                           error.name === 'AuthRetryableFetchError' ||
+                           error.status === 0;
+      
+      if (isNetworkError) {
+        // For network errors, allow request to continue - client-side will handle retry
+        // Don't redirect on network failures as user might still be authenticated
+        return res;
+      }
+      
+      // For actual auth errors (not network), redirect to signin
+      const url = req.nextUrl.clone();
+      url.pathname = '/signin';
+      if (!searchParams.get('next')) {
+        url.searchParams.set('next', pathname);
+      }
+      return NextResponse.redirect(url);
+    }
+
+    // If no session and no error (shouldn't happen, but handle it)
+    if (!session?.user) {
       const url = req.nextUrl.clone();
       url.pathname = '/signin';
       if (!searchParams.get('next')) {
@@ -74,7 +96,6 @@ export async function proxy(req: NextRequest) {
 
     // Validate user has at least one role
     if (userRoles.length === 0) {
-      console.log('User has no roles, redirecting to signin');
       const url = req.nextUrl.clone();
       url.pathname = '/signin';
       return NextResponse.redirect(url);
@@ -98,8 +119,6 @@ export async function proxy(req: NextRequest) {
       const hasAccess = route.roles.some((role) => userRoles.includes(role as SamveraRole));
       
       if (!hasAccess) {
-        console.log(`Access denied to ${pathname}. User roles: ${userRoles.join(', ')}`);
-        
         // Redirect to user's highest privilege dashboard
         const userMaxLevel = Math.max(...userRoles.map((role: SamveraRole) => ROLE_HIERARCHY[role] || 0));
         const highestRole = userRoles.find((role: SamveraRole) => ROLE_HIERARCHY[role] === userMaxLevel) as SamveraRole;
@@ -116,10 +135,19 @@ export async function proxy(req: NextRequest) {
     res.headers.set('x-user-active-role', activeRole || userRoles[0]);
 
     return res;
-  } catch (error) {
-    console.error('Proxy error:', error);
+  } catch (error: any) {
+    // Check if it's a network/fetch error
+    const isNetworkError = error?.message?.includes('fetch failed') || 
+                          error?.message?.includes('timeout') ||
+                          error?.name === 'AuthRetryableFetchError' ||
+                          error?.status === 0;
     
-    // On error, redirect to signin
+    if (isNetworkError) {
+      // For network errors, allow request to continue
+      return NextResponse.next();
+    }
+    
+    // On other errors, redirect to signin
     const url = req.nextUrl.clone();
     url.pathname = '/signin';
     return NextResponse.redirect(url);

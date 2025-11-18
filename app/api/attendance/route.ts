@@ -15,7 +15,6 @@ const getAttendanceQuerySchema = z.object({
 export async function GET(request: Request) {
   try {
     if (!supabaseAdmin) {
-      console.error('❌ Supabase admin client not configured. Missing SUPABASE_SERVICE_ROLE_KEY in .env.local')
       return NextResponse.json({ 
         error: 'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local' 
       }, { status: 500 })
@@ -77,7 +76,6 @@ export async function GET(request: Request) {
     const { data: attendance, error } = await query
 
     if (error) {
-      console.error('❌ Error fetching attendance:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
@@ -90,7 +88,6 @@ export async function GET(request: Request) {
     })
 
   } catch (err: any) {
-    console.error('❌ Error in attendance GET:', err)
     return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 })
   }
 }
@@ -98,7 +95,6 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     if (!supabaseAdmin) {
-      console.error('❌ Supabase admin client not configured. Missing SUPABASE_SERVICE_ROLE_KEY in .env.local')
       return NextResponse.json({ 
         error: 'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local' 
       }, { status: 500 })
@@ -122,7 +118,6 @@ export async function POST(request: Request) {
     }
     const { org_id, class_id, student_id, date, status, notes, recorded_by } = bodyValidation.data
 
-    console.log('📋 Creating attendance record:', { org_id, class_id, student_id, date, status, recorded_by })
 
     // Use upsert to handle UNIQUE constraint (student_id, date)
     // If record exists for this student and date, update it; otherwise create new
@@ -145,13 +140,10 @@ export async function POST(request: Request) {
       .single()
 
     if (attendanceError) {
-      console.error('❌ Failed to create/update attendance:', attendanceError)
       return NextResponse.json({ 
         error: `Failed to save attendance: ${attendanceError.message}` 
       }, { status: 500 })
     }
-
-    console.log('✅ Attendance record saved successfully:', attendance.id)
 
     return NextResponse.json({ 
       attendance,
@@ -159,7 +151,6 @@ export async function POST(request: Request) {
     }, { status: 201 })
 
   } catch (err: any) {
-    console.error('❌ Error in attendance POST:', err)
     return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 })
   }
 }
@@ -167,7 +158,6 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     if (!supabaseAdmin) {
-      console.error('❌ Supabase admin client not configured. Missing SUPABASE_SERVICE_ROLE_KEY in .env.local')
       return NextResponse.json({ 
         error: 'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local' 
       }, { status: 500 })
@@ -188,7 +178,6 @@ export async function PUT(request: Request) {
     }
     const { id, status, notes, recorded_by } = bodyValidation.data
 
-    console.log('📋 Updating attendance record:', { id, status, notes })
 
     const updateData: any = {
       updated_at: new Date().toISOString()
@@ -212,13 +201,10 @@ export async function PUT(request: Request) {
       .single()
 
     if (attendanceError) {
-      console.error('❌ Failed to update attendance:', attendanceError)
       return NextResponse.json({ 
         error: `Failed to update attendance: ${attendanceError.message}` 
       }, { status: 500 })
     }
-
-    console.log('✅ Attendance record updated successfully:', attendance.id)
 
     return NextResponse.json({ 
       attendance,
@@ -226,7 +212,6 @@ export async function PUT(request: Request) {
     }, { status: 200 })
 
   } catch (err: any) {
-    console.error('❌ Error in attendance PUT:', err)
     return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 })
   }
 }
@@ -234,7 +219,6 @@ export async function PUT(request: Request) {
 export async function DELETE(request: Request) {
   try {
     if (!supabaseAdmin) {
-      console.error('❌ Supabase admin client not configured. Missing SUPABASE_SERVICE_ROLE_KEY in .env.local')
       return NextResponse.json({ 
         error: 'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local' 
       }, { status: 500 })
@@ -253,18 +237,14 @@ export async function DELETE(request: Request) {
       .eq('id', id)
 
     if (error) {
-      console.error('❌ Failed to delete attendance:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
-
-    console.log('✅ Attendance record deleted successfully:', id)
 
     return NextResponse.json({ 
       message: 'Attendance deleted successfully!'
     }, { status: 200 })
 
   } catch (err: any) {
-    console.error('❌ Error in attendance DELETE:', err)
     return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 })
   }
 }

@@ -32,7 +32,7 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
     if (session?.user?.id && !orgId) {
       const fetchUserOrgId = async () => {
         try {
-          const response = await fetch(`/api/user-org-id?user_id=${session.user.id}`);
+          const response = await fetch(`/api/user-org-id?user_id=${session.user.id}`, { credentials: 'include' });
           const data = await response.json();
           if (response.ok && data.org_id) {
             setDbOrgId(data.org_id);
@@ -169,7 +169,7 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
   async function loadOrgs(showLoading = true) {
     try {
       if (showLoading) setLoadingOrgs(true);
-      const res = await fetch('/api/orgs', { cache: 'no-store' });
+      const res = await fetch('/api/orgs', { cache: 'no-store', credentials: 'include' });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
       setOrgs(json.orgs || []);
@@ -186,7 +186,7 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
     if (!orgId) return;
 
     try {
-      const res = await fetch(`/api/menus?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
+      const res = await fetch(`/api/menus?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store', credentials: 'include' });
       const json = await res.json();
 
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
@@ -209,7 +209,7 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
     const orgId = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
     if (!orgId) return;
     try {
-      const res = await fetch(`/api/stories?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
+      const res = await fetch(`/api/stories?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store', credentials: 'include' });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
       const list = json.stories || [];
@@ -231,7 +231,7 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
       params.set('userRole', (userMetadata?.role || userMetadata?.activeRole || 'principal') as string);
       params.set('limit', '100');
       
-      const res = await fetch(`/api/announcements?${params.toString()}&t=${Date.now()}`, { cache: 'no-store' });
+      const res = await fetch(`/api/announcements?${params.toString()}&t=${Date.now()}`, { cache: 'no-store', credentials: 'include' });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
       const list = json.announcements || [];
@@ -248,7 +248,7 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
     const orgId = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
     if (!orgId || !session?.user?.id) return;
     try {
-      const res = await fetch(`/api/messages?userId=${session.user.id}&t=${Date.now()}`, { cache: 'no-store' });
+      const res = await fetch(`/api/messages?userId=${session.user.id}&t=${Date.now()}`, { cache: 'no-store', credentials: 'include' });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
       const threads = json.threads || [];
@@ -270,7 +270,7 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
       if (!orgId) return;
       
       // Fetch and update stories count immediately
-      fetch(`/api/stories?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' })
+      fetch(`/api/stories?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store', credentials: 'include' })
         .then(res => res.json())
         .then(json => {
           if (json.stories && Array.isArray(json.stories)) {
@@ -462,7 +462,7 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
     if (!orgId) return;
 
     try {
-      const res = await fetch(`/api/classes?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
+      const res = await fetch(`/api/classes?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store', credentials: 'include' });
       const json = await res.json();
 
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
@@ -489,7 +489,7 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
     if (!orgId) return;
 
     try {
-      const res = await fetch(`/api/staff-management?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
+      const res = await fetch(`/api/staff-management?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store', credentials: 'include' });
       const json = await res.json();
 
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
@@ -514,7 +514,7 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
     if (loadingStaff && showLoading) return;
     try {
       if (showLoading) setLoadingStaff(true);
-      const response = await fetch(`/api/staff-management?orgId=${finalOrgId}`, { cache: 'no-store' });
+      const response = await fetch(`/api/staff-management?orgId=${finalOrgId}`, { cache: 'no-store', credentials: 'include' });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Failed to load staff');
       setStaff(data.staff || []);
@@ -536,7 +536,7 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
     if (!orgId) return;
 
     try {
-      const res = await fetch(`/api/guardians?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
+      const res = await fetch(`/api/guardians?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store', credentials: 'include' });
       const json = await res.json();
 
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
@@ -562,7 +562,7 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
     if (!orgId) return;
 
     try {
-      const res = await fetch(`/api/students?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
+      const res = await fetch(`/api/students?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store', credentials: 'include' });
       const json = await res.json();
 
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);

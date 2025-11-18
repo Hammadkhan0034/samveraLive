@@ -32,9 +32,29 @@ export const createSupabaseServer = async () => {
 export async function getServerUser() {
   const supabase = await createSupabaseServer();
   const { data: { user }, error } = await supabase.auth.getUser();
+  
+  // Check if it's a network/fetch error (retryable) vs auth error
+  if (error) {
+    const isNetworkError = error.message?.includes('fetch failed') || 
+                           error.message?.includes('timeout') ||
+                           error.name === 'AuthRetryableFetchError' ||
+                           error.status === 0;
+    
+    if (isNetworkError) {
+      // For network errors, try to get session from cookies as fallback
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        return { user: session.user, session, error: null };
+      }
+      // If session also fails, return network error
+      return { user: null, session: null, error: { ...error, isNetworkError: true } };
+    }
+  }
+  
   if (error || !user) {
     return { user: null, session: null, error };
   }
+  
   // Optionally fetch session if needed downstream
   const { data: { session } } = await supabase.auth.getSession();
   return { user, session: session ?? null, error: null };
@@ -43,7 +63,16 @@ export async function getServerUser() {
 export async function requireServerAuth() {
   const { user, session, error } = await getServerUser();
   
-  if (error || !user) {
+  if (error) {
+    // If it's a network error, don't throw - allow request to continue
+    // Client-side will handle retry
+    if ((error as any).isNetworkError) {
+      throw new Error('Network error - please retry');
+    }
+    throw new Error('Authentication required');
+  }
+  
+  if (!user) {
     throw new Error('Authentication required');
   }
   
