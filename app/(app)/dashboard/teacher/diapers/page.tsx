@@ -7,6 +7,7 @@ import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
+import TeacherSidebar from '@/app/components/shared/TeacherSidebar';
 
 type Lang = 'is' | 'en';
 type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
@@ -43,7 +44,7 @@ export default function TeacherDiapersPage() {
     );
   }
 
-  // Define tiles array
+  // Define tiles array (excluding attendance and diapers as they're handled separately)
   const tiles: Array<{
     id: TileId;
     title: string;
@@ -52,8 +53,6 @@ export default function TeacherDiapersPage() {
     badge?: string | number;
     route?: string;
   }> = useMemo(() => [
-      { id: 'attendance', title: t.tile_att, desc: t.tile_att_desc, Icon: CheckSquare, route: '/dashboard/teacher/attendance' },
-      { id: 'diapers', title: t.tile_diaper, desc: t.tile_diaper_desc, Icon: Baby, route: '/dashboard/teacher/diapers' },
       { id: 'messages', title: t.tile_msg, desc: t.tile_msg_desc, Icon: MessageSquare, route: '/dashboard/teacher' },
       { id: 'media', title: t.tile_media, desc: t.tile_media_desc, Icon: Camera, route: '/dashboard/teacher' },
       { id: 'stories', title: t.tile_stories, desc: t.tile_stories_desc, Icon: Timer, route: '/dashboard/teacher' },
@@ -78,119 +77,20 @@ export default function TeacherDiapersPage() {
       {/* Main content area with sidebar and content - starts below navbar */}
       <div className="flex flex-1 overflow-hidden h-full">
         {/* Sidebar */}
-        <aside
-          className={clsx(
-            'flex-shrink-0 w-72 bg-slate-900 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 overflow-y-auto transition-transform duration-300 ease-in-out',
-            sidebarOpen 
-              ? 'fixed top-14 bottom-0 left-0 z-50 translate-x-0 md:relative md:top-0 md:translate-x-0' 
-              : 'fixed top-14 bottom-0 left-0 z-50 -translate-x-full md:relative md:top-0 md:translate-x-0'
-          )}
-        >
-          <div className="p-4">
-            <div className="mb-4 flex items-center justify-between md:hidden">
-              <h2 className="text-lg font-semibold text-slate-100 dark:text-slate-100">Menu</h2>
-              <button
-                onClick={() => setSidebarOpen(false)}
-                className="p-2 rounded-lg hover:bg-slate-800 dark:hover:bg-slate-700 text-slate-200 dark:text-slate-300"
-                aria-label="Close sidebar"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <nav className="space-y-1">
-              {/* Attendance tile */}
-              <button
-                onClick={() => {
-                  router.push('/dashboard/teacher/attendance');
-                  setSidebarOpen(false);
-                }}
-                className={clsx(
-                  'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
-                  'hover:bg-slate-800 dark:hover:bg-slate-700',
-                  pathname === '/dashboard/teacher/attendance'
-                    ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
-                    : 'border-l-4 border-transparent'
-                )}
-              >
-                <span className={clsx(
-                  'flex-shrink-0 rounded-lg p-2',
-                  pathname === '/dashboard/teacher/attendance'
-                    ? 'bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900'
-                    : 'bg-slate-800 dark:bg-slate-700 text-slate-200 dark:text-slate-300'
-                )}>
-                  <CheckSquare className="h-5 w-5" />
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className={clsx(
-                      'font-medium truncate',
-                      pathname === '/dashboard/teacher/attendance'
-                        ? 'text-slate-100 dark:text-slate-100'
-                        : 'text-slate-200 dark:text-slate-300'
-                    )}>
-                      {t.tile_att}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{t.tile_att_desc}</p>
-                </div>
-              </button>
-              {tiles.map(({ id, title, desc, Icon, badge, route }) => (
-                <button
-                  key={id}
-                  onClick={() => {
-                    if (route) {
-                      router.push(route);
-                    }
-                    setSidebarOpen(false);
-                  }}
-                  className={clsx(
-                    'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
-                    'hover:bg-slate-800 dark:hover:bg-slate-700',
-                    activeTile === id
-                      ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
-                      : 'border-l-4 border-transparent'
-                  )}
-                >
-                  <span className={clsx(
-                    'flex-shrink-0 rounded-lg p-2',
-                    activeTile === id
-                      ? 'bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900'
-                      : 'bg-slate-800 dark:bg-slate-700 text-slate-200 dark:text-slate-300'
-                  )}>
-                    <Icon className="h-5 w-5" />
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className={clsx(
-                        'font-medium truncate',
-                        activeTile === id
-                          ? 'text-slate-100 dark:text-slate-100'
-                          : 'text-slate-200 dark:text-slate-300'
-                      )}>
-                        {title}
-                      </span>
-                      {badge !== undefined && badge !== null && badge !== 0 && (
-                        <span className="flex-shrink-0 rounded-full bg-slate-700 dark:bg-slate-600 px-2 py-0.5 text-xs font-medium text-slate-100 dark:text-slate-300" suppressHydrationWarning>
-                          {badge}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{desc}</p>
-                  </div>
-                </button>
-              ))}
-            </nav>
-          </div>
-        </aside>
-
-        {/* Mobile overlay */}
-        {sidebarOpen && (
-          <div
-            className="fixed top-14 bottom-0 left-0 right-0 bg-black bg-opacity-50 z-40 md:hidden"
-            onClick={() => setSidebarOpen(false)}
-            aria-hidden="true"
-          />
-        )}
+        <TeacherSidebar
+          sidebarOpen={sidebarOpen}
+          onSidebarClose={() => setSidebarOpen(false)}
+          tiles={tiles}
+          pathname={pathname}
+          attendanceTile={{
+            title: t.tile_att,
+            desc: t.tile_att_desc,
+          }}
+          diapersTile={{
+            title: t.tile_diaper,
+            desc: t.tile_diaper_desc,
+          }}
+        />
 
         {/* Main content area */}
         <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900">
