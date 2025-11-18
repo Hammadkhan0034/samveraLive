@@ -93,10 +93,6 @@ export default function TeacherMediaPage() {
     badge?: string | number;
     route?: string;
   }> = useMemo(() => [
-      { id: 'messages', title: t.tile_msg, desc: t.tile_msg_desc, Icon: MessageSquare, route: '/dashboard/teacher/messages' },
-      { id: 'stories', title: t.tile_stories, desc: t.tile_stories_desc, Icon: Timer, route: '/dashboard/teacher?tab=stories' },
-      { id: 'announcements', title: t.tile_announcements, desc: t.tile_announcements_desc, Icon: Bell, route: '/dashboard/teacher?tab=announcements' },
-      { id: 'students', title: t.tile_students, desc: t.tile_students_desc, Icon: Users, route: '/dashboard/teacher?tab=students' },
       { id: 'guardians', title: t.tile_guardians || 'Guardians', desc: t.tile_guardians_desc || 'Manage guardians', Icon: Users, route: '/dashboard/teacher?tab=guardians' },
       { id: 'link_student', title: t.tile_link_student || 'Link Student', desc: t.tile_link_student_desc || 'Link a guardian to a student', Icon: LinkIcon, route: '/dashboard/teacher?tab=link_student' },
       { id: 'menus', title: t.tile_menus || 'Menus', desc: t.tile_menus_desc || 'Manage daily menus', Icon: Utensils, route: '/dashboard/teacher?tab=menus' },
@@ -155,6 +151,10 @@ export default function TeacherMediaPage() {
           announcementsTile={{
             title: t.tile_announcements,
             desc: t.tile_announcements_desc,
+          }}
+          studentsTile={{
+            title: t.tile_students,
+            desc: t.tile_students_desc,
           }}
         />
         <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900">
