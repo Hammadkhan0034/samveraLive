@@ -72,8 +72,17 @@ export default function StoryColumn({
   const pausedTimeRef = useRef<number>(0);
   const itemStartTimeRef = useRef<number>(0);
 
+  // Helper to validate UUID format
+  const isValidUUID = (str: string | null | undefined): boolean => {
+    if (!str) return false;
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(str);
+  };
+
   // Get effective orgId and userId from session if not provided
-  const effectiveOrgId = orgId || (session?.user?.user_metadata as any)?.org_id || (session?.user?.user_metadata as any)?.organization_id || (session?.user?.user_metadata as any)?.orgId;
+  const rawOrgId = orgId || (session?.user?.user_metadata as any)?.org_id || (session?.user?.user_metadata as any)?.organization_id || (session?.user?.user_metadata as any)?.orgId;
+  // Only use orgId if it's a valid UUID (skip legacy "1" values)
+  const effectiveOrgId = rawOrgId && isValidUUID(rawOrgId) ? rawOrgId : null;
   const effectiveUserId = userId || session?.user?.id;
 
   // Determine user role from session if not provided
@@ -113,6 +122,20 @@ export default function StoryColumn({
   useEffect(() => {
     if (!effectiveOrgId) {
       setLoading(false);
+      setError(null); // Don't show error for missing/invalid orgId
+      return;
+    }
+
+    // For teachers, API requires either teacherClassIds or teacherAuthorId
+    // Skip the call if we don't have either (session might not be loaded yet)
+    if (effectiveUserRole === 'teacher' && !effectiveUserId && teacherClassIds.length === 0) {
+      setLoading(false);
+      setError(null); // Don't show error, just don't fetch
+      console.log('⚠️ StoryColumn: Skipping API call - teacher needs either userId or teacherClassIds', {
+        effectiveUserId,
+        teacherClassIdsLength: teacherClassIds.length,
+        hasSession: !!session
+      });
       return;
     }
 
@@ -127,10 +150,29 @@ export default function StoryColumn({
         
         if (effectiveUserRole === 'teacher') {
           params.set('audience', 'teacher');
-          if (effectiveUserId) {
+          
+          // API requires either teacherClassIds or teacherAuthorId for teachers
+          // Ensure we have at least one before making the call
+          const hasTeacherAuthorId = effectiveUserId && typeof effectiveUserId === 'string' && effectiveUserId.trim() !== '';
+          const hasTeacherClassIds = teacherClassIds.length > 0;
+          
+          if (!hasTeacherAuthorId && !hasTeacherClassIds) {
+            console.error('❌ StoryColumn: Cannot fetch stories - teacher needs either userId or teacherClassIds', {
+              effectiveUserId,
+              teacherClassIdsLength: teacherClassIds.length,
+              hasSession: !!session
+            });
+            setError(null); // Don't show error to user
+            setLoading(false);
+            return;
+          }
+          
+          // Always set teacherAuthorId if available (required by API validation)
+          if (hasTeacherAuthorId) {
             params.set('teacherAuthorId', effectiveUserId);
           }
-          if (teacherClassIds.length > 0) {
+          // Also include teacherClassIds if available
+          if (hasTeacherClassIds) {
             const classIdsString = teacherClassIds.join(',');
             params.set('teacherClassIds', classIdsString);
             console.log('📤 StoryColumn: Sending teacherClassIds to API:', {
@@ -139,7 +181,7 @@ export default function StoryColumn({
               userId: effectiveUserId
             });
           } else {
-            console.log('⚠️ StoryColumn: No teacherClassIds provided');
+            console.log('⚠️ StoryColumn: No teacherClassIds provided, using teacherAuthorId only');
           }
         } else if (effectiveUserRole === 'parent') {
           params.set('audience', 'parent');
@@ -157,10 +199,47 @@ export default function StoryColumn({
         }
 
         const res = await fetch(`/api/stories?${params.toString()}`, { cache: 'no-store' });
-        const json = await res.json();
+        
+        // Clone response for error handling (response body can only be read once)
+        const resClone = res.clone();
+        
+        let json: any;
+        try {
+          json = await res.json();
+        } catch (e) {
+          // If JSON parsing fails, try to get text from cloned response
+          try {
+            const text = await resClone.text();
+            console.error('❌ Stories API: Failed to parse JSON response:', {
+              status: res.status,
+              statusText: res.statusText,
+              rawResponse: text.substring(0, 500), // First 500 chars
+              params: params.toString()
+            });
+            throw new Error(`Invalid response from server (${res.status}): ${text.substring(0, 200)}`);
+          } catch (textError) {
+            console.error('❌ Stories API: Failed to parse response:', {
+              status: res.status,
+              statusText: res.statusText,
+              parseError: e,
+              params: params.toString()
+            });
+            throw new Error(`Invalid response from server (${res.status})`);
+          }
+        }
         
         if (!res.ok) {
-          throw new Error(json.error || `Failed with ${res.status}`);
+          const errorMessage = json.error || (typeof json.details === 'string' ? json.details : (json.details ? JSON.stringify(json.details) : null)) || `Failed with status ${res.status}`;
+          console.error('❌ Stories API error:', {
+            status: res.status,
+            statusText: res.statusText,
+            error: errorMessage,
+            details: json.details,
+            fullResponse: json,
+            params: params.toString(),
+            url: `/api/stories?${params.toString()}`
+          });
+          throw new Error(errorMessage);
         }
 
         const storiesList = Array.isArray(json.stories) ? json.stories : [];

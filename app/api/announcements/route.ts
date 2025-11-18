@@ -26,7 +26,14 @@ export async function GET(request: Request) {
       id: uuidSchema.optional(),
       classId: classIdSchema.optional(),
       teacherClassIds: z.string().optional(), // comma-separated
-      limit: z.string().transform((val) => Number(val) || 10).optional(),
+      limit: z.preprocess(
+        (val) => {
+          if (val === undefined || val === null) return 10;
+          const num = Number(val);
+          return isNaN(num) ? 10 : num;
+        },
+        z.number()
+      ),
       userId: userIdSchema.optional(),
       userRole: z.enum(['parent', 'guardian', 'teacher', 'principal', 'admin']).optional(),
     });
@@ -35,7 +42,7 @@ export async function GET(request: Request) {
     if (!queryValidation.success) {
       return queryValidation.error;
     }
-    const { id, classId, teacherClassIds, limit, userId, userRole } = queryValidation.data;
+    const { id, classId, teacherClassIds, limit: limitParam, userId, userRole } = queryValidation.data;
     
     // If id is provided, fetch single announcement
     if (id) {
@@ -70,11 +77,8 @@ export async function GET(request: Request) {
       })
     }
     
-    const classId = searchParams.get('classId') || undefined
-    const teacherClassIdsCsv = searchParams.get('teacherClassIds') // comma-separated class IDs for teacher
-    const limit = Number(searchParams.get('limit') || '10')
-    const userId = searchParams.get('userId') || undefined // For guardian filtering
-    const userRole = searchParams.get('userRole') || undefined // For role-based filtering
+    const teacherClassIdsCsv = teacherClassIds // comma-separated class IDs for teacher
+    const limit = (limitParam ?? 10) as number
 
     // For guardians: get their children's class IDs
     let guardianClassIds: string[] = []

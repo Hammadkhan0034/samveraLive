@@ -1,8 +1,8 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
-import { supabase } from './supabaseClient';
+import { supabase, markUserLoggedIn } from './supabaseClient';
 import { type SamveraRole } from './auth';
 
 interface AuthContextType {
@@ -25,26 +25,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const sessionInitialized = useRef(false);
+  const lastRefreshTime = useRef<number>(0);
+  const refreshBlocked = useRef<boolean>(false);
+  const MIN_REFRESH_INTERVAL = 300000; // 5 minutes minimum between refreshes
 
   useEffect(() => {
+    // Prevent multiple initial session calls
+    if (sessionInitialized.current) return;
+    sessionInitialized.current = true;
+
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      if (session?.expires_at) {
+        lastRefreshTime.current = Date.now();
+      }
     });
 
     // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-
-      // Handle sign in success
+      // Handle SIGNED_IN event first - always allow session update
       if (event === 'SIGNED_IN' && session) {
-        // If user has no roles yet and a pending role was stored (OTP sign-up), set it now
+        // Reset refresh tracking on new login
+        lastRefreshTime.current = Date.now();
+        refreshBlocked.current = false;
+        
+        // Mark login in supabase client to allow immediate refresh
+        markUserLoggedIn();
+        
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+        
+        // Handle sign in success logic
         try {
           const hasRoles = Array.isArray(session.user.user_metadata?.roles) && session.user.user_metadata?.roles.length > 0;
           if (!hasRoles && typeof window !== 'undefined') {
@@ -72,7 +90,70 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } else {
           setIsSigningIn(false);
         }
-      } else if (event === 'SIGNED_OUT') {
+        return; // Don't process further
+      } else if (event === 'TOKEN_REFRESHED') {
+        // Block TOKEN_REFRESHED events if they're happening too frequently
+        const now = Date.now();
+        const timeSinceLastRefresh = now - lastRefreshTime.current;
+
+        // Always allow first refresh or refresh right after login
+        if (lastRefreshTime.current === 0 || timeSinceLastRefresh < 60000) {
+          // First refresh or within 1 minute (likely after login)
+          lastRefreshTime.current = now;
+          refreshBlocked.current = false;
+          
+          setSession((prevSession) => {
+            if (!prevSession || !session) return session;
+            if (prevSession.access_token !== session.access_token) {
+              return session;
+            }
+            return prevSession;
+          });
+          return;
+        }
+
+        // Block refresh if it happened too recently (within 5 minutes)
+        if (timeSinceLastRefresh < MIN_REFRESH_INTERVAL) {
+          console.log('🚫 Blocking frequent token refresh (too soon after last refresh)');
+          refreshBlocked.current = true;
+          return; // Block this refresh
+        }
+
+        // Check if token actually needs refresh
+        if (session?.expires_at) {
+          const expiresAt = session.expires_at * 1000;
+          const timeUntilExpiry = expiresAt - now;
+          
+          // If token is still valid for more than 10 minutes, block the refresh
+          if (timeUntilExpiry > 600000) { // 10 minutes
+            console.log('🚫 Blocking unnecessary token refresh (token still valid)');
+            refreshBlocked.current = true;
+            return; // Block this refresh
+          }
+        }
+
+        // Allow refresh - update timestamp and session
+        lastRefreshTime.current = now;
+        refreshBlocked.current = false;
+        
+        // Silently update session without triggering re-renders
+        setSession((prevSession) => {
+          if (!prevSession || !session) return session;
+          // Only update if token actually changed
+          if (prevSession.access_token !== session.access_token) {
+            return session;
+          }
+          return prevSession; // No change, keep previous session
+        });
+        return; // Don't process further
+      }
+
+      // For all other events (SIGNED_OUT, etc.), update state normally
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+
+      if (event === 'SIGNED_OUT') {
         console.log('🔄 SIGNED_OUT event received');
         setIsSigningIn(false);
         // Immediately redirect to signin to avoid any delay or flicker
