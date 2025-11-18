@@ -26,27 +26,40 @@ export default function LinkStudentPage() {
     );
   }
 
-  return (
-    <TeacherLayout hideHeader={true}>
-      <div className="h-full bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 overflow-y-auto">
-        <div className="mx-auto max-w-6xl px-4 py-8 md:px-6">
-          {/* Header with Back button */}
-          <div className="mb-6 flex items-center gap-3 flex-wrap">
-            <button
-              onClick={() => router.back()}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-            >
-              <ArrowLeft className="h-4 w-4" /> {lang === 'is' ? 'Til baka' : 'Back'}
-            </button>
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-              {lang === 'is' ? 'Tengja nemanda' : 'Link Student'}
-            </h1>
-          </div>
-          <LinkStudentGuardian lang={lang} />
+  if (!user) return null;
+
+  // Check if user is a teacher
+  const userMetadata = user?.user_metadata;
+  const role = (userMetadata?.role || userMetadata?.user_role || userMetadata?.app_role || userMetadata?.activeRole || '').toString().toLowerCase();
+  const isTeacher = role === 'teacher' || (userMetadata?.roles && Array.isArray(userMetadata.roles) && userMetadata.roles.includes('teacher'));
+
+  const content = (
+    <div className="h-full bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 overflow-y-auto">
+      <div className="mx-auto max-w-6xl px-4 py-8 md:px-6">
+        {/* Header with Back button */}
+        <div className="mb-6 flex items-center gap-3 flex-wrap">
+          <button
+            onClick={() => router.back()}
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+          >
+            <ArrowLeft className="h-4 w-4" /> {lang === 'is' ? 'Til baka' : 'Back'}
+          </button>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+            {lang === 'is' ? 'Tengja nemanda' : 'Link Student'}
+          </h1>
         </div>
+        <LinkStudentGuardian lang={lang} />
       </div>
-    </TeacherLayout>
+    </div>
   );
+
+  // Only wrap with TeacherLayout if user is a teacher
+  if (isTeacher) {
+    return <TeacherLayout hideHeader={true}>{content}</TeacherLayout>;
+  }
+
+  // For non-teachers (principals), return content without TeacherLayout
+  return content;
 }
 
 

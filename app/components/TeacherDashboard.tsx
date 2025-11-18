@@ -161,6 +161,22 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
             title: t.tile_announcements,
             desc: t.tile_announcements_desc,
           }}
+          studentsTile={{
+            title: t.tile_students,
+            desc: t.tile_students_desc,
+          }}
+          guardiansTile={{
+            title: t.tile_guardians,
+            desc: t.tile_guardians_desc,
+          }}
+          linkStudentTile={{
+            title: t.tile_link_student,
+            desc: t.tile_link_student_desc,
+          }}
+          menusTile={{
+            title: t.tile_menus,
+            desc: t.tile_menus_desc,
+          }}
         />
 
         {/* Main content area */}
@@ -240,6 +256,10 @@ const enText = {
   tile_stories_desc: 'Post classroom stories that expire in 24h.',
   tile_announcements: 'Announcements',
   tile_announcements_desc: 'Create and view announcements.',
+  tile_students: 'Students',
+  tile_students_desc: 'Manage your students',
+  tile_guardians: 'Guardians',
+  tile_guardians_desc: 'Manage guardians',
   tile_link_student: 'Link Student',
   tile_link_student_desc: 'Link a guardian to a student.',
   tile_menus: 'Menus',
@@ -336,6 +356,12 @@ const isText = {
   tile_media_desc: 'Hlaða upp myndum og albúmum.',
   tile_stories: 'Sögur (24 klst)',
   tile_stories_desc: 'Hópsögur sem hverfa eftir 24 klst.',
+  tile_announcements: 'Tilkynningar',
+  tile_announcements_desc: 'Stofna og skoða tilkynningar',
+  tile_students: 'Nemendur',
+  tile_students_desc: 'Stjórna nemendum',
+  tile_guardians: 'Forráðamenn',
+  tile_guardians_desc: 'Stjórna forráðamönnum',
   tile_link_student: 'Tengja nemanda',
   tile_link_student_desc: 'Tengja forráðamann við nemanda.',
   tile_menus: 'Matseðillar',
@@ -397,8 +423,6 @@ const isText = {
   empty_stories: 'Engar sögur fundust.',
 
   // Announcements
-  tile_announcements: 'Tilkynningar',
-  tile_announcements_desc: 'Stofna og skoða tilkynningar',
   announcements_title: 'Tilkynningar',
   announcements_list: 'Tilkynningar hóps',
 

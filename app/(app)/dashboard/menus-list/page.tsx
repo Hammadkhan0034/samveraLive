@@ -418,8 +418,11 @@ export default function MenusListPage() {
 
   if (!user) return null;
 
-  return (
-    <TeacherLayout hideHeader={true}>
+  // Check if user is a teacher
+  const role = (userMetadata?.role || userMetadata?.user_role || userMetadata?.app_role || userMetadata?.activeRole || '').toString().toLowerCase();
+  const isTeacher = role === 'teacher' || (userMetadata?.roles && Array.isArray(userMetadata.roles) && userMetadata.roles.includes('teacher'));
+
+  const content = (
       <div className="h-full bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
         <div className="mx-auto max-w-6xl px-4 py-6 md:px-6">
           {/* Header with Back button */}
@@ -590,8 +593,13 @@ export default function MenusListPage() {
         />
         </div>
       </div>
-    </TeacherLayout>
   );
+
+  if (isTeacher) {
+    return <TeacherLayout hideHeader={true}>{content}</TeacherLayout>;
+  }
+
+  return content;
 }
 
 const enText = {
