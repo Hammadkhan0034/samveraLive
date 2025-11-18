@@ -3,7 +3,7 @@
 import React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { X } from 'lucide-react';
-import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Bell, Users, Shield, Link as LinkIcon } from 'lucide-react';
+import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Bell, Users, Shield, Link as LinkIcon, Utensils } from 'lucide-react';
 
 // Small helper
 function clsx(...xs: Array<string | false | undefined>) {
@@ -66,6 +66,10 @@ export interface TeacherSidebarProps {
     title: string;
     desc: string;
   };
+  menusTile?: {
+    title: string;
+    desc: string;
+  };
 }
 
 export default function TeacherSidebar({
@@ -84,6 +88,7 @@ export default function TeacherSidebar({
   studentsTile,
   guardiansTile,
   linkStudentTile,
+  menusTile,
 }: TeacherSidebarProps) {
   const router = useRouter();
 
@@ -132,6 +137,9 @@ export default function TeacherSidebar({
     }
     if (tileId === 'link_student') {
       return pathname === '/dashboard/teacher/link-student';
+    }
+    if (tileId === 'menus') {
+      return pathname === '/dashboard/teacher/menus';
     }
     return false;
   };
@@ -222,6 +230,14 @@ export default function TeacherSidebar({
     onSidebarClose();
   };
 
+  // Handle menus tile click
+  const handleMenusClick = () => {
+    if (pathname !== '/dashboard/teacher/menus') {
+      router.replace('/dashboard/teacher/menus');
+    }
+    onSidebarClose();
+  };
+
   const isAttendanceActive = pathname === '/dashboard/teacher/attendance';
   const isDiapersActive = pathname === '/dashboard/teacher/diapers';
   const isMessagesActive = pathname === '/dashboard/teacher/messages';
@@ -231,6 +247,7 @@ export default function TeacherSidebar({
   const isStudentsActive = pathname === '/dashboard/teacher/students';
   const isGuardiansActive = pathname === '/dashboard/teacher/guardians';
   const isLinkStudentActive = pathname === '/dashboard/teacher/link-student';
+  const isMenusActive = pathname === '/dashboard/teacher/menus';
 
   return (
     <>
@@ -590,6 +607,42 @@ export default function TeacherSidebar({
                     </span>
                   </div>
                   <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{linkStudentTile.desc}</p>
+                </div>
+              </button>
+            )}
+
+            {/* Menus tile - always route-based */}
+            {menusTile && (
+              <button
+                onClick={handleMenusClick}
+                className={clsx(
+                  'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                  'hover:bg-slate-800 dark:hover:bg-slate-700',
+                  isMenusActive
+                    ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
+                    : 'border-l-4 border-transparent'
+                )}
+              >
+                <span className={clsx(
+                  'flex-shrink-0 rounded-lg p-2',
+                  isMenusActive
+                    ? 'bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900'
+                    : 'bg-slate-800 dark:bg-slate-700 text-slate-200 dark:text-slate-300'
+                )}>
+                  <Utensils className="h-5 w-5" />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={clsx(
+                      'font-medium truncate',
+                      isMenusActive
+                        ? 'text-slate-100 dark:text-slate-100'
+                        : 'text-slate-200 dark:text-slate-300'
+                    )}>
+                      {menusTile.title}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{menusTile.desc}</p>
                 </div>
               </button>
             )}

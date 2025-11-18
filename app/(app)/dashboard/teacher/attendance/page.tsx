@@ -481,6 +481,14 @@ export default function TeacherAttendancePage() {
             title: t.tile_announcements,
             desc: t.tile_announcements_desc,
           }}
+          studentsTile={{
+            title: t.tile_students,
+            desc: t.tile_students_desc,
+          }}
+          guardiansTile={{
+            title: t.tile_guardians,
+            desc: t.tile_guardians_desc,
+          }}
         />
 
         {/* Main content area */}
