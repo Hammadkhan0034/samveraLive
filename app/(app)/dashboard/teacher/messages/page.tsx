@@ -9,11 +9,12 @@ import MessagesPanel from '@/app/components/shared/MessagesPanel';
 import TeacherLayout from '@/app/components/shared/TeacherLayout';
 
 export default function TeacherMessagesPage() {
-  const { user, loading } = useRequireAuth('teacher');
+  const { user, loading, isSigningIn } = useRequireAuth('teacher');
   const { lang } = useLanguage();
   const router = useRouter();
 
-  if (loading && !user) {
+  // Show loading while we're checking authentication
+  if (loading || (isSigningIn && !user)) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
         <div className="flex items-center justify-center min-h-screen">
@@ -28,6 +29,7 @@ export default function TeacherMessagesPage() {
     );
   }
 
+  // Don't render anything if user is not available (useRequireAuth will handle redirect)
   if (!user) return null;
 
   const t = lang === 'is' 

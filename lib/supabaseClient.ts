@@ -63,6 +63,17 @@ if (typeof window !== 'undefined') {
           const clonedResponse = response.clone();
           try {
             const errorData = await clonedResponse.json();
+            
+            // Handle rate limit errors (429) - log but let it pass through
+            // The auth-context will handle keeping the session
+            if (response.status === 429 || errorData?.error === 'rate_limit_exceeded' || errorData?.message?.includes('rate limit') || errorData?.message?.includes('Too Many Requests')) {
+              console.warn('⚠️ Rate limit reached on token refresh - session may still be valid');
+              // Store a flag to indicate rate limit error
+              if (typeof window !== 'undefined') {
+                sessionStorage.setItem('supabase_rate_limit_error', Date.now().toString());
+              }
+            }
+            
             if (errorData?.error === 'refresh_token_already_used' || errorData?.code === 'refresh_token_already_used') {
               // This is a non-critical error - Supabase will handle it on next request
               return response;
@@ -70,6 +81,11 @@ if (typeof window !== 'undefined') {
           } catch (e) {
             // If we can't parse the error, just return the original response
             return response;
+          }
+        } else {
+          // Clear rate limit flag on successful refresh
+          if (typeof window !== 'undefined') {
+            sessionStorage.removeItem('supabase_rate_limit_error');
           }
         }
       }

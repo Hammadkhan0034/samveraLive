@@ -1,7 +1,7 @@
 'use client';
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Users, CalendarDays, Plus, Send, Paperclip, Bell, X, Search, ChevronLeft, ChevronRight, Edit, Trash2, Link as LinkIcon, Mail, Utensils, Menu, Eye } from 'lucide-react';
+import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Users, CalendarDays, Plus, Send, Paperclip, Bell, X, Search, ChevronLeft, ChevronRight, Edit, Trash2, Link as LinkIcon, Mail, Utensils, Menu, Eye, MessageSquarePlus } from 'lucide-react';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import { useAuth } from '@/lib/hooks/useAuth';
 import AnnouncementForm from './AnnouncementForm';
@@ -1924,6 +1924,9 @@ function MessagesPanel({ t, lang = 'en', teacherClasses = [], students = [], isA
   const [loadingRecipients, setLoadingRecipients] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [allowedGuardianIds, setAllowedGuardianIds] = useState<Set<string>>(new Set());
+  const [showNewConversation, setShowNewConversation] = useState(false);
+  const [chatMessageBody, setChatMessageBody] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const userMetadata = session?.user?.user_metadata;
   const orgId = userMetadata?.org_id || userMetadata?.organization_id || userMetadata?.orgId;
@@ -2388,30 +2391,82 @@ function MessagesPanel({ t, lang = 'en', teacherClasses = [], students = [], isA
     return [...principalList, ...guardianList];
   }, [principals, guardians]);
 
+  // Send message from chat view
+  async function sendChatMessage() {
+    if (!chatMessageBody.trim() || !selectedThread || !session?.user?.id) return;
+
+    setSending(true);
+    try {
+      const messageRes = await fetch('/api/message-items', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message_id: selectedThread.id,
+          body: chatMessageBody.trim()
+        })
+      });
+
+      const messageData = await messageRes.json();
+      if (!messageRes.ok) {
+        throw new Error(messageData.error || 'Failed to send message');
+      }
+
+      setChatMessageBody('');
+      
+      // Reset textarea height
+      const textarea = document.querySelector('textarea[placeholder*="msg_ph"]') as HTMLTextAreaElement;
+      if (textarea) {
+        textarea.style.height = 'auto';
+      }
+      
+      // Add message to local state immediately for better UX
+      if (messageData.item) {
+        setMessages(prev => [...prev, messageData.item]);
+      }
+    } catch (error: any) {
+      console.error('Error sending message:', error);
+      alert(error.message || 'Failed to send message');
+    } finally {
+      setSending(false);
+    }
+  }
+
+  // Create new conversation and send first message
   async function sendMessage() {
     if (!messageBody.trim() || !recipientId || !session?.user?.id) return;
 
     setSending(true);
     try {
-      // Check if thread already exists with this recipient
       let threadId = selectedThread?.id;
       
+      // Check if thread already exists with this recipient
       if (!threadId || selectedThread?.other_participant?.id !== recipientId) {
-        // Create new thread
-        const threadRes = await fetch('/api/messages', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            thread_type: 'dm',
-            recipient_id: recipientId
-          })
-        });
+        // First, check if a thread already exists in the current threads list
+        const existingThread = threads.find(
+          (t) => t.other_participant?.id === recipientId
+        );
+        
+        if (existingThread) {
+          threadId = existingThread.id;
+          // Select the existing thread
+          setSelectedThread(existingThread);
+        } else {
+          // Create new thread
+          const threadRes = await fetch('/api/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              thread_type: 'dm',
+              recipient_id: recipientId
+            })
+          });
 
-        const threadData = await threadRes.json();
-        if (!threadRes.ok) {
-          throw new Error(threadData.error || 'Failed to create thread');
+          const threadData = await threadRes.json();
+          if (!threadRes.ok) {
+            throw new Error(threadData.error || 'Failed to create thread');
+          }
+          threadId = threadData.message.id;
         }
-        threadId = threadData.message.id;
       }
 
       // Send message
@@ -2433,6 +2488,7 @@ function MessagesPanel({ t, lang = 'en', teacherClasses = [], students = [], isA
       setTimeout(() => setSent(false), 1200);
       setMessageBody('');
       setRecipientId('');
+      setShowNewConversation(false);
 
       // Reload threads and messages
       const threadsRes = await fetch(`/api/messages?userId=${session.user.id}&t=${Date.now()}`, { cache: 'no-store' });
@@ -2480,187 +2536,291 @@ function MessagesPanel({ t, lang = 'en', teacherClasses = [], students = [], isA
     }
   }
 
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">{t.msg_title}</h2>
-        <div className="text-sm text-slate-500 dark:text-slate-400">{t.msg_hint}</div>
-      </div>
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
 
-      <div className="grid gap-4 md:grid-cols-[1fr,380px]">
-        {/* Thread list */}
-        <div className="rounded-xl border border-slate-200 dark:border-slate-600">
-          <div className="border-b border-slate-200 bg-slate-50 p-3 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200">
-            <div className="flex items-center gap-2">
-              <Search className="h-4 w-4 text-slate-500" />
-              <input
-                type="text"
-                placeholder={t.search_placeholder || 'Search conversations...'}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400"
-              />
+  return (
+    <div className="flex h-[calc(100vh-200px)] rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800 overflow-hidden">
+      {/* Left Sidebar - Conversations List */}
+      <div className="w-1/3 border-r border-slate-200 dark:border-slate-700 flex flex-col">
+        {/* Header with New Conversation Button */}
+        <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t.msg_title}</h2>
+            <button
+              onClick={() => {
+                setShowNewConversation(!showNewConversation);
+                setSelectedThread(null);
+              }}
+              className="p-2 rounded-lg bg-black hover:bg-gray-800 text-white transition-colors"
+              title={t.new_message}
+            >
+              <MessageSquarePlus className="h-5 w-5" />
+            </button>
+          </div>
+          
+          {/* New Conversation Form */}
+          {showNewConversation && (
+            <div className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 mb-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-slate-900 dark:text-slate-100">{t.new_message}</span>
+                <button
+                  onClick={() => {
+                    setShowNewConversation(false);
+                    setRecipientId('');
+                    setMessageBody('');
+                  }}
+                  className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <label className="block text-xs text-slate-700 dark:text-slate-300 mb-1">
+                {t.to}
+                <select
+                  value={recipientId}
+                  onChange={(e) => setRecipientId(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1.5 text-sm dark:text-slate-200"
+                >
+                  <option value="">{t.select_recipient}</option>
+                  {principals.length > 0 && (
+                    <optgroup label={t.principal}>
+                      {principals.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.first_name} {p.last_name || ''} ({p.email})
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {teachers.length > 0 && (
+                    <optgroup label={(t as any).teacher || 'Teacher'}>
+                      {teachers.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.first_name} {t.last_name || ''} ({t.email})
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {guardians.length > 0 && (
+                    <optgroup label={t.guardian}>
+                      {guardians
+                        .filter((g) => {
+                          if (allowedGuardianIds.size > 0) {
+                            return allowedGuardianIds.has(g.id);
+                          }
+                          return true;
+                        })
+                        .map((g) => (
+                          <option key={g.id} value={g.id}>
+                            {g.first_name} {g.last_name || ''} ({g.email})
+                          </option>
+                        ))}
+                    </optgroup>
+                  )}
+                </select>
+              </label>
+              <label className="block text-xs text-slate-700 dark:text-slate-300 mt-2 mb-2">
+                {t.message}
+                <textarea
+                  rows={2}
+                  value={messageBody}
+                  onChange={(e) => setMessageBody(e.target.value)}
+                  className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1.5 text-sm dark:text-slate-200 dark:placeholder-slate-400 resize-none"
+                  placeholder={t.msg_ph}
+                />
+              </label>
+              <button
+                onClick={sendMessage}
+                disabled={sending || !messageBody.trim() || !recipientId}
+                className="w-full rounded-lg bg-black px-3 py-1.5 text-sm text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+              >
+                <Send className="h-4 w-4" /> {t.send}
+              </button>
+              {sent && <span className="text-xs text-emerald-600 dark:text-emerald-400 mt-1 block text-center">✓ {t.sent}</span>}
             </div>
+          )}
+
+          {/* Search Bar */}
+          <div className="flex items-center gap-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2">
+            <Search className="h-4 w-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder={t.search_placeholder}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400 dark:text-slate-200"
+            />
           </div>
-          <div className="text-sm font-medium text-slate-700 dark:text-slate-300 px-3 py-2 border-b border-slate-200 dark:border-slate-600">
-            {t.inbox}
-          </div>
-          {!loading && filteredThreads.length === 0 ? (
-            <div className="p-4 text-center text-sm text-slate-500">{(t as any).no_threads || 'No messages yet'}</div>
-          ) : loading ? null : (
-            <ul className="divide-y divide-slate-200 dark:divide-slate-600 max-h-[600px] overflow-y-auto">
+        </div>
+
+        {/* Conversations List */}
+        <div className="flex-1 overflow-y-auto">
+          {loading ? (
+            <div className="p-4 text-center text-sm text-slate-500">{(t as any).loading || 'Loading...'}</div>
+          ) : filteredThreads.length === 0 ? (
+            <div className="p-4 text-center text-sm text-slate-500">{t.no_threads}</div>
+          ) : (
+            <ul className="divide-y divide-slate-200 dark:divide-slate-700">
               {filteredThreads.map((thread) => (
                 <li
                   key={thread.id}
-                  onClick={() => setSelectedThread(thread)}
-                  className={`cursor-pointer p-3 hover:bg-slate-50 dark:hover:bg-slate-700 ${
-                    selectedThread?.id === thread.id ? 'bg-slate-100 dark:bg-slate-700' : ''
+                  onClick={() => {
+                    setSelectedThread(thread);
+                    setShowNewConversation(false);
+                    setChatMessageBody('');
+                  }}
+                  className={`cursor-pointer p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors ${
+                    selectedThread?.id === thread.id ? 'bg-slate-100 dark:bg-slate-800/50 border-l-4 border-black' : ''
                   }`}
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="font-medium text-slate-900 dark:text-slate-100">
-                      {thread.other_participant
-                        ? `${thread.other_participant.first_name} ${thread.other_participant.last_name || ''}`.trim() || thread.other_participant.email
-                        : 'Unknown'}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="font-semibold text-slate-900 dark:text-slate-100 truncate">
+                          {thread.other_participant
+                            ? `${thread.other_participant.first_name} ${thread.other_participant.last_name || ''}`.trim() || thread.other_participant.email
+                            : 'Unknown'}
+                        </div>
+                        {thread.unread && (
+                          <span className="flex-shrink-0 w-2 h-2 rounded-full bg-black"></span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-1">
+                        <span>
+                          {thread.other_participant?.role === 'principal' ? t.principal : 
+                           thread.other_participant?.role === 'teacher' ? ((t as any).teacher || 'Teacher') : t.guardian}
+                        </span>
+                      </div>
+                      {thread.latest_item && (
+                        <p className="text-sm text-slate-600 dark:text-slate-400 truncate line-clamp-1">
+                          {thread.latest_item.body}
+                        </p>
+                      )}
+                      {thread.latest_item && (
+                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                          {new Date(thread.latest_item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
+                      )}
                     </div>
-                    {thread.unread && (
-                      <span className="rounded-full bg-rose-50 px-2 py-0.5 text-xs text-rose-700 dark:bg-rose-900/20 dark:text-rose-300">
-                        {t.unread}
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-1 flex items-center gap-2">
-                    <span className="text-xs text-slate-500 dark:text-slate-400">
-                      {thread.other_participant?.role === 'principal' ? (t.principal || 'Principal') : 
-                       thread.other_participant?.role === 'teacher' ? ((t as any).teacher || 'Teacher') : 
-                       (t.guardian || 'Guardian')}
-                    </span>
-                    {thread.latest_item && (
-                      <p className="flex-1 line-clamp-1 text-sm text-slate-600 dark:text-slate-400">
-                        {thread.latest_item.body}
-                      </p>
-                    )}
                   </div>
                 </li>
               ))}
             </ul>
           )}
         </div>
+      </div>
 
-        {/* Message view and composer */}
-        <div className="space-y-4">
-          {/* Selected thread messages */}
-          {selectedThread && (
-            <div className="rounded-xl border border-slate-200 p-3 dark:border-slate-600 dark:bg-slate-700 max-h-[400px] overflow-y-auto">
-              <div className="mb-2 text-sm font-medium text-slate-900 dark:text-slate-100">
-                {selectedThread.other_participant
-                  ? `${selectedThread.other_participant.first_name} ${selectedThread.other_participant.last_name || ''}`.trim() || selectedThread.other_participant.email
-                  : 'Unknown'}
-              </div>
-              {messages.length === 0 ? (
-                <div className="text-sm text-slate-500 text-center py-4">{(t as any).no_messages || 'No messages in this thread'}</div>
-              ) : (
-                <div className="space-y-2">
-                  {messages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`p-2 rounded-lg ${
-                        msg.author_id === session?.user?.id
-                          ? 'bg-blue-50 dark:bg-blue-900/20 ml-auto text-right'
-                          : 'bg-slate-100 dark:bg-slate-600'
-                      }`}
-                    >
-                      <p className="text-sm text-slate-900 dark:text-slate-100">{msg.body}</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                        {new Date(msg.created_at).toLocaleTimeString()}
-                      </p>
-                    </div>
-                  ))}
+      {/* Right Side - Chat View */}
+      <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900">
+        {selectedThread ? (
+          <>
+            {/* Chat Header */}
+            <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center text-white font-semibold">
+                  {selectedThread.other_participant
+                    ? (selectedThread.other_participant.first_name?.[0] || selectedThread.other_participant.email?.[0] || '?').toUpperCase()
+                    : '?'}
                 </div>
+                <div className="flex-1">
+                  <div className="font-semibold text-slate-900 dark:text-slate-100">
+                    {selectedThread.other_participant
+                      ? `${selectedThread.other_participant.first_name} ${selectedThread.other_participant.last_name || ''}`.trim() || selectedThread.other_participant.email
+                      : 'Unknown'}
+                  </div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">
+                    {selectedThread.other_participant?.role === 'principal' ? t.principal : 
+                     selectedThread.other_participant?.role === 'teacher' ? ((t as any).teacher || 'Teacher') : t.guardian}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Messages Area */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {messages.length === 0 ? (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <p className="text-slate-500 dark:text-slate-400">{t.no_messages}</p>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {messages.map((msg) => {
+                    const isOwn = msg.author_id === session?.user?.id;
+                    return (
+                      <div
+                        key={msg.id}
+                        className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div
+                          className={`max-w-[70%] rounded-2xl px-4 py-2 ${
+                            isOwn
+                              ? 'bg-black text-white rounded-br-sm'
+                              : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-bl-sm border border-slate-200 dark:border-slate-700'
+                          }`}
+                        >
+                          <p className="text-sm whitespace-pre-wrap break-words">{msg.body}</p>
+                          <p className={`text-xs mt-1 ${isOwn ? 'text-white' : 'text-slate-400 dark:text-slate-500'}`}>
+                            {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div ref={messagesEndRef} />
+                </>
               )}
             </div>
-          )}
 
-          {/* Composer */}
-          <div className="rounded-xl border border-slate-200 p-3 dark:border-slate-600 dark:bg-slate-700">
-            <div className="text-sm font-medium text-slate-900 dark:text-slate-100 mb-2">{t.new_message}</div>
-            <label className="block text-sm text-slate-700 dark:text-slate-300 mb-1">
-              {t.to}
-              <select
-                value={recipientId}
-                onChange={(e) => setRecipientId(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-300 p-2 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
-                onFocus={() => {
-                  console.log('🔍 Recipient dropdown focused. Principals count:', principals.length, principals);
-                  console.log('🔍 Teachers count:', teachers.length);
-                  console.log('🔍 Guardians count:', guardians.length);
-                }}
-              >
-                <option value="">{(t as any).select_recipient || 'Select recipient'}</option>
-                {principals.length > 0 ? (
-                  <optgroup label={t.principal || 'Principal'}>
-                    {principals.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.first_name} {p.last_name || ''} ({p.email})
-                      </option>
-                    ))}
-                  </optgroup>
-                ) : (
-                  loadingRecipients ? (
-                    <optgroup label={t.principal || 'Principal'}>
-                      <option value="" disabled>Loading principals...</option>
-                    </optgroup>
-                  ) : (
-                    <optgroup label={t.principal || 'Principal'}>
-                      <option value="" disabled>No principals available</option>
-                    </optgroup>
-                  )
-                )}
-                {teachers.length > 0 && (
-                  <optgroup label={(t as any).teacher || 'Teacher'}>
-                    {teachers.map((teacher) => (
-                      <option key={teacher.id} value={teacher.id}>
-                        {teacher.first_name} {teacher.last_name || ''} ({teacher.email})
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
-                {guardians.length > 0 && (
-                  <optgroup label={t.guardian || 'Guardian'}>
-                    {guardians.map((g) => (
-                      <option key={g.id} value={g.id}>
-                        {g.first_name} {g.last_name || ''} ({g.email})
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
-              </select>
-            </label>
-            <label className="block text-sm text-slate-700 dark:text-slate-300 mt-2">
-              {t.message}
-              <textarea
-                rows={4}
-                value={messageBody}
-                onChange={(e) => setMessageBody(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-slate-300 p-2 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:placeholder-slate-400"
-                placeholder={t.msg_ph}
-              />
-            </label>
-            <div className="mt-3 flex items-center gap-2">
-              <button
-                onClick={sendMessage}
-                disabled={sending || !messageBody.trim() || !recipientId}
-                className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Send className="h-4 w-4" /> {t.send}
-              </button>
-              <button className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-3 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
-                <Paperclip className="h-4 w-4" /> {t.attach}
-              </button>
-              {sent && <span className="text-sm text-emerald-700 dark:text-emerald-400">✓ {t.sent}</span>}
+            {/* Message Input */}
+            <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+              <div className="flex items-end gap-2">
+                <button className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-colors">
+                  <Paperclip className="h-5 w-5" />
+                </button>
+                <div className="flex-1 relative">
+                  <textarea
+                    value={chatMessageBody}
+                    onChange={(e) => {
+                      setChatMessageBody(e.target.value);
+                      // Auto-resize textarea
+                      e.target.style.height = 'auto';
+                      e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        sendChatMessage();
+                      }
+                    }}
+                    placeholder={t.msg_ph}
+                    rows={1}
+                    className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 py-2 pr-12 text-sm dark:text-slate-200 dark:placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent max-h-[120px] overflow-y-auto"
+                  />
+                </div>
+                <button
+                  onClick={sendChatMessage}
+                  disabled={sending || !chatMessageBody.trim()}
+                  className="p-2 rounded-lg bg-black hover:bg-gray-800 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  <Send className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <MessageSquarePlus className="h-16 w-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
+              <p className="text-slate-500 dark:text-slate-400">{t.select_recipient}</p>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

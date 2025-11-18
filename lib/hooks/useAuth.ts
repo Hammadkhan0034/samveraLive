@@ -14,7 +14,27 @@ export function useRequireAuth(requiredRole?: SamveraRole | SamveraRole[]) {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
+    // Don't redirect if we're still loading or signing in
+    if (loading || isSigningIn) {
+      return;
+    }
+
+    // Check if there was a recent rate limit error - if so, wait a bit longer
+    const rateLimitErrorTime = typeof window !== 'undefined' 
+      ? sessionStorage.getItem('supabase_rate_limit_error') 
+      : null;
+    
+    if (rateLimitErrorTime) {
+      const errorTime = parseInt(rateLimitErrorTime, 10);
+      const timeSinceError = Date.now() - errorTime;
+      // If rate limit error was very recent (within 2 seconds), wait a bit before redirecting
+      if (timeSinceError < 2000) {
+        return;
+      }
+    }
+
+    // Only redirect if we're sure there's no user (not loading and not signing in)
+    if (!user) {
       router.push('/signin');
       return;
     }
@@ -42,7 +62,7 @@ export function useRequireAuth(requiredRole?: SamveraRole | SamveraRole[]) {
         }
       }
     }
-  }, [user, loading, requiredRole, router, session]);
+  }, [user, loading, requiredRole, router, session, isSigningIn]);
 
   return { user, loading, session, isSigningIn };
 }

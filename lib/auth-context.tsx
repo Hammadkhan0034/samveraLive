@@ -149,17 +149,80 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         // For all other events (SIGNED_OUT, etc.), update state normally
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-
         if (event === 'SIGNED_OUT') {
           console.log('🔄 SIGNED_OUT event received');
+          
+          // Check if this is an explicit signout (user clicked signout button)
+          const explicitSignout = typeof window !== 'undefined' 
+            ? sessionStorage.getItem('explicit_signout') 
+            : null;
+          
+          // If this is an explicit signout, clear the flag and proceed with signout
+          if (explicitSignout) {
+            sessionStorage.removeItem('explicit_signout');
+            sessionStorage.removeItem('supabase_rate_limit_error'); // Also clear rate limit flag
+            setIsSigningIn(false);
+            setSession(null);
+            setUser(null);
+            setLoading(false);
+            // Only redirect if we're not already on signin page and not on parent dashboard
+            if (typeof window !== 'undefined' && window.location.pathname !== '/signin' && !window.location.pathname.startsWith('/dashboard/parent')) {
+              window.location.replace('/signin');
+            }
+            return;
+          }
+          
+          // Check if this might be due to a rate limit error (only if not explicit signout)
+          const rateLimitErrorTime = typeof window !== 'undefined' 
+            ? sessionStorage.getItem('supabase_rate_limit_error') 
+            : null;
+          
+          // If we had a recent rate limit error (within last 5 seconds), check if session is still valid
+          if (rateLimitErrorTime && typeof window !== 'undefined') {
+            const errorTime = parseInt(rateLimitErrorTime, 10);
+            const timeSinceError = Date.now() - errorTime;
+            
+            // If rate limit error was recent (within 5 seconds), try to keep the session
+            if (timeSinceError < 5000) {
+              try {
+                const { data: { session: currentSession } } = await supabase.auth.getSession();
+                if (currentSession && currentSession.expires_at) {
+                  const expiresAt = currentSession.expires_at * 1000;
+                  const now = Date.now();
+                  // If session is still valid (has more than 1 minute left), keep it
+                  if (expiresAt - now > 60000) {
+                    console.warn('⚠️ SIGNED_OUT event after rate limit - session still valid, keeping it');
+                    // Keep the existing session instead of clearing it
+                    setSession(currentSession);
+                    setUser(currentSession.user);
+                    setLoading(false);
+                    setIsSigningIn(false);
+                    // Clear the rate limit flag
+                    sessionStorage.removeItem('supabase_rate_limit_error');
+                    return; // Don't redirect
+                  }
+                }
+              } catch (e) {
+                console.debug('Could not check session after rate limit error:', e);
+              }
+            }
+          }
+          
           setIsSigningIn(false);
-          // Immediately redirect to signin to avoid any delay or flicker
-          if (typeof window !== 'undefined' && window.location.pathname !== '/signin') {
+          // Clear session state
+          setSession(null);
+          setUser(null);
+          setLoading(false);
+          
+          // Only redirect if we're not already on signin page and not on parent dashboard
+          if (typeof window !== 'undefined' && window.location.pathname !== '/signin' && !window.location.pathname.startsWith('/dashboard/parent')) {
             window.location.replace('/signin');
           }
+        } else {
+          // For other events, update state normally
+          setSession(session);
+          setUser(session?.user ?? null);
+          setLoading(false);
         }
       } catch (error: any) {
         // Handle refresh token errors gracefully
@@ -169,6 +232,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.debug('🔄 Refresh token already used (non-critical, Supabase will handle)');
           return;
         }
+        
+        // Handle rate limit errors - don't clear session
+        if (error?.status === 429 || error?.message?.includes('rate limit') || error?.message?.includes('Too Many Requests') || error?.code === 'rate_limit_exceeded') {
+          console.warn('⚠️ Rate limit error in auth state change - keeping existing session');
+          // Try to get the current session and keep it
+          try {
+            const { data: { session: currentSession } } = await supabase.auth.getSession();
+            if (currentSession) {
+              setSession(currentSession);
+              setUser(currentSession.user);
+              setLoading(false);
+            }
+          } catch (e) {
+            // If we can't get session, just log and continue
+            console.debug('Could not retrieve session after rate limit error');
+          }
+          return;
+        }
+        
         // For other errors, log them but don't break the app
         console.error('❌ Auth state change error:', error);
       }
@@ -276,6 +358,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     console.log('🔄 Auth context signOut called...');
+    
+    // Set flag to indicate explicit signout (prevents SIGNED_OUT handler from restoring session)
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('explicit_signout', Date.now().toString());
+    }
     
     // Clear local state first
     setSession(null);

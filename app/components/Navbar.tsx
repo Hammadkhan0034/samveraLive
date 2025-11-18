@@ -4,13 +4,14 @@ import { useEffect, useState } from "react";
 import { Sun, Moon, Globe, ChevronDown } from "lucide-react";
 import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { useTheme } from "@/lib/contexts/ThemeContext";
-import { supabase } from "@/lib/supabaseClient";
+import { useAuth } from "@/lib/hooks/useAuth";
 import { useRouter, usePathname } from "next/navigation";
 
 export default function Navbar() {
   const { isDark, toggleTheme } = useTheme();
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
   const { lang, setLang, t } = useLanguage();
+  const { signOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -86,8 +87,11 @@ export default function Navbar() {
           {/* Sign out (visible on admin routes or always if you prefer) */}
           <button
             onClick={async () => {
-              await supabase.auth.signOut();
-              router.replace('/signin');
+              await signOut();
+              // Don't redirect to signin if we're on parent dashboard
+              if (!pathname?.startsWith('/dashboard/parent')) {
+                router.replace('/signin');
+              }
             }}
             className="inline-flex items-center gap-2 rounded-md border border-gray-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
           >
