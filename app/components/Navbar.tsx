@@ -33,10 +33,10 @@ export default function Navbar() {
   }, [isLangDropdownOpen]);
 
   return (
-    <nav className="fixed top-0 left-0 w-full z-50 border-b bg-white/60 backdrop-blur supports-[backdrop-filter]:bg-white/60 dark:bg-slate-900/80 dark:supports-[backdrop-filter]:bg-slate-900/60">
+    <nav className="fixed top-0 left-0 w-full z-50 border-b border-sand-200 bg-slate-900 backdrop-blur supports-[backdrop-filter]:bg-sand-50/80 dark:border-slate-700 dark:bg-slate-900 dark:supports-[backdrop-filter]:bg-slate-900/80">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
-        <div className="flex items-center gap-1 font-semibold text-slate-800 dark:text-slate-100">
-          <span className="inline-block rounded-md dark:bg-white dark:text-slate-900  bg-slate-900 text-white py-0.5 px-2.5">S</span>
+        <div className="flex items-center gap-1 font-semibold text-slate-900 dark:text-slate-100">
+          <span className="inline-block rounded-md bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-0.5 px-2.5">S</span>
           <span>Samvera</span>
         </div>
         <div className="flex items-center gap-2">
@@ -44,7 +44,7 @@ export default function Navbar() {
             type="button"
             aria-label={isDark ? "Activate light mode" : "Activate dark mode"}
             onClick={toggleTheme}
-            className="inline-flex items-center gap-2 rounded-md border border-gray-300 px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
+            className="inline-flex items-center gap-2 rounded-md border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
           >
             {isDark ? <Sun size={16} /> : <Moon size={16} />}
             {/* <span className="hidden sm:inline">{isDark ? t.light : t.dark}</span> */}
@@ -53,7 +53,7 @@ export default function Navbar() {
           <div className="relative language-dropdown">
             <button
               onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
-              className="flex items-center gap-2 rounded-md border border-gray-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
+              className="flex items-center gap-2 rounded-md border border-slate-300 dark:border-slate-700 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
             >
               <Globe className="h-4 w-4" />
               <span className="hidden sm:inline">{lang === 'is' ? 'Íslenska' : 'English'}</span>
@@ -93,7 +93,7 @@ export default function Navbar() {
                 router.replace('/signin');
               }
             }}
-            className="inline-flex items-center gap-2 rounded-md border border-gray-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
+            className="inline-flex items-center gap-2 rounded-md border border-slate-300 dark:border-slate-700 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
           >
             {lang === 'is' ? 'Útskrá' : 'Sign out'}
           </button>

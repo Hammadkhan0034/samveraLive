@@ -487,6 +487,8 @@ export const enText = {
   add_image_item: 'Add Image Item',
 
   // Parent Dashboard
+  parent_dashboard_title: 'Parent Dashboard',
+  parent_dashboard_subtitle: 'Stay connected with your child\'s learning journey',
   welcome_message: 'Stay connected with your child\'s learning journey',
   notices: 'Notices',
   notices_desc: 'Announcements and reminders from your child\'s class.',

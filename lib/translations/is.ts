@@ -487,6 +487,8 @@ export const isText = {
   add_image_item: 'Bæta við myndatriði',
 
   // Parent Dashboard
+  parent_dashboard_title: 'Foreldradashboard',
+  parent_dashboard_subtitle: 'Vertu tengdur við námsferil barnsins þíns',
   welcome_message: 'Vertu tengdur við námsferil barnsins þíns',
   notices: 'Tilkynningar',
   notices_desc: 'Tilkynningar og áminningar frá hópnum.',

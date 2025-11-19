@@ -1,15 +1,9 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
 import { SquareCheck as CheckSquare, Baby, MessageSquare, Users, CalendarDays, Plus, Send, Paperclip, Bell, X, Search, ChevronLeft, ChevronRight, Edit, Trash2, Mail, Menu, Eye, MessageSquarePlus } from 'lucide-react';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { option } from 'framer-motion/client';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
-import StoryColumn from './shared/StoryColumn';
-import { MessageThreadWithParticipants, MessageItem } from '@/lib/types/messages';
-import { useMessagesRealtime } from '@/lib/hooks/useMessagesRealtime';
 import TeacherSidebar from '@/app/components/shared/TeacherSidebar';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 
@@ -219,13 +213,4 @@ export default function TeacherDashboard() {
     </div>
   );
 }
-
-/* -------------------- Panels -------------------- */
-
-// MessagesPanel removed - now in /dashboard/teacher/messages page
-// MediaPanel removed - now in /dashboard/teacher/media page
-// StoriesPanel removed - now in /dashboard/teacher/stories page
-// AnnouncementsPanel removed - now in /dashboard/teacher/announcements page
-// StudentsPanel removed - now in /dashboard/teacher/students page
-// GuardiansPanel removed - now in /dashboard/teacher/guardians page
 
