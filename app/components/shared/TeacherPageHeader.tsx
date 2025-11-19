@@ -3,7 +3,7 @@
 import React from 'react';
 import { Menu, Users, CalendarDays } from 'lucide-react';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
-import { TeacherSidebarRef } from './TeacherSidebar';
+import { useTeacherPageLayout } from './TeacherPageLayout';
 
 interface TeacherPageHeaderStats {
   label: string;
@@ -15,11 +15,11 @@ interface TeacherPageHeaderStats {
 
 interface TeacherPageHeaderProps {
   title: string;
-  sidebarRef: React.RefObject<TeacherSidebarRef>;
   stats?: TeacherPageHeaderStats;
 }
 
-export default function TeacherPageHeader({ title, sidebarRef, stats }: TeacherPageHeaderProps) {
+export default function TeacherPageHeader({ title, stats }: TeacherPageHeaderProps) {
+  const { sidebarRef } = useTeacherPageLayout();
   return (
     <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
       <div className="flex items-center gap-3">

@@ -1,16 +1,15 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { SquareCheck as CheckSquare, MessageSquare, Camera, Timer, Users, Plus, Bell, Link as LinkIcon, Utensils } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { enText } from '@/lib/translations/en';
 import { isText } from '@/lib/translations/is';
-import { useRequireAuth } from '@/lib/hooks/useAuth';
-import TeacherSidebar, { TeacherSidebarRef } from '@/app/components/shared/TeacherSidebar';
 import LoadingSkeleton from '@/app/components/shared/LoadingSkeleton';
 import TeacherPageHeader from '@/app/components/shared/TeacherPageHeader';
+import TeacherPageLayout from '@/app/components/shared/TeacherPageLayout';
 
 type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
 
@@ -22,9 +21,6 @@ function clsx(...xs: Array<string | false | undefined>) {
 export default function TeacherAttendancePage() {
   const { t, lang } = useLanguage();
   const { session } = useAuth();
-  const pathname = usePathname();
-  const { user, loading, isSigningIn } = useRequireAuth('teacher');
-  const sidebarRef = useRef<TeacherSidebarRef>(null);
 
   // Try to get org_id from multiple possible locations
   const userMetadata = session?.user?.user_metadata;
@@ -297,22 +293,6 @@ export default function TeacherAttendancePage() {
     }
   }, [students.length, finalOrgId, session?.user?.id, teacherClasses.length]);
 
-  // Show loading state while checking authentication
-  if (loading || (isSigningIn && !user)) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-600 mx-auto mb-4"></div>
-            <p className="text-slate-600 dark:text-slate-400">
-              Loading attendance page...
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   // ---- Attendance actions ----
 
   // Save single attendance record to database
@@ -416,61 +396,37 @@ export default function TeacherAttendancePage() {
     setAttendance(newAttendance);
   }
 
-  // Determine active tile based on pathname
-
-  // Safety check: if user is still not available after loading, don't render
-  // (useRequireAuth hook should have redirected by now)
-  if (!loading && !isSigningIn && !user) {
-    return null;
-  }
-
   return (
-    <div className="flex flex-col h-screen overflow-hidden md:pt-14">
-      {/* Main content area with sidebar and content - starts below navbar */}
-      <div className="flex flex-1 overflow-hidden h-full">
-        {/* Sidebar */}
-        <TeacherSidebar
-          ref={sidebarRef}
-          pathname={pathname}
-          attendanceBadge={kidsIn}
+    <TeacherPageLayout attendanceBadge={kidsIn}>
+      {/* Content Header */}
+      <TeacherPageHeader
+        title={t.att_title}
+        stats={{
+          label: t.kids_checked_in,
+          value: kidsIn,
+          total: students.length,
+          showToday: true,
+          todayHint: t.today_hint,
+        }}
+      />
+      
+      {/* Attendance Panel */}
+      <section>
+        <AttendancePanel 
+          t={t}
+          lang={lang}
+          students={students}
+          teacherClasses={teacherClasses}
+          attendance={attendance}
+          hasUnsavedChanges={hasUnsavedChanges}
+          isSaving={isSavingAttendance}
+          onMarkAll={markAllPresent} 
+          onToggle={togglePresent}
+          onSubmit={submitAttendance}
+          loadingStudents={loadingStudents}
         />
-
-        {/* Main content area */}
-        <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900">
-          <div className="p-2 md:p-6 lg:p-8">
-            {/* Content Header */}
-            <TeacherPageHeader
-              title={t.att_title}
-              sidebarRef={sidebarRef}
-              stats={{
-                label: t.kids_checked_in,
-                value: kidsIn,
-                total: students.length,
-                showToday: true,
-                todayHint: t.today_hint,
-              }}
-            />
-            
-            {/* Attendance Panel */}
-            <section>
-              <AttendancePanel 
-                t={t}
-                lang={lang}
-                students={students}
-                teacherClasses={teacherClasses}
-                attendance={attendance}
-                hasUnsavedChanges={hasUnsavedChanges}
-                isSaving={isSavingAttendance}
-                onMarkAll={markAllPresent} 
-                onToggle={togglePresent}
-                onSubmit={submitAttendance}
-                loadingStudents={loadingStudents}
-              />
-            </section>
-          </div>
-        </main>
-      </div>
-    </div>
+      </section>
+    </TeacherPageLayout>
   );
 }
 

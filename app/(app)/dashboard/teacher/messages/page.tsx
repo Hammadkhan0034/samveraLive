@@ -1,16 +1,15 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import { MessageSquare, Camera, Timer, Users, Bell, X, Search, Send, Paperclip, Link as LinkIcon, Mail, Utensils, MessageSquarePlus } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
+import { X, Search, Send, Paperclip, Link as LinkIcon, Utensils, MessageSquarePlus } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
-import { useRequireAuth } from '@/lib/hooks/useAuth';
-import TeacherSidebar, { TeacherSidebarRef } from '@/app/components/shared/TeacherSidebar';
 import { MessageThreadWithParticipants, MessageItem } from '@/lib/types/messages';
 import { useMessagesRealtime } from '@/lib/hooks/useMessagesRealtime';
 import LoadingSkeleton from '@/app/components/shared/LoadingSkeleton';
 import TeacherPageHeader from '@/app/components/shared/TeacherPageHeader';
+import TeacherPageLayout from '@/app/components/shared/TeacherPageLayout';
 
 type Lang = 'is' | 'en';
 type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
@@ -26,9 +25,6 @@ export default function TeacherMessagesPage() {
   const { t, lang } = useLanguage();
   const { session } = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
-  const { user, loading, isSigningIn } = useRequireAuth('teacher');
-  const sidebarRef = useRef<TeacherSidebarRef>(null);
 
   // Messages state
   const [threads, setThreads] = useState<MessageThreadWithParticipants[]>([]);
@@ -607,46 +603,12 @@ export default function TeacherMessagesPage() {
       { id: 'menus', title: t.tile_menus || 'Menus', desc: t.tile_menus_desc || 'Manage daily menus', Icon: Utensils, route: '/dashboard/teacher?tab=menus' },
     ], [t, lang]);
 
-  // Show loading state while checking authentication - MUST be after all hooks
-  if (loading || (isSigningIn && !user)) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-600 mx-auto mb-4"></div>
-            <p className="text-slate-600 dark:text-slate-400">
-              Loading messages page...
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Safety check: if user is still not available after loading, don't render - MUST be after all hooks
-  if (!loading && !isSigningIn && !user) {
-    return null;
-  }
-
   return (
-    <div className="flex flex-col h-screen overflow-hidden md:pt-14">
-      {/* Main content area with sidebar and content - starts below navbar */}
-      <div className="flex flex-1 overflow-hidden h-full">
-        {/* Sidebar */}
-        <TeacherSidebar
-          ref={sidebarRef}
-          pathname={pathname}
-          messagesBadge={messagesCount > 0 ? messagesCount : undefined}
-        />
-
-        {/* Main content area */}
-        <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900">
-          <div className="p-2 md:p-6 lg:p-8">
-            {/* Content Header */}
-            <TeacherPageHeader
-              title={t.msg_title}
-              sidebarRef={sidebarRef}
-            />
+    <TeacherPageLayout messagesBadge={messagesCount > 0 ? messagesCount : undefined}>
+      {/* Content Header */}
+      <TeacherPageHeader
+        title={t.msg_title}
+      />
 
             {/* Messages Panel */}
             <div className="flex h-[calc(100vh-200px)] rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800 overflow-hidden">
@@ -929,9 +891,6 @@ export default function TeacherMessagesPage() {
                 )}
               </div>
             </div>
-          </div>
-        </main>
-      </div>
-    </div>
+    </TeacherPageLayout>
   );
 }
