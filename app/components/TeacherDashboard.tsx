@@ -8,7 +8,7 @@ import AnnouncementForm from './AnnouncementForm';
 import AnnouncementList from './AnnouncementList';
 import { supabase } from '@/lib/supabaseClient';
 import { option } from 'framer-motion/client';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import StoryColumn from './shared/StoryColumn';
 import { MessageThreadWithParticipants, MessageItem } from '@/lib/types/messages';
@@ -18,7 +18,7 @@ import { GuardianForm, type GuardianFormData } from '@/app/components/shared/Gua
 import LinkStudentGuardian from './LinkStudentGuardian';
 
 type Lang = 'is' | 'en';
-type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
+type TileId = 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
 
 // Small helpers
 function clsx(...xs: Array<string | false | undefined>) {
@@ -28,10 +28,11 @@ const uid = () => Math.random().toString(36).slice(2, 9);
 
 export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
   const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
-  const [active, setActive] = useState<TileId>('attendance');
+  const [active, setActive] = useState<TileId>('diapers');
   const { session } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   useEffect(() => { setMounted(true); }, []);
@@ -39,7 +40,7 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
   // Set active tab from query parameter
   useEffect(() => {
     const tabParam = searchParams?.get('tab');
-    if (tabParam && ['attendance', 'diapers', 'messages', 'media', 'stories', 'announcements', 'students', 'guardians', 'link_student', 'menus'].includes(tabParam)) {
+    if (tabParam && ['diapers', 'messages', 'media', 'stories', 'announcements', 'students', 'guardians', 'link_student', 'menus'].includes(tabParam)) {
       setActive(tabParam as TileId);
     }
   }, [searchParams]);
@@ -81,12 +82,6 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
   
   // Final org_id to use - from metadata, database, or default
   const finalOrgId = orgIdFromMetadata || dbOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID || '1db3c97c-de42-4ad2-bb72-cc0b6cda69f7';
-
-  // ---- Attendance state ----
-  // Track attendance by student ID (string) - true = present, false = absent
-  const [attendance, setAttendance] = useState<Record<string, boolean>>({});
-  const [savedAttendance, setSavedAttendance] = useState<Record<string, boolean>>({}); // Original saved state
-  const [isSavingAttendance, setIsSavingAttendance] = useState(false);
 
   // Messages state removed - now managed inside MessagesPanel component
   const [messagesCount, setMessagesCount] = useState(0);
@@ -148,20 +143,15 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
     guardian_ids: [] as string[]
   });
 
-  // Calculate kids checked in from actual students (needed for tiles badge)
-  const kidsIn = useMemo(() => {
-    return students.filter(s => attendance[s.id]).length;
-  }, [students, attendance]);
-
-  // Define tiles array after kidsIn is calculated
+  // Define tiles array
   const tiles: Array<{
     id: TileId;
     title: string;
     desc: string;
     Icon: React.ElementType;
     badge?: string | number;
+    route?: string;
   }> = useMemo(() => [
-      { id: 'attendance', title: t.tile_att, desc: t.tile_att_desc, Icon: CheckSquare, badge: kidsIn },
       { id: 'diapers', title: t.tile_diaper, desc: t.tile_diaper_desc, Icon: Baby },
       { id: 'messages', title: t.tile_msg, desc: t.tile_msg_desc, Icon: MessageSquare, badge: messagesCount > 0 ? messagesCount : undefined },
       { id: 'media', title: t.tile_media, desc: t.tile_media_desc, Icon: Camera, badge: uploads.length || undefined },
@@ -171,158 +161,8 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
       { id: 'guardians', title: t.tile_guardians || 'Guardians', desc: t.tile_guardians_desc || 'Manage guardians', Icon: Users },
       { id: 'link_student', title: t.tile_link_student || 'Link Student', desc: t.tile_link_student_desc || 'Link a guardian to a student', Icon: LinkIcon },
       { id: 'menus', title: t.tile_menus || 'Menus', desc: t.tile_menus_desc || 'Manage daily menus', Icon: Utensils },
-    ], [t, kidsIn, uploads, messagesCount]);
+    ], [t, uploads, messagesCount]);
 
-  // ---- Attendance actions ----
-  // Load attendance for today
-  async function loadAttendanceForToday() {
-    if (!finalOrgId || students.length === 0) return;
-
-    try {
-      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-      const classIds = teacherClasses.map(c => c.id).filter(Boolean);
-      
-      // Load attendance for all assigned classes
-      const allAttendance: Record<string, boolean> = {};
-      
-      for (const classId of classIds) {
-        const response = await fetch(
-          `/api/attendance?orgId=${finalOrgId}&classId=${classId}&date=${today}&t=${Date.now()}`,
-          { cache: 'no-store' }
-        );
-        const data = await response.json();
-        
-        if (response.ok && data.attendance) {
-          data.attendance.forEach((record: any) => {
-            // Map status to boolean: 'present' = true, others = false
-            allAttendance[record.student_id] = record.status === 'present';
-          });
-        }
-      }
-      
-      setAttendance(allAttendance);
-      setSavedAttendance(allAttendance); // Store original state
-      console.log('✅ Attendance loaded for today:', allAttendance);
-    } catch (error) {
-      console.error('❌ Error loading attendance:', error);
-    }
-  }
-
-  // Save single attendance record to database
-  async function saveAttendanceRecord(studentId: string, isPresent: boolean, classId?: string | null) {
-    if (!finalOrgId || !session?.user?.id) return false;
-
-    try {
-      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-      const status = isPresent ? 'present' : 'absent';
-      
-      const response = await fetch('/api/attendance', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          org_id: finalOrgId,
-          class_id: classId || null,
-          student_id: studentId,
-          date: today,
-          status: status,
-          recorded_by: session.user.id
-        })
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        console.log('✅ Attendance saved:', { studentId, status });
-        return true;
-      } else {
-        console.error('❌ Failed to save attendance:', data.error);
-        return false;
-      }
-    } catch (error: any) {
-      console.error('❌ Error saving attendance:', error);
-      return false;
-    }
-  }
-
-  // Submit all attendance changes
-  async function submitAttendance() {
-    if (!finalOrgId || !session?.user?.id || isSavingAttendance) return;
-
-    try {
-      setIsSavingAttendance(true);
-      const today = new Date().toISOString().split('T')[0];
-      
-      // Get all students that have attendance changes
-      const studentsToSave = students.filter(student => {
-        const currentStatus = attendance[student.id] || false;
-        const savedStatus = savedAttendance[student.id] || false;
-        return currentStatus !== savedStatus;
-      });
-
-      if (studentsToSave.length === 0) {
-        console.log('No attendance changes to save');
-        setIsSavingAttendance(false);
-        return;
-      }
-
-      console.log(`📋 Saving attendance for ${studentsToSave.length} student(s)...`);
-
-      // Save all changed attendance records
-      const savePromises = studentsToSave.map(async (student) => {
-        const isPresent = attendance[student.id] || false;
-        const classId = student.class_id || (student as any)?.classes?.id || null;
-        return saveAttendanceRecord(student.id, isPresent, classId);
-      });
-
-      const results = await Promise.allSettled(savePromises);
-      const successCount = results.filter(r => r.status === 'fulfilled' && r.value === true).length;
-      const failureCount = results.length - successCount;
-
-      if (failureCount === 0) {
-        // All saved successfully - update saved state
-        setSavedAttendance({ ...attendance });
-        console.log(`✅ Successfully saved attendance for ${successCount} student(s)`);
-      } else {
-        console.error(`❌ Failed to save attendance for ${failureCount} student(s)`);
-        alert(`Failed to save attendance for ${failureCount} student(s). Please try again.`);
-      }
-    } catch (error: any) {
-      console.error('❌ Error submitting attendance:', error);
-      alert('Error saving attendance. Please try again.');
-    } finally {
-      setIsSavingAttendance(false);
-    }
-  }
-
-  function togglePresent(studentId: string, checked: boolean) {
-    // Only update UI, don't save yet
-    setAttendance((prev) => ({ ...prev, [studentId]: checked }));
-  }
-
-  function markAllPresent(classId?: string) {
-    const studentsToMark = classId 
-      ? students.filter(s => {
-          const sClassId = s.class_id || (s as any).classes?.id;
-          return sClassId === classId;
-        })
-      : students;
-    
-    // Only update UI, don't save yet
-    const newAttendance = { ...attendance };
-    studentsToMark.forEach(s => {
-      newAttendance[s.id] = true;
-    });
-    setAttendance(newAttendance);
-  }
-
-  // Check if there are unsaved changes
-  const hasUnsavedChanges = React.useMemo(() => {
-    return students.some(student => {
-      const currentStatus = attendance[student.id] || false;
-      const savedStatus = savedAttendance[student.id] || false;
-      return currentStatus !== savedStatus;
-    });
-  }, [attendance, savedAttendance, students]);
 
   // ---- Media actions (mock) ----
   function handleFiles(files: FileList | null) {
@@ -687,19 +527,12 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
     }
   }, [session?.user?.id, teacherClasses.length, active]);
 
-  // Load attendance ONLY when attendance tab is active
-  React.useEffect(() => {
-    if (active === 'attendance' && students.length > 0 && finalOrgId && session?.user?.id && teacherClasses.length > 0) {
-      loadAttendanceForToday();
-    }
-  }, [active, students.length, finalOrgId, session?.user?.id, teacherClasses.length]);
 
   React.useEffect(() => {
     if (isStudentRequestModalOpen && session?.user?.id) {
     }
   }, [isStudentRequestModalOpen, session?.user?.id, finalOrgId]);
 
-//     try {
 //       const userId = session?.user?.id;
 //       if (!userId) return;
 
@@ -956,41 +789,41 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
     }
   }
 
-  // Function to fix missing user metadata
-  async function fixUserMetadata() {
-    try {
-      const userId = session?.user?.id;
-      if (!userId) return;
+  // // Function to fix missing user metadata
+  // async function fixUserMetadata() {
+  //   try {
+  //     const userId = session?.user?.id;
+  //     if (!userId) return;
 
-      // Use default values for now - in a real app, you'd get these from context or database
-      const defaultOrgId = process.env.NEXT_PUBLIC_DEFAULT_ORG_ID || 'default-org-id';
-      const defaultClassId = 'default-class-id';
+  //     // Use default values for now - in a real app, you'd get these from context or database
+  //     const defaultOrgId = process.env.NEXT_PUBLIC_DEFAULT_ORG_ID || 'default-org-id';
+  //     const defaultClassId = 'default-class-id';
 
-      console.log('📝 Using default values:', { defaultOrgId, defaultClassId });
+  //     console.log('📝 Using default values:', { defaultOrgId, defaultClassId });
 
-      // Update the user's metadata with the default org_id and class_id
-      const updateResponse = await fetch('/api/teacher-metadata', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: userId,
-          org_id: defaultOrgId,
-          class_id: defaultClassId
-        })
-      });
+  //     // Update the user's metadata with the default org_id and class_id
+  //     const updateResponse = await fetch('/api/teacher-metadata', {
+  //       method: 'POST',
+  //       headers: { 'Content-Type': 'application/json' },
+  //       body: JSON.stringify({
+  //         user_id: userId,
+  //         org_id: defaultOrgId,
+  //         class_id: defaultClassId
+  //       })
+  //     });
 
-      const updateData = await updateResponse.json();
+  //     const updateData = await updateResponse.json();
 
-      if (updateResponse.ok) {
-        console.log('✅ Metadata updated successfully');
-        // loadStudentRequests removed - teachers now create students directly
-      } else {
-        console.error('❌ Failed to update metadata:', updateData.error);
-      }
-    } catch (error) {
-      console.error('💥 Error fixing metadata:', error);
-    }
-  }
+  //     if (updateResponse.ok) {
+  //       console.log('✅ Metadata updated successfully');
+  //       // loadStudentRequests removed - teachers now create students directly
+  //     } else {
+  //       console.error('❌ Failed to update metadata:', updateData.error);
+  //     }
+  //   } catch (error) {
+  //     console.error('💥 Error fixing metadata:', error);
+  //   }
+  // }
 
   return (
     <div className="flex flex-col h-screen overflow-hidden md:pt-14">
@@ -1017,6 +850,42 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
               </button>
             </div>
             <nav className="space-y-1">
+              {/* Attendance tile - navigate to separate page */}
+              <button
+                onClick={() => {
+                  router.push('/dashboard/teacher/attendance');
+                  setSidebarOpen(false);
+                }}
+                className={clsx(
+                  'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                  'hover:bg-slate-800 dark:hover:bg-slate-700',
+                  pathname === '/dashboard/teacher/attendance'
+                    ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
+                    : 'border-l-4 border-transparent'
+                )}
+              >
+                <span className={clsx(
+                  'flex-shrink-0 rounded-lg p-2',
+                  pathname === '/dashboard/teacher/attendance'
+                    ? 'bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900'
+                    : 'bg-slate-800 dark:bg-slate-700 text-slate-200 dark:text-slate-300'
+                )}>
+                  <CheckSquare className="h-5 w-5" />
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={clsx(
+                      'font-medium truncate',
+                      pathname === '/dashboard/teacher/attendance'
+                        ? 'text-slate-100 dark:text-slate-100'
+                        : 'text-slate-200 dark:text-slate-300'
+                    )}>
+                      {t.tile_att}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{t.tile_att_desc}</p>
+                </div>
+              </button>
               {tiles.map(({ id, title, desc, Icon, badge }) => (
                 <button
                   key={id}
@@ -1094,8 +963,8 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
                 <div className="hidden md:flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
                   <Users className="h-4 w-4" />
                   <span>
-                    {t.kids_checked_in}:{' '}
-                    <span className="font-medium">{kidsIn}</span> / {students.length}
+                    {t.tile_students}:{' '}
+                    <span className="font-medium">{students.length}</span>
                   </span>
                   <span className="mx-2 text-slate-300 dark:text-slate-600">•</span>
                   <CalendarDays className="h-4 w-4" />
@@ -1105,8 +974,8 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
                 <div className="md:hidden flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
                   <Users className="h-4 w-4" />
                   <span>
-                    {t.kids_checked_in}:{' '}
-                    <span className="font-medium">{kidsIn}</span> / {students.length}
+                    {t.tile_students}:{' '}
+                    <span className="font-medium">{students.length}</span>
                   </span>
                 </div>
               </div>
@@ -1114,20 +983,6 @@ export default function TeacherDashboard({ lang = 'en' }: { lang?: Lang }) {
             {/* Active panel */}
             
             <section>
-              {active === 'attendance' && (
-                <AttendancePanel 
-                  t={t} 
-                  students={students}
-                  teacherClasses={teacherClasses}
-                  attendance={attendance}
-                  hasUnsavedChanges={hasUnsavedChanges}
-                  isSaving={isSavingAttendance}
-                  onMarkAll={markAllPresent} 
-                  onToggle={togglePresent}
-                  onSubmit={submitAttendance}
-                  loadingStudents={loadingStudents}
-                />
-              )}
               {active === 'diapers' && <DiaperPanel t={t} />}
               {active === 'media' && <MediaPanel t={t} uploads={uploads} onFiles={handleFiles} />}
               {active === 'stories' && <StoriesPanel t={t} router={router} session={session} orgId={finalOrgId} teacherClasses={teacherClasses} isActive={active === 'stories'} />}
@@ -1634,202 +1489,6 @@ type="text"
 }
 
 /* -------------------- Panels -------------------- */
-
-function AttendancePanel({
-  t,
-  students,
-  teacherClasses,
-  attendance,
-  hasUnsavedChanges,
-  isSaving,
-  onMarkAll,
-  onToggle,
-  onSubmit,
-  loadingStudents,
-}: {
-  t: typeof enText;
-  students: Array<{ id: string; first_name: string; last_name: string | null; dob: string | null; gender: string; class_id: string | null; created_at: string; classes?: any; guardians?: Array<{ id: string; relation: string; users?: { id: string; full_name: string; email: string } }> }>;
-  teacherClasses: any[];
-  attendance: Record<string, boolean>;
-  hasUnsavedChanges: boolean;
-  isSaving: boolean;
-  onMarkAll: (classId?: string) => void;
-  onToggle: (studentId: string, checked: boolean) => void;
-  onSubmit: () => void;
-  loadingStudents: boolean;
-}) {
-  const [selectedClassId, setSelectedClassId] = useState<string>('all');
-
-  // Filter students by selected class
-  const filteredStudents = React.useMemo(() => {
-    if (selectedClassId === 'all') {
-      return students;
-    }
-    
-    // Filter by class_id - handle both direct class_id and nested classes.id
-    const filtered = students.filter(s => {
-      const studentClassId = s.class_id || (s as any).classes?.id || null;
-      
-      // Normalize both IDs to strings for comparison
-      const normalizedStudentClassId = studentClassId ? String(studentClassId).trim() : null;
-      const normalizedSelectedClassId = selectedClassId ? String(selectedClassId).trim() : null;
-      
-      const matches = normalizedStudentClassId === normalizedSelectedClassId;
-      
-      // Debug each student for first few
-      if (students.indexOf(s) < 3) {
-        console.log('Student filter check:', {
-          studentId: s.id,
-          studentClassId: normalizedStudentClassId,
-          selectedClassId: normalizedSelectedClassId,
-          matches
-        });
-      }
-      
-      return matches;
-    });
-    
-    // Debug logging
-    console.log('AttendancePanel - Filtering students:', {
-      selectedClassId,
-      totalStudents: students.length,
-      filteredCount: filtered.length,
-      allStudentClassIds: students.slice(0, 5).map(s => ({
-        id: s.id,
-        class_id: s.class_id,
-        classes_id: (s as any).classes?.id,
-        firstName: (s as any).users?.first_name || s.first_name,
-        lastName: (s as any).users?.last_name || s.last_name
-      }))
-    });
-    
-    return filtered;
-  }, [students, selectedClassId]);
-
-  // Get class name for display
-  const getClassName = (classId: string | null) => {
-    if (!classId) return 'No Class';
-    const classInfo = teacherClasses.find(c => c.id === classId);
-    return classInfo?.name || `Class ${classId.substring(0, 8)}...`;
-  };
-
-  // Get student full name - check both direct and nested users object
-  const getStudentName = (student: any) => {
-    const firstName = (student as any).users?.first_name || student.first_name || '';
-    const lastName = (student as any).users?.last_name || student.last_name || '';
-    const fullName = `${firstName} ${lastName}`.trim();
-    return fullName || 'Unknown';
-  };
-
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">{t.att_title}</h2>
-        <div className="flex items-center gap-3">
-          {/* Class Filter Dropdown */}
-          {teacherClasses.length > 0 ? (
-            <select
-              value={selectedClassId}
-              onChange={(e) => {
-                const newClassId = e.target.value;
-                console.log('Class filter changed:', { from: selectedClassId, to: newClassId });
-                setSelectedClassId(newClassId);
-              }}
-              className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
-            >
-              <option value="all">{t.all_classes || 'All Classes'}</option>
-              {teacherClasses.map((cls) => (
-                <option key={cls.id} value={cls.id}>
-                  {cls.name}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <div className="text-sm text-slate-500 dark:text-slate-400">
-              {t.no_classes_assigned || 'No classes assigned'}
-            </div>
-          )}
-          <button
-            onClick={() => onMarkAll(selectedClassId !== 'all' ? selectedClassId : undefined)}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
-          >
-            <Plus className="h-4 w-4" />
-            {t.att_mark_all_in}
-          </button>
-          <button
-            onClick={onSubmit}
-            disabled={!hasUnsavedChanges || isSaving || loadingStudents}
-            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-emerald-700 dark:hover:bg-emerald-600"
-          >
-            {isSaving ? (
-              <>
-                <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                {t.saved || 'Saving...'}
-              </>
-            ) : (
-              <>
-                <CheckSquare className="h-4 w-4" />
-                {t.submit_attendance || 'Submit Attendance'}
-              </>
-            )}
-          </button>
-        </div>
-      </div>
-      {hasUnsavedChanges && !isSaving && (
-        <div className="mb-4 rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-300">
-          {t.unsaved_changes || 'You have unsaved changes. Click "Submit Attendance" to save.'}
-        </div>
-      )}
-      
-      {loadingStudents ? (
-        <div className="text-center py-8 text-slate-600 dark:text-slate-400">{t.loading}</div>
-      ) : filteredStudents.length === 0 ? (
-        <div className="text-center py-8 text-slate-500 dark:text-slate-400">
-          {selectedClassId === 'all' 
-            ? t.no_students_found || 'No students found in assigned classes'
-            : t.no_students_in_class || 'No students in this class'}
-        </div>
-      ) : (
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredStudents.map((student) => {
-            const isPresent = attendance[student.id] || false;
-            const studentName = getStudentName(student);
-            return (
-          <label
-                key={student.id}
-            className={clsx(
-              'flex cursor-pointer items-center justify-between rounded-xl border p-3 transition',
-                  isPresent
-                ? 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300'
-                : 'border-slate-200 bg-white text-slate-700 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300'
-            )}
-          >
-                <div className="flex flex-col">
-                  <span className="font-medium">{studentName}</span>
-                  {(student.class_id || (student as any).classes?.id) && (
-                    <span className="text-xs text-slate-500 dark:text-slate-400">
-                      {getClassName(student.class_id || (student as any).classes?.id)}
-                    </span>
-                  )}
-                </div>
-            <input
-              type="checkbox"
-                  checked={isPresent}
-                  onChange={(e) => onToggle(student.id, e.target.checked)}
-                  disabled={isSaving || loadingStudents}
-                  className="h-4 w-4 disabled:opacity-50 disabled:cursor-not-allowed"
-            />
-          </label>
-            );
-          })}
-      </div>
-      )}
-    </div>
-  );
-}
 
 function DiaperPanel({ t }: { t: typeof enText }) {
   const [child, setChild] = useState('');
