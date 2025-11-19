@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Users, CalendarDays, Plus, Send, Paperclip, Bell, X, Search, ChevronLeft, ChevronRight, Edit, Trash2, Link as LinkIcon, Mail, Utensils, Menu } from 'lucide-react';
-import ProfileSwitcher from '@/app/components/ProfileSwitcher';
+import { SquareCheck as CheckSquare, MessageSquare, Camera, Timer, Users, Plus, Bell, Link as LinkIcon, Utensils } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { enText } from '@/lib/translations/en';
@@ -11,8 +10,8 @@ import { isText } from '@/lib/translations/is';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
 import TeacherSidebar, { TeacherSidebarRef } from '@/app/components/shared/TeacherSidebar';
 import LoadingSkeleton from '@/app/components/shared/LoadingSkeleton';
+import TeacherPageHeader from '@/app/components/shared/TeacherPageHeader';
 
-type Lang = 'is' | 'en';
 type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
 
 // Small helpers
@@ -23,7 +22,6 @@ function clsx(...xs: Array<string | false | undefined>) {
 export default function TeacherAttendancePage() {
   const { t, lang } = useLanguage();
   const { session } = useAuth();
-  const router = useRouter();
   const pathname = usePathname();
   const { user, loading, isSigningIn } = useRequireAuth('teacher');
   const sidebarRef = useRef<TeacherSidebarRef>(null);
@@ -73,24 +71,6 @@ export default function TeacherAttendancePage() {
     return students.filter(s => attendance[s.id]).length;
   }, [students, attendance]);
 
-  // Define tiles array (excluding attendance and diapers as they're handled separately)
-  const tiles: Array<{
-    id: TileId;
-    title: string;
-    desc: string;
-    Icon: React.ElementType;
-    badge?: string | number;
-    route?: string;
-  }> = useMemo(() => [
-      { id: 'messages', title: t.tile_msg, desc: t.tile_msg_desc, Icon: MessageSquare, route: '/dashboard/teacher/messages' },
-      { id: 'media', title: t.tile_media, desc: t.tile_media_desc, Icon: Camera, route: '/dashboard/teacher/media' },
-      { id: 'stories', title: t.tile_stories, desc: t.tile_stories_desc, Icon: Timer, route: '/dashboard/teacher/stories' },
-      { id: 'announcements', title: t.tile_announcements, desc: t.tile_announcements_desc, Icon: Bell, route: '/dashboard/teacher/announcements' },
-      { id: 'students', title: t.tile_students, desc: t.tile_students_desc, Icon: Users, route: '/dashboard/teacher?tab=students' },
-      { id: 'guardians', title: t.tile_guardians || 'Guardians', desc: t.tile_guardians_desc || 'Manage guardians', Icon: Users, route: '/dashboard/teacher?tab=guardians' },
-      { id: 'link_student', title: t.tile_link_student || 'Link Student', desc: t.tile_link_student_desc || 'Link a guardian to a student', Icon: LinkIcon, route: '/dashboard/teacher?tab=link_student' },
-      { id: 'menus', title: t.tile_menus || 'Menus', desc: t.tile_menus_desc || 'Manage daily menus', Icon: Utensils, route: '/dashboard/teacher?tab=menus' },
-    ], [t, lang]);
 
   // Check if there are unsaved changes
   const hasUnsavedChanges = React.useMemo(() => {
@@ -377,7 +357,6 @@ export default function TeacherAttendancePage() {
 
     try {
       setIsSavingAttendance(true);
-      const today = new Date().toISOString().split('T')[0];
       
       const studentsToSave = students.filter(student => {
         const currentStatus = attendance[student.id] || false;
@@ -438,7 +417,6 @@ export default function TeacherAttendancePage() {
   }
 
   // Determine active tile based on pathname
-  const activeTile = pathname === '/dashboard/teacher/attendance' ? 'attendance' : null;
 
   // Safety check: if user is still not available after loading, don't render
   // (useRequireAuth hook should have redirected by now)
@@ -461,40 +439,17 @@ export default function TeacherAttendancePage() {
         <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900">
           <div className="p-2 md:p-6 lg:p-8">
             {/* Content Header */}
-            <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div className="flex items-center gap-3">
-                {/* Mobile menu button */}
-                <button
-                  onClick={() => sidebarRef.current?.open()}
-                  className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
-                  aria-label="Toggle sidebar"
-                >
-                  <Menu className="h-5 w-5" />
-                </button>
-                <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.att_title}</h2>
-              </div>
-              <div className="flex items-center gap-3">
-                <ProfileSwitcher />
-                <div className="hidden md:flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                  <Users className="h-4 w-4" />
-                  <span>
-                    {t.kids_checked_in}:{' '}
-                    <span className="font-medium">{kidsIn}</span> / {students.length}
-                  </span>
-                  <span className="mx-2 text-slate-300 dark:text-slate-600">•</span>
-                  <CalendarDays className="h-4 w-4" />
-                  <span>{t.today_hint}</span>
-                </div>
-                {/* Small-screen stats row */}
-                <div className="md:hidden flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                  <Users className="h-4 w-4" />
-                  <span>
-                    {t.kids_checked_in}:{' '}
-                    <span className="font-medium">{kidsIn}</span> / {students.length}
-                  </span>
-                </div>
-              </div>
-            </div>
+            <TeacherPageHeader
+              title={t.att_title}
+              sidebarRef={sidebarRef}
+              stats={{
+                label: t.kids_checked_in,
+                value: kidsIn,
+                total: students.length,
+                showToday: true,
+                todayHint: t.today_hint,
+              }}
+            />
             
             {/* Attendance Panel */}
             <section>

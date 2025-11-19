@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { MessageSquare, Camera, Timer, Users, Bell, X, Search, Send, Paperclip, Link as LinkIcon, Mail, Utensils, Menu, MessageSquarePlus } from 'lucide-react';
-import ProfileSwitcher from '@/app/components/ProfileSwitcher';
+import { MessageSquare, Camera, Timer, Users, Bell, X, Search, Send, Paperclip, Link as LinkIcon, Mail, Utensils, MessageSquarePlus } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
@@ -11,6 +10,7 @@ import TeacherSidebar, { TeacherSidebarRef } from '@/app/components/shared/Teach
 import { MessageThreadWithParticipants, MessageItem } from '@/lib/types/messages';
 import { useMessagesRealtime } from '@/lib/hooks/useMessagesRealtime';
 import LoadingSkeleton from '@/app/components/shared/LoadingSkeleton';
+import TeacherPageHeader from '@/app/components/shared/TeacherPageHeader';
 
 type Lang = 'is' | 'en';
 type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
@@ -643,21 +643,10 @@ export default function TeacherMessagesPage() {
         <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900">
           <div className="p-2 md:p-6 lg:p-8">
             {/* Content Header */}
-            <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => sidebarRef.current?.open()}
-                  className="md:hidden p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700"
-                  aria-label="Open sidebar"
-                >
-                  <Menu className="h-5 w-5" />
-                </button>
-                <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.msg_title}</h2>
-              </div>
-              <div className="flex items-center gap-3">
-                <ProfileSwitcher />
-              </div>
-            </div>
+            <TeacherPageHeader
+              title={t.msg_title}
+              sidebarRef={sidebarRef}
+            />
 
             {/* Messages Panel */}
             <div className="flex h-[calc(100vh-200px)] rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800 overflow-hidden">

@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { Bell, Timer, Users, MessageSquare, Camera, Link as LinkIcon, Utensils, Plus, Search, Edit, Trash2, X, Menu } from 'lucide-react';
+import { Bell, Timer, Users, MessageSquare, Camera, Link as LinkIcon, Utensils, Plus, Search, Edit, Trash2, X } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { enText } from '@/lib/translations/en';
@@ -10,8 +10,8 @@ import { isText } from '@/lib/translations/is';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
 import TeacherSidebar, { TeacherSidebarRef } from '@/app/components/shared/TeacherSidebar';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
-import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import LoadingSkeleton from '@/app/components/shared/LoadingSkeleton';
+import TeacherPageHeader from '@/app/components/shared/TeacherPageHeader';
 
 type Lang = 'is' | 'en';
 type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
@@ -678,39 +678,16 @@ export default function TeacherStudentsPage() {
         <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900">
           <div className="p-2 md:p-6 lg:p-8">
             {/* Content Header */}
-            <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div className="flex items-center gap-3">
-                {/* Mobile menu button */}
-                <button
-                  onClick={() => sidebarRef.current?.open()}
-                  className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
-                  aria-label="Toggle sidebar"
-                >
-                  <Menu className="h-5 w-5" />
-                </button>
-                <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.title}</h2>
-              </div>
-              <div className="flex items-center gap-3">
-                <ProfileSwitcher />
-                <div className="hidden md:flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                  <Users className="h-4 w-4" />
-                  <span>
-                    {t.tile_students}:{' '}
-                    <span className="font-medium">{students.length}</span>
-                  </span>
-                  <span className="mx-2 text-slate-300 dark:text-slate-600">•</span>
-                  <span>{t.today_hint}</span>
-                </div>
-                {/* Small-screen stats row */}
-                <div className="md:hidden flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-                  <Users className="h-4 w-4" />
-                  <span>
-                    {t.tile_students}:{' '}
-                    <span className="font-medium">{students.length}</span>
-                  </span>
-                </div>
-              </div>
-            </div>
+            <TeacherPageHeader
+              title={t.title}
+              sidebarRef={sidebarRef}
+              stats={{
+                label: t.tile_students,
+                value: students.length,
+                showToday: true,
+                todayHint: t.today_hint,
+              }}
+            />
 
             {/* Students Panel */}
             <StudentsPanel 
