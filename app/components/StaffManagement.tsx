@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Edit, Trash2, Users, X, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 
 type Lang = 'is' | 'en';
@@ -16,11 +17,12 @@ interface StaffManagementProps {
   lang?: Lang;
 }
 
-export default function StaffManagement({ lang = 'en' }: StaffManagementProps) {
+export default function StaffManagement({ lang: propLang }: StaffManagementProps) {
   const router = useRouter();
   const { session } = useAuth?.() || ({} as any);
-
-  const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
+  const { t, lang: contextLang } = useLanguage();
+  // Use lang prop if provided, otherwise use current language from context
+  const lang = propLang || contextLang;
 
   // Resolve org id (metadata -> DB -> env fallback)
   const userMetadata = session?.user?.user_metadata;
@@ -217,8 +219,8 @@ export default function StaffManagement({ lang = 'en' }: StaffManagementProps) {
   
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8 md:px-6 mt-10">
-      <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <main className="mx-auto max-w-6xl px-4 py-8 md:px-6">
+      <div className="mb-6 flex flex-col gap-3 mt-14 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4">
           <button
             onClick={() => router.back()}
@@ -520,136 +522,6 @@ export default function StaffManagement({ lang = 'en' }: StaffManagementProps) {
   );
 }
 
-const enText = {
-  back: 'Back',
-  staff_ssn: 'SSN',
-  staff_ssn_placeholder: 'Enter SSN',
-  edit: 'Edit',
-  edit_staff: 'Edit Staff Member',
-  staff_management: 'Staff Management',
-  manage_staff: 'Manage Staff',
-  create_staff: 'Create staff',
-  role: 'Role',
-  staff_role: 'Role',
-  role_teacher: 'Teacher',
-  role_assistant: 'Assistant',
-  role_specialist: 'Specialist',
-  role_principal: 'Principal',
-  role_guardian: 'Guardian',
-  role_student: 'Student',
-  staff_email: 'Email',
-  staff_email_placeholder: 'Enter email address',
-  staff_phone: 'Phone',
-  staff_phone_placeholder: 'Enter phone number (optional)',
-  staff_address: 'Address',
-  staff_address_placeholder: 'Enter address',
-  staff_education_level: 'Education Level',
-  staff_education_level_placeholder: 'e.g. B.Ed, M.Ed',
-  staff_union_membership: 'Union Membership',
-  create_staff_btn: 'Create Staff',
-  staff_created_success: 'Staff created successfully',
-  staff_creation_error: 'Error creating staff member',
-  assign_to_class: 'Assign to Class (Optional)',
-  no_class_assigned: 'No class assigned',
-  class_assignment_note: 'Teacher will be assigned to this class',
-  creating: 'Creating...',
-  invalid_phone: 'Invalid phone number. Use + and 7-15 digits.',
-  remove_staff_member: 'Remove Staff Member',
-  remove_staff_confirm: 'Are you sure you want to remove this staff member? This action cannot be undone.',
-  remove: 'Remove',
-  account_created_email_sent: 'Account Created & Email Sent',
-  invitation_sent_to: 'Invitation sent to',
-  staff_invited_success: 'Staff Invited Successfully!',
-  invitation_email_sent: 'An invitation email has been sent to',
-  with_login_credentials: 'with login credentials.',
-  login_credentials: 'Login Credentials',
-  password: 'Password',
-  copy: 'Copy',
-  copy_all_credentials: 'Copy All Credentials',
-  active_staff_members: 'Active Staff Members',
-  joined: 'Joined',
-  actions: 'Actions',
-  inactive: 'Inactive',
-  delete: 'Delete',
-  loading: 'Loading...',
-  no_staff_members: 'No staff members yet',
-  
-  close: 'Close',
-  first_name: 'First Name',
-  last_name: 'Last Name',
-  email: 'Email',
-  status: 'Status',
-  active: 'Active',
-  update: 'Update',
-  updating: 'Updating...',
-  cancel: 'Cancel',
-  done: 'Done',
-} as const;
-
-const isText = {
-  back: 'Til baka',
-  staff_ssn: 'Kennitala',
-  staff_ssn_placeholder: 'Sláðu inn kennitölu',
-  edit: 'Breyta',
-  edit_staff: 'Breyta starfsmanni',
-  staff_management: 'Sýsla með starfsfólk',
-  manage_staff: 'Sýsla með starfsfólk',
-  create_staff: 'Búa til starfsmann',
-  role: 'Hlutverk',
-  staff_role: 'Hlutverk',
-  role_teacher: 'Kennari',
-  role_assistant: 'Aðstoðarmaður',
-  role_specialist: 'Sérfræðingur',
-  role_principal: 'Stjórnandi',
-  role_guardian: 'Forráðamaður',
-  role_student: 'Nemandi',
-  staff_email: 'Netfang',
-  staff_email_placeholder: 'Sláðu inn netfang',
-  staff_phone: 'Sími',
-  staff_phone_placeholder: 'Sláðu inn símanúmer (valfrjálst)',
-  staff_address: 'Heimilisfang',
-  staff_address_placeholder: 'Sláðu inn heimilisfang',
-  staff_education_level: 'Menntun',
-  staff_education_level_placeholder: 't.d. B.Ed, M.Ed',
-  staff_union_membership: 'Stéttarfélagsaðild',
-  create_staff_btn: 'Búa til',
-  staff_created_success: 'Starfsmaður stofnaður. Staðfestingarpóstur hefur verið sendur.',
-  staff_creation_error: 'Villa við að búa til starfsmann',
-  assign_to_class: 'Úthluta til hóps (valfrjálst)',
-  no_class_assigned: 'Enginn hópur úthlutaður',
-  class_assignment_note: 'Kennari verður úthlutaður til þessa hóps',
-  creating: 'Bý til...',
-  invalid_phone: 'Ógilt símanúmer. Notaðu + og 7-15 tölustafi.',
-  remove_staff_member: 'Fjarlægja starfsmann',
-  remove_staff_confirm: 'Ertu viss um að þú viljir fjarlægja þennan starfsmann? Þessa aðgerð er ekki hægt að afturkalla.',
-  remove: 'Fjarlægja',
-  account_created_email_sent: 'Aðgangur búinn til og tölvupóstur sentur',
-  invitation_sent_to: 'Boð sent til',
-  staff_invited_success: 'Starfsmaður boðinn með góðum árangri!',
-  invitation_email_sent: 'Boð hefur verið sent til',
-  with_login_credentials: 'með innskráningarskilyrðum.',
-  login_credentials: 'Innskráningarskilyrði',
-  password: 'Lykilorð',
-  copy: 'Afrita',
-  copy_all_credentials: 'Afrita öll skilyrði',
-  active_staff_members: 'Virkir starfsmenn',
-  joined: 'Gekk til liðs',
-  actions: 'Aðgerðir',
-  inactive: 'Óvirkur',
-  delete: 'Eyða',
-  loading: 'Hleður...',
-  no_staff_members: 'Engir starfsmenn enn',
-  
-  close: 'Loka',
-  first_name: 'Fornafn',
-  last_name: 'Eftirnafn',
-  email: 'Netfang',
-  status: 'Staða',
-  active: 'Virkur',
-  update: 'Uppfæra',
-  updating: 'Uppfærir...',
-  cancel: 'Hætta við',
-  done: 'Lokið',
-} as const;
+// Translations removed - using centralized translations from @/lib/translations
 
 

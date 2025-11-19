@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useEffect, useState, Suspense } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useRequireAuth } from '@/lib/hooks/useAuth';
@@ -11,8 +11,7 @@ function AddGuardianPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, loading, isSigningIn } = useRequireAuth();
-  const { lang } = useLanguage();
-  const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
+  const { t } = useLanguage();
 
   const userMetadata = user?.user_metadata;
   const orgId = userMetadata?.org_id || userMetadata?.organization_id || userMetadata?.orgId;
@@ -101,7 +100,7 @@ function AddGuardianPageContent() {
       
       // If creating new guardian (not editing), show success message
       if (!data.id) {
-        setSuccessMessage(t.guardian_created_success);
+        setSuccessMessage(t.guardian_created);
         // Auto-hide after 3 seconds and redirect
         setTimeout(() => {
           router.back();
@@ -194,67 +193,7 @@ function AddGuardianPageContent() {
   );
 }
 
-const enText = {
-  title: 'Add Guardian',
-  subtitle: 'Fill in details to create a new guardian.',
-  back: 'Back',
-  create_guardian: 'Create Guardian',
-  edit_guardian: 'Edit Guardian',
-  first_name: 'First Name',
-  last_name: 'Last Name',
-  email: 'Email',
-  phone: 'Phone',
-  organization: 'Organization',
-  status: 'Status',
-  active: 'Active',
-  inactive: 'Inactive',
-  create: 'Create',
-  update: 'Update',
-  cancel: 'Cancel',
-  creating: 'Creating...',
-  updating: 'Updating...',
-  first_name_placeholder: 'Enter first name',
-  last_name_placeholder: 'Enter last name',
-  email_placeholder: 'Enter email address',
-  phone_placeholder: 'Enter phone number',
-  status_placeholder: 'Select status',
-  ssn: 'Social Security Number (SSN)',
-  ssn_placeholder: '000000-0000',
-  address: 'Address',
-  address_placeholder: 'Enter address (optional)',
-  guardian_created_success: 'Guardian created successfully'
-};
-
-const isText = {
-  title: 'Bæta við forráðamanni',
-  subtitle: 'Fylltu út upplýsingar til að stofna nýjan forráðamann.',
-  back: 'Til baka',
-  create_guardian: 'Búa til forráðamann',
-  edit_guardian: 'Breyta forráðamanni',
-  first_name: 'Fornafn',
-  last_name: 'Eftirnafn',
-  email: 'Netfang',
-  phone: 'Sími',
-  organization: 'Stofnun',
-  status: 'Staða',
-  active: 'Virkur',
-  inactive: 'Óvirkur',
-  create: 'Búa til',
-  update: 'Uppfæra',
-  cancel: 'Hætta við',
-  creating: 'Býr til...',
-  updating: 'Uppfærir...',
-  first_name_placeholder: 'Sláðu inn fornafn',
-  last_name_placeholder: 'Sláðu inn eftirnafn',
-  email_placeholder: 'Sláðu inn netfang',
-  phone_placeholder: 'Sláðu inn símanúmer',
-  status_placeholder: 'Veldu stöðu',
-  ssn: 'Kennitala',
-  ssn_placeholder: '000000-0000',
-  address: 'Heimilisfang',
-  address_placeholder: 'Sláðu inn heimilisfang (valfrjálst)',
-  guardian_created_success: 'Forráðamaður stofnaður með góðum árangri'
-};
+// Translations removed - using centralized translations from @/lib/translations
 
 export default function AddGuardianPage() {
   return (

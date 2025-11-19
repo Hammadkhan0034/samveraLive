@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Bell, Timer, Users, MessageSquare, Camera, Link as LinkIcon, Utensils } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
@@ -12,58 +12,10 @@ import LinkStudentGuardian from '@/app/components/LinkStudentGuardian';
 type Lang = 'is' | 'en';
 type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
 
-// Import translations
-const enText = {
-  tile_announcements: 'Announcements',
-  tile_announcements_desc: 'Share announcements',
-  tile_stories: 'Stories',
-  tile_stories_desc: 'Create and share stories',
-  tile_media: 'Media',
-  tile_media_desc: 'Upload and manage photos',
-  tile_att: 'Attendance',
-  tile_att_desc: 'Track student attendance',
-  tile_diaper: 'Diapers',
-  tile_diaper_desc: 'Log diaper changes',
-  tile_msg: 'Messages',
-  tile_msg_desc: 'Communicate with parents and staff',
-  tile_students: 'Students',
-  tile_students_desc: 'Manage your students',
-  tile_guardians: 'Guardians',
-  tile_guardians_desc: 'Manage guardians',
-  tile_link_student: 'Link Student',
-  tile_link_student_desc: 'Link a guardian to a student',
-  tile_menus: 'Menus',
-  tile_menus_desc: 'Manage daily menus',
-  link_student_title: 'Link Guardian to Student',
-} as const;
-
-const isText = {
-  tile_announcements: 'Tilkynningar',
-  tile_announcements_desc: 'Deildu tilkynningum',
-  tile_stories: 'Sögur',
-  tile_stories_desc: 'Búðu til og deildu sögum',
-  tile_media: 'Miðlar',
-  tile_media_desc: 'Hlaða upp og stjórna myndum',
-  tile_att: 'Mæting',
-  tile_att_desc: 'Fylgstu með mætingu nemenda',
-  tile_diaper: 'Bleia',
-  tile_diaper_desc: 'Skrá bleiubreytingar',
-  tile_msg: 'Skilaboð',
-  tile_msg_desc: 'Samið við foreldra og starfsfólk',
-  tile_students: 'Nemendur',
-  tile_students_desc: 'Stjórna nemendum',
-  tile_guardians: 'Forráðamenn',
-  tile_guardians_desc: 'Stjórna forráðamönnum',
-  tile_link_student: 'Tengja nemanda',
-  tile_link_student_desc: 'Tengdu forráðamann við nemanda',
-  tile_menus: 'Matseðlar',
-  tile_menus_desc: 'Stjórna daglegum matseðlum',
-  link_student_title: 'Tengja forráðamann við nemanda',
-} as const;
+// Translations removed - using centralized translations from @/lib/translations
 
 export default function TeacherLinkStudentPage() {
-  const { lang } = useLanguage();
-  const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
+  const { t, lang } = useLanguage();
   const { session } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -108,7 +60,7 @@ export default function TeacherLinkStudentPage() {
     route?: string;
   }> = useMemo(() => [
       { id: 'menus', title: t.tile_menus || 'Menus', desc: t.tile_menus_desc || 'Manage daily menus', Icon: Utensils, route: '/dashboard/teacher?tab=menus' },
-    ], [t]);
+    ], [t, lang]);
 
   // Show loading state while checking authentication
   if (authLoading || (isSigningIn && !user)) {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { ArrowLeft, Plus, Filter, ChevronDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -12,8 +12,7 @@ import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmat
 type Lang = 'is' | 'en';
 
 export default function StudentsPage() {
-  const { lang } = useLanguage();
-  const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
+  const { t } = useLanguage();
   const { user, loading, isSigningIn } = useRequireAuth(['principal']);
   const router = useRouter();
 
@@ -344,7 +343,7 @@ export default function StudentsPage() {
 
   // Get filter options
   const filterOptions = useMemo(() => {
-    const options = [
+    const options: Array<{ value: string; label: string }> = [
       { value: 'all', label: t.all_classes }
     ];
     
@@ -359,7 +358,7 @@ export default function StudentsPage() {
     }
     
     return options;
-  }, [classes, t.all_classes]);
+  }, [classes, t]);
 
   if (showInitialLoading) {
     return (
@@ -380,9 +379,9 @@ export default function StudentsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-        <main className="mx-auto max-w-7xl px-4 py-8 md:px-6 mt-10">
+        <main className="mx-auto max-w-6xl px-4 py-8 md:px-6">
       {/* Header */}
-      <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div className="mb-6 flex flex-col gap-3 mt-14 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-4">
           <button
             onClick={() => router.back()}
@@ -391,8 +390,8 @@ export default function StudentsPage() {
             <ArrowLeft className="h-4 w-4" /> {t.back}
           </button>
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.title}</h1>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.subtitle}</p>
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.students}</h1>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.add_student_subtitle}</p>
           </div>
         </div>
 
@@ -484,7 +483,7 @@ export default function StudentsPage() {
             disabled={currentPage === 1}
             className="inline-flex items-center rounded-lg border border-slate-400 px-3 py-1.5 text-sm disabled:opacity-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
           >
-            {'Prev'}
+            {t.prev || 'Prev'}
           </button>
           {Array.from({ length: totalPages }).map((_, idx) => (
             <button
@@ -500,7 +499,7 @@ export default function StudentsPage() {
             disabled={currentPage === totalPages}
             className="inline-flex items-center rounded-lg border border-slate-400 px-3 py-1.5 text-sm disabled:opacity-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
           >
-            {'Next'}
+            {t.next || 'Next'}
           </button>
         </div>
       </div>
@@ -583,128 +582,6 @@ export default function StudentsPage() {
   );
 }
 
-const enText = {
-  title: 'Student Management',
-  subtitle: 'Manage all students in your organization.',
-  back: 'Back',
-  students: 'Students',
-  add_student: 'Add Student',
-  create_student: 'Create Student',
-  edit_student: 'Edit Student',
-  delete_student: 'Delete Student',
-  delete_student_confirm: 'Are you sure you want to delete this student?',
-  student_name: 'Name',
-  student_class: 'Class',
-  student_guardians: 'Guardians',
-  student_dob: 'Date of Birth',
-  student_gender: 'Gender',
-  no_students: 'No students yet',
-  loading: 'Loading...',
-  actions: 'Actions',
-  create: 'Create',
-  update: 'Update',
-  cancel: 'Cancel',
-  delete: 'Delete',
-  edit: 'Edit',
-  creating: 'Creating...',
-  updating: 'Updating...',
-  first_name: 'First Name',
-  last_name: 'Last Name',
-  dob: 'Date of Birth',
-  gender: 'Gender',
-  class: 'Class',
-  guardians: 'Guardians',
-  medical_notes: 'Medical Notes',
-  allergies: 'Allergies',
-  emergency_contact: 'Emergency Contact',
-  student_first_name_placeholder: 'Enter first name',
-  student_last_name_placeholder: 'Enter last name',
-  student_medical_notes_placeholder: 'Enter medical notes (optional)',
-  student_allergies_placeholder: 'Enter allergies (optional)',
-  student_emergency_contact_placeholder: 'Enter emergency contact (optional)',
-  student_phone: 'Phone',
-  student_registration_time: 'Registration Time',
-  student_registration_time_placeholder: 'Enter registration time',
-  student_address: 'Address',
-  student_address_placeholder: 'Enter address',
-  student_start_date: 'Start Date',
-  student_child_value: 'Child Value',
-  student_child_value_placeholder: 'Enter child value',
-  student_language: 'Language',
-  student_social_security_number: 'Social Security Number',
-  student_social_security_number_placeholder: 'Enter social security number',
-  student_phone_placeholder: 'Enter phone number',
-  gender_unknown: 'Unknown',
-  gender_male: 'Male',
-  gender_female: 'Female',
-  gender_other: 'Other',
-  no_class_assigned: 'No class assigned',
-  no_guardians_available: 'No guardians available',
-  student_age_requirement: 'Student must be between 0-18 years old',
-  all_classes: 'All Classes',
-  loading_classes: 'Loading classes...',
-};
-
-const isText = {
-  title: 'Nemendastjórnun',
-  subtitle: 'Sýsla með alla nemendur í stofnuninni þinni.',
-  back: 'Til baka',
-  students: 'Nemendur',
-  add_student: 'Bæta við nemanda',
-  create_student: 'Búa til nemanda',
-  edit_student: 'Breyta nemanda',
-  delete_student: 'Eyða nemanda',
-  delete_student_confirm: 'Ertu viss um að þú viljir eyða þessum nemanda?',
-  student_name: 'Nafn',
-  student_class: 'Hópur',
-  student_guardians: 'Forráðamenn',
-  student_dob: 'Fæðingardagur',
-  student_gender: 'Kyn',
-  no_students: 'Engir nemendur enn',
-  loading: 'Hleður...',
-  actions: 'Aðgerðir',
-  create: 'Búa til',
-  update: 'Uppfæra',
-  cancel: 'Hætta við',
-  delete: 'Eyða',
-  edit: 'Breyta',
-  creating: 'Býr til...',
-  updating: 'Uppfærir...',
-  first_name: 'Fornafn',
-  last_name: 'Eftirnafn',
-  dob: 'Fæðingardagur',
-  gender: 'Kyn',
-  class: 'Hópur',
-  guardians: 'Forráðamenn',
-  medical_notes: 'Læknisfræðilegar athugasemdir',
-  allergies: 'Ofnæmi',
-  emergency_contact: 'Neyðarsamband',
-  student_first_name_placeholder: 'Sláðu inn fornafn',
-  student_last_name_placeholder: 'Sláðu inn eftirnafn',
-  student_medical_notes_placeholder: 'Sláðu inn læknisfræðilegar athugasemdir (valfrjálst)',
-  student_allergies_placeholder: 'Sláðu inn ofnæmi (valfrjálst)',
-  student_emergency_contact_placeholder: 'Sláðu inn neyðarsamband (valfrjálst)',
-  student_phone: 'Sími',
-  student_registration_time: 'Skráningartími',
-  student_registration_time_placeholder: 'Sláðu inn skráningartíma',
-  student_address: 'Heimilisfang',
-  student_address_placeholder: 'Sláðu inn heimilisfang',
-  student_start_date: 'Upphafsdagur',
-  student_child_value: 'Barnagildi',
-  student_child_value_placeholder: 'Sláðu inn barnagildi',
-  student_language: 'Tungumál',
-  student_social_security_number: 'Kennitala',
-  student_social_security_number_placeholder: 'Sláðu inn kennitölu',
-  student_phone_placeholder: 'Sláðu inn símanúmer',
-  gender_unknown: 'Óþekkt',
-  gender_male: 'Karl',
-  gender_female: 'Kona',
-  gender_other: 'Annað',
-  no_class_assigned: 'Enginn hópur úthlutaður',
-  no_guardians_available: 'Engir forráðamenn tiltækir',
-  student_age_requirement: 'Nemandi verður að vera á aldrinum 0-18 ára',
-  all_classes: 'Allir Hópar',
-  loading_classes: 'Hleður hópa...',
-};
+// Translations removed - using centralized translations from @/lib/translations
 
 

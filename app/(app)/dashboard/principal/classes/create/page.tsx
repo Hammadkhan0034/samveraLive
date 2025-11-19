@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState, useEffect, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useRequireAuth } from '@/lib/hooks/useAuth';
@@ -10,8 +10,7 @@ import TeacherSelection from '@/app/components/TeacherSelection';
 type Lang = 'is' | 'en';
 
 function CreateClassPageContent() {
-  const { lang } = useLanguage();
-  const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
+  const { t, lang } = useLanguage();
   const { user, loading } = useRequireAuth('principal');
   const { session } = useAuth?.() || {} as any;
   const router = useRouter();
@@ -280,9 +279,9 @@ function CreateClassPageContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      <main className="mx-auto max-w-7xl px-4 py-8 md:px-6 mt-10">
+    <main className="mx-auto max-w-6xl px-4 py-8 md:px-6">
         {/* Header */}
-        <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="mb-6 flex flex-col gap-3 mt-14 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.back()}
@@ -398,51 +397,7 @@ function CreateClassPageContent() {
   );
 }
 
-/* -------------------- Translations -------------------- */
-
-const enText = {
-  back: 'Back',
-  add_class: 'Add Class',
-  edit_class: 'Edit Class',
-  create_class_subtitle: 'Create a new class for your organization',
-  edit_class_subtitle: 'Update class information',
-  class_name: 'Class Name',
-  class_name_placeholder: 'Enter class name',
-  class_description: 'Description',
-  class_description_placeholder: 'Enter class description (optional)',
-  class_capacity: 'Capacity',
-  class_capacity_placeholder: 'Enter max students',
-  cancel: 'Cancel',
-  create_class: 'Create Class',
-  update_class: 'Update Class',
-  creating: 'Creating...',
-  updating: 'Updating...',
-  loading_class_data: 'Loading class data...',
-  select_teachers: 'Add Teachers',
-  close: 'Close',
-} as const;
-
-const isText = {
-  back: 'Til baka',
-  add_class: 'Bæta við hóp',
-  edit_class: 'Breyta hóp',
-  create_class_subtitle: 'Búðu til nýjan hóp fyrir stofnunina þína',
-  edit_class_subtitle: 'Uppfæra upplýsingar um hóp',
-  class_name: 'Nafn hóps',
-  class_name_placeholder: 'Sláðu inn nafn hóps',
-  class_description: 'Lýsing',
-  class_description_placeholder: 'Sláðu inn lýsingu hóps (valfrjálst)',
-  class_capacity: 'Fjöldi',
-  class_capacity_placeholder: 'Sláðu inn hámarksfjölda nemenda',
-  cancel: 'Hætta við',
-  create_class: 'Búa til hóp',
-  update_class: 'Uppfæra hóp',
-  creating: 'Bý til...',
-  updating: 'Uppfærir...',
-  loading_class_data: 'Hleður upplýsingum um hóp...',
-  select_teachers: 'Bæta við kennurum',
-  close: 'Loka',
-} as const;
+// Translations removed - using centralized translations from @/lib/translations
 
 export default function CreateClassPage() {
   return (

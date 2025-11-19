@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
@@ -26,8 +26,7 @@ function toLocalInput(iso: string) {
 }
 
 export default function EditStoryPage() {
-  const { lang } = useLanguage();
-  const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
+  const { t } = useLanguage();
   const { user } = useRequireAuth();
   const router = useRouter();
   const params = useParams();
@@ -535,71 +534,5 @@ export default function EditStoryPage() {
   );
 }
 
-const enText = {
-  title: 'Edit Story',
-  subtitle: 'Update your story with optional text and images.',
-  back: 'Back',
-  loading: 'Loading story...',
-  class_label: 'Class',
-  org_wide: 'Organization-wide',
-  title_label: 'Title',
-  title_ph: 'Optional title',
-  caption_label: 'Caption',
-  caption_ph: 'Optional caption',
-  is_public: 'Public',
-  public_yes: 'Yes',
-  public_no: 'No',
-  expires_label: 'Expires at',
-  items_label: 'Story items',
-  items_empty: 'No items yet. Add text or image items.',
-  add_text_item: 'Add text item',
-  add_image_item: 'Add image item',
-  remove: 'Remove',
-  item_caption_ph: 'Item caption (optional)',
-  duration_ms_ph: 'Duration (ms, optional)',
-  image_data_ph: 'Image data (base64)',
-  mime_type_ph: 'MIME type e.g. image/jpeg',
-  item_type_text: 'Text',
-  item_type_image: 'Image',
-  save: 'Save',
-  updating: 'Updating...',
-  cancel: 'Cancel',
-  missing_fields: 'Missing required fields',
-  no_items_error: 'Please add at least one story item (text or image) before updating the story.',
-  choose_file: 'Choose Image File',
-};
-
-const isText = {
-  title: 'Breyta sögu',
-  subtitle: 'Uppfærðu söguna með texta og/eða myndum.',
-  back: 'Til baka',
-  loading: 'Hleður sögu...',
-  class_label: 'Hópur',
-  org_wide: 'Stofnunarvítt',
-  title_label: 'Titill',
-  title_ph: 'Valfrjáls titill',
-  caption_label: 'Lýsing',
-  caption_ph: 'Valfrjáls lýsing',
-  is_public: 'Opinber',
-  public_yes: 'Já',
-  public_no: 'Nei',
-  expires_label: 'Rennur út',
-  items_label: 'Atriði sögunnar',
-  items_empty: 'Engin atriði enn. Bættu við texta eða mynd.',
-  add_text_item: 'Bæta við textaatriði',
-  add_image_item: 'Bæta við myndaatriði',
-  remove: 'Fjarlægja',
-  item_caption_ph: 'Lýsing atriðis (valfrjálst)',
-  duration_ms_ph: 'Lengd (ms, valfrjálst)',
-  upload_id_ph: 'Upload ID (fyrir mynd)',
-  mime_type_ph: 'MIME gerð t.d. image/jpeg',
-  item_type_text: 'Texti',
-  item_type_image: 'Mynd',
-  save: 'Vista',
-  updating: 'Uppfærir...',
-  cancel: 'Hætta við',
-  missing_fields: 'Vantar nauðsynleg svæði',
-  no_items_error: 'Vinsamlegast bættu við að minnsta kosti einu atriði sögunnar (texta eða mynd) áður en þú uppfærir söguna.',
-  choose_file: 'Veldu myndaskrá',
-};
+// Translations removed - using centralized translations from @/lib/translations
 

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
 
 interface Announcement {
   id: string;
@@ -44,7 +45,9 @@ export default function AnnouncementList({
   const [orgName, setOrgName] = useState<string | null>(null);
   const [hydratedFromCache, setHydratedFromCache] = useState(false);
 
-  const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
+  const { t, lang: currentLang } = useLanguage();
+  // Use lang prop if provided, otherwise use current language from context
+  const effectiveLang = lang || currentLang;
 
   const loadAnnouncements = useCallback(async () => {
     try {
@@ -183,7 +186,7 @@ export default function AnnouncementList({
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString(lang === 'is' ? 'is-IS' : 'en-US', {
+    return date.toLocaleDateString(effectiveLang === 'is' ? 'is-IS' : 'en-US', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -259,24 +262,4 @@ export default function AnnouncementList({
   );
 }
 
-const enText = {
-  failed_to_load: 'Failed to load announcements',
-  try_again: 'Try again',
-  no_announcements: 'No announcements yet.',
-  class_announcements_note: 'Class announcements will appear here.',
-  org_announcements_note: 'Organization announcements will appear here.',
-  by: 'By',
-  class_announcement: 'Class Announcement',
-  organization_wide: 'Organization-wide',
-};
-
-const isText = {
-  failed_to_load: 'Mistókst að hlaða tilkynningum',
-  try_again: 'Reyna aftur',
-  no_announcements: 'Engar tilkynningar enn.',
-  class_announcements_note: 'Tilkynningar hóps munu birtast hér.',
-  org_announcements_note: 'Tilkynningar stofnunar munu birtast hér.',
-  by: 'Eftir',
-  class_announcement: 'Tilkynning hóps',
-  organization_wide: 'Alla stofnunina',
-};
+// Translations removed - using centralized translations from @/lib/translations

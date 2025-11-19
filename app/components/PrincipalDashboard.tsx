@@ -1,22 +1,20 @@
 'use client';
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Users, School, ChartBar as BarChart3, FileText, Plus, ListFilter as Filter, Search, CircleCheck as CheckCircle2, Circle as XCircle, Eye, EyeOff, Settings, Bell, Utensils, Megaphone, MessageSquare } from 'lucide-react';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import { useAuth } from '@/lib/hooks/useAuth';
 import AnnouncementList from './AnnouncementList';
 import { useRouter } from 'next/navigation';
 import StoryColumn from './shared/StoryColumn';
- 
-
-type Lang = 'is' | 'en';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
 
 function clsx(...xs: Array<string | false | undefined>) {
   return xs.filter(Boolean).join(' ');
 }
 
-export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
-  const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
+export default function PrincipalDashboard() {
+  const { t, lang } = useLanguage();
   const { session } = useAuth?.() || {} as any;
   const router = useRouter();
 
@@ -397,8 +395,16 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
   // Global loading state - always false to show dashboard immediately
   const [isInitialLoading] = useState(false);
 
+  // Memoize activity items to ensure they update when language changes
+  const activityItems = useMemo(() => [
+    t.act_added_class.replace('{name}', 'Rauðkjarni'),
+    t.act_invited.replace('{name}', 'Margrét Jónsdóttir'),
+    t.act_visibility_off.replace('{name}', 'Rauðkjarni'),
+    t.act_export,
+  ], [t, lang]);
 
-  const kpis = [
+  // Memoize KPIs to ensure they update when language changes
+  const kpis = useMemo(() => [
     { 
       label: t.kpi_students, 
       value: studentsCount, 
@@ -453,7 +459,7 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
       icon: MessageSquare,
       onClick: () => router.push('/dashboard/principal/messages')
     },
-  ];
+  ], [t, lang, studentsCount, staffCount, classesCount, guardiansCount, menusCount, storiesCount, announcementsCount, messagesCount, router]);
 
 
   // Load classes count for KPI (simplified, just count)
@@ -585,10 +591,9 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
   }
 
 
-  // Data loading is handled in the main useEffect above - no duplicate loading needed
+ 
 
   
-
 
   
 
@@ -601,9 +606,9 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
   // Do not block UI with a loading overlay; render immediately
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8 md:px-6 mt-10">
+    <main className="mx-auto max-w-7xl px-4 py-8 md:px-6">
       {/* Header */}
-      <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between mt-10">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.title}</h1>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.subtitle}</p>
@@ -665,18 +670,12 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
         </div>
       </div>
 
-
       {/* Activity feed */}
       <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
           <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">{t.recent_activity}</h3>
           <ul className="mt-3 space-y-3 text-sm">
-            {[
-              t.act_added_class.replace('{name}', 'Rauðkjarni'),
-              t.act_invited.replace('{name}', 'Margrét Jónsdóttir'),
-              t.act_visibility_off.replace('{name}', 'Rauðkjarni'),
-              t.act_export,
-            ].map((txt, i) => (
+            {activityItems.map((txt, i) => (
               <li key={i} className="rounded-xl border border-slate-200 p-3 text-slate-700 dark:border-slate-600 dark:text-slate-300">
                 {txt}
               </li>
@@ -696,384 +695,3 @@ export default function PrincipalDashboard({ lang = 'en' }: { lang?: Lang }) {
     </main>
   );
 }
-
-/* -------------------- copy -------------------- */
-
-const enText = {
-  staff_ssn: 'SSN',
-  staff_ssn_placeholder: 'Enter SSN',
-  edit: 'Edit',
-  edit_staff: 'Edit Staff Member',
-  title: 'Principal Dashboard',
-  subtitle: 'Manage groups, staff and visibility.',
-  kpi_students: 'Total students',
-  kpi_staff: 'Total staff',
-  kpi_classes: 'Classes',
-  kpi_link_student: 'Link Student',
-  kpi_guardians: 'Total guardians',
-  kpi_menus: 'Menus',
-  kpi_stories: 'Stories',
-  kpi_announcements: 'Announcements',
-  kpi_messages: 'Messages',
-  classes_management: 'Classes Management',
-  add_class: 'Add class',
-  invite_staff: 'Invite staff',
-  refresh: 'Refresh',
-  export: 'Export',
-  settings: 'Settings',
-  only_visible: 'Show only visible',
-  search_ph: 'Search classes…',
-  departments: 'Departments / Classes',
-  overview_hint: 'Overview of groups across the school',
-  col_name: 'Name',
-  col_students: 'Students',
-  col_staff: 'Staff',
-  col_visible: 'Visible',
-  col_actions: 'Actions',
-  visible_yes: 'Yes',
-  visible_no: 'No',
-  hide: 'Hide',
-  show: 'Show',
-  empty: 'No classes match your filters.',
-  recent_activity: 'Recent activity',
-  quick_tips: 'Quick tips',
-  act_added_class: 'Added class: {name}',
-  act_invited: 'Invited new staff member: {name}',
-  act_visibility_off: 'Set {name} to hidden',
-  act_export: 'Exported monthly report',
-  tip_roles: 'Use roles to limit access (RBAC).',
-  tip_visibility: 'Toggle visibility per class before publishing.',
-  tip_exports: 'Export data and audit trails anytime.',
-
-  // Announcements
-  announcements_title: 'Create Announcement',
-  announcements_list: 'School Announcements',
-  view_all_announcements: 'View All Announcements',
-
-  // Modal
-  class_name: 'Class Name',
-  class_name_placeholder: 'Enter class name',
-  class_description: 'Description',
-  class_description_placeholder: 'Enter class description (optional)',
-  class_capacity: 'Capacity',
-  class_capacity_placeholder: 'Enter max students',
-  organization: 'Organization',
-  select_organization: 'Select organization',
-  cancel: 'Cancel',
-  create_class: 'Create Class',
-
-  // Staff Modal
-  staff_name: 'Full Name',
-  staff_name_placeholder: 'Enter full name',
-  staff_email: 'Email',
-  staff_email_placeholder: 'Enter email address',
-  staff_role: 'Role',
-  staff_phone: 'Phone',
-  staff_phone_placeholder: 'Enter phone number (optional)',
-  staff_address: 'Address',
-  staff_address_placeholder: 'Enter address',
-  staff_education_level: 'Education Level',
-  staff_education_level_placeholder: 'e.g. B.Ed, M.Ed',
-  staff_union_membership: 'Union Membership',
-  role_teacher: 'Teacher',
-  role_assistant: 'Assistant',
-  role_specialist: 'Specialist',
-  invite_staff_btn: 'Send Invitation',
-  staff_created_success: 'Staff member created successfully:',
-  invitation_sent: 'Invitation has been sent.',
-  staff_creation_error: 'Error creating staff member',
-  assign_to_class: 'Assign to Class (Optional)',
-  no_class_assigned: 'No class assigned',
-  class_assignment_note: 'Teacher will be assigned to this class',
-  sending: 'Sending...',
-  remove_staff_member: 'Remove Staff Member',
-  remove_staff_confirm: 'Are you sure you want to remove this staff member? This action cannot be undone.',
-  remove: 'Remove',
-  class_created: 'Class Created!',
-  class_created_subtitle: 'Successfully added to your dashboard',
-  class_is_ready: 'Class is Ready',
-  class_created_message: 'has been created and is now visible in your dashboard.',
-  class_details: 'Class Details',
-  name: 'Name',
-  status: 'Status',
-  active: 'Active',
-  staff: 'Staff',
-  done: 'Done',
-  staff_invited_success: 'Staff Invited Successfully!',
-  invitation_sent_to: 'Invitation sent to',
-  account_created_email_sent: 'Account Created & Email Sent',
-  invitation_email_sent: 'An invitation email has been sent to',
-  with_login_credentials: 'with login credentials.',
-  login_credentials: 'Login Credentials',
-  password: 'Password',
-  copy: 'Copy',
-  copy_all_credentials: 'Copy All Credentials',
-  manage_staff: 'Manage Staff',
-  staff_management: 'Staff Management',
-  active_staff_members: 'Active Staff Members',
-  pending_invitations: 'Pending Invitations',
-  joined: 'Joined',
-  sent: 'Sent',
-  expires: 'Expires',
-  actions: 'Actions',
-  inactive: 'Inactive',
-  delete: 'Delete',
-  loading: 'Loading...',
-  no_staff_members: 'No staff members yet',
-  no_pending_invitations: 'No pending invitations',
-  close: 'Close',
-
-  // Guardian translations
-  guardians: 'Guardians',
-  create_guardian: 'Create Guardian',
-  edit_guardian: 'Edit Guardian',
-  delete_guardian: 'Delete Guardian',
-  delete_guardian_confirm: 'Are you sure you want to delete this guardian?',
-  no_guardians: 'No guardians yet',
-  error_loading_guardians: 'Error loading guardians',
-  error_creating_guardian: 'Error creating guardian',
-  error_updating_guardian: 'Error updating guardian',
-
-  // Student translations
-  students: 'Students',
-  create_student: 'Create Student',
-  edit_student: 'Edit Student',
-  delete_student: 'Delete Student',
-  delete_student_confirm: 'Are you sure you want to delete this student?',
-  student_name: 'Name',
-  student_class: 'Class',
-  student_guardians: 'Guardians',
-  student_dob: 'Date of Birth',
-  student_gender: 'Gender',
-  no_students: 'No students yet',
-  error_loading_students: 'Error loading students',
-  error_creating_student: 'Error creating student',
-  error_updating_student: 'Error updating student',
-  student_age_requirement: 'Student must be between 0-18 years old',
-
-  // Student form specific translations
-  student_first_name_placeholder: 'Enter first name',
-  student_last_name_placeholder: 'Enter last name',
-  student_medical_notes_placeholder: 'Enter medical notes (optional)',
-  student_allergies_placeholder: 'Enter allergies (optional)',
-  student_emergency_contact_placeholder: 'Enter emergency contact (optional)',
-  gender_unknown: 'Unknown',
-  gender_male: 'Male',
-  gender_female: 'Female',
-  gender_other: 'Other',
-  no_guardians_available: 'No guardians available',
-
-  // Common form fields (only unique keys)
-  first_name: 'First Name',
-  last_name: 'Last Name',
-  email: 'Email',
-  phone: 'Phone',
-  dob: 'Date of Birth',
-  gender: 'Gender',
-  class: 'Class',
-  medical_notes: 'Medical Notes',
-  allergies: 'Allergies',
-  emergency_contact: 'Emergency Contact',
-  first_name_placeholder: 'Enter first name',
-  last_name_placeholder: 'Enter last name',
-  email_placeholder: 'Enter email address',
-  phone_placeholder: 'Enter phone number',
-  status_placeholder: 'Select status',
-
-  // Common form actions
-  create: 'Create',
-  update: 'Update',
-  creating: 'Creating...',
-  updating: 'Updating...',
-
-};
-
-const isText = {
-  staff_ssn: 'Kennitala',
-  staff_ssn_placeholder: 'Sláðu inn kennitölu',
-  edit: 'Breyta',
-  edit_staff: 'Breyta starfsmanni',
-  title: 'Stjórnandayfirlit',
-  subtitle: 'Sýsla með hópa, starfsfólk og sýnileika.',
-  kpi_students: 'Heildarfjöldi nemenda',
-  kpi_staff: 'Heildarfjöldi starfsmanna',
-  kpi_classes: 'Hópar',
-  kpi_link_student: 'Tengja nemanda',
-  kpi_guardians: 'Heildarfjöldi forráðamanna',
-  kpi_menus: 'Matseðillar',
-  kpi_stories: 'Sögur',
-  kpi_announcements: 'Tilkynningar',
-  kpi_messages: 'Skilaboð',
-  classes_management: 'Hópastjórnun',
-  add_class: 'Bæta við hóp',
-  invite_staff: 'Bjóða starfsmanni',
-  refresh: 'Endurnýja',
-  export: 'Flytja út',
-  settings: 'Stillingar',
-  only_visible: 'Sýna aðeins sýnilega',
-  search_ph: 'Leita að hópum…',
-  departments: 'Deildir / Hópar',
-  overview_hint: 'Yfirsýn yfir hópa í skólanum',
-  col_name: 'Nafn',
-  col_students: 'Nemendur',
-  col_staff: 'Starfsmenn',
-  col_visible: 'Sýnileg',
-  col_actions: 'Aðgerðir',
-  visible_yes: 'Já',
-  visible_no: 'Nei',
-  hide: 'Gera ósýnilegt',
-  show: 'Gera sýnilegt',
-  empty: 'Engir hópar passa við síur.',
-  recent_activity: 'Nýlegar aðgerðir',
-  quick_tips: 'Flýtiráð',
-  act_added_class: 'Bætt við hóp: {name}',
-  act_invited: 'Boð sent til starfsmanns: {name}',
-  act_visibility_off: 'Hópur {name} gerður ósýnilegur',
-  act_export: 'Útflutningur á mánaðarskýrslu',
-  tip_roles: 'Notaðu hlutverk til að stýra aðgengi (RBAC).',
-  tip_visibility: 'Kveiktu/slökktu á sýnileika á hópum áður en birt er.',
-  tip_exports: 'Flyttu út gögn og atvikaskrár hvenær sem er.',
-
-  // Announcements
-  announcements_title: 'Búa til tilkynningu',
-  announcements_list: 'Tilkynningar skóla',
-  view_all_announcements: 'Skoða allar tilkynningar',
-
-  // Modal
-  class_name: 'Nafn hóps',
-  class_name_placeholder: 'Sláðu inn nafn hóps',
-  class_description: 'Lýsing',
-  class_description_placeholder: 'Sláðu inn lýsingu hóps (valfrjálst)',
-  class_capacity: 'Fjöldi',
-  class_capacity_placeholder: 'Sláðu inn hámarksfjölda nemenda',
-  organization: 'Stofnun',
-  select_organization: 'Veldu stofnun',
-  cancel: 'Hætta við',
-  create_class: 'Búa til hóp',
-
-  // Staff Modal
-  staff_name: 'Fullt nafn',
-  staff_name_placeholder: 'Sláðu inn fullt nafn',
-  staff_email: 'Netfang',
-  staff_email_placeholder: 'Sláðu inn netfang',
-  staff_role: 'Hlutverk',
-  staff_phone: 'Sími',
-  staff_phone_placeholder: 'Sláðu inn símanúmer (valfrjálst)',
-  staff_address: 'Heimilisfang',
-  staff_address_placeholder: 'Sláðu inn heimilisfang',
-  staff_education_level: 'Menntun',
-  staff_education_level_placeholder: 't.d. B.Ed, M.Ed',
-  staff_union_membership: 'Stéttarfélagsaðild',
-  role_teacher: 'Kennari',
-  role_assistant: 'Aðstoðarkennari',
-  role_specialist: 'Sérfræðingur',
-  invite_staff_btn: 'Senda boð',
-  staff_created_success: 'Starfsmaður búinn til:',
-  invitation_sent: 'Boð hefur verið sent.',
-  staff_creation_error: 'Villa við að búa til starfsmann',
-  assign_to_class: 'Úthluta til hóps (valfrjálst)',
-  no_class_assigned: 'Enginn hópur úthlutaður',
-  class_assignment_note: 'Kennari verður úthlutaður til þessa hóps',
-  sending: 'Sendi...',
-  remove_staff_member: 'Fjarlægja starfsmann',
-  remove_staff_confirm: 'Ertu viss um að þú viljir fjarlægja þennan starfsmann? Þessa aðgerð er ekki hægt að afturkalla.',
-  remove: 'Fjarlægja',
-  class_created: 'Hópur búinn til!',
-  class_created_subtitle: 'Bætt við yfirlitið þitt',
-  class_is_ready: 'Hópurinn er tilbúinn',
-  class_created_message: 'hefur verið búinn til og er nú sýnilegur í yfirlitinu þínu.',
-  class_details: 'Upplýsingar um hóp',
-  name: 'Nafn',
-  status: 'Staða',
-  active: 'Virkur',
-  students: 'Nemendur',
-  staff: 'Starfsmenn',
-  done: 'Lokið',
-  staff_invited_success: 'Starfsmaður boðinn með góðum árangri!',
-  invitation_sent_to: 'Boð sent til',
-  account_created_email_sent: 'Aðgangur búinn til og tölvupóstur sentur',
-  invitation_email_sent: 'Boð hefur verið sent til',
-  with_login_credentials: 'með innskráningarskilyrðum.',
-  login_credentials: 'Innskráningarskilyrði',
-  email: 'Netfang',
-  password: 'Lykilorð',
-  copy: 'Afrita',
-  copy_all_credentials: 'Afrita öll skilyrði',
-  manage_staff: 'Sýsla með starfsfólk',
-  staff_management: 'Sýsla með starfsfólk',
-  active_staff_members: 'Virkir starfsmenn',
-  pending_invitations: 'Bíðandi boð',
-  joined: 'Gekk til liðs',
-  sent: 'Sent',
-  expires: 'Rennur út',
-  actions: 'Aðgerðir',
-  inactive: 'Óvirkur',
-  delete: 'Eyða',
-  loading: 'Hleður...',
-  no_staff_members: 'Engir starfsmenn enn',
-  no_pending_invitations: 'Engin bíðandi boð',
-  close: 'Loka',
-
-  // Guardian translations
-  guardians: 'Forráðamenn',
-  create_guardian: 'Búa til forráðamann',
-  edit_guardian: 'Breyta forráðamanni',
-  delete_guardian: 'Eyða forráðamanni',
-  delete_guardian_confirm: 'Ertu viss um að þú viljir eyða þessum forráðamanni?',
-  no_guardians: 'Engir forráðamenn enn',
-  error_loading_guardians: 'Villa við að hlaða forráðamönnum',
-  error_creating_guardian: 'Villa við að búa til forráðamann',
-  error_updating_guardian: 'Villa við að uppfæra forráðamann',
-
-  // Student translations
-  student: 'Nemendur',
-  create_student: 'Búa til nemanda',
-  edit_student: 'Breyta nemanda',
-  delete_student: 'Eyða nemanda',
-  delete_student_confirm: 'Ertu viss um að þú viljir eyða þessum nemanda?',
-  student_name: 'Nafn',
-  student_class: 'Hópur',
-  student_guardians: 'Forráðamenn',
-  student_dob: 'Fæðingardagur',
-  student_gender: 'Kyn',
-  no_students: 'Engir nemendur enn',
-  error_loading_students: 'Villa við að hlaða nemendum',
-  error_creating_student: 'Villa við að búa til nemanda',
-  error_updating_student: 'Villa við að uppfæra nemanda',
-  student_age_requirement: 'Nemandi verður að vera á aldrinum 0-18 ára',
-
-  // Student form specific translations
-  student_first_name_placeholder: 'Sláðu inn fornafn',
-  student_last_name_placeholder: 'Sláðu inn eftirnafn',
-  student_medical_notes_placeholder: 'Sláðu inn læknisfræðilegar athugasemdir (valfrjálst)',
-  student_allergies_placeholder: 'Sláðu inn ofnæmi (valfrjálst)',
-  student_emergency_contact_placeholder: 'Sláðu inn neyðarsamband (valfrjálst)',
-  gender_unknown: 'Óþekkt',
-  gender_male: 'Karl',
-  gender_female: 'Kona',
-  gender_other: 'Annað',
-  no_guardians_available: 'Engir forráðamenn tiltækir',
-
-  // Common form fields (only unique keys)
-  first_name: 'Fornafn',
-  last_name: 'Eftirnafn',
-  phone: 'Sími',
-  dob: 'Fæðingardagur',
-  gender: 'Kyn',
-  class: 'Hópur',
-  medical_notes: 'Læknisfræðilegar athugasemdir',
-  allergies: 'Ofnæmi',
-  emergency_contact: 'Neyðarsamband',
-  first_name_placeholder: 'Sláðu inn fornafn',
-  last_name_placeholder: 'Sláðu inn eftirnafn',
-  email_placeholder: 'Sláðu inn netfang',
-  phone_placeholder: 'Sláðu inn símanúmer',
-  status_placeholder: 'Veldu staðu',
-
-  // Common form actions
-  create: 'Búa til',
-  update: 'Uppfæra',
-  creating: 'Býr til...',
-  updating: 'Uppfærir...',
-
-};

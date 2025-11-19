@@ -1,7 +1,7 @@
 // Landing Page Code.
 'use client';
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useTheme } from '@/lib/contexts/ThemeContext';
 import { motion } from 'framer-motion';
@@ -12,10 +12,9 @@ import {
 
 
 export default function SamveraLanding() {
-  const { lang, setLang } = useLanguage();
+  const { lang, setLang, t } = useLanguage();
   const { isDark, toggleTheme } = useTheme();
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
-  const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -314,153 +313,4 @@ export default function SamveraLanding() {
     </div>
   );
 }
-
-/* ------------------ COPY ------------------ */
-const enText = {
-  nav_features: "Features",
-  nav_roles: "Roles",
-  nav_security: "Security",
-  nav_contact: "Contact",
-  nav_signin: "Sign in",
-  cta_demo: "Get started",
-  cta_explore: "Explore features",
-  hero_title: "Connect schools, teachers & parents — simply.",
-  hero_sub: "Samvera is a modern platform for Icelandic leikskólar: attendance, daily logs, messaging, menus, media, orders with external vendors, and more.",
-  // Updated hero badge
-  hero_cloud: "Powered by Scaleway (EU cloud)",
-  mock_title: "Samvera – Dashboard preview",
-  mock_stories: "Stories (24h)",
-  mock_add_story: "Add",
-  mock_feed: "Class feed",
-  mock_post1: "Þórdís added photos from Outdoor Time",
-  mock_post2: "Allergy note updated for Arnar",
-  mock_post3: "Reminder: Bring rain gear tomorrow",
-  mock_today: "Today's schedule",
-  mock_breakfast: "Breakfast",
-  mock_outdoor: "Outdoor play",
-  mock_lunch: "Lunch",
-  mock_attendance: "Attendance",
-  mock_child: "Child",
-  features_title: "Everything you need for day-to-day",
-  features_sub: "Built with families and staff in mind",
-  f_calendar_title: "Calendars & Menus",
-  f_calendar_desc: "Share weekly menus, events and trips with reminders.",
-  f_messaging_title: "Private Messaging",
-  f_messaging_desc: "Direct messages and announcements with read receipts.",
-  f_attendance_title: "Attendance & Check-in",
-  f_attendance_desc: "Fast in/out, late notes, and daily summaries.",
-  f_diaper_title: "Diaper & Health Logs",
-  f_diaper_desc: "Track diaper changes, naps, meds and temperature.",
-  f_media_title: "Photos & Stories",
-  f_media_desc: "Upload albums and story posts with approvals.",
-  f_stories24_title: "24-hour Classroom Stories",
-  f_stories24_desc: "Instagram/Snapchat-style stories per class. Visible only to guardians of enrolled children; auto-expires after 24h.",
-  f_orders_title: "Orders via Vendors",
-  f_orders_desc: "Link to external shops for uniforms and supplies—no card data stored in Samvera.",
-  f_security_title: "RBAC & Audit Trails",
-  f_security_desc: "Role-based access, approvals, and immutable activity logs.",
-  // Updated Cloud feature to mention Scaleway
-  f_cloud_title: "Secure Cloud (Scaleway)",
-  f_cloud_desc: "Your data stays in Europe — hosted on Scaleway, a GDPR-compliant EU cloud provider.",
-  roles_title: "Purpose-built roles",
-  roles_sub: "Each role sees just what they need—nothing more.",
-  role_admin_title: "Admin",
-  role_admin_1: "Manage schools, rooms, rosters and permissions",
-  role_admin_2: "Configure menus, calendars and policies",
-  role_admin_3: "Export data and view audit trails",
-  role_teacher_title: "Teacher",
-  role_teacher_1: "Post updates, take attendance, log diapers",
-  role_teacher_2: "Message guardians and schedule events",
-  role_teacher_3: "Capture photos and 24h class stories",
-  role_parent_title: "Parent/Guardian",
-  role_parent_1: "Private updates about your child",
-  role_parent_2: "Menus, calendars and reminders",
-  role_parent_3: "Secure messaging + 24h class story (only your child's class)",
-  security_title: "Security by design",
-  security_sub: "We follow practical, high-impact controls suitable for schools.",
-  security_badge: "Best practice",
-  security_1: "GDPR-aligned data handling and DPA on request.",
-  security_2: "Role-based access control (RBAC) and least privilege.",
-  security_3: "Encrypted in transit (TLS) and at rest by provider.",
-  security_4: "Audit logging for sensitive actions.",
-  // Updated security note to include Scaleway + EU hosting
-  security_note: "Hosting is in the EU with Scaleway. GDPR compliance and a DPIA checklist are available during onboarding.",
-  footer_security: "Security",
-  // New footer hosting line
-  footer_hosting: "Hosted in the EU on Scaleway",
-};
-
-const isText = {
-  nav_features: "Eiginleikar",
-  nav_roles: "Hlutverk",
-  nav_security: "Öryggi",
-  nav_contact: "Hafa samband",
-  nav_signin: "Innskrá",
-  cta_demo: "Hefja notkun",
-  cta_explore: "Skoða eiginleika",
-  hero_title: "Tengir leikskóla, kennara og forráðafólk — einfalt.",
-  hero_sub: "Samvera er nútímalausn fyrir leikskóla: mæting, dagbækur, skilaboð, matseðlar, myndir, pantanir hjá söluaðilum og fleira.",
-  // Updated hero badge (IS)
-  hero_cloud: "Knúið af Scaleway (ESB ský)",
-  mock_title: "Samvera – Forsíða (sýn)",
-  mock_stories: "Sögur (24 klst)",
-  mock_add_story: "Bæta við",
-  mock_feed: "Bekkjaflæði",
-  mock_post1: "Þórdís bætti inn myndum úr útiveru",
-  mock_post2: "Ofnæmisathugasemd uppfærð fyrir Arnar",
-  mock_post3: "Áminning: Regnföt á morgun",
-  mock_today: "Dagskrá dagsins",
-  mock_breakfast: "Morgunmatur",
-  mock_outdoor: "Útivera",
-  mock_lunch: "Hádegismatur",
-  mock_attendance: "Mæting",
-  mock_child: "Barn",
-  features_title: "Allt fyrir daglegt starf",
-  features_sub: "Hannað með fjölskyldur og starfsfólk í huga",
-  f_calendar_title: "Dagatal & Matseðlar",
-  f_calendar_desc: "Deildu viðburðum, ferðum og vikumatseðlum með áminningum.",
-  f_messaging_title: "Einkaskilaboð",
-  f_messaging_desc: "Bein skilaboð og tilkynningar með leskvittun.",
-  f_attendance_title: "Mæting & Inn-/útstimplun",
-  f_attendance_desc: "Hröð skráning, seinkunarskýrslur og dagssamantektir.",
-  f_diaper_title: "Bleyju- og heilsuferlar",
-  f_diaper_desc: "Skráðu bleyjur, svefn, lyf og hita.",
-  f_media_title: "Myndir & Sögur",
-  f_media_desc: "Hladdu upp albúmum og sögum með samþykktum.",
-  f_stories24_title: "24 tíma sögur fyrir bekk",
-  f_stories24_desc: "Sögur líkt og á Instagram/Snapchat. Aðeins sýnilegt forráðafólki barna í hópnum; hverfur eftir 24 klst.",
-  f_orders_title: "Pantanir hjá söluaðilum",
-  f_orders_desc: "Samvera geymir ekki kortaupplýsingar; vísað er á vefsíður söluaðila.",
-  f_security_title: "Aðgangsstýring & Atvikaskrár",
-  f_security_desc: "Hlutverkaskipan, samþykktir og óafturkræf atvikaskráning.",
-  // Updated Cloud feature (IS)
-  f_cloud_title: "Öruggt ský (Scaleway)",
-  f_cloud_desc: "Gögnin þín eru hýst í Evrópu — á Scaleway, GDPR-samræmdum skýjaþjónustuaðila í ESB.",
-  roles_title: "Hlutverk byggð fyrir verkið",
-  roles_sub: "Hvert hlutverk sér einungis það sem þarf.",
-  role_admin_title: "Stjórnandi",
-  role_admin_1: "Sýsla með deildir, hópa og heimildir",
-  role_admin_2: "Stilla matseðla, dagatöl og reglur",
-  role_admin_3: "Útflutningur gagna og atvikaskrár",
-  role_teacher_title: "Kennari",
-  role_teacher_1: "Setja inn færslur, skrá mætingu, halda utan um bleyjur",
-  role_teacher_2: "Senda skilaboð og skipuleggja viðburði",
-  role_teacher_3: "Myndir og 24 klst hópsögur",
-  role_parent_title: "Foreldri/Forráðamaður",
-  role_parent_1: "Einkanotkun um barnið þitt",
-  role_parent_2: "Matseðlar, dagatöl og áminningar",
-  role_parent_3: "Örugg skilaboð + 24 klst hópsaga",
-  security_title: "Öryggi í fyrirrúmi",
-  security_sub: "Skynsamar og öruggar lausnir á vörslu gagna fyrir skóla ",
-  security_badge: "Góð venja",
-  security_1: "GDPR-samræmd vinnsla og vinnslusamningur í boði.",
-  security_2: "Hlutverkaskipan (RBAC) og lágmarksheimildir.",
-  security_3: "Dulkóðun í flutningi (TLS) og hvíld hjá þjónustuaðila.",
-  security_4: "Atvikaskráning fyrir viðkvæmar aðgerðir.",
-  // Updated security note (IS)
-  security_note: "Allt hýsing er í ESB hjá Scaleway. GDPR samræmi og gátlisti (DPIA) í boði við innleiðingu.",
-  footer_security: "Öryggi",
-  // New footer hosting line (IS)
-  footer_hosting: "Hýst í ESB á Scaleway",
-};
 

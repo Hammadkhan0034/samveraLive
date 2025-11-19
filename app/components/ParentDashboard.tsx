@@ -1,5 +1,5 @@
 'use client';
-import React, { useMemo, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import FeatureGrid, { FeatureItem } from '@/app/components/FeatureGrid';
 import { Bell, CalendarDays, MessageSquare, Camera, Utensils, FileText, ClipboardCheck } from 'lucide-react';
@@ -7,11 +7,10 @@ import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/hooks/useAuth';
 import AnnouncementList from './AnnouncementList';
 import StoryColumn from './shared/StoryColumn';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
 
-type Lang = 'is' | 'en';
-
-export default function ParentDashboard({ lang = 'en' }: { lang?: Lang }) {
-  const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
+export default function ParentDashboard() {
+  const { t, lang } = useLanguage();
   const { session } = useAuth();
   const router = useRouter();
   
@@ -367,9 +366,9 @@ export default function ParentDashboard({ lang = 'en' }: { lang?: Lang }) {
   ];
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8 md:px-6 mt-10">
+    <main className="mx-auto max-w-7xl px-4 py-8 md:px-6">
       {/* Welcome Section */}
-      <div className="mb-8">
+      <div className="mb-8 mt-10">
         <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
           {t.title}
         </h1>
@@ -752,109 +751,3 @@ export default function ParentDashboard({ lang = 'en' }: { lang?: Lang }) {
     </main>
   );
 }
-
-/* ---------------- Copy ---------------- */
-
-const enText = {
-  title: 'Parent Dashboard',
-  welcome_message: 'Stay connected with your child\'s learning journey',
-  notices: 'Notices',
-  notices_desc: 'Announcements and reminders from your child\'s class.',
-  calendar: 'Calendar',
-  calendar_desc: 'Upcoming events, trips and menus.',
-  messages: 'Messages',
-  messages_desc: 'Direct messages with staff.',
-  media: 'Photos',
-  media_desc: 'Albums shared with your class.',
-  stories: 'Stories',
-  stories_desc: 'View school and class stories.',
-  menu: 'Menu',
-  menu_desc: 'View today\'s menu and meal schedule.',
-  menu_title: "Today's Menu",
-  class_feed: 'Class feed',
-  today: "Today's schedule",
-  empty_menu: 'No menu available for today',
-  breakfast: 'Breakfast',
-  outdoor: 'Outdoor play',
-  lunch: 'Lunch',
-  snack: 'Snack',
-  nap: 'Nap time',
-  feed1: 'Photos from outdoor time were added',
-  feed2: 'Reminder: Bring rain gear tomorrow',
-  feed3: 'Allergy note updated for Arnar',
-  notes: 'Notes',
-  quick_actions: 'Quick Actions',
-  contact_teacher: 'Contact Teacher',
-  contact_teacher_desc: 'Send a message to your child\'s teacher',
-  view_calendar: 'View Calendar',
-  view_calendar_desc: 'See upcoming events and activities',
-  send_message: 'Send Message',
-  send_message_desc: 'Message the school staff',
-  view_photos: 'View Photos',
-  view_photos_desc: 'Browse shared photos and albums',
-  my_students: 'My Students',
-  student_name: 'Name',
-  student_class: 'Class',
-  attendance: 'Attendance',
-  attendance_desc: 'View your child\'s attendance records.',
-  attendance_title: 'Today\'s Attendance',
-  attendance_present: 'Present',
-  attendance_absent: 'Absent',
-  attendance_late: 'Late',
-  attendance_excused: 'Excused',
-  attendance_not_recorded: 'Not Recorded',
-  no_attendance_data: 'No attendance data available',
-  loading: 'Loading...',
-};
-
-const isText = {
-  title: 'Foreldrasvæði',
-  welcome_message: 'Vertu tengdur við námsferil barnsins þíns',
-  notices: 'Tilkynningar',
-  notices_desc: 'Tilkynningar og áminningar frá hópnum.',
-  calendar: 'Dagatal',
-  calendar_desc: 'Komandi viðburðir, ferðir og matseðlar.',
-  messages: 'Skilaboð',
-  messages_desc: 'Bein skilaboð við starfsfólk.',
-  media: 'Myndir',
-  media_desc: 'Albúm deilt með hópnum.',
-  stories: 'Sögur',
-  stories_desc: 'Skoða sögur skólans og hópsins.',
-  menu: 'Matseðill',
-  menu_desc: 'Skoða matseðil dagsins og máltíma.',
-  menu_title: 'Matseðill dagsins',
-  class_feed: 'Flæði hóps',
-  today: 'Dagskrá dagsins',
-  empty_menu: 'Enginn matseðill fyrir daginn',
-  breakfast: 'Morgunmatur',
-  outdoor: 'Útivera',
-  lunch: 'Hádegismatur',
-  snack: 'Snakk',
-  nap: 'Hvíld',
-  feed1: 'Bætt var við myndum úr útiveru',
-  feed2: 'Áminning: Regnföt á morgun',
-  feed3: 'Ofnæmisathugasemd uppfærð fyrir Arnar',
-  notes: 'Athugasemdir',
-  quick_actions: 'Flýtiaðgerðir',
-  contact_teacher: 'Hafa samband við kennara',
-  contact_teacher_desc: 'Sendu skilaboð til kennara barnsins þíns',
-  view_calendar: 'Skoða dagatal',
-  view_calendar_desc: 'Sjá komandi viðburði og starfsemi',
-  send_message: 'Senda skilaboð',
-  send_message_desc: 'Skilaboð til starfsmanna skólans',
-  view_photos: 'Skoða myndir',
-  view_photos_desc: 'Fletta í deildum myndum og albúmum',
-  my_students: 'Nemendur mínir',
-  student_name: 'Nafn',
-  student_class: 'Klasi',
-  attendance: 'Mæting',
-  attendance_desc: 'Skoða mætingarskrá barnsins.',
-  attendance_title: 'Mæting dagsins',
-  attendance_present: 'Mætt',
-  attendance_absent: 'Fjarverandi',
-  attendance_late: 'Seinn',
-  attendance_excused: 'Afskráð',
-  attendance_not_recorded: 'Ekki skráð',
-  no_attendance_data: 'Engin mætingargögn tiltæk',
-  loading: 'Hleður...',
-};

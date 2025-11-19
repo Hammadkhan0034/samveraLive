@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { Plus, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -13,8 +13,7 @@ import TeacherLayout from '@/app/components/shared/TeacherLayout';
 type Lang = 'is' | 'en';
 
 export default function GuardiansPage() {
-  const { lang } = useLanguage();
-  const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
+  const { t, lang } = useLanguage();
   const { user, loading, isSigningIn } = useRequireAuth();
   const router = useRouter();
 
@@ -262,16 +261,16 @@ export default function GuardiansPage() {
 
   const content = (
       <div className="h-full bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 overflow-y-auto">
-        <div className="mx-auto max-w-6xl px-4 pt-8 pb-0 md:px-6 mt-14">
+        <div className="mx-auto max-w-6xl px-4 pt-8 pb-0 md:px-6">
           {/* Header with Back button */}
-          <div className="mb-6 flex items-center gap-3 flex-wrap">
+          <div className="mb-6 flex items-center gap-3 flex-wrap mt-14">
             <button
               onClick={() => router.back()}
               className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
             >
               <ArrowLeft className="h-4 w-4" /> {lang === 'is' ? 'Til baka' : 'Back'}
             </button>
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.title}</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.guardians}</h1>
             <div className="flex items-center gap-2 ml-auto">
               <button
                 onClick={openCreateGuardianModal}
@@ -407,92 +406,4 @@ export default function GuardiansPage() {
   return content;
 }
 
-const enText = {
-  title: 'Guardian Management',
-  subtitle: 'Manage all guardians in your organization.',
-  back: 'Back',
-  guardians: 'Guardians',
-  add_guardian: 'Add Guardian',
-  create_guardian: 'Create Guardian',
-  edit_guardian: 'Edit Guardian',
-  delete_guardian: 'Delete Guardian',
-  delete_guardian_confirm: 'Are you sure you want to delete this guardian?',
-  no_guardians: 'No guardians yet',
-  no_guardians_loading: 'Loading...',
-  actions: 'Actions',
-  create: 'Create',
-  update: 'Update',
-  cancel: 'Cancel',
-  delete: 'Delete',
-  edit: 'Edit',
-  creating: 'Creating...',
-  updating: 'Updating...',
-  full_name: 'Full Name',
-  first_name: 'First Name',
-  last_name: 'Last Name',
-  email: 'Email',
-  phone: 'Phone',
-  organization: 'Organization',
-  status: 'Status',
-  active: 'Active',
-  inactive: 'Inactive',
-  first_name_placeholder: 'Enter first name',
-  last_name_placeholder: 'Enter last name',
-  email_placeholder: 'Enter email address',
-  phone_placeholder: 'Enter phone number',
-  status_placeholder: 'Select status',
-  ssn: 'Social Security Number (SSN)',
-  ssn_placeholder: '000000-0000',
-  address: 'Address',
-  address_placeholder: 'Enter address (optional)',
-  send_magic_link: 'Send Magic Link',
-  sending: 'Sending...',
-  magic_link_sent: 'Magic link sent successfully',
-  magic_link_send_failed: 'Failed to send magic link',
-  no_students_linked: 'No students linked to this guardian',
-};
-
-const isText = {
-  title: 'Forráðamannastjórnun',
-  subtitle: 'Sýsla með alla forráðamenn í stofnuninni þinni.',
-  back: 'Til baka',
-  guardians: 'Forráðamenn',
-  add_guardian: 'Bæta við forráðamanni',
-  create_guardian: 'Búa til forráðamann',
-  edit_guardian: 'Breyta forráðamanni',
-  delete_guardian: 'Eyða forráðamanni',
-  delete_guardian_confirm: 'Ertu viss um að þú viljir eyða þessum forráðamanni?',
-  no_guardians: 'Engir forráðamenn enn',
-  no_guardians_loading: 'Hleður...',
-  actions: 'Aðgerðir',
-  create: 'Búa til',
-  update: 'Uppfæra',
-  cancel: 'Hætta við',
-  delete: 'Eyða',
-  edit: 'Breyta',
-  creating: 'Býr til...',
-  updating: 'Uppfærir...',
-  full_name: 'Fullt nafn',
-  first_name: 'Fornafn',
-  last_name: 'Eftirnafn',
-  email: 'Netfang',
-  phone: 'Sími',
-  organization: 'Stofnun',
-  status: 'Staða',
-  active: 'Virkur',
-  inactive: 'Óvirkur',
-  first_name_placeholder: 'Sláðu inn fornafn',
-  last_name_placeholder: 'Sláðu inn eftirnafn',
-  email_placeholder: 'Sláðu inn netfang',
-  phone_placeholder: 'Sláðu inn símanúmer',
-  status_placeholder: 'Veldu stöðu',
-  ssn: 'Kennitala',
-  ssn_placeholder: '000000-0000',
-  address: 'Heimilisfang',
-  address_placeholder: 'Sláðu inn heimilisfang (valfrjálst)',
-  send_magic_link: 'Senda töfraslóð',
-  sending: 'Sendi...',
-  magic_link_sent: 'Töfraslóð send',
-  magic_link_send_failed: 'Tókst ekki að senda töfraslóð',
-  no_students_linked: 'Engir nemendur tengdir við þennan forráðamann',
-};
+// Translations removed - using centralized translations from @/lib/translations

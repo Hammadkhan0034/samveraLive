@@ -29,54 +29,6 @@ export default function GuardianMessagesPage() {
 
   if (!user) return null;
 
-  const t = lang === 'is' 
-    ? {
-        msg_title: 'Skilaboð',
-        msg_hint: 'Spjalla við stjórnanda og kennara.',
-        inbox: 'Innhólf',
-        unread: 'nýtt',
-        new_message: 'Ný skilaboð',
-        to: 'Til',
-        message: 'Skilaboð',
-        msg_ph: 'Skrifa skilaboð...',
-        send: 'Senda',
-        attach: 'Hengja við',
-        sent: 'Sent',
-        select_recipient: 'Veldu viðtakanda',
-        no_threads: 'Engin skilaboð enn',
-        no_messages: 'Engin skilaboð í þessum þræði',
-        loading: 'Hleður...',
-        error_loading: 'Villa við að hlaða skilaboðum',
-        send_message: 'Senda skilaboð',
-        search_placeholder: 'Leita í samtalum...',
-        teacher: 'Kennari',
-        guardian: 'Forráðamaður',
-        principal: 'Stjórnandi',
-      }
-    : {
-        msg_title: 'Messages',
-        msg_hint: 'Chat with principal and teachers.',
-        inbox: 'Inbox',
-        unread: 'new',
-        new_message: 'New message',
-        to: 'To',
-        message: 'Message',
-        msg_ph: 'Write a message...',
-        send: 'Send',
-        attach: 'Attach',
-        sent: 'Sent',
-        select_recipient: 'Select recipient',
-        no_threads: 'No messages yet',
-        no_messages: 'No messages in this thread',
-        loading: 'Loading...',
-        error_loading: 'Error loading messages',
-        send_message: 'Send message',
-        search_placeholder: 'Search conversations...',
-        teacher: 'Teacher',
-        guardian: 'Guardian',
-        principal: 'Principal',
-      };
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       <main className="mx-auto max-w-7xl px-4 py-8 md:px-6 mt-10">
@@ -88,7 +40,7 @@ export default function GuardianMessagesPage() {
             <ArrowLeft className="h-4 w-4" /> {lang === 'is' ? 'Til baka' : 'Back'}
           </button>
         </div>
-        <MessagesPanel t={t} lang={lang} role="guardian" />
+        <MessagesPanel role="guardian" />
       </main>
     </div>
   );

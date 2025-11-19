@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
 import { useRouter } from 'next/navigation';
@@ -18,53 +18,10 @@ interface Announcement {
   class_name?: string | null;
 }
 
-const enText = {
-  title: 'Announcements',
-  subtitle: 'Create and manage announcements for your organization or classes.',
-  back: 'Back',
-  loading: 'Loading announcements…',
-  empty: 'No announcements yet.',
-  col_title: 'Title',
-  col_scope: 'Scope',
-  col_created: 'Created',
-  col_actions: 'Actions',
-  add_announcement: 'Add Announcement',
-  edit: 'Edit',
-  delete: 'Delete',
-  delete_announcement: 'Delete Announcement',
-  delete_announcement_confirm: 'Are you sure you want to delete this announcement? This action cannot be undone.',
-  delete_confirm: 'Delete',
-  cancel: 'Cancel',
-  org_wide: 'Organization-wide',
-  error_loading: 'Failed to load announcements',
-  try_again: 'Try again',
-};
-
-const isText = {
-  title: 'Tilkynningar',
-  subtitle: 'Búa til og sýsla með tilkynningar fyrir stofnunina þína eða hópa.',
-  back: 'Til baka',
-  loading: 'Hleður tilkynningum…',
-  empty: 'Engar tilkynningar enn.',
-  col_title: 'Titill',
-  col_scope: 'Svið',
-  col_created: 'Búið til',
-  col_actions: 'Aðgerðir',
-  add_announcement: 'Bæta við tilkynningu',
-  edit: 'Breyta',
-  delete: 'Eyða',
-  delete_announcement: 'Eyða tilkynningu',
-  delete_announcement_confirm: 'Ertu viss um að þú viljir eyða þessari tilkynningu? Þessa aðgerð er ekki hægt að afturkalla.',
-  delete_confirm: 'Eyða',
-  cancel: 'Hætta við',
-  org_wide: 'Alla stofnunina',
-  error_loading: 'Mistókst að hlaða tilkynningum',
-  try_again: 'Reyna aftur',
-};
+// Translations removed - using centralized translations from @/lib/translations
 
 export default function AnnouncementsPage() {
-  const { lang } = useLanguage();
-  const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
+  const { t, lang } = useLanguage();
   const { user } = useRequireAuth(['principal', 'admin', 'teacher']);
   const router = useRouter();
 
@@ -242,9 +199,9 @@ export default function AnnouncementsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      <main className="mx-auto max-w-7xl px-4 py-8 md:px-6 mt-10">
+      <main className="mx-auto max-w-6xl px-4 py-8 md:px-6">
         {/* Header */}
-        <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="mb-6 flex flex-col gap-3 mt-14 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.back()}
@@ -253,10 +210,10 @@ export default function AnnouncementsPage() {
               <ArrowLeft className="h-4 w-4" /> {t.back}
             </button>
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-                {t.title}
+              <h1 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+                {t.announcements || 'Announcements'}
               </h1>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.subtitle}</p>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.announcements_subtitle || 'View and manage school announcements'}</p>
             </div>
           </div>
 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { ArrowLeft, Save, X } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -20,8 +20,7 @@ interface MenuForm {
 }
 
 function AddMenuPageContent() {
-  const { lang } = useLanguage();
-  const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
+  const { t } = useLanguage();
   const { user, loading, isSigningIn } = useRequireAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -174,9 +173,9 @@ function AddMenuPageContent() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
 
-        <main className="mx-auto max-w-5xl px-4 py-8 md:px-6 mt-10 ml-20">
+        <main className="mx-auto max-w-5xl px-4 py-8 md:px-6 ml-20">
           {/* Header */}
-          <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="mb-6 flex flex-col gap-3 mt-14 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => router.push('/dashboard/teacher?tab=menus')}
@@ -186,7 +185,7 @@ function AddMenuPageContent() {
               </button>
               <div>
                 <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-                  {editingMenu ? t.edit_menu : t.title}
+                  {editingMenu ? t.edit_menu : t.add_menu || 'Add Menu'}
                 </h1>
                 <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.subtitle}</p>
               </div>
@@ -335,55 +334,7 @@ function AddMenuPageContent() {
   );
 }
 
-const enText = {
-  title: 'Add Menu',
-  subtitle: 'Create a new menu for a specific date.',
-  back: 'Back',
-  edit_menu: 'Edit Menu',
-  save: 'Save',
-  cancel: 'Cancel',
-  saving: 'Saving...',
-  date: 'Date',
-  class_label: 'Class',
-  optional: 'Optional',
-  all_classes: 'All Classes (Org-wide)',
-  loading_classes: 'Loading classes...',
-  breakfast: 'Breakfast',
-  lunch: 'Lunch',
-  snack: 'Snack',
-  notes: 'Notes',
-  breakfast_placeholder: 'Enter breakfast menu',
-  lunch_placeholder: 'Enter lunch menu',
-  snack_placeholder: 'Enter snack menu',
-  notes_placeholder: 'Enter optional notes',
-  is_public: 'Make this menu public',
-  missing_fields: 'Missing required fields',
-};
-
-const isText = {
-  title: 'Bæta við matseðli',
-  subtitle: 'Búðu til nýjan matseðil fyrir ákveðna dagsetningu.',
-  back: 'Til baka',
-  edit_menu: 'Breyta matseðli',
-  save: 'Vista',
-  cancel: 'Hætta við',
-  saving: 'Vistar...',
-  date: 'Dagsetning',
-  class_label: 'Hópur',
-  optional: 'Valfrjálst',
-  all_classes: 'Allir hópar (Stofnunarmiðað)',
-  loading_classes: 'Hleður hópum...',
-  breakfast: 'Morgunmatur',
-  lunch: 'Hádegismatur',
-  snack: 'Kvöldmatur',
-  notes: 'Athugasemdir',
-  breakfast_placeholder: 'Sláðu inn morgunmat',
-  lunch_placeholder: 'Sláðu inn hádegismat',
-  snack_placeholder: 'Sláðu inn kvöldmat',
-  notes_placeholder: 'Sláðu inn valfrjálsar athugasemdir',
-  is_public: 'Gera þennan matseðil aðgengilegan',
-  missing_fields: 'Vantar nauðsynlegar upplýsingar',
-};
+// Translations removed - using centralized translations from @/lib/translations
 
 export default function AddMenuPage() {
   return (

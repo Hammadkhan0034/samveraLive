@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Utensils, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useRequireAuth } from '@/lib/hooks/useAuth';
@@ -23,8 +23,7 @@ interface Menu {
 }
 
 export default function MenusViewPage() {
-  const { lang } = useLanguage();
-  const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
+  const { lang, t } = useLanguage();
   const { user, loading, isSigningIn } = useRequireAuth();
   const { signOut } = useAuth();
   const router = useRouter();
@@ -527,8 +526,8 @@ export default function MenusViewPage() {
     <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
 
         {/* Main Content */}
-        <main className="mx-auto max-w-5xl px-4 py-8 md:px-6 mt-10">
-          <div className="mb-6 flex items-center gap-3">
+        <main className="mx-auto max-w-5xl px-4 py-8 md:px-6">
+          <div className="mb-6 flex items-center gap-3 mt-14">
             <button
               onClick={() => router.back()}
               className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
@@ -536,7 +535,7 @@ export default function MenusViewPage() {
               <ArrowLeft className="h-4 w-4" /> {lang === 'is' ? 'Til baka' : 'Back'}
             </button>
             <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-              {t.title}
+              {t.menu}
             </h1>
           </div>
           {/* Date Selector */}
@@ -632,29 +631,5 @@ export default function MenusViewPage() {
   );
 }
 
-const enText = {
-  title: "Today's Menu",
-  select_date: 'Select Date',
-  loading: 'Loading...',
-  empty_menu: 'No menu available for this date',
-  breakfast: 'Breakfast',
-  lunch: 'Lunch',
-  snack: 'Snack',
-  notes: 'Notes',
-  all_classes: 'All Classes',
-  back: 'Back',
-};
-
-const isText = {
-  title: 'Matseðill dagsins',
-  select_date: 'Veldu dagsetningu',
-  loading: 'Hleður...',
-  empty_menu: 'Enginn matseðill tiltækur fyrir þessa dagsetningu',
-  breakfast: 'Morgunmatur',
-  lunch: 'Hádegismatur',
-  snack: 'Snakk',
-  notes: 'Athugasemdir',
-  all_classes: 'Allar bekkir',
-  back: 'Til baka',
-};
+// Translations removed - using centralized translations from @/lib/translations
 

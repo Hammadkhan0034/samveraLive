@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { ArrowLeft, Plus, Calendar, Utensils, Edit, Trash2, Save, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -21,8 +21,7 @@ interface Menu {
 }
 
 export default function MenusPage() {
-  const { lang } = useLanguage();
-  const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
+  const { t, lang } = useLanguage();
   const { user, loading, isSigningIn } = useRequireAuth();
   const router = useRouter();
 
@@ -438,61 +437,5 @@ export default function MenusPage() {
   );
 }
 
-const enText = {
-  title: 'Menu Management',
-  subtitle: 'Manage daily menus for your organization.',
-  back: 'Back',
-  add_menu: 'Add Menu',
-  edit_menu: 'Edit Menu',
-  edit: 'Edit',
-  delete: 'Delete',
-  save: 'Save',
-  cancel: 'Cancel',
-  saving: 'Saving...',
-  loading: 'Loading...',
-  select_date: 'Select Date',
-  menu_for: 'Menu for',
-  breakfast: 'Breakfast',
-  lunch: 'Lunch',
-  snack: 'Snack',
-  notes: 'Notes',
-  date: 'Date',
-  breakfast_placeholder: 'Enter breakfast menu',
-  lunch_placeholder: 'Enter lunch menu',
-  snack_placeholder: 'Enter snack menu',
-  notes_placeholder: 'Enter optional notes',
-  is_public: 'Make this menu public',
-  no_menu: 'No menu found for this date. Click "Add Menu" to create one.',
-  delete_confirm: 'Are you sure you want to delete this menu?',
-  missing_fields: 'Missing required fields',
-};
-
-const isText = {
-  title: 'Matseðilstjórnun',
-  subtitle: 'Sýsla með daglegar matseðla fyrir stofnunina þína.',
-  back: 'Til baka',
-  add_menu: 'Bæta við matseðli',
-  edit_menu: 'Breyta matseðli',
-  edit: 'Breyta',
-  delete: 'Eyða',
-  save: 'Vista',
-  cancel: 'Hætta við',
-  saving: 'Vistar...',
-  loading: 'Hleður...',
-  select_date: 'Veldu dagsetningu',
-  menu_for: 'Matseðill fyrir',
-  breakfast: 'Morgunmatur',
-  lunch: 'Hádegismatur',
-  snack: 'Kvöldmatur',
-  notes: 'Athugasemdir',
-  date: 'Dagsetning',
-  breakfast_placeholder: 'Sláðu inn morgunmat',
-  lunch_placeholder: 'Sláðu inn hádegismat',
-  snack_placeholder: 'Sláðu inn kvöldmat',
-  notes_placeholder: 'Sláðu inn valfrjálsar athugasemdir',
-  is_public: 'Gera þennan matseðil aðgengilegan',
-  no_menu: 'Enginn matseðill fannst fyrir þessa dagsetningu. Smelltu á "Bæta við matseðli" til að búa til einn.',
-  delete_confirm: 'Ertu viss um að þú viljir eyða þessum matseðli?',
-  missing_fields: 'Vantar nauðsynlegar upplýsingar',
-};
+// Translations removed - using centralized translations from @/lib/translations
 

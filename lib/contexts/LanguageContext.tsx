@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { enText, isText } from '@/lib/translations';
 
 type Lang = 'is' | 'en';
 
@@ -50,98 +51,3 @@ export const LanguageProvider = ({ children }: LanguageProviderProps) => {
     </LanguageContext.Provider>
   );
 };
-
-// Translation objects
-const enText = {
-  // Navbar
-  light: "Light",
-  dark: "Dark",
-  
-  // Admin Dashboard
-  adminDashboard: "Admin Dashboard",
-  manageUsersSchools: "Manage users, schools, and system settings",
-  adminAccess: "Admin Access",
-  fullPermissions: "Full permissions",
-  totalUsers: "Total Users",
-  teachers: "Teachers",
-  students: "Students",
-  parents: "Parents",
-  activeUsers: "Active Users",
-  newThisWeek: "New This Week",
-  quickActions: "Quick Actions",
-  addNewUser: "Add New User",
-  createNewUserAccount: "Create a new user account",
-  manageSchools: "Manage Schools",
-  configureSchoolSettings: "Configure school settings",
-  systemSettings: "System Settings",
-  configureSystemPreferences: "Configure system preferences",
-  generateReports: "Generate Reports",
-  createUsageAnalyticsReports: "Create usage and analytics reports",
-  recentActivity: "Recent Activity",
-  viewAll: "View all",
-  systemStatus: "System Status",
-  database: "Database",
-  operational: "Operational",
-  api: "API",
-  healthy: "Healthy",
-  backup: "Backup",
-  pending: "Pending",
-  registeredAs: "registered as",
-  loggedIn: "logged in",
-  systemAlertTriggered: "System alert triggered",
-  thisMonth: "this month",
-  thisWeek: "this week",
-  
-  // Stories
-  stories_title: "Stories",
-  create_story: "Create Story",
-  no_stories: "No stories yet",
-  view_story: "View Story",
-} as const;
-
-const isText = {
-  // Navbar
-  light: "Ljós",
-  dark: "Dökkt",
-  
-  // Admin Dashboard
-  adminDashboard: "Stjórnunaryfirlit",
-  manageUsersSchools: "Stjórna notendum, skólum og kerfisstillingum",
-  adminAccess: "Stjórnunaraðgangur",
-  fullPermissions: "Full réttindi",
-  totalUsers: "Heildarnotendur",
-  teachers: "Kennarar",
-  students: "Nemandi",
-  parents: "Foreldrar",
-  activeUsers: "Virkir notendur",
-  newThisWeek: "Nýir þessa viku",
-  quickActions: "Fljótlegar aðgerðir",
-  addNewUser: "Bæta við nýjum notanda",
-  createNewUserAccount: "Búa til nýjan notandaaðgang",
-  manageSchools: "Stjórna skólum",
-  configureSchoolSettings: "Stilla skólastillingar",
-  systemSettings: "Kerfisstillingar",
-  configureSystemPreferences: "Stilla kerfisvalkosti",
-  generateReports: "Búa til skýrslur",
-  createUsageAnalyticsReports: "Búa til notkun og greiningarskýrslur",
-  recentActivity: "Nýlegar athafnir",
-  viewAll: "Skoða allt",
-  systemStatus: "Kerfisstaða",
-  database: "Gagnagrunnur",
-  operational: "Í rekstri",
-  api: "API",
-  healthy: "Heilbrigt",
-  backup: "Öryggisafrit",
-  pending: "Í bið",
-  registeredAs: "skráður sem",
-  loggedIn: "skráður inn",
-  systemAlertTriggered: "Kerfisviðvörun kveikt",
-  thisMonth: "þennan mánuð",
-  thisWeek: "þessa viku",
-  
-  // Stories
-  stories_title: "Sögur",
-  create_story: "Búa til sögu",
-  no_stories: "Engar sögur ennþá",
-  view_story: "Skoða sögu",
-} as const;

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { MessageSquare, Camera, Timer, Users, Bell, X, Search, Send, Paperclip, Link as LinkIcon, Mail, Utensils, Menu, MessageSquarePlus } from 'lucide-react';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
@@ -19,90 +19,10 @@ function clsx(...xs: Array<string | false | undefined>) {
   return xs.filter(Boolean).join(' ');
 }
 
-// Import translations (same as TeacherDashboard)
-const enText = {
-  tile_msg: 'Messages',
-  tile_msg_desc: 'Communicate with parents and staff',
-  tile_att: 'Attendance',
-  tile_att_desc: 'Track student attendance',
-  tile_diaper: 'Diapers',
-  tile_diaper_desc: 'Log diaper changes',
-  tile_media: 'Media',
-  tile_media_desc: 'Upload and manage photos',
-  tile_stories: 'Stories',
-  tile_stories_desc: 'Create and share stories',
-  tile_announcements: 'Announcements',
-  tile_announcements_desc: 'Share announcements',
-  tile_students: 'Students',
-  tile_students_desc: 'Manage your students',
-  tile_guardians: 'Guardians',
-  tile_guardians_desc: 'Manage guardians',
-  tile_link_student: 'Link Student',
-  tile_link_student_desc: 'Link a guardian to a student',
-  tile_menus: 'Menus',
-  tile_menus_desc: 'Manage daily menus',
-  title: 'Teacher Dashboard',
-  today_hint: 'Today',
-  msg_title: 'Messages',
-  new_message: 'New Message',
-  to: 'To',
-  select_recipient: 'Select recipient',
-  message: 'Message',
-  msg_ph: 'Type your message...',
-  send: 'Send',
-  sent: 'Sent',
-  search_placeholder: 'Search conversations...',
-  loading: 'Loading...',
-  no_threads: 'No conversations yet',
-  no_messages: 'No messages yet',
-  principal: 'Principal',
-  teacher: 'Teacher',
-  guardian: 'Guardian',
-} as const;
-
-const isText = {
-  tile_msg: 'Skilaboð',
-  tile_msg_desc: 'Samið við foreldra og starfsfólk',
-  tile_att: 'Mæting',
-  tile_att_desc: 'Fylgstu með mætingu nemenda',
-  tile_diaper: 'Bleia',
-  tile_diaper_desc: 'Skrá bleiubreytingar',
-  tile_media: 'Miðlar',
-  tile_media_desc: 'Hlaða upp og stjórna myndum',
-  tile_stories: 'Sögur',
-  tile_stories_desc: 'Búðu til og deildu sögum',
-  tile_announcements: 'Tilkynningar',
-  tile_announcements_desc: 'Deildu tilkynningum',
-  tile_students: 'Nemendur',
-  tile_students_desc: 'Stjórna nemendum',
-  tile_guardians: 'Forráðamenn',
-  tile_guardians_desc: 'Stjórna forráðamönnum',
-  tile_link_student: 'Tengja nemanda',
-  tile_link_student_desc: 'Tengdu forráðamann við nemanda',
-  tile_menus: 'Matseðlar',
-  tile_menus_desc: 'Stjórna daglegum matseðlum',
-  title: 'Kennarastjórnborð',
-  today_hint: 'Í dag',
-  msg_title: 'Skilaboð',
-  new_message: 'Ný skilaboð',
-  to: 'Til',
-  select_recipient: 'Veldu viðtakanda',
-  message: 'Skilaboð',
-  msg_ph: 'Skrifaðu skilaboðin þín...',
-  send: 'Senda',
-  sent: 'Sent',
-  search_placeholder: 'Leita í samtalum...',
-  loading: 'Hleður...',
-  no_threads: 'Engin samtal ennþá',
-  no_messages: 'Engin skilaboð ennþá',
-  principal: 'Skólastjóri',
-  teacher: 'Kennari',
-  guardian: 'Forráðamaður',
-} as const;
+// Translations removed - using centralized translations from @/lib/translations
 
 export default function TeacherMessagesPage() {
-  const { lang } = useLanguage();
-  const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
+  const { t, lang } = useLanguage();
   const { session } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -686,7 +606,7 @@ export default function TeacherMessagesPage() {
   }> = useMemo(() => [
       { id: 'link_student', title: t.tile_link_student || 'Link Student', desc: t.tile_link_student_desc || 'Link a guardian to a student', Icon: LinkIcon, route: '/dashboard/teacher?tab=link_student' },
       { id: 'menus', title: t.tile_menus || 'Menus', desc: t.tile_menus_desc || 'Manage daily menus', Icon: Utensils, route: '/dashboard/teacher?tab=menus' },
-    ], [t]);
+    ], [t, lang]);
 
   // Show loading state while checking authentication - MUST be after all hooks
   if (loading || (isSigningIn && !user)) {
@@ -828,7 +748,7 @@ export default function TeacherMessagesPage() {
                             </optgroup>
                           )}
                           {teachers.length > 0 && (
-                            <optgroup label={t.teacher}>
+                            <optgroup label={t.role_teacher_title || 'Teacher'}>
                               {teachers.map((t) => (
                                 <option key={t.id} value={t.id}>
                                   {t.first_name} {t.last_name || ''} ({t.email})
@@ -871,7 +791,7 @@ export default function TeacherMessagesPage() {
                       >
                         <Send className="h-4 w-4" /> {t.send}
                       </button>
-                      {sent && <span className="text-xs text-emerald-600 dark:text-emerald-400 mt-1 block text-center">✓ {t.sent}</span>}
+                      {sent && <span className="text-xs text-emerald-600 dark:text-emerald-400 mt-1 block text-center">✓ {t.message_sent}</span>}
                     </div>
                   )}
 
@@ -923,7 +843,7 @@ export default function TeacherMessagesPage() {
                               <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-1">
                                 <span>
                                   {thread.other_participant?.role === 'principal' ? t.principal : 
-                                   thread.other_participant?.role === 'teacher' ? t.teacher : t.guardian}
+                                   thread.other_participant?.role === 'teacher' ? (t.role_teacher_title || 'Teacher') : t.guardian}
                                 </span>
                               </div>
                               {thread.latest_item && (
@@ -965,7 +885,7 @@ export default function TeacherMessagesPage() {
                           </div>
                           <div className="text-xs text-slate-500 dark:text-slate-400">
                             {selectedThread.other_participant?.role === 'principal' ? t.principal : 
-                             selectedThread.other_participant?.role === 'teacher' ? t.teacher : t.guardian}
+                             selectedThread.other_participant?.role === 'teacher' ? (t.role_teacher_title || 'Teacher') : t.guardian}
                           </div>
                         </div>
                       </div>

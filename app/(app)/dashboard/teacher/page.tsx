@@ -9,7 +9,6 @@ import { useRequireAuth, useAuth } from '../../../../lib/hooks/useAuth';
 export default function TeacherDashboardPage() {
   const router = useRouter();
   const { user, loading, isSigningIn } = useRequireAuth('teacher');
-  const { lang } = useLanguage();
 
   // Only show loading if we're actually loading and don't have a user yet
   if (loading && !user && isSigningIn) {
@@ -37,7 +36,7 @@ export default function TeacherDashboardPage() {
           </div>
         </div>
       }>
-      <TeacherDashboard lang={lang} />
+      <TeacherDashboard />
       </Suspense>
     </div>
   );

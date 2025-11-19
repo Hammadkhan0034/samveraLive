@@ -50,7 +50,7 @@ export function GuardianTable({
   return (
     <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-lg border border-slate-200 dark:border-slate-700">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t.guardians}</h3>
+        {/* <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t.guardians}</h3> */}
       </div>
 
       {error && (
@@ -59,9 +59,9 @@ export function GuardianTable({
         </div>
       )}
 
-      <div className="rounded-md border border-slate-200  dark:border-slate-700">
+      <div className="rounded-md">
         <table className="w-full text-sm">
-          <thead className="sticky top-0 bg-black text-white dark:bg-slate-800 z-10">
+          <thead className="sticky top-0 bg-black text-white dark:bg-black z-10">
             <tr className="text-center text-slate-600 dark:text-slate-300">
               <th className="py-2 pr-1 text-white">{t.first_name || 'First Name'}</th>
               <th className="py-2 pr-1 text-white">{t.last_name || 'Last Name'}</th>

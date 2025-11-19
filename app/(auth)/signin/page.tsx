@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useEffect, useMemo, useState, Suspense } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, Sun, Moon, Globe, ChevronDown, ArrowRight } from 'lucide-react';
 import { type SamveraRole } from '@/lib/auth';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useTheme } from '@/lib/contexts/ThemeContext';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
 
 type Lang = 'is' | 'en';
 
@@ -27,7 +28,7 @@ function SignInPageContent() {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [lang, setLang] = useState<Lang>('en');
+  const { lang, setLang, t } = useLanguage();
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState('');
@@ -53,18 +54,6 @@ function SignInPageContent() {
     if (passwordParam) setPassword(passwordParam);
   }, [qp]);
 
-  // remember language between visits
-  useEffect(() => {
-    const saved = typeof window !== 'undefined'
-      ? (localStorage.getItem('samvera_lang') as Lang | null)
-      : null;
-    if (saved === 'is' || saved === 'en') setLang(saved);
-  }, []);
-  useEffect(() => {
-    if (typeof window !== 'undefined') localStorage.setItem('samvera_lang', lang);
-  }, [lang]);
-
-
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -81,8 +70,6 @@ function SignInPageContent() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isLangDropdownOpen]);
-
-  const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
 
   // Redirect if already authenticated - only check once when loading completes and user exists
   useEffect(() => {
@@ -267,10 +254,10 @@ function SignInPageContent() {
           >
             <div className="text-center mb-6">
               <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
-                {isSignUp ? t.title_signup : t.title}
+                {isSignUp ? t.title_signup : t.signin_title}
               </h1>
               <p className="text-slate-600 dark:text-slate-200">
-                {isSignUp ? t.sub_signup : t.sub}
+                {isSignUp ? t.sub_signup : t.signin_sub}
               </p>
             </div>
 
@@ -295,7 +282,7 @@ function SignInPageContent() {
                 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
-                    {t.email}
+                    {t.signin_email}
                   </label>
                   <input
                     type="email"
@@ -312,7 +299,7 @@ function SignInPageContent() {
                 {!useOtp && (
                   <div>
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                      {t.password}
+                      {t.signin_password}
                     </label>
                     <div className="relative">
                       <input
@@ -399,7 +386,7 @@ function SignInPageContent() {
                 {submitting ? (
                   <>
                     <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                    {useOtp ? t.sending : isSignUp ? t.signing_up : t.signing_in}
+                    {useOtp ? t.signin_sending : isSignUp ? t.signing_up : t.signing_in}
                   </>
                 ) : (
                   <>
@@ -456,95 +443,7 @@ function roleLabel(r: SamveraRole, lang: Lang) {
   return r === 'teacher' ? 'teacher' : r === 'principal' ? 'principal' : r === 'admin' ? 'admin' : 'parent';
 }
 
-const enText = {
-  title: 'Welcome back',
-  title_signup: 'Create account',
-  sub: 'Sign in to your account to continue.',
-  sub_signup: 'Create a new account to get started.',
-  email: 'Email address',
-  fullname: 'Full name',
-  fullname_placeholder: 'John Doe',
-  password: 'Password',
-  signin: 'Sign in',
-  signup: 'Create account',
-  signing_in: 'Signing in…',
-  signing_up: 'Creating account…',
-  send_magic_link: 'Send magic link',
-  verify: 'Verify code',
-  sending: 'Sending…',
-  verifying: 'Verifying…',
-  use_magic_link: 'Use magic link',
-  use_password: 'Use password',
-  otp_code: 'Verification code',
-  otp_placeholder: 'Enter the 6-digit code',
-  otp_instructions: 'Check your email and click the magic link to sign in.',
-  already_have_account: 'Already have an account? Sign in',
-  need_account: 'Need an account? Sign up',
-  auth_hint:
-    'Real authentication with Supabase. You can switch roles inside the dashboards.',
-  signin_role: 'You\'ll be signed in as {role}. You can also use ?role=teacher, ?role=principal, or ?role=admin in the URL.',
-  signup_role: 'You\'ll be creating an account as {role}. You can also use ?role=teacher, ?role=principal, or ?role=admin in the URL.',
-  errors: {
-    email_required: 'Please enter an email address.',
-    email_invalid: 'Please enter a valid email address.',
-    password_required: 'Please enter a password.',
-    fullname_required: 'Please enter your full name.',
-    otp_required: 'Please enter a verification code.',
-    rate_limit: 'Too many sign-in attempts. Please wait a few minutes before trying again.',
-    unexpected: 'An unexpected error occurred. Please try again.',
-  },
-  success: {
-    check_email: 'Please check your email to confirm your account.',
-    magic_link_sent: 'Magic link sent. Check your email.',
-    otp_verified: 'Code verified! Redirecting...',
-  },
-} as const;
-
-const isText = {
-  title: 'Velkomin aftur',
-  title_signup: 'Búa til aðgang',
-  sub: 'Skráðu þig inn til að halda áfram.',
-  sub_signup: 'Búðu til nýjan aðgang til að byrja.',
-  email: 'Netfang',
-  fullname: 'Fullt nafn',
-  fullname_placeholder: 'Jón Jónsson',
-  password: 'Lykilorð',
-  signin: 'Skrá inn',
-  signup: 'Búa til aðgang',
-  signing_in: 'Skrái inn…',
-  signing_up: 'Býr til aðgang…',
-  send_magic_link: 'Senda töfraslóð',
-  verify: 'Staðfesta kóða',
-  sending: 'Sendi…',
-  verifying: 'Staðfesti…',
-  use_magic_link: 'Nota töfraslóð',
-  use_password: 'Nota lykilorð',
-  otp_code: 'Staðfestingarkóði',
-  otp_placeholder: 'Sláðu inn 6 stafa kóða',
-  otp_instructions: 'Athugaðu pósthólfið og smelltu á töfraslóðina til að skrá þig inn.',
-  already_have_account: 'Ertu þegar með aðgang? Skráðu þig inn',
-  need_account: 'Þarft aðgang? Skráðu þig',
-  auth_hint:
-    'Raunveruleg auðkenning með Supabase. Hægt er að skipta um hlutverk inni á yfirlitum.',
-  signin_role:
-    'Þú skráir þig inn sem {role}. Þú getur líka notað ?role=teacher, ?role=principal, eða ?role=admin í slóðinni.',
-  signup_role:
-    'Þú býrð til aðgang sem {role}. Þú getur líka notað ?role=teacher, ?role=principal, eða ?role=admin í slóðinni.',
-  errors: {
-    email_required: 'Vinsamlegast sláðu inn netfang.',
-    email_invalid: 'Vinsamlegast sláðu inn gilt netfang.',
-    password_required: 'Vinsamlegast sláðu inn lykilorð.',
-    fullname_required: 'Vinsamlegast sláðu inn fullt nafn.',
-    otp_required: 'Vinsamlegast sláðu inn staðfestingarkóða.',
-    rate_limit: 'Of margar innskráningartilraunir. Vinsamlegast bíddu í nokkrar mínútur áður en þú reynir aftur.',
-    unexpected: 'Óvænt villa kom upp. Vinsamlegast reyndu aftur.',
-  },
-  success: {
-    check_email: 'Vinsamlegast athugaðu netfangið þitt til að staðfesta aðganginn þinn.',
-    magic_link_sent: 'Töfraslóð send. Athugaðu pósthólfið.',
-    otp_verified: 'Kóði staðfestur! Endurbeina...',
-  },
-} as const;
+// Translations removed - using centralized translations from @/lib/translations
 
 export default function SignInPage() {
   return (

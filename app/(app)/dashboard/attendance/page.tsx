@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Calendar } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useRequireAuth } from '@/lib/hooks/useAuth';
@@ -26,8 +26,7 @@ interface AttendanceRecord {
 }
 
 export default function AttendancePage() {
-  const { lang } = useLanguage();
-  const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
+  const { lang, t } = useLanguage();
   const { user, loading, isSigningIn } = useRequireAuth();
   const { session } = useAuth();
   const router = useRouter();
@@ -249,9 +248,9 @@ export default function AttendancePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      <main className="mx-auto max-w-6xl px-4 py-8 md:px-6 mt-10 ml-20">
+      <main className="mx-auto max-w-6xl px-4 py-8 md:px-6 ml-20">
         {/* Header with Back button and Date filter */}
-        <div className="mb-6 flex items-center gap-3 flex-wrap">
+        <div className="mb-6 flex items-center gap-3 flex-wrap mt-14">
           <button
             onClick={() => router.back()}
             className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
@@ -420,51 +419,5 @@ export default function AttendancePage() {
   );
 }
 
-const enText = {
-  attendance: 'Attendance',
-  loading: 'Loading...',
-  no_attendance_data: 'No attendance data available',
-  attendance_present: 'Present',
-  attendance_absent: 'Absent',
-  attendance_late: 'Late',
-  attendance_excused: 'Excused',
-  attendance_not_recorded: 'Not Recorded',
-  col_date: 'Date',
-  col_student_name: 'Student Name',
-  col_class: 'Class',
-  col_status: 'Status',
-  clear_filter: 'Clear Filter',
-  prev: 'Prev',
-  next: 'Next',
-  unknown_student: 'Unknown Student',
-  no_class: 'No Class',
-  error: 'Error',
-  no_linked_students: 'No students linked to your account. Please contact the school administrator.',
-  try_different_date: 'Try selecting a different date or clear the date filter to see all records.',
-  no_records_for_students: 'No attendance records found for your linked students.',
-};
-
-const isText = {
-  attendance: 'Mæting',
-  loading: 'Hleður...',
-  no_attendance_data: 'Engin mætingargögn tiltæk',
-  attendance_present: 'Mætt',
-  attendance_absent: 'Fjarverandi',
-  attendance_late: 'Seinn',
-  attendance_excused: 'Afskráð',
-  attendance_not_recorded: 'Ekki skráð',
-  col_date: 'Dagsetning',
-  col_student_name: 'Nafn nemanda',
-  col_class: 'Bekkur',
-  col_status: 'Staða',
-  clear_filter: 'Hreinsa síu',
-  prev: 'Fyrri',
-  next: 'Næsta',
-  unknown_student: 'Óþekktur nemandi',
-  no_class: 'Enginn bekkur',
-  error: 'Villa',
-  no_linked_students: 'Engir nemendur tengdir við reikninginn þinn. Vinsamlegast hafðu samband við skólastjórn.',
-  try_different_date: 'Reyndu að velja aðra dagsetningu eða hreinsa dagsetningarsíu til að sjá allar færslur.',
-  no_records_for_students: 'Engar mætingarfærslur fundust fyrir tengda nemendur þína.',
-};
+// Translations removed - using centralized translations from @/lib/translations
 

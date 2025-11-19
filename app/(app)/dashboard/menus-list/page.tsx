@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { Plus, Calendar, Utensils, Edit, Trash2, ArrowLeft } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
@@ -25,8 +25,7 @@ interface Menu {
 }
 
 export default function MenusListPage() {
-  const { lang } = useLanguage();
-  const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
+  const { lang, t } = useLanguage();
   const { user, loading, isSigningIn } = useRequireAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -424,16 +423,16 @@ export default function MenusListPage() {
 
   const content = (
       <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-        <div className="mx-auto max-w-6xl px-4 pt-6 pb-0 md:px-6 mt-14">
+        <div className="mx-auto max-w-6xl px-4 pt-6 pb-0 md:px-6">
           {/* Header with Back button */}
-          <div className="mb-6 flex items-center gap-3 flex-wrap">
+          <div className="mb-6 flex items-center gap-3 flex-wrap mt-16">
             <button
               onClick={() => router.back()}
               className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
             >
               <ArrowLeft className="h-4 w-4" /> {lang === 'is' ? 'Til baka' : 'Back'}
             </button>
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.title}</h1>
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.tile_menus || 'Menus'}</h1>
             <div className="flex items-center gap-2 ml-auto">
               <button
                 onClick={() => router.push('/dashboard/add-menu')}
@@ -602,53 +601,5 @@ export default function MenusListPage() {
   return content;
 }
 
-const enText = {
-  title: 'Menus',
-  subtitle: 'Manage daily menus for your organization.',
-  back: 'Back',
-  add_menu: 'Add Menu',
-  edit: 'Edit',
-  delete: 'Delete',
-  loading: 'Loading...',
-  date: 'Date',
-  breakfast: 'Breakfast',
-  lunch: 'Lunch',
-  snack: 'Snack',
-  notes: 'Notes',
-  actions: 'Actions',
-  no_menus: 'No menus found. Click "Add Menu" to create one.',
-  filter_by_date: 'Filter by Date',
-  clear_filter: 'Clear Filter',
-  delete_confirm: 'Are you sure you want to delete this menu?',
-  delete_menu: 'Delete Menu',
-  cancel: 'Cancel',
-  prev: 'Prev',
-  next: 'Next',
-  created_date: 'Created Date',
-};
-
-const isText = {
-  title: 'Matseðillar',
-  subtitle: 'Sýsla með daglegar matseðla fyrir stofnunina þína.',
-  back: 'Til baka',
-  add_menu: 'Bæta við matseðli',
-  edit: 'Breyta',
-  delete: 'Eyða',
-  loading: 'Hleður...',
-  date: 'Dagsetning',
-  breakfast: 'Morgunmatur',
-  lunch: 'Hádegismatur',
-  snack: 'Kvöldmatur',
-  notes: 'Athugasemdir',
-  actions: 'Aðgerðir',
-  no_menus: 'Engir matseðillar fundust. Smelltu á "Bæta við matseðli" til að búa til einn.',
-  filter_by_date: 'Sía eftir dagsetningu',
-  clear_filter: 'Hreinsa síu',
-  delete_confirm: 'Ertu viss um að þú viljir eyða þessum matseðli?',
-  delete_menu: 'Eyða matseðli',
-  cancel: 'Hætta við',
-  prev: 'Fyrri',
-  next: 'Næst',
-  created_date: 'Búið til',
-};
+// Translations removed - using centralized translations from @/lib/translations
 

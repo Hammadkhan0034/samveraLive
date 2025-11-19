@@ -5,6 +5,8 @@ import { useRouter, usePathname } from 'next/navigation';
 import { Bell, Timer, Users, MessageSquare, Camera, Link as LinkIcon, Utensils, Plus, Search, Edit, Trash2, X, Menu } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
+import { enText } from '@/lib/translations/en';
+import { isText } from '@/lib/translations/is';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
 import TeacherSidebar from '@/app/components/shared/TeacherSidebar';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
@@ -13,136 +15,7 @@ import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 type Lang = 'is' | 'en';
 type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
 
-// Translations
-const enText = {
-  title: 'Students',
-  tile_announcements: 'Announcements',
-  tile_announcements_desc: 'Share announcements',
-  tile_stories: 'Stories',
-  tile_stories_desc: 'Create and share stories',
-  tile_media: 'Media',
-  tile_media_desc: 'Upload and manage photos',
-  tile_att: 'Attendance',
-  tile_att_desc: 'Track student attendance',
-  tile_diaper: 'Diapers',
-  tile_diaper_desc: 'Log diaper changes',
-  tile_msg: 'Messages',
-  tile_msg_desc: 'Communicate with parents and staff',
-  tile_students: 'Students',
-  tile_students_desc: 'Manage your students',
-  tile_guardians: 'Guardians',
-  tile_guardians_desc: 'Manage guardians',
-  tile_link_student: 'Link Student',
-  tile_link_student_desc: 'Link a guardian to a student',
-  tile_menus: 'Menus',
-  tile_menus_desc: 'Manage daily menus',
-  
-  // Students
-  students_title: 'Student Requests',
-  add_student: 'Add Student',
-  existing_students: 'Existing Students',
-  no_students_found: 'No students found in assigned classes',
-  guardians: 'Guardians',
-  student_name: 'Student Name',
-  student_dob: 'Date of Birth',
-  student_gender: 'Gender',
-  student_class: 'Class',
-  actions: 'Actions',
-  edit: 'Edit',
-  delete: 'Delete',
-  edit_student: 'Edit Student',
-  delete_student: 'Delete Student',
-  delete_student_confirm: 'Are you sure you want to delete this student? This action cannot be undone.',
-  updating: 'Updating...',
-  update: 'Update',
-  cancel: 'Cancel',
-  loading: 'Loading...',
-  search_students_placeholder: 'Search students...',
-  no_students_found_search: 'No students found matching your search',
-  prev: 'Prev',
-  next: 'Next',
-  student_first_name: 'First Name',
-  student_last_name: 'Last Name',
-  student_first_name_placeholder: 'Enter first name',
-  student_last_name_placeholder: 'Enter last name',
-  student_medical_notes: 'Medical Notes',
-  student_allergies: 'Allergies',
-  student_emergency_contact: 'Emergency Contact',
-  student_medical_notes_placeholder: 'Enter medical notes (optional)',
-  student_allergies_placeholder: 'Enter allergies (optional)',
-  student_emergency_contact_placeholder: 'Enter emergency contact (optional)',
-  select_class: 'Select a class',
-  gender_unknown: 'Unknown',
-  gender_male: 'Male',
-  gender_female: 'Female',
-  gender_other: 'Other',
-  today_hint: 'Today',
-} as const;
-
-const isText = {
-  title: 'Nemendur',
-  tile_announcements: 'Tilkynningar',
-  tile_announcements_desc: 'Deildu tilkynningum',
-  tile_stories: 'Sögur',
-  tile_stories_desc: 'Búðu til og deildu sögum',
-  tile_media: 'Miðlar',
-  tile_media_desc: 'Hlaða upp og stjórna myndum',
-  tile_att: 'Mæting',
-  tile_att_desc: 'Fylgstu með mætingu nemenda',
-  tile_diaper: 'Bleia',
-  tile_diaper_desc: 'Skrá bleiubreytingar',
-  tile_msg: 'Skilaboð',
-  tile_msg_desc: 'Samið við foreldra og starfsfólk',
-  tile_students: 'Nemendur',
-  tile_students_desc: 'Stjórna nemendum',
-  tile_guardians: 'Forráðamenn',
-  tile_guardians_desc: 'Stjórna forráðamönnum',
-  tile_link_student: 'Tengja nemanda',
-  tile_link_student_desc: 'Tengdu forráðamann við nemanda',
-  tile_menus: 'Matseðlar',
-  tile_menus_desc: 'Stjórna daglegum matseðlum',
-  
-  // Students
-  students_title: 'Beiðnir nemenda',
-  add_student: 'Bæta við nemanda',
-  existing_students: 'Núverandi nemendur',
-  no_students_found: 'Engir nemendur fundust í úthlutuðum hópum',
-  guardians: 'Forráðamenn',
-  student_name: 'Nafn nemanda',
-  student_dob: 'Fæðingardagur',
-  student_gender: 'Kyn',
-  student_class: 'Hópur',
-  actions: 'Aðgerðir',
-  edit: 'Breyta',
-  delete: 'Eyða',
-  edit_student: 'Breyta nemanda',
-  delete_student: 'Eyða nemanda',
-  delete_student_confirm: 'Ertu viss um að þú viljir eyða þessum nemanda? Þessa aðgerð er ekki hægt að afturkalla.',
-  updating: 'Uppfæri...',
-  update: 'Uppfæra',
-  cancel: 'Hætta við',
-  loading: 'Hleður...',
-  search_students_placeholder: 'Leita að nemendum...',
-  no_students_found_search: 'Engir nemendur fundust sem passa við leit',
-  prev: 'Fyrri',
-  next: 'Næsta',
-  student_first_name: 'Fornafn',
-  student_last_name: 'Eftirnafn',
-  student_first_name_placeholder: 'Sláðu inn fornafn',
-  student_last_name_placeholder: 'Sláðu inn eftirnafn',
-  student_medical_notes: 'Læknisfræðilegar athugasemdir',
-  student_allergies: 'Ofnæmi',
-  student_emergency_contact: 'Neyðarsamband',
-  student_medical_notes_placeholder: 'Sláðu inn læknisfræðilegar athugasemdir (valfrjálst)',
-  student_allergies_placeholder: 'Sláðu inn ofnæmi (valfrjálst)',
-  student_emergency_contact_placeholder: 'Sláðu inn neyðarsamband (valfrjálst)',
-  select_class: 'Veldu hóp',
-  gender_unknown: 'Óþekkt',
-  gender_male: 'Karl',
-  gender_female: 'Kona',
-  gender_other: 'Annað',
-  today_hint: 'Í dag',
-} as const;
+// Translations removed - using centralized translations from @/lib/translations
 
 // StudentsPanel Component
 function StudentsPanel({
@@ -378,8 +251,7 @@ function StudentsPanel({
 }
 
 export default function TeacherStudentsPage() {
-  const { lang } = useLanguage();
-  const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
+  const { t, lang } = useLanguage();
   const { session } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -772,7 +644,7 @@ export default function TeacherStudentsPage() {
   }> = useMemo(() => [
       { id: 'link_student', title: t.tile_link_student || 'Link Student', desc: t.tile_link_student_desc || 'Link a guardian to a student', Icon: LinkIcon, route: '/dashboard/teacher?tab=link_student' },
       { id: 'menus', title: t.tile_menus || 'Menus', desc: t.tile_menus_desc || 'Manage daily menus', Icon: Utensils, route: '/dashboard/teacher?tab=menus' },
-    ], [t]);
+    ], [t, lang]);
 
   // Show loading state while checking authentication
   if (authLoading || (isSigningIn && !user)) {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth, useRequireAuth } from '@/lib/hooks/useAuth';
@@ -9,8 +9,7 @@ import { ArrowLeft, Trash2, AlertTriangle, X, UserPlus, Users, Search, CheckCirc
 type Lang = 'is' | 'en';
 
 export default function ClassDetailsPage() {
-  const { lang } = useLanguage();
-  const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
+  const { t } = useLanguage();
   const { user, loading } = useRequireAuth('principal');
   const { session } = useAuth?.() || {} as any;
   const router = useRouter();
@@ -490,9 +489,9 @@ export default function ClassDetailsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       
-      <main className="mx-auto max-w-7xl px-4 py-8 md:px-6 mt-10">
+      <main className="mx-auto max-w-6xl px-4 py-8 md:px-6">
         {/* Header */}
-        <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="mb-6 flex flex-col gap-3 mt-14 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.back()}
@@ -785,105 +784,5 @@ export default function ClassDetailsPage() {
   );
 }
 
-/* -------------------- Translations -------------------- */
-
-const enText = {
-  back: 'Back',
-  class_details: 'Class Details',
-  col_name: 'Name',
-  col_students: 'Students',
-  col_staff: 'Staff',
-  class_description: 'Description',
-  visible_yes: 'Yes',
-  assigned_staff: 'Assigned Staff',
-  assigned_students: 'Assigned Students',
-  first_name: 'First Name',
-  last_name: 'Last Name',
-  email: 'Email',
-  dob: 'Date of Birth',
-  gender: 'Gender',
-  no_staff_assigned: 'No staff assigned to this class.',
-  no_students_assigned: 'No students assigned to this class.',
-  col_actions: 'Actions',
-  delete_teacher: 'Remove Teacher',
-  delete_teacher_message: 'Are you sure you want to remove {name} from this class?',
-  delete_student: 'Remove Student',
-  delete_student_message: 'Are you sure you want to remove {name} from this class?',
-  cancel: 'Cancel',
-  delete: 'Delete',
-  deleting: 'Deleting...',
-  assign_teacher: 'Assign Teacher',
-  add_student: 'Add Student',
-  add_student_to_class: 'Add Student to Class',
-  assign_teacher_to_class: 'Assign Teacher to Class',
-  search_students_placeholder: 'Search students by name or email...',
-  search_teachers_placeholder: 'Search teachers by name or email...',
-  loading_students: 'Loading students...',
-  loading_teachers: 'Loading teachers...',
-  no_students_available: 'No students available',
-  no_teachers_available: 'No teachers available',
-  student_selected: 'student selected',
-  students_selected: 'students selected',
-  teacher_selected: 'teacher selected',
-  teachers_selected: 'teachers selected',
-  assign_selected: 'Assign Selected',
-  assigning: 'Assigning...',
-  student_assigned_success: 'Student assigned successfully',
-  students_assigned_success: 'Students assigned successfully',
-  teachers_updated_success: 'Teachers updated successfully',
-  updating_teachers: 'Updating teachers...',
-  currently_in_class: 'Currently in class',
-  save: 'Save',
-  close: 'Close',
-} as const;
-
-const isText = {
-  back: 'Til baka',
-  class_details: 'Bekkjaupplýsingar',
-  col_name: 'Nafn',
-  col_students: 'Nemendur',
-  col_staff: 'Starfsfólk',
-  class_description: 'Lýsing',
-  visible_yes: 'Já',
-  assigned_staff: 'Úthlutað starfsfólk',
-  assigned_students: 'Úthlutaðir nemendur',
-  first_name: 'Fornafn',
-  last_name: 'Eftirnafn',
-  email: 'Netfang',
-  dob: 'Fæðingardagur',
-  gender: 'Kyn',
-  no_staff_assigned: 'Engu starfsfólki hefur verið úthlutað í þennan bekk.',
-  no_students_assigned: 'Engum nemendum hefur verið úthlutað í þennan bekk.',
-  col_actions: 'Aðgerðir',
-  delete_teacher: 'Fjarlægja kennara',
-  delete_teacher_message: 'Ertu viss um að þú viljir fjarlægja {name} úr þessum bekk?',
-  delete_student: 'Fjarlægja nemanda',
-  delete_student_message: 'Ertu viss um að þú viljir fjarlægja {name} úr þessum bekk?',
-  cancel: 'Hætta við',
-  delete: 'Eyða',
-  deleting: 'Eyði...',
-  assign_teacher: 'Úthluta kennara',
-  add_student: 'Bæta við nemanda',
-  add_student_to_class: 'Bæta nemanda við bekk',
-  assign_teacher_to_class: 'Úthluta kennara í bekk',
-  search_students_placeholder: 'Leita að nemendum eftir nafni eða netfangi...',
-  search_teachers_placeholder: 'Leita að kennurum eftir nafni eða netfangi...',
-  loading_students: 'Hleður nemendum...',
-  loading_teachers: 'Hleður kennurum...',
-  no_students_available: 'Engir nemendur í boði',
-  no_teachers_available: 'Engir kennarar í boði',
-  student_selected: 'nemandi valinn',
-  students_selected: 'nemendur valdir',
-  teacher_selected: 'kennari valinn',
-  teachers_selected: 'kennarar valdir',
-  assign_selected: 'Úthluta valda',
-  assigning: 'Úthlutar...',
-  student_assigned_success: 'Nemandi hefur verið úthlutaður',
-  students_assigned_success: 'Nemendur hafa verið úthlutaðir',
-  teachers_updated_success: 'Kennarar hafa verið uppfærðir',
-  updating_teachers: 'Uppfæri kennara...',
-  currently_in_class: 'Nú í bekk',
-  save: 'Vista',
-  close: 'Loka',
-} as const;
+// Translations removed - using centralized translations from @/lib/translations
 

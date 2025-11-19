@@ -1,5 +1,7 @@
 import { createSupabaseServer } from '@/lib/supabaseServer';
 import { supabaseAdmin } from '@/lib/supabaseClient';
+import { enText } from '@/lib/translations/en';
+import { isText } from '@/lib/translations/is';
 
 interface Announcement {
   id: string;
@@ -21,25 +23,7 @@ interface AnnouncementListServerProps {
   lang?: 'is' | 'en';
 }
 
-const enText = {
-  failed_to_load: 'Failed to load announcements',
-  no_announcements: 'No announcements yet.',
-  class_announcements_note: 'Class announcements will appear here.',
-  org_announcements_note: 'Organization announcements will appear here.',
-  by: 'By',
-  class_announcement: 'Class Announcement',
-  organization_wide: 'Organization-wide',
-};
-
-const isText = {
-  failed_to_load: 'Mistókst að hlaða tilkynningum',
-  no_announcements: 'Engar tilkynningar enn.',
-  class_announcements_note: 'Tilkynningar hóps munu birtast hér.',
-  org_announcements_note: 'Tilkynningar stofnunar munu birtast hér.',
-  by: 'Eftir',
-  class_announcement: 'Tilkynning hóps',
-  organization_wide: 'Alla stofnunina',
-};
+// Translations removed - using centralized translations from @/lib/translations
 
 export default async function AnnouncementListServer({
   classId,

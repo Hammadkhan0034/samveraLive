@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useEffect, useMemo, useRef, useState, Suspense } from 'react';
+import React, { useCallback, useEffect, useRef, useState, Suspense } from 'react';
 import Image from 'next/image';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
@@ -23,90 +23,7 @@ function toLocalInput(iso: string) {
   }
 }
 
-const enText = {
-  title: 'Stories',
-  subtitle: 'Create and manage stories by organization or class.',
-  loading: 'Loading stories…',
-  empty: 'No stories yet.',
-  col_title: 'Title',
-  col_scope: 'Scope',
-  col_caption: 'Caption',
-  no_caption: 'No Caption Added',
-  col_public: 'Public',
-  col_expires: 'Expires',
-  edit: 'Edit',
-  view: 'View',
-  delete: 'Delete',
-  delete_story: 'Delete Story',
-  delete_story_confirm: 'Are you sure you want to delete this story? This action cannot be undone.',
-  delete_confirm: 'Delete',
-  actions: 'Actions',
-  back: 'Back',
-  prev: 'Prev',
-  next: 'Next',
-  class_label: 'Class',
-  org_wide: 'Organization-wide',
-  title_label: 'Title',
-  title_ph: 'Optional title',
-  caption_label: 'Caption',
-  caption_ph: 'Optional caption',
-  is_public: 'Public',
-  expires_label: 'Expires at',
-  create_story: 'Create Story',
-  cancel: 'Cancel',
-  save: 'Save',
-  public_yes: 'Yes',
-  public_no: 'No',
-  missing_fields: 'Missing required fields',
-  items_label: 'Story items',
-  items_empty: 'No items yet. Add text or image items.',
-  add_text_item: 'Add text item',
-  add_image_item: 'Add image item',
-  remove: 'Remove',
-  item_caption_ph: 'Item caption (optional)',
-  duration_ms_ph: 'Duration (ms, optional)',
-  image_data_ph: 'Image data (base64)',
-  mime_type_ph: 'MIME type e.g. image/jpeg',
-  item_type_text: 'Text',
-  item_type_image: 'Image',
-};
-
-const isText = {
-  title: 'Sögur',
-  subtitle: 'Búa til og sýsla með sögur eftir stofnun eða hóp.',
-  loading: 'Hleður sögum…',
-  empty: 'Engar sögur fundust.',
-  col_title: 'Titill',
-  col_scope: 'Svið',
-  col_caption: 'Lýsing',
-  no_caption: 'Engin lýsing bætt við',
-  col_public: 'Opinber',
-  col_expires: 'Rennur út',
-  edit: 'Breyta',
-  view: 'Skoða',  
-  delete: 'Eyða',
-  delete_story: 'Eyða sögu',
-  delete_story_confirm: 'Ertu viss um að þú viljir eyða þessari sögu? Þessa aðgerð er ekki hægt að afturkalla.',
-  delete_confirm: 'Eyða',
-  actions: 'Aðgerðir',
-  back: 'Til baka',
-  prev: 'Fyrri',
-  next: 'Næsta',
-  class_label: 'Hópur',
-  org_wide: 'Stofnunarvítt',
-  title_label: 'Titill',
-  title_ph: 'Valfrjáls titill',
-  caption_label: 'Lýsing',
-  caption_ph: 'Valfrjáls lýsing',
-  is_public: 'Opinber',
-  expires_label: 'Rennur út',
-  create_story: 'Búa til sögu',
-  cancel: 'Hætta við',
-  save: 'Vista',
-  public_yes: 'Já',
-  public_no: 'Nei',
-  missing_fields: 'Vantar nauðsynleg svæði',
-};
+// Translations removed - using centralized translations from @/lib/translations
 
 type Story = {
   id: string;
@@ -122,8 +39,7 @@ type Story = {
 };
 
 function StoriesPageContent() {
-  const { lang } = useLanguage();
-  const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
+  const { t } = useLanguage();
   const { user } = useRequireAuth();
   const router = useRouter();
 
@@ -750,8 +666,8 @@ function StoriesPageContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      <main className="mx-auto max-w-7xl px-4 py-8 md:px-6 mt-10">
-          <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <main className="mx-auto max-w-6xl px-4 py-8 md:px-6">
+          <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between mt-14">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => router.back()}
@@ -760,7 +676,7 @@ function StoriesPageContent() {
                 <ArrowLeft className="h-4 w-4" /> {t.back}
               </button>
               <div>
-                <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.title}</h1>
+                <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.stories_title}</h1>
                 <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.subtitle}</p>
               </div>
             </div>

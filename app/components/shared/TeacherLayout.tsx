@@ -1,5 +1,5 @@
 'use client';
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Users, CalendarDays, X, Link as LinkIcon, Utensils, Menu, Bell } from 'lucide-react';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
@@ -13,57 +13,7 @@ function clsx(...xs: Array<string | false | undefined>) {
   return xs.filter(Boolean).join(' ');
 }
 
-const enText = {
-  title: 'Teacher Dashboard',
-  kids_checked_in: 'Children checked in',
-  today_hint: 'Today · Demo data',
-  tile_att: 'Attendance',
-  tile_att_desc: 'Mark in/out and late arrivals.',
-  tile_diaper: 'Diapers & Health',
-  tile_diaper_desc: 'Log diapers, naps, meds & temperature.',
-  tile_msg: 'Messages',
-  tile_msg_desc: 'Direct messages and announcements.',
-  tile_guardians: 'Guardians',
-  tile_guardians_desc: 'Add and manage guardians.',
-  tile_media: 'Media',
-  tile_media_desc: 'Upload photos & albums.',
-  tile_stories: 'Stories (24h)',
-  tile_stories_desc: 'Post classroom stories that expire in 24h.',
-  tile_announcements: 'Announcements',
-  tile_announcements_desc: 'Create and view announcements.',
-  tile_link_student: 'Link Student',
-  tile_link_student_desc: 'Link a guardian to a student.',
-  tile_menus: 'Menus',
-  tile_menus_desc: 'Manage daily menus.',
-  tile_students: 'Students',
-  tile_students_desc: 'Manage student requests and enrollment.',
-};
-
-const isText = {
-  title: 'Kennarayfirlit',
-  kids_checked_in: 'Börn skráð inn',
-  today_hint: 'Í dag · Sýnagögn',
-  tile_att: 'Mæting',
-  tile_att_desc: 'Skrá inn/út og seinkun.',
-  tile_diaper: 'Bleyjur & Heilsa',
-  tile_diaper_desc: 'Skrá bleyjur, svefn, lyf og hita.',
-  tile_msg: 'Skilaboð',
-  tile_msg_desc: 'Bein skilaboð og tilkynningar.',
-  tile_guardians: 'Forráðamenn',
-  tile_guardians_desc: 'Bæta við og sýsla með forráðamenn.',
-  tile_media: 'Myndir',
-  tile_media_desc: 'Hlaða upp myndum og albúmum.',
-  tile_stories: 'Sögur (24 klst)',
-  tile_stories_desc: 'Hópsögur sem hverfa eftir 24 klst.',
-  tile_announcements: 'Tilkynningar',
-  tile_announcements_desc: 'Búa til og skoða tilkynningar.',
-  tile_link_student: 'Tengja nemanda',
-  tile_link_student_desc: 'Tengja forráðamann við nemanda.',
-  tile_menus: 'Matseðillar',
-  tile_menus_desc: 'Sýsla með daglega matseðla.',
-  tile_students: 'Nemendur',
-  tile_students_desc: 'Sýsla með beiðnir nemenda og skráningu.',
-};
+// Translations removed - using centralized translations from @/lib/translations
 
 interface TeacherLayoutProps {
   children: React.ReactNode;
@@ -82,8 +32,7 @@ export default function TeacherLayout({
   uploads = [],
   hideHeader = false
 }: TeacherLayoutProps) {
-  const { lang } = useLanguage();
-  const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
+  const { lang, t } = useLanguage();
   const { session } = useAuth();
   const router = useRouter();
   const pathname = usePathname();

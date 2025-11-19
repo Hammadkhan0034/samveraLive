@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { createAnnouncement, updateAnnouncement } from '@/lib/server-actions';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
 
 interface AnnouncementFormProps {
   classId?: string;
   orgId?: string;
   onSuccess?: () => void;
-  lang?: 'is' | 'en';
   showClassSelector?: boolean; // New prop to show class selector
   mode?: 'create' | 'edit';
   initialData?: {
@@ -19,18 +19,16 @@ interface AnnouncementFormProps {
   };
 }
 
-type Lang = 'is' | 'en';
-
 export default function AnnouncementForm({ 
   classId: propClassId, 
   orgId, 
   onSuccess, 
-  lang = 'en', 
   showClassSelector = false,
   mode = 'create',
   initialData
 }: AnnouncementFormProps) {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [title, setTitle] = useState(initialData?.title || '');
   const [body, setBody] = useState(initialData?.body || '');
   const [selectedClassId, setSelectedClassId] = useState<string>(initialData?.classId || propClassId || '');
@@ -39,8 +37,6 @@ export default function AnnouncementForm({
   const [success, setSuccess] = useState('');
   const [classes, setClasses] = useState<Array<{ id: string; name: string }>>([]);
   const [loadingClasses, setLoadingClasses] = useState(false);
-
-  const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
 
   // Update form when initialData changes (for edit mode)
   useEffect(() => {
@@ -273,51 +269,3 @@ export default function AnnouncementForm({
     </div>
   );
 }
-
-const enText = {
-  create_announcement: 'Create Announcement',
-  edit_announcement: 'Edit Announcement',
-  update_announcement: 'Update Announcement',
-  title: 'Title',
-  title_placeholder: 'Enter announcement title',
-  message: 'Message',
-  message_placeholder: 'Enter announcement message',
-  class_label: 'Class',
-  select_class_optional: 'Select Class (Optional - Leave empty for Organization-wide)',
-  loading_classes: 'Loading classes...',
-  no_classes_available: 'No classes available',
-  class_announcement_note: 'This announcement will be sent to the selected class only.',
-  org_announcement_note: 'This announcement will be sent to the entire organization.',
-  clear: 'Clear',
-  creating: 'Creating...',
-  updating: 'Updating...',
-  fill_all_fields: 'Please fill in all fields',
-  announcement_created: 'Announcement created successfully!',
-  announcement_updated: 'Announcement updated successfully!',
-  failed_to_create: 'Failed to create announcement',
-  failed_to_update: 'Failed to update announcement',
-};
-
-const isText = {
-  create_announcement: 'Búa til tilkynningu',
-  edit_announcement: 'Breyta tilkynningu',
-  update_announcement: 'Uppfæra tilkynningu',
-  title: 'Titill',
-  title_placeholder: 'Sláðu inn titil tilkynningar',
-  message: 'Skilaboð',
-  message_placeholder: 'Sláðu inn skilaboð tilkynningar',
-  class_label: 'Hópur',
-  select_class_optional: 'Veldu hóp (Valfrjálst - Skildu eftir tómt fyrir allan stofnun)',
-  loading_classes: 'Hleður hópum...',
-  no_classes_available: 'Engir hópar í boði',
-  class_announcement_note: 'Þessi tilkynning verður send til valins hóps aðeins.',
-  org_announcement_note: 'Þessi tilkynning verður send til allrar stofnunarinnar.',
-  clear: 'Hreinsa',
-  creating: 'Býr til...',
-  updating: 'Uppfærir...',
-  fill_all_fields: 'Vinsamlegast fylltu út öll reiti',
-  announcement_created: 'Tilkynning búin til með góðum árangri!',
-  announcement_updated: 'Tilkynning uppfærð með góðum árangri!',
-  failed_to_create: 'Mistókst að búa til tilkynningu',
-  failed_to_update: 'Mistókst að uppfæra tilkynningu',
-};

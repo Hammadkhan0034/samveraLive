@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useMemo, useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Users, CalendarDays, Plus, Send, Paperclip, Bell, X, Search, ChevronLeft, ChevronRight, Edit, Trash2, Link as LinkIcon, Mail, Utensils, Menu } from 'lucide-react';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
+import { enText } from '@/lib/translations/en';
+import { isText } from '@/lib/translations/is';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
 import TeacherSidebar from '@/app/components/shared/TeacherSidebar';
 
@@ -18,8 +20,7 @@ function clsx(...xs: Array<string | false | undefined>) {
 }
 
 export default function TeacherAttendancePage() {
-  const { lang } = useLanguage();
-  const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
+  const { t, lang } = useLanguage();
   const { session } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -90,7 +91,7 @@ export default function TeacherAttendancePage() {
       { id: 'guardians', title: t.tile_guardians || 'Guardians', desc: t.tile_guardians_desc || 'Manage guardians', Icon: Users, route: '/dashboard/teacher?tab=guardians' },
       { id: 'link_student', title: t.tile_link_student || 'Link Student', desc: t.tile_link_student_desc || 'Link a guardian to a student', Icon: LinkIcon, route: '/dashboard/teacher?tab=link_student' },
       { id: 'menus', title: t.tile_menus || 'Menus', desc: t.tile_menus_desc || 'Manage daily menus', Icon: Utensils, route: '/dashboard/teacher?tab=menus' },
-    ], [t]);
+    ], [t, lang]);
 
   // Check if there are unsaved changes
   const hasUnsavedChanges = React.useMemo(() => {
@@ -533,7 +534,8 @@ export default function TeacherAttendancePage() {
             {/* Attendance Panel */}
             <section>
               <AttendancePanel 
-                t={t} 
+                t={t}
+                lang={lang}
                 students={students}
                 teacherClasses={teacherClasses}
                 attendance={attendance}
@@ -556,6 +558,7 @@ export default function TeacherAttendancePage() {
 
 function AttendancePanel({
   t,
+  lang,
   students,
   teacherClasses,
   attendance,
@@ -566,7 +569,8 @@ function AttendancePanel({
   onSubmit,
   loadingStudents,
 }: {
-  t: typeof enText;
+  t: typeof enText | typeof isText;
+  lang: 'is' | 'en';
   students: Array<{ id: string; first_name: string; last_name: string | null; dob: string | null; gender: string; class_id: string | null; created_at: string; classes?: any; guardians?: Array<{ id: string; relation: string; users?: { id: string; full_name: string; email: string } }> }>;
   teacherClasses: any[];
   attendance: Record<string, boolean>;
@@ -631,7 +635,7 @@ function AttendancePanel({
             </select>
           ) : (
             <div className="text-sm text-slate-500 dark:text-slate-400">
-              {t.no_classes_assigned || 'No classes assigned'}
+              {t.no_class_assigned || 'No class assigned'}
             </div>
           )}
           <button
@@ -657,7 +661,7 @@ function AttendancePanel({
             ) : (
               <>
                 <CheckSquare className="h-4 w-4" />
-                {t.submit_attendance || 'Submit Attendance'}
+                {t.save || 'Save'}
               </>
             )}
           </button>
@@ -665,7 +669,7 @@ function AttendancePanel({
       </div>
       {hasUnsavedChanges && !isSaving && (
         <div className="mb-4 rounded-lg bg-amber-50 border border-amber-200 p-3 text-sm text-amber-800 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-300">
-          {t.unsaved_changes || 'You have unsaved changes. Click "Submit Attendance" to save.'}
+          {lang === 'is' ? 'Þú hefur óvistaðar breytingar. Smelltu á "Vista" til að vista.' : 'You have unsaved changes. Click "Save" to save.'}
         </div>
       )}
       
@@ -675,7 +679,7 @@ function AttendancePanel({
         <div className="text-center py-8 text-slate-500 dark:text-slate-400">
           {selectedClassId === 'all' 
             ? t.no_students_found || 'No students found in assigned classes'
-            : t.no_students_in_class || 'No students in this class'}
+            : t.no_students_assigned || 'No students assigned to this class'}
         </div>
       ) : (
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -716,77 +720,5 @@ function AttendancePanel({
   );
 }
 
-/* -------------------- Translations -------------------- */
-
-const enText = {
-  title: 'Teacher Dashboard',
-  kids_checked_in: 'Children checked in',
-  today_hint: 'Today · Demo data',
-  tile_att: 'Attendance',
-  tile_att_desc: 'Mark in/out and late arrivals.',
-  tile_diaper: 'Diapers & Health',
-  tile_diaper_desc: 'Log diapers, naps, meds & temperature.',
-  tile_msg: 'Messages',
-  tile_msg_desc: 'Direct messages and announcements.',
-  tile_guardians: 'Guardians',
-  tile_guardians_desc: 'Add and manage guardians.',
-  tile_media: 'Media',
-  tile_media_desc: 'Upload photos & albums.',
-  tile_stories: 'Stories (24h)',
-  tile_stories_desc: 'Post classroom stories that expire in 24h.',
-  tile_announcements: 'Announcements',
-  tile_announcements_desc: 'Create and view announcements.',
-  tile_link_student: 'Link Student',
-  tile_link_student_desc: 'Link a guardian to a student.',
-  tile_menus: 'Menus',
-  tile_menus_desc: 'Manage daily menus.',
-  tile_students: 'Students',
-  tile_students_desc: 'Manage student requests and enrollment.',
-  att_title: 'Attendance & Check-in',
-  att_mark_all_in: 'Mark all present',
-  all_classes: 'All Classes',
-  no_classes_assigned: 'No classes assigned',
-  no_students_found: 'No students found in assigned classes',
-  no_students_in_class: 'No students in this class',
-  submit_attendance: 'Submit Attendance',
-  unsaved_changes: 'You have unsaved changes. Click "Submit Attendance" to save.',
-  loading: 'Loading...',
-  saved: 'Saved',
-};
-
-const isText = {
-  title: 'Kennarayfirlit',
-  kids_checked_in: 'Börn skráð inn',
-  today_hint: 'Í dag · Sýnagögn',
-  tile_att: 'Mæting',
-  tile_att_desc: 'Skrá inn/út og seinkun.',
-  tile_diaper: 'Bleyjur & Heilsa',
-  tile_diaper_desc: 'Skrá bleyjur, svefn, lyf og hita.',
-  tile_msg: 'Skilaboð',
-  tile_msg_desc: 'Bein skilaboð og tilkynningar.',
-  tile_guardians: 'Forráðamenn',
-  tile_guardians_desc: 'Bæta við og sýsla með forráðamenn.',
-  tile_media: 'Myndir',
-  tile_media_desc: 'Hlaða upp myndum og albúmum.',
-  tile_stories: 'Sögur (24 klst)',
-  tile_stories_desc: 'Hópsögur sem hverfa eftir 24 klst.',
-  tile_announcements: 'Tilkynningar',
-  tile_announcements_desc: 'Stofna og skoða tilkynningar',
-  tile_link_student: 'Tengja nemanda',
-  tile_link_student_desc: 'Tengja forráðamann við nemanda.',
-  tile_menus: 'Matseðillar',
-  tile_menus_desc: 'Sýsla með daglega matseðla.',
-  tile_students: 'Nemendur',
-  tile_students_desc: 'Sýsla með beiðnir nemenda og skráningu.',
-  att_title: 'Mæting & Inn-/útstimplun',
-  att_mark_all_in: 'Skrá alla inn',
-  all_classes: 'Allir hópar',
-  no_classes_assigned: 'Engir hópar úthlutaðir',
-  no_students_found: 'Engir nemendur fundust í úthlutuðum hópum',
-  no_students_in_class: 'Engir nemendur í þessum hóp',
-  submit_attendance: 'Vista mætingu',
-  unsaved_changes: 'Þú hefur óvistaðar breytingar. Smelltu á "Vista mætingu" til að vista.',
-  loading: 'Hleður...',
-  saved: 'Vistað',
-};
+// Translations removed - using centralized translations from @/lib/translations
 

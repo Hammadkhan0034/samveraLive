@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useEffect, useState, Suspense, useRef } from 'react';
+import React, { useEffect, useState, Suspense, useRef } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useRequireAuth } from '@/lib/hooks/useAuth';
@@ -11,8 +11,7 @@ function AddStudentPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, loading, isSigningIn } = useRequireAuth();
-  const { lang } = useLanguage();
-  const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
+  const { t } = useLanguage();
 
   // Try to get org_id from multiple possible locations
   const userMetadata = user?.user_metadata;
@@ -187,8 +186,8 @@ function AddStudentPageContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-        <main className="mx-auto max-w-6xl px-4 py-8 md:px-6 mt-10 ml-20">
-          <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <main className="mx-auto max-w-6xl px-4 py-8 md:px-6 ml-20">
+          <div className="mb-6 flex flex-col gap-3 mt-14 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => router.back()}
@@ -197,8 +196,8 @@ function AddStudentPageContent() {
                 <ArrowLeft className="h-4 w-4" /> {t.back}
               </button>
               <div>
-                <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{editingStudent?.id ? t.edit_student : t.title}</h1>
-                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{editingStudent?.id ? '' : t.subtitle}</p>
+                <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{editingStudent?.id ? t.edit_student : t.add_student}</h1>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{editingStudent?.id ? '' : t.student_form_subtitle}</p>
               </div>
             </div>
           </div>
@@ -262,98 +261,6 @@ function AddStudentPageContent() {
     </div>
   );
 }
-
-const enText = {
-  title: 'Add Student',
-  subtitle: 'Fill the details below to create a new student.',
-  back: 'Back',
-  create_student: 'Create Student',
-  edit_student: 'Edit Student',
-  first_name: 'First Name',
-  last_name: 'Last Name',
-  dob: 'Date of Birth',
-  gender: 'Gender',
-  class: 'Class',
-  guardians: 'Guardians',
-  medical_notes: 'Medical Notes',
-  allergies: 'Allergies',
-  emergency_contact: 'Emergency Contact',
-  student_first_name_placeholder: 'Enter first name',
-  student_last_name_placeholder: 'Enter last name',
-  student_medical_notes_placeholder: 'Enter medical notes (optional)',
-  student_allergies_placeholder: 'Enter allergies (optional)',
-  student_emergency_contact_placeholder: 'Enter emergency contact (optional)',
-  student_phone: 'Phone',
-  student_registration_time: 'Registration Time',
-  student_registration_time_placeholder: 'Enter registration time',
-  student_address: 'Address',
-  student_address_placeholder: 'Enter address',
-  student_start_date: 'Start Date',
-  student_child_value: 'Child Value',
-  student_child_value_placeholder: 'Enter child value',
-  student_language: 'Language',
-  student_social_security_number: 'Social Security Number',
-  student_social_security_number_placeholder: 'Enter social security number',
-  student_phone_placeholder: 'Enter phone number',
-  gender_unknown: 'Unknown',
-  gender_male: 'Male',
-  gender_female: 'Female',
-  gender_other: 'Other',
-  no_class_assigned: 'No class assigned',
-  no_guardians_available: 'No guardians available',
-  student_age_requirement: 'Student must be between 0-18 years old',
-  create: 'Create',
-  update: 'Update',
-  cancel: 'Cancel',
-  creating: 'Creating...',
-  updating: 'Updating...'
-};
-
-const isText = {
-  title: 'Bæta við nemanda',
-  subtitle: 'Fylltu út upplýsingar til að stofna nýjan nemanda.',
-  back: 'Til baka',
-  create_student: 'Búa til nemanda',
-  edit_student: 'Breyta nemanda',
-  first_name: 'Fornafn',
-  last_name: 'Eftirnafn',
-  dob: 'Fæðingardagur',
-  gender: 'Kyn',
-  class: 'Hópur',
-  guardians: 'Forráðamenn',
-  medical_notes: 'Læknisfræðilegar athugasemdir',
-  allergies: 'Ofnæmi',
-  emergency_contact: 'Neyðarsamband',
-  student_first_name_placeholder: 'Sláðu inn fornafn',
-  student_last_name_placeholder: 'Sláðu inn eftirnafn',
-  student_medical_notes_placeholder: 'Sláðu inn læknisfræðilegar athugasemdir (valfrjálst)',
-  student_allergies_placeholder: 'Sláðu inn ofnæmi (valfrjálst)',
-  student_emergency_contact_placeholder: 'Sláðu inn neyðarsamband (valfrjálst)',
-  student_phone: 'Sími',
-  student_registration_time: 'Skráningartími',
-  student_registration_time_placeholder: 'Sláðu inn skráningartíma',
-  student_address: 'Heimilisfang',
-  student_address_placeholder: 'Sláðu inn heimilisfang',
-  student_start_date: 'Upphafsdagur',
-  student_child_value: 'Barnagildi',
-  student_child_value_placeholder: 'Sláðu inn barnagildi',
-  student_language: 'Tungumál',
-  student_social_security_number: 'Kennitala',
-  student_social_security_number_placeholder: 'Sláðu inn kennitölu',
-  student_phone_placeholder: 'Sláðu inn símanúmer',
-  gender_unknown: 'Óþekkt',
-  gender_male: 'Karl',
-  gender_female: 'Kona',
-  gender_other: 'Annað',
-  no_class_assigned: 'Enginn hópur úthlutaður',
-  no_guardians_available: 'Engir forráðamenn tiltækir',
-  student_age_requirement: 'Nemandi verður að vera á aldrinum 0-18 ára',
-  create: 'Búa til',
-  update: 'Uppfæra',
-  cancel: 'Hætta við',
-  creating: 'Býr til...',
-  updating: 'Uppfærir...'
-};
 
 export default function AddStudentPage() {
   return (

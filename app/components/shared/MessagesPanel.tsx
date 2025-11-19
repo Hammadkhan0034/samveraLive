@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Send, Paperclip, Search, MessageSquarePlus, X } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useMessagesRealtime } from '@/lib/hooks/useMessagesRealtime';
 import { MessageThreadWithParticipants, MessageItem } from '@/lib/types/messages';
 
@@ -10,37 +11,14 @@ type Lang = 'is' | 'en';
 type Role = 'principal' | 'teacher' | 'guardian';
 
 interface MessagesPanelProps {
-  t: {
-    msg_title: string;
-    msg_hint: string;
-    inbox: string;
-    unread: string;
-    new_message: string;
-    to: string;
-    message: string;
-    msg_ph: string;
-    send: string;
-    attach: string;
-    sent: string;
-    select_recipient: string;
-    no_threads: string;
-    no_messages: string;
-    loading: string;
-    error_loading: string;
-    send_message: string;
-    search_placeholder: string;
-    teacher: string;
-    guardian: string;
-    principal: string;
-  };
-  lang?: Lang;
   role: Role;
   teacherClasses?: any[];
   students?: Array<{ id: string; class_id: string | null }>;
 }
 
-export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [], students = [] }: MessagesPanelProps) {
+export default function MessagesPanel({ role, teacherClasses = [], students = [] }: MessagesPanelProps) {
   const { session } = useAuth();
+  const { t, lang } = useLanguage();
   const [threads, setThreads] = useState<MessageThreadWithParticipants[]>([]);
   const [selectedThread, setSelectedThread] = useState<MessageThreadWithParticipants | null>(null);
   const [messages, setMessages] = useState<MessageItem[]>([]);
@@ -276,7 +254,7 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
                     const isNotCurrentUser = t.id !== session?.user?.id;
                     return isTeacher && isNotCurrentUser;
                   });
-                console.log(teacherRoleStaff, '==================')
+               
                 setTeachers(teacherRoleStaff.map((t: any) => ({
                   id: t.id,
                   first_name: t.first_name || '',
@@ -1187,7 +1165,7 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
         {/* Header with New Conversation Button */}
         <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t.msg_title}</h2>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t.messages || 'Messages'}</h2>
             <button
               onClick={() => {
                 setShowNewConversation(!showNewConversation);
@@ -1227,7 +1205,7 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
                   {role === 'principal' && (
                     <>
                       {teachers.length > 0 && (
-                        <optgroup label={t.teacher}>
+                        <optgroup label={t.role_teacher_title || 'Teacher'}>
                           {teachers.map((t) => (
                             <option key={t.id} value={t.id}>
                               {t.first_name} {t.last_name || ''} ({t.email})
@@ -1258,7 +1236,7 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
                         </optgroup>
                       )}
                       {teachers.length > 0 && (
-                        <optgroup label={t.teacher}>
+                        <optgroup label={t.role_teacher_title || 'Teacher'}>
                           {teachers.map((t) => (
                             <option key={t.id} value={t.id}>
                               {t.first_name} {t.last_name || ''} ({t.email})
@@ -1300,7 +1278,7 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
                       {(() => {
                         console.log(`🔍 [Guardian Chat] Render check: teachers.length = ${teachers.length}, teachers =`, teachers);
                         return teachers.length > 0 ? (
-                          <optgroup label={t.teacher}>
+                          <optgroup label={t.role_teacher_title || 'Teacher'}>
                             {teachers.map((t) => (
                               <option key={t.id} value={t.id}>
                                 {t.first_name} {t.last_name || ''} ({t.email})
@@ -1330,7 +1308,7 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
               >
                 <Send className="h-4 w-4" /> {t.send}
               </button>
-              {sent && <span className="text-xs text-emerald-600 dark:text-emerald-400 mt-1 block text-center">✓ {t.sent}</span>}
+              {sent && <span className="text-xs text-emerald-600 dark:text-emerald-400 mt-1 block text-center">✓ {t.message_sent}</span>}
             </div>
           )}
 
@@ -1382,7 +1360,7 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
                       <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-1">
                         <span>
                           {thread.other_participant?.role === 'principal' ? t.principal : 
-                           thread.other_participant?.role === 'teacher' ? t.teacher : t.guardian}
+                           thread.other_participant?.role === 'teacher' ? (t.role_teacher_title || 'Teacher') : t.guardian}
                         </span>
                       </div>
                       {thread.latest_item && (
@@ -1424,7 +1402,7 @@ export default function MessagesPanel({ t, lang = 'en', role, teacherClasses = [
                   </div>
                   <div className="text-xs text-slate-500 dark:text-slate-400">
                     {selectedThread.other_participant?.role === 'principal' ? t.principal : 
-                     selectedThread.other_participant?.role === 'teacher' ? t.teacher : t.guardian}
+                     selectedThread.other_participant?.role === 'teacher' ? (t.role_teacher_title || 'Teacher') : t.guardian}
                   </div>
                 </div>
               </div>

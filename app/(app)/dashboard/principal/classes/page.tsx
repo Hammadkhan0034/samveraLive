@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState, useEffect, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense, useMemo } from 'react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useRequireAuth } from '@/lib/hooks/useAuth';
@@ -14,8 +14,7 @@ function clsx(...xs: Array<string | false | undefined>) {
 }
 
 function ClassesPageContent() {
-  const { lang } = useLanguage();
-  const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
+  const { t, lang } = useLanguage();
   const { user, loading, isSigningIn } = useRequireAuth('principal');
   const { session } = useAuth?.() || {} as any;
   const router = useRouter();
@@ -389,7 +388,7 @@ function ClassesPageContent() {
       if (firstStudent) {
         setStudentToAssign({
           id: firstStudent.id,
-          name: `${studentsToReassign.length} ${studentsToReassign.length === 1 ? 'student' : 'students'}`,
+          name: `${studentsToReassign.length} ${studentsToReassign.length === 1 ? t.student_selected : t.students_selected}`,
           currentClass: firstStudent.current_class_name
         });
         setShowStudentConfirmModal(true);
@@ -730,9 +729,9 @@ function ClassesPageContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      <main className="mx-auto max-w-7xl px-4 py-8 md:px-6 mt-10">
+      <main className="mx-auto max-w-6xl px-4 py-8 md:px-6">
         {/* Header */}
-        <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="mb-6 flex flex-col gap-3 mt-14 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.back()}
@@ -1286,153 +1285,7 @@ function ClassesPageContent() {
   );
 }
 
-/* -------------------- Translations -------------------- */
-
-const enText = {
-  back: 'Back',
-  classes_management: 'Classes Management',
-  add_class: 'Add class',
-  departments: 'Departments / Classes',
-  overview_hint: 'Overview of groups across the school',
-  col_name: 'Name',
-  col_students: 'Students',
-  col_staff: 'Staff',
-  col_visible: 'Visible',
-  col_actions: 'Actions',
-  visible_yes: 'Yes',
-  show: 'Show',
-  edit: 'Edit',
-  add_student: 'Add Student',
-  assign_teacher: 'Assign Teacher',
-  add_student_to_class: 'Add Student to Class',
-  assign_teacher_to_class: 'Assign Teacher to Class',
-  student_assigned_success: 'Student assigned successfully',
-  students_assigned_success: 'Students assigned successfully',
-  student_selected: 'student selected',
-  students_selected: 'students selected',
-  assign_selected: 'Assign Selected',
-  teacher_assigned_success: 'Teacher assigned successfully',
-  teachers_updated_success: 'Teachers updated successfully',
-  teacher_removed_success: 'Teacher removed from class successfully',
-  delete: 'Delete',
-  delete_class: 'Delete Class',
-  delete_class_message: 'Are you sure you want to delete "{name}"? This action cannot be undone.',
-  class_deleted_success: 'Class deleted successfully',
-  deleting: 'Deleting...',
-  updating_teachers: 'Updating teachers...',
-  teacher_selected: 'teacher selected',
-  teachers_selected: 'teachers selected',
-  save: 'Save',
-  loading_students: 'Loading students...',
-  loading_teachers: 'Loading teachers...',
-  no_students_available: 'No students available',
-  no_teachers_available: 'No teachers available',
-  search_students_placeholder: 'Search students by name or email...',
-  search_teachers_placeholder: 'Search teachers by name or email...',
-  currently_in_class: 'Currently in class',
-  reassign_student: 'Reassign Student',
-  reassign_student_message: '{name} is currently assigned to {currentClass}. Do you want to reassign to {newClass}?',
-  no_class: 'No class',
-  confirm_reassign: 'Confirm Reassign',
-  assigning: 'Assigning...',
-  cancel: 'Cancel',
-  close: 'Close',
-  empty: 'No classes match your filters.',
-  class_name: 'Class Name',
-  class_name_placeholder: 'Enter class name',
-  class_description: 'Description',
-  class_description_placeholder: 'Enter class description (optional)',
-  class_capacity: 'Capacity',
-  class_capacity_placeholder: 'Enter max students',
-  create_class: 'Create Class',
-  class_created: 'Class Created!',
-  class_created_subtitle: 'Successfully added to your dashboard',
-  class_is_ready: 'Class is Ready',
-  class_created_message: 'has been created and is now visible in your dashboard.',
-  class_details: 'Class Details',
-  name: 'Name',
-  status: 'Status',
-  active: 'Active',
-  students: 'Students',
-  staff: 'Staff',
-  done: 'Done',
-  first_name: 'First Name',
-  last_name: 'Last Name',
-  email: 'Email',
-} as const;
-
-const isText = {
-  back: 'Til baka',
-  classes_management: 'Hópastjórnun',
-  add_class: 'Bæta við hóp',
-  departments: 'Deildir / Hópar',
-  overview_hint: 'Yfirsýn yfir hópa í skólanum',
-  col_name: 'Nafn',
-  col_students: 'Nemendur',
-  col_staff: 'Starfsmenn',
-  col_visible: 'Sýnileg',
-  col_actions: 'Aðgerðir',
-  visible_yes: 'Já',
-  show: 'Gera sýnilegt',
-  edit: 'Breyta',
-  add_student: 'Bæta við nemanda',
-  assign_teacher: 'Úthluta kennara',
-  add_student_to_class: 'Bæta nemanda við hóp',
-  assign_teacher_to_class: 'Úthluta kennara til hóps',
-  student_assigned_success: 'Nemandi hefur verið úthlutaður',
-  students_assigned_success: 'Nemendur hafa verið úthlutaðir',
-  student_selected: 'nemandi valinn',
-  students_selected: 'nemendur valdir',
-  assign_selected: 'Úthluta valda',
-  teacher_assigned_success: 'Kennari hefur verið úthlutaður',
-  teachers_updated_success: 'Kennarar hafa verið uppfærðir',
-  teacher_removed_success: 'Kennari hefur verið fjarlægður úr bekknum',
-  delete: 'Eyða',
-  delete_class: 'Eyða bekk',
-  delete_class_message: 'Ertu viss um að þú viljir eyða "{name}"? Þessa aðgerð er ekki hægt að afturkalla.',
-  class_deleted_success: 'Bekkur hefur verið eytt',
-  deleting: 'Eyði...',
-  updating_teachers: 'Uppfæri kennara...',
-  teacher_selected: 'kennari valinn',
-  teachers_selected: 'kennarar valdir',
-  save: 'Vista',
-  loading_students: 'Hleður nemendum...',
-  loading_teachers: 'Hleður kennurum...',
-  no_students_available: 'Engir nemendur tiltækir',
-  no_teachers_available: 'Engir kennarar tiltækir',
-  search_students_placeholder: 'Leita að nemendum eftir nafni eða netfangi...',
-  search_teachers_placeholder: 'Leita að kennurum eftir nafni eða netfangi...',
-  currently_in_class: 'Nú í hóp',
-  reassign_student: 'Endurúthluta nemanda',
-  reassign_student_message: '{name} er núna úthlutaður til {currentClass}. Viltu endurúthluta til {newClass}?',
-  no_class: 'Enginn hópur',
-  confirm_reassign: 'Staðfesta endurúthlutan',
-  assigning: 'Úthlutar...',
-  cancel: 'Hætta við',
-  close: 'Loka',
-  empty: 'Engir hópar passa við síur.',
-  class_name: 'Nafn hóps',
-  class_name_placeholder: 'Sláðu inn nafn hóps',
-  class_description: 'Lýsing',
-  class_description_placeholder: 'Sláðu inn lýsingu hóps (valfrjálst)',
-  class_capacity: 'Fjöldi',
-  class_capacity_placeholder: 'Sláðu inn hámarksfjölda nemenda',
-  create_class: 'Búa til hóp',
-  class_created: 'Hópur búinn til!',
-  class_created_subtitle: 'Bætt við yfirlitið þitt',
-  class_is_ready: 'Hópurinn er tilbúinn',
-  class_created_message: 'hefur verið búinn til og er nú sýnilegur í yfirlitinu þínu.',
-  class_details: 'Upplýsingar um hóp',
-  name: 'Nafn',
-  status: 'Staða',
-  active: 'Virkur',
-  students: 'Nemendur',
-  staff: 'Starfsmenn',
-  done: 'Lokið',
-  first_name: 'Fornafn',
-  last_name: 'Eftirnafn',
-  email: 'Netfang',
-} as const;
+// Translations removed - using centralized translations from @/lib/translations
 
 export default function ClassesPage() {
   return (

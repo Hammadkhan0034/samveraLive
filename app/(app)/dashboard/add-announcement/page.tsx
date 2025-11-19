@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useEffect, useState, Suspense } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
@@ -11,8 +11,7 @@ function AddAnnouncementContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, loading, isSigningIn } = useRequireAuth();
-  const { lang } = useLanguage();
-  const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
+  const { t } = useLanguage();
 
   const userMetadata = user?.user_metadata;
   const orgId = userMetadata?.org_id || userMetadata?.organization_id || userMetadata?.orgId;
@@ -101,8 +100,8 @@ function AddAnnouncementContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      <main className="mx-auto max-w-6xl px-4 py-8 md:px-6 mt-10 ml-20">
-        <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <main className="mx-auto max-w-6xl px-4 py-8 md:px-6  ml-20">
+        <div className="mb-6 flex flex-col gap-3 mt-14 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.back()}
@@ -111,11 +110,11 @@ function AddAnnouncementContent() {
               <ArrowLeft className="h-4 w-4" /> {t.back}
             </button>
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-                {editingAnnouncement?.id ? t.edit_announcement : t.title}
+              <h1 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+                {editingAnnouncement?.id ? t.edit_announcement : t.add_announcement || 'Add Announcement'}
               </h1>
               <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                {editingAnnouncement?.id ? '' : t.subtitle}
+                {editingAnnouncement?.id ? '' : t.add_announcement_subtitle || 'Create a new announcement for your organization or classes.'}
               </p>
             </div>
           </div>
@@ -133,7 +132,6 @@ function AddAnnouncementContent() {
             initialData={editingAnnouncement || undefined}
             orgId={finalOrgId}
             onSuccess={handleSuccess}
-            lang={lang}
             showClassSelector={true}
           />
         </div>
@@ -142,21 +140,7 @@ function AddAnnouncementContent() {
   );
 }
 
-const enText = {
-  title: 'Add Announcement',
-  subtitle: 'Create a new announcement for your organization or classes.',
-  back: 'Back',
-  loading: 'Loading...',
-  edit_announcement: 'Edit Announcement',
-};
-
-const isText = {
-  title: 'Bæta við tilkynningu',
-  subtitle: 'Búa til nýja tilkynningu fyrir stofnunina þína eða hópa.',
-  back: 'Til baka',
-  loading: 'Hleður...',
-  edit_announcement: 'Breyta tilkynningu',
-};
+// Translations removed - using centralized translations from @/lib/translations
 
 export default function AddAnnouncementPage() {
   return (

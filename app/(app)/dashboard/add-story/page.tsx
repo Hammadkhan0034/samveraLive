@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
@@ -11,8 +11,7 @@ import { supabase } from '@/lib/supabaseClient';
 type Lang = 'is' | 'en';
 
 export default function AddStoryPage() {
-  const { lang } = useLanguage();
-  const t = useMemo(() => (lang === 'is' ? isText : enText), [lang]);
+  const { t } = useLanguage();
   const { user } = useRequireAuth();
   const router = useRouter();
 
@@ -252,8 +251,8 @@ export default function AddStoryPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-        <main className="mx-auto max-w-5xl px-4 py-8 md:px-6 mt-10 ml-20">
-          <div className="mb-6 flex items-center gap-4">
+        <main className="mx-auto max-w-5xl px-4 py-8 md:px-6 ml-20">
+          <div className="mb-6 flex items-center gap-4 mt-14">
             <button
               onClick={() => router.back()}
               className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
@@ -261,8 +260,8 @@ export default function AddStoryPage() {
               <ArrowLeft className="h-4 w-4" /> {t.back}
             </button>
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.title}</h1>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.subtitle}</p>
+              <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.add_story || 'Add Story'}</h1>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.add_story_subtitle || 'Add a new story to your class'}</p>
             </div>
           </div>
 
@@ -420,14 +419,14 @@ export default function AddStoryPage() {
 
             <div className="mt-6 flex items-center justify-end gap-2">
               <button 
-                className="rounded-md px-4 py-2 text-sm text-slate-700 hover:underline dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed" 
+                className="rounded-md border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:underline  disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200" 
                 onClick={()=>router.push('/dashboard/stories')}
                 disabled={submitting}
               >
                 {t.cancel}
               </button>
               <button 
-                className="inline-flex items-center gap-2 rounded-md bg-slate-900 px-4 py-2 text-sm text-white disabled:opacity-60 disabled:cursor-not-allowed dark:bg-slate-100 dark:text-slate-900" 
+                className="inline-flex items-center gap-2 rounded-md bg-slate-900 px-4 py-2 text-sm text-white disabled:opacity-60 disabled:cursor-not-allowed dark:bg-black dark:text-white" 
                 disabled={submitting} 
                 onClick={submit}
               >
@@ -467,70 +466,6 @@ function toLocalInput(iso: string) {
   }
 }
 
-const enText = {
-  title: 'Create Story',
-  subtitle: 'Compose a story with optional text and images.',
-  back: 'Back',
-  class_label: 'Class',
-  org_wide: 'Organization-wide',
-  title_label: 'Title',
-  title_ph: 'Optional title',
-  caption_label: 'Caption',
-  caption_ph: 'Optional caption',
-  is_public: 'Public',
-  public_yes: 'Yes',
-  public_no: 'No',
-  expires_label: 'Expires at',
-  items_label: 'Story items',
-  items_empty: 'No items yet. Add text or image items.',
-  add_text_item: 'Add text item',
-  add_image_item: 'Add image item',
-  remove: 'Remove',
-  item_caption_ph: 'Item caption (optional)',
-  duration_ms_ph: 'Duration (ms, optional)',
-  image_data_ph: 'Image data (base64)',
-  mime_type_ph: 'MIME type e.g. image/jpeg',
-  item_type_text: 'Text',
-  item_type_image: 'Image',
-  save: 'Save',
-  creating: 'Creating...',
-  cancel: 'Cancel',
-  missing_fields: 'Missing required fields',
-  no_items_error: 'Please add at least one story item (text or image) before creating the story.',
-  choose_file: 'Choose Image File',
-};
-
-const isText = {
-  title: 'Búa til sögu',
-  subtitle: 'Settu saman sögu með texta og/eða myndum.',
-  back: 'Til baka',
-  class_label: 'Hópur',
-  org_wide: 'Stofnunarvítt',
-  title_label: 'Titill',
-  title_ph: 'Valfrjáls titill',
-  caption_label: 'Lýsing',
-  caption_ph: 'Valfrjáls lýsing',
-  is_public: 'Opinber',
-  public_yes: 'Já',
-  public_no: 'Nei',
-  expires_label: 'Rennur út',
-  items_label: 'Atriði sögunnar',
-  items_empty: 'Engin atriði enn. Bættu við texta eða mynd.',
-  add_text_item: 'Bæta við textaatriði',
-  add_image_item: 'Bæta við myndaatriði',
-  remove: 'Fjarlægja',
-  item_caption_ph: 'Lýsing atriðis (valfrjálst)',
-  duration_ms_ph: 'Lengd (ms, valfrjálst)',
-  upload_id_ph: 'Upload ID (fyrir mynd)',
-  mime_type_ph: 'MIME gerð t.d. image/jpeg',
-  item_type_text: 'Texti',
-  item_type_image: 'Mynd',
-  save: 'Vista',
-  creating: 'Býr til...',
-  cancel: 'Hætta við',
-  missing_fields: 'Vantar nauðsynleg svæði',
-  no_items_error: 'Vinsamlegast bættu við að minnsta kosti einu atriði sögunnar (texta eða mynd) áður en þú býrð til söguna.',
-  choose_file: 'Veldu myndaskrá',
-};
+// Translations removed - using centralized translations from @/lib/translations
 
 
