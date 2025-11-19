@@ -435,6 +435,8 @@ export const isText = {
 
   // Messages
   msg_title: 'Skilaboð',
+  messages_title: 'Skilaboð',
+  messages_subtitle: 'Skoða og stjórna skilaboðum',
   msg_hint: 'Foreldrar og starfsfólk fá uppfærslur hér.',
   inbox: 'Innhólf',
   unread: 'ný',

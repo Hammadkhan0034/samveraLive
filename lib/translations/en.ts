@@ -435,6 +435,8 @@ export const enText = {
 
   // Messages
   msg_title: 'Messages',
+  messages_title: 'Messages',
+  messages_subtitle: 'View and manage messages',
   msg_hint: 'Parents and staff can receive updates here.',
   inbox: 'Inbox',
   unread: 'new',

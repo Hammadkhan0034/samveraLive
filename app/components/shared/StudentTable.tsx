@@ -77,7 +77,7 @@ export function StudentTable({
       
       <div className="rounded-md dark:border-slate-700">
         <table className="w-full text-sm">
-          <thead className="sticky top-0 bg-black text-white   dark:bg-slate-800 z-10">
+          <thead className="sticky top-0 bg-black text-white  dark:bg-black z-10 ">
             <tr className="text-center  dark:border-slate-700 text-slate-600 dark:text-slate-300">
               {/* <th className="py-2 pr-3 text-white">{t.student_name}</th> */}
               <th className="py-2 pr-3 text-white">{t.student_first_name}</th>
