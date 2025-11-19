@@ -1,30 +1,19 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
-import { SquareCheck as CheckSquare, Baby, MessageSquare, Users, CalendarDays, Plus, Send, Paperclip, Bell, X, Search, ChevronLeft, ChevronRight, Edit, Trash2, Mail, Menu, Eye, MessageSquarePlus } from 'lucide-react';
+import { CalendarDays, Menu } from 'lucide-react';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import TeacherSidebar from '@/app/components/shared/TeacherSidebar';
+import TeacherSidebar, { TeacherSidebarRef } from '@/app/components/shared/TeacherSidebar';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
-
-type TileId = never;
-
-// Small helpers
-function clsx(...xs: Array<string | false | undefined>) {
-  return xs.filter(Boolean).join(' ');
-}
-const uid = () => Math.random().toString(36).slice(2, 9);
 
 export default function TeacherDashboard() {
   const { t, lang } = useLanguage();
-  const [active, setActive] = useState<TileId | null>(null);
   const { session } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
-  const [mounted, setMounted] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+  const sidebarRef = useRef<TeacherSidebarRef>(null);
 
   // Set active tab from query parameter
   useEffect(() => {
@@ -78,40 +67,28 @@ export default function TeacherDashboard() {
   }, [session?.user?.id, orgIdFromMetadata]);
   
   // Final org_id to use - from metadata, database, or default
-  const finalOrgId = orgIdFromMetadata || dbOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID || '1db3c97c-de42-4ad2-bb72-cc0b6cda69f7';
 
   // Messages count for sidebar badge
   const [messagesCount, setMessagesCount] = useState(0);
 
-  // Define tiles array - empty since all functionality moved to separate pages
-  const tiles: Array<{
-    id: TileId;
-    title: string;
-    desc: string;
-    Icon: React.ElementType;
-    badge?: string | number;
-    route?: string;
-  }> = [];
 
-
-
-  // Load messages count for KPI badge - only when messages tab is active or on initial mount
-  async function loadMessagesForKPI() {
-    if (!session?.user?.id) return;
-    try {
-      const res = await fetch(`/api/messages?userId=${session.user.id}&t=${Date.now()}`, { cache: 'no-store' });
-      const json = await res.json();
-      if (res.ok && json.threads) {
-        const unreadCount = json.threads.filter((t: any) => t.unread).length;
-        setMessagesCount(unreadCount);
-      }
-    } catch (error) {
-      console.error('Error loading messages count:', error);
-    }
-  }
 
   // Load messages count for sidebar badge
-  React.useEffect(() => {
+  useEffect(() => {
+    async function loadMessagesForKPI() {
+      if (!session?.user?.id) return;
+      try {
+        const res = await fetch(`/api/messages?userId=${session.user.id}&t=${Date.now()}`, { cache: 'no-store' });
+        const json = await res.json();
+        if (res.ok && json.threads) {
+          const unreadCount = json.threads.filter((t: any) => t.unread).length;
+          setMessagesCount(unreadCount);
+        }
+      } catch (error) {
+        console.error('Error loading messages count:', error);
+      }
+    }
+
     if (session?.user?.id) {
       loadMessagesForKPI();
     }
@@ -124,53 +101,9 @@ export default function TeacherDashboard() {
       <div className="flex flex-1 overflow-hidden h-full">
         {/* Sidebar */}
         <TeacherSidebar
-          activeTile={active}
-          onTileClick={(tileId) => setActive(tileId as TileId)}
-          sidebarOpen={sidebarOpen}
-          onSidebarClose={() => setSidebarOpen(false)}
-          tiles={tiles}
+          ref={sidebarRef}
           pathname={pathname}
-          attendanceTile={{
-            title: t.tile_att,
-            desc: t.tile_att_desc,
-          }}
-          diapersTile={{
-            title: t.tile_diaper,
-            desc: t.tile_diaper_desc,
-          }}
-          messagesTile={{
-            title: t.tile_msg,
-            desc: t.tile_msg_desc,
-            badge: messagesCount > 0 ? messagesCount : undefined,
-          }}
-          mediaTile={{
-            title: t.tile_media,
-            desc: t.tile_media_desc,
-          }}
-          storiesTile={{
-            title: t.tile_stories,
-            desc: t.tile_stories_desc,
-          }}
-          announcementsTile={{
-            title: t.tile_announcements,
-            desc: t.tile_announcements_desc,
-          }}
-          studentsTile={{
-            title: t.tile_students,
-            desc: t.tile_students_desc,
-          }}
-          guardiansTile={{
-            title: t.tile_guardians,
-            desc: t.tile_guardians_desc,
-          }}
-          linkStudentTile={{
-            title: t.tile_link_student,
-            desc: t.tile_link_student_desc,
-          }}
-          menusTile={{
-            title: t.tile_menus,
-            desc: t.tile_menus_desc,
-          }}
+          messagesBadge={messagesCount > 0 ? messagesCount : undefined}
         />
 
         {/* Main content area */}
@@ -181,7 +114,7 @@ export default function TeacherDashboard() {
               <div className="flex items-center gap-3">
                 {/* Mobile menu button */}
                 <button
-                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  onClick={() => sidebarRef.current?.open()}
                   className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
                   aria-label="Toggle sidebar"
                 >

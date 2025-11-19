@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { enText } from '@/lib/translations/en';
 import { isText } from '@/lib/translations/is';
 import { useRouter, usePathname } from 'next/navigation';
@@ -9,7 +9,7 @@ import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
-import TeacherSidebar from '@/app/components/shared/TeacherSidebar';
+import TeacherSidebar, { TeacherSidebarRef } from '@/app/components/shared/TeacherSidebar';
 
 type Lang = 'is' | 'en';
 type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
@@ -25,9 +25,7 @@ export default function TeacherDiapersPage() {
   const router = useRouter();
   const pathname = usePathname();
   const { user, loading, isSigningIn } = useRequireAuth('teacher');
-  const [mounted, setMounted] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+  const sidebarRef = useRef<TeacherSidebarRef>(null);
 
   // Show loading state while checking authentication
   if (loading || (isSigningIn && !user)) {
@@ -79,34 +77,8 @@ export default function TeacherDiapersPage() {
       <div className="flex flex-1 overflow-hidden h-full">
         {/* Sidebar */}
         <TeacherSidebar
-          sidebarOpen={sidebarOpen}
-          onSidebarClose={() => setSidebarOpen(false)}
-          tiles={tiles}
+          ref={sidebarRef}
           pathname={pathname}
-          attendanceTile={{
-            title: t.tile_att,
-            desc: t.tile_att_desc,
-          }}
-          diapersTile={{
-            title: t.tile_diaper,
-            desc: t.tile_diaper_desc,
-          }}
-          messagesTile={{
-            title: t.tile_msg,
-            desc: t.tile_msg_desc,
-          }}
-          mediaTile={{
-            title: t.tile_media,
-            desc: t.tile_media_desc,
-          }}
-          storiesTile={{
-            title: t.tile_stories,
-            desc: t.tile_stories_desc,
-          }}
-          announcementsTile={{
-            title: t.tile_announcements,
-            desc: t.tile_announcements_desc,
-          }}
         />
 
         {/* Main content area */}
@@ -117,7 +89,7 @@ export default function TeacherDiapersPage() {
               <div className="flex items-center gap-3">
                 {/* Mobile menu button */}
                 <button
-                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  onClick={() => sidebarRef.current?.open()}
                   className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
                   aria-label="Toggle sidebar"
                 >

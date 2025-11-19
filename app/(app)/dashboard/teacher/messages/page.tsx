@@ -7,7 +7,7 @@ import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
-import TeacherSidebar from '@/app/components/shared/TeacherSidebar';
+import TeacherSidebar, { TeacherSidebarRef } from '@/app/components/shared/TeacherSidebar';
 import { MessageThreadWithParticipants, MessageItem } from '@/lib/types/messages';
 import { useMessagesRealtime } from '@/lib/hooks/useMessagesRealtime';
 
@@ -27,9 +27,7 @@ export default function TeacherMessagesPage() {
   const router = useRouter();
   const pathname = usePathname();
   const { user, loading, isSigningIn } = useRequireAuth('teacher');
-  const [mounted, setMounted] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+  const sidebarRef = useRef<TeacherSidebarRef>(null);
 
   // Messages state
   const [threads, setThreads] = useState<MessageThreadWithParticipants[]>([]);
@@ -635,43 +633,9 @@ export default function TeacherMessagesPage() {
       <div className="flex flex-1 overflow-hidden h-full">
         {/* Sidebar */}
         <TeacherSidebar
-          sidebarOpen={sidebarOpen}
-          onSidebarClose={() => setSidebarOpen(false)}
-          tiles={tiles}
+          ref={sidebarRef}
           pathname={pathname}
-          attendanceTile={{
-            title: t.tile_att,
-            desc: t.tile_att_desc,
-          }}
-          diapersTile={{
-            title: t.tile_diaper,
-            desc: t.tile_diaper_desc,
-          }}
-          messagesTile={{
-            title: t.tile_msg,
-            desc: t.tile_msg_desc,
-            badge: messagesCount > 0 ? messagesCount : undefined,
-          }}
-          mediaTile={{
-            title: t.tile_media,
-            desc: t.tile_media_desc,
-          }}
-          storiesTile={{
-            title: t.tile_stories,
-            desc: t.tile_stories_desc,
-          }}
-          announcementsTile={{
-            title: t.tile_announcements,
-            desc: t.tile_announcements_desc,
-          }}
-          studentsTile={{
-            title: t.tile_students,
-            desc: t.tile_students_desc,
-          }}
-          guardiansTile={{
-            title: t.tile_guardians,
-            desc: t.tile_guardians_desc,
-          }}
+          messagesBadge={messagesCount > 0 ? messagesCount : undefined}
         />
 
         {/* Main content area */}
@@ -681,7 +645,7 @@ export default function TeacherMessagesPage() {
             <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div className="flex items-center gap-3">
                 <button
-                  onClick={() => setSidebarOpen(true)}
+                  onClick={() => sidebarRef.current?.open()}
                   className="md:hidden p-2 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700"
                   aria-label="Open sidebar"
                 >

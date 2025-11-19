@@ -1,9 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useImperativeHandle, forwardRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { X } from 'lucide-react';
 import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Bell, Users, Shield, Link as LinkIcon, Utensils } from 'lucide-react';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
 
 // Small helper
 function clsx(...xs: Array<string | false | undefined>) {
@@ -20,85 +21,43 @@ export interface TeacherSidebarTile {
 }
 
 export interface TeacherSidebarProps {
-  activeTile?: string | null; // For active state mode (used in main dashboard)
-  onTileClick?: (tileId: string) => void; // For active state mode (used in main dashboard)
-  sidebarOpen: boolean;
-  onSidebarClose: () => void;
-  tiles: TeacherSidebarTile[];
   pathname: string; // For route-based active state detection
-  // Special tiles that are always route-based
-  attendanceTile?: {
-    title: string;
-    desc: string;
-    badge?: string | number;
-  };
-  diapersTile?: {
-    title: string;
-    desc: string;
-  };
-  messagesTile?: {
-    title: string;
-    desc: string;
-    badge?: string | number;
-  };
-  mediaTile?: {
-    title: string;
-    desc: string;
-    badge?: string | number;
-  };
-  storiesTile?: {
-    title: string;
-    desc: string;
-  };
-  announcementsTile?: {
-    title: string;
-    desc: string;
-  };
-  studentsTile?: {
-    title: string;
-    desc: string;
-  };
-  guardiansTile?: {
-    title: string;
-    desc: string;
-  };
-  linkStudentTile?: {
-    title: string;
-    desc: string;
-  };
-  menusTile?: {
-    title: string;
-    desc: string;
-  };
+  messagesBadge?: number; // Optional badge count for messages
+  attendanceBadge?: number; // Optional badge count for attendance
+  mediaBadge?: number; // Optional badge count for media
+  tiles?: TeacherSidebarTile[]; // For any custom tiles
 }
 
-export default function TeacherSidebar({
-  activeTile,
-  onTileClick,
-  sidebarOpen,
-  onSidebarClose,
-  tiles,
-  pathname,
-  attendanceTile,
-  diapersTile,
-  messagesTile,
-  mediaTile,
-  storiesTile,
-  announcementsTile,
-  studentsTile,
-  guardiansTile,
-  linkStudentTile,
-  menusTile,
-}: TeacherSidebarProps) {
-  const router = useRouter();
+export interface TeacherSidebarRef {
+  open: () => void;
+  close: () => void;
+}
 
-  // Determine if a tile is active
+const TeacherSidebar = forwardRef<TeacherSidebarRef, TeacherSidebarProps>(({
+  pathname,
+  messagesBadge,
+  attendanceBadge,
+  mediaBadge,
+  tiles = [],
+}, ref) => {
+  const router = useRouter();
+  const { t } = useLanguage();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Expose methods to parent via ref
+  useImperativeHandle(ref, () => ({
+    open: () => setSidebarOpen(true),
+    close: () => setSidebarOpen(false),
+  }));
+
+  // Internal handler to close sidebar
+  const handleSidebarClose = () => {
+    setSidebarOpen(false);
+  };
+
+  // Determine if a tile is active based on pathname
   const isTileActive = (tileId: string, tileRoute?: string): boolean => {
-    // If activeTile is provided (active state mode), use it
-    if (activeTile !== undefined && activeTile !== null) {
-      return activeTile === tileId;
-    }
-    // Otherwise, use pathname-based detection (route mode)
+    // Use pathname-based detection (route mode)
     if (tileRoute) {
       // Extract pathname from route (remove query parameters for comparison)
       const routePathname = tileRoute.split('?')[0];
@@ -148,13 +107,8 @@ export default function TeacherSidebar({
   const handleTileClick = (tile: TeacherSidebarTile) => {
     if (tile.route) {
       // Route-based navigation - navigate to the new route
-      // This will completely replace the current page (e.g., messages page will be hidden)
       router.push(tile.route);
-      onSidebarClose();
-    } else if (onTileClick) {
-      // Active state-based navigation
-      onTileClick(tile.id);
-      onSidebarClose();
+      handleSidebarClose();
     }
   };
 
@@ -163,7 +117,7 @@ export default function TeacherSidebar({
     if (pathname !== '/dashboard/teacher/attendance') {
       router.replace('/dashboard/teacher/attendance');
     }
-    onSidebarClose();
+    handleSidebarClose();
   };
 
   // Handle diapers tile click
@@ -171,7 +125,7 @@ export default function TeacherSidebar({
     if (pathname !== '/dashboard/teacher/diapers') {
       router.replace('/dashboard/teacher/diapers');
     }
-    onSidebarClose();
+    handleSidebarClose();
   };
 
   // Handle messages tile click
@@ -179,7 +133,7 @@ export default function TeacherSidebar({
     if (pathname !== '/dashboard/teacher/messages') {
       router.replace('/dashboard/teacher/messages');
     }
-    onSidebarClose();
+    handleSidebarClose();
   };
 
   // Handle media tile click
@@ -187,7 +141,7 @@ export default function TeacherSidebar({
     if (pathname !== '/dashboard/teacher/media') {
       router.replace('/dashboard/teacher/media');
     }
-    onSidebarClose();
+    handleSidebarClose();
   };
 
   // Handle stories tile click
@@ -195,7 +149,7 @@ export default function TeacherSidebar({
     if (pathname !== '/dashboard/teacher/stories') {
       router.replace('/dashboard/teacher/stories');
     }
-    onSidebarClose();
+    handleSidebarClose();
   };
 
   // Handle announcements tile click
@@ -203,7 +157,7 @@ export default function TeacherSidebar({
     if (pathname !== '/dashboard/teacher/announcements') {
       router.replace('/dashboard/teacher/announcements');
     }
-    onSidebarClose();
+    handleSidebarClose();
   };
 
   // Handle students tile click
@@ -211,7 +165,7 @@ export default function TeacherSidebar({
     if (pathname !== '/dashboard/teacher/students') {
       router.replace('/dashboard/teacher/students');
     }
-    onSidebarClose();
+    handleSidebarClose();
   };
 
   // Handle guardians tile click
@@ -219,7 +173,7 @@ export default function TeacherSidebar({
     if (pathname !== '/dashboard/teacher/guardians') {
       router.replace('/dashboard/teacher/guardians');
     }
-    onSidebarClose();
+    handleSidebarClose();
   };
 
   // Handle link student tile click
@@ -227,7 +181,7 @@ export default function TeacherSidebar({
     if (pathname !== '/dashboard/teacher/link-student') {
       router.replace('/dashboard/teacher/link-student');
     }
-    onSidebarClose();
+    handleSidebarClose();
   };
 
   // Handle menus tile click
@@ -235,7 +189,7 @@ export default function TeacherSidebar({
     if (pathname !== '/dashboard/teacher/menus') {
       router.replace('/dashboard/teacher/menus');
     }
-    onSidebarClose();
+    handleSidebarClose();
   };
 
   const isAttendanceActive = pathname === '/dashboard/teacher/attendance';
@@ -264,7 +218,7 @@ export default function TeacherSidebar({
           <div className="mb-4 flex items-center justify-between md:hidden">
             <h2 className="text-lg font-semibold text-slate-100 dark:text-slate-100">Menu</h2>
             <button
-              onClick={onSidebarClose}
+              onClick={handleSidebarClose}
               className="p-2 rounded-lg hover:bg-slate-800 dark:hover:bg-slate-700 text-slate-200 dark:text-slate-300"
               aria-label="Close sidebar"
             >
@@ -273,379 +227,359 @@ export default function TeacherSidebar({
           </div>
           <nav className="space-y-1">
             {/* Attendance tile - always route-based */}
-            {attendanceTile && (
-              <button
-                onClick={handleAttendanceClick}
-                className={clsx(
-                  'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
-                  'hover:bg-slate-800 dark:hover:bg-slate-700',
-                  isAttendanceActive
-                    ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
-                    : 'border-l-4 border-transparent'
-                )}
-              >
-                <span className={clsx(
-                  'flex-shrink-0 rounded-lg p-2',
-                  isAttendanceActive
-                    ? 'bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900'
-                    : 'bg-slate-800 dark:bg-slate-700 text-slate-200 dark:text-slate-300'
-                )}>
-                  <CheckSquare className="h-5 w-5" />
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className={clsx(
-                      'font-medium truncate',
-                      isAttendanceActive
-                        ? 'text-slate-100 dark:text-slate-100'
-                        : 'text-slate-200 dark:text-slate-300'
-                    )}>
-                      {attendanceTile.title}
+            <button
+              onClick={handleAttendanceClick}
+              className={clsx(
+                'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                'hover:bg-slate-800 dark:hover:bg-slate-700',
+                isAttendanceActive
+                  ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
+                  : 'border-l-4 border-transparent'
+              )}
+            >
+              <span className={clsx(
+                'flex-shrink-0 rounded-lg p-2',
+                isAttendanceActive
+                  ? 'bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900'
+                  : 'bg-slate-800 dark:bg-slate-700 text-slate-200 dark:text-slate-300'
+              )}>
+                <CheckSquare className="h-5 w-5" />
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <span className={clsx(
+                    'font-medium truncate',
+                    isAttendanceActive
+                      ? 'text-slate-100 dark:text-slate-100'
+                      : 'text-slate-200 dark:text-slate-300'
+                  )}>
+                    {t.tile_att}
+                  </span>
+                  {attendanceBadge !== undefined && attendanceBadge !== null && attendanceBadge !== 0 && (
+                    <span className="flex-shrink-0 rounded-full bg-slate-700 dark:bg-slate-600 px-2 py-0.5 text-xs font-medium text-slate-100 dark:text-slate-300" suppressHydrationWarning>
+                      {attendanceBadge}
                     </span>
-                    {attendanceTile.badge !== undefined && attendanceTile.badge !== null && attendanceTile.badge !== 0 && (
-                      <span className="flex-shrink-0 rounded-full bg-slate-700 dark:bg-slate-600 px-2 py-0.5 text-xs font-medium text-slate-100 dark:text-slate-300" suppressHydrationWarning>
-                        {attendanceTile.badge}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{attendanceTile.desc}</p>
+                  )}
                 </div>
-              </button>
-            )}
+                <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{t.tile_att_desc}</p>
+              </div>
+            </button>
 
             {/* Diapers tile - always route-based */}
-            {diapersTile && (
-              <button
-                onClick={handleDiapersClick}
-                className={clsx(
-                  'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
-                  'hover:bg-slate-800 dark:hover:bg-slate-700',
-                  isDiapersActive
-                    ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
-                    : 'border-l-4 border-transparent'
-                )}
-              >
-                <span className={clsx(
-                  'flex-shrink-0 rounded-lg p-2',
-                  isDiapersActive
-                    ? 'bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900'
-                    : 'bg-slate-800 dark:bg-slate-700 text-slate-200 dark:text-slate-300'
-                )}>
-                  <Baby className="h-5 w-5" />
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className={clsx(
-                      'font-medium truncate',
-                      isDiapersActive
-                        ? 'text-slate-100 dark:text-slate-100'
-                        : 'text-slate-200 dark:text-slate-300'
-                    )}>
-                      {diapersTile.title}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{diapersTile.desc}</p>
+            <button
+              onClick={handleDiapersClick}
+              className={clsx(
+                'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                'hover:bg-slate-800 dark:hover:bg-slate-700',
+                isDiapersActive
+                  ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
+                  : 'border-l-4 border-transparent'
+              )}
+            >
+              <span className={clsx(
+                'flex-shrink-0 rounded-lg p-2',
+                isDiapersActive
+                  ? 'bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900'
+                  : 'bg-slate-800 dark:bg-slate-700 text-slate-200 dark:text-slate-300'
+              )}>
+                <Baby className="h-5 w-5" />
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <span className={clsx(
+                    'font-medium truncate',
+                    isDiapersActive
+                      ? 'text-slate-100 dark:text-slate-100'
+                      : 'text-slate-200 dark:text-slate-300'
+                  )}>
+                    {t.tile_diaper}
+                  </span>
                 </div>
-              </button>
-            )}
+                <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{t.tile_diaper_desc}</p>
+              </div>
+            </button>
 
             {/* Messages tile - always route-based */}
-            {messagesTile && (
-              <button
-                onClick={handleMessagesClick}
-                className={clsx(
-                  'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
-                  'hover:bg-slate-800 dark:hover:bg-slate-700',
-                  isMessagesActive
-                    ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
-                    : 'border-l-4 border-transparent'
-                )}
-              >
-                <span className={clsx(
-                  'flex-shrink-0 rounded-lg p-2',
-                  isMessagesActive
-                    ? 'bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900'
-                    : 'bg-slate-800 dark:bg-slate-700 text-slate-200 dark:text-slate-300'
-                )}>
-                  <MessageSquare className="h-5 w-5" />
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className={clsx(
-                      'font-medium truncate',
-                      isMessagesActive
-                        ? 'text-slate-100 dark:text-slate-100'
-                        : 'text-slate-200 dark:text-slate-300'
-                    )}>
-                      {messagesTile.title}
+            <button
+              onClick={handleMessagesClick}
+              className={clsx(
+                'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                'hover:bg-slate-800 dark:hover:bg-slate-700',
+                isMessagesActive
+                  ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
+                  : 'border-l-4 border-transparent'
+              )}
+            >
+              <span className={clsx(
+                'flex-shrink-0 rounded-lg p-2',
+                isMessagesActive
+                  ? 'bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900'
+                  : 'bg-slate-800 dark:bg-slate-700 text-slate-200 dark:text-slate-300'
+              )}>
+                <MessageSquare className="h-5 w-5" />
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <span className={clsx(
+                    'font-medium truncate',
+                    isMessagesActive
+                      ? 'text-slate-100 dark:text-slate-100'
+                      : 'text-slate-200 dark:text-slate-300'
+                  )}>
+                    {t.tile_msg}
+                  </span>
+                  {messagesBadge !== undefined && messagesBadge !== null && messagesBadge !== 0 && (
+                    <span className="flex-shrink-0 rounded-full bg-slate-700 dark:bg-slate-600 px-2 py-0.5 text-xs font-medium text-slate-100 dark:text-slate-300" suppressHydrationWarning>
+                      {messagesBadge}
                     </span>
-                    {messagesTile.badge !== undefined && messagesTile.badge !== null && messagesTile.badge !== 0 && (
-                      <span className="flex-shrink-0 rounded-full bg-slate-700 dark:bg-slate-600 px-2 py-0.5 text-xs font-medium text-slate-100 dark:text-slate-300" suppressHydrationWarning>
-                        {messagesTile.badge}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{messagesTile.desc}</p>
+                  )}
                 </div>
-              </button>
-            )}
+                <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{t.tile_msg_desc}</p>
+              </div>
+            </button>
 
             {/* Media tile - always route-based */}
-            {mediaTile && (
-              <button
-                onClick={handleMediaClick}
-                className={clsx(
-                  'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
-                  'hover:bg-slate-800 dark:hover:bg-slate-700',
-                  isMediaActive
-                    ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
-                    : 'border-l-4 border-transparent'
-                )}
-              >
-                <span className={clsx(
-                  'flex-shrink-0 rounded-lg p-2',
-                  isMediaActive
-                    ? 'bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900'
-                    : 'bg-slate-800 dark:bg-slate-700 text-slate-200 dark:text-slate-300'
-                )}>
-                  <Camera className="h-5 w-5" />
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className={clsx(
-                      'font-medium truncate',
-                      isMediaActive
-                        ? 'text-slate-100 dark:text-slate-100'
-                        : 'text-slate-200 dark:text-slate-300'
-                    )}>
-                      {mediaTile.title}
+            <button
+              onClick={handleMediaClick}
+              className={clsx(
+                'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                'hover:bg-slate-800 dark:hover:bg-slate-700',
+                isMediaActive
+                  ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
+                  : 'border-l-4 border-transparent'
+              )}
+            >
+              <span className={clsx(
+                'flex-shrink-0 rounded-lg p-2',
+                isMediaActive
+                  ? 'bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900'
+                  : 'bg-slate-800 dark:bg-slate-700 text-slate-200 dark:text-slate-300'
+              )}>
+                <Camera className="h-5 w-5" />
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <span className={clsx(
+                    'font-medium truncate',
+                    isMediaActive
+                      ? 'text-slate-100 dark:text-slate-100'
+                      : 'text-slate-200 dark:text-slate-300'
+                  )}>
+                    {t.tile_media}
+                  </span>
+                  {mediaBadge !== undefined && mediaBadge !== null && mediaBadge !== 0 && (
+                    <span className="flex-shrink-0 rounded-full bg-slate-700 dark:bg-slate-600 px-2 py-0.5 text-xs font-medium text-slate-100 dark:text-slate-300" suppressHydrationWarning>
+                      {mediaBadge}
                     </span>
-                    {mediaTile.badge !== undefined && mediaTile.badge !== null && mediaTile.badge !== 0 && (
-                      <span className="flex-shrink-0 rounded-full bg-slate-700 dark:bg-slate-600 px-2 py-0.5 text-xs font-medium text-slate-100 dark:text-slate-300" suppressHydrationWarning>
-                        {mediaTile.badge}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{mediaTile.desc}</p>
+                  )}
                 </div>
-              </button>
-            )}
+                <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{t.tile_media_desc}</p>
+              </div>
+            </button>
 
             {/* Stories tile - always route-based */}
-            {storiesTile && (
-              <button
-                onClick={handleStoriesClick}
-                className={clsx(
-                  'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
-                  'hover:bg-slate-800 dark:hover:bg-slate-700',
-                  isStoriesActive
-                    ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
-                    : 'border-l-4 border-transparent'
-                )}
-              >
-                <span className={clsx(
-                  'flex-shrink-0 rounded-lg p-2',
-                  isStoriesActive
-                    ? 'bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900'
-                    : 'bg-slate-800 dark:bg-slate-700 text-slate-200 dark:text-slate-300'
-                )}>
-                  <Timer className="h-5 w-5" />
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className={clsx(
-                      'font-medium truncate',
-                      isStoriesActive
-                        ? 'text-slate-100 dark:text-slate-100'
-                        : 'text-slate-200 dark:text-slate-300'
-                    )}>
-                      {storiesTile.title}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{storiesTile.desc}</p>
+            <button
+              onClick={handleStoriesClick}
+              className={clsx(
+                'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                'hover:bg-slate-800 dark:hover:bg-slate-700',
+                isStoriesActive
+                  ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
+                  : 'border-l-4 border-transparent'
+              )}
+            >
+              <span className={clsx(
+                'flex-shrink-0 rounded-lg p-2',
+                isStoriesActive
+                  ? 'bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900'
+                  : 'bg-slate-800 dark:bg-slate-700 text-slate-200 dark:text-slate-300'
+              )}>
+                <Timer className="h-5 w-5" />
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <span className={clsx(
+                    'font-medium truncate',
+                    isStoriesActive
+                      ? 'text-slate-100 dark:text-slate-100'
+                      : 'text-slate-200 dark:text-slate-300'
+                  )}>
+                    {t.tile_stories}
+                  </span>
                 </div>
-              </button>
-            )}
+                <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{t.tile_stories_desc}</p>
+              </div>
+            </button>
 
             {/* Announcements tile - always route-based */}
-            {announcementsTile && (
-              <button
-                onClick={handleAnnouncementsClick}
-                className={clsx(
-                  'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
-                  'hover:bg-slate-800 dark:hover:bg-slate-700',
-                  isAnnouncementsActive
-                    ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
-                    : 'border-l-4 border-transparent'
-                )}
-              >
-                <span className={clsx(
-                  'flex-shrink-0 rounded-lg p-2',
-                  isAnnouncementsActive
-                    ? 'bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900'
-                    : 'bg-slate-800 dark:bg-slate-700 text-slate-200 dark:text-slate-300'
-                )}>
-                  <Bell className="h-5 w-5" />
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className={clsx(
-                      'font-medium truncate',
-                      isAnnouncementsActive
-                        ? 'text-slate-100 dark:text-slate-100'
-                        : 'text-slate-200 dark:text-slate-300'
-                    )}>
-                      {announcementsTile.title}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{announcementsTile.desc}</p>
+            <button
+              onClick={handleAnnouncementsClick}
+              className={clsx(
+                'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                'hover:bg-slate-800 dark:hover:bg-slate-700',
+                isAnnouncementsActive
+                  ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
+                  : 'border-l-4 border-transparent'
+              )}
+            >
+              <span className={clsx(
+                'flex-shrink-0 rounded-lg p-2',
+                isAnnouncementsActive
+                  ? 'bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900'
+                  : 'bg-slate-800 dark:bg-slate-700 text-slate-200 dark:text-slate-300'
+              )}>
+                <Bell className="h-5 w-5" />
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <span className={clsx(
+                    'font-medium truncate',
+                    isAnnouncementsActive
+                      ? 'text-slate-100 dark:text-slate-100'
+                      : 'text-slate-200 dark:text-slate-300'
+                  )}>
+                    {t.tile_announcements}
+                  </span>
                 </div>
-              </button>
-            )}
+                <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{t.tile_announcements_desc}</p>
+              </div>
+            </button>
 
             {/* Students tile - always route-based */}
-            {studentsTile && (
-              <button
-                onClick={handleStudentsClick}
-                className={clsx(
-                  'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
-                  'hover:bg-slate-800 dark:hover:bg-slate-700',
-                  isStudentsActive
-                    ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
-                    : 'border-l-4 border-transparent'
-                )}
-              >
-                <span className={clsx(
-                  'flex-shrink-0 rounded-lg p-2',
-                  isStudentsActive
-                    ? 'bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900'
-                    : 'bg-slate-800 dark:bg-slate-700 text-slate-200 dark:text-slate-300'
-                )}>
-                  <Users className="h-5 w-5" />
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className={clsx(
-                      'font-medium truncate',
-                      isStudentsActive
-                        ? 'text-slate-100 dark:text-slate-100'
-                        : 'text-slate-200 dark:text-slate-300'
-                    )}>
-                      {studentsTile.title}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{studentsTile.desc}</p>
+            <button
+              onClick={handleStudentsClick}
+              className={clsx(
+                'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                'hover:bg-slate-800 dark:hover:bg-slate-700',
+                isStudentsActive
+                  ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
+                  : 'border-l-4 border-transparent'
+              )}
+            >
+              <span className={clsx(
+                'flex-shrink-0 rounded-lg p-2',
+                isStudentsActive
+                  ? 'bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900'
+                  : 'bg-slate-800 dark:bg-slate-700 text-slate-200 dark:text-slate-300'
+              )}>
+                <Users className="h-5 w-5" />
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <span className={clsx(
+                    'font-medium truncate',
+                    isStudentsActive
+                      ? 'text-slate-100 dark:text-slate-100'
+                      : 'text-slate-200 dark:text-slate-300'
+                  )}>
+                    {t.tile_students}
+                  </span>
                 </div>
-              </button>
-            )}
+                <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{t.tile_students_desc}</p>
+              </div>
+            </button>
 
             {/* Guardians tile - always route-based */}
-            {guardiansTile && (
-              <button
-                onClick={handleGuardiansClick}
-                className={clsx(
-                  'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
-                  'hover:bg-slate-800 dark:hover:bg-slate-700',
-                  isGuardiansActive
-                    ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
-                    : 'border-l-4 border-transparent'
-                )}
-              >
-                <span className={clsx(
-                  'flex-shrink-0 rounded-lg p-2',
-                  isGuardiansActive
-                    ? 'bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900'
-                    : 'bg-slate-800 dark:bg-slate-700 text-slate-200 dark:text-slate-300'
-                )}>
-                  <Shield className="h-5 w-5" />
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className={clsx(
-                      'font-medium truncate',
-                      isGuardiansActive
-                        ? 'text-slate-100 dark:text-slate-100'
-                        : 'text-slate-200 dark:text-slate-300'
-                    )}>
-                      {guardiansTile.title}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{guardiansTile.desc}</p>
+            <button
+              onClick={handleGuardiansClick}
+              className={clsx(
+                'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                'hover:bg-slate-800 dark:hover:bg-slate-700',
+                isGuardiansActive
+                  ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
+                  : 'border-l-4 border-transparent'
+              )}
+            >
+              <span className={clsx(
+                'flex-shrink-0 rounded-lg p-2',
+                isGuardiansActive
+                  ? 'bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900'
+                  : 'bg-slate-800 dark:bg-slate-700 text-slate-200 dark:text-slate-300'
+              )}>
+                <Shield className="h-5 w-5" />
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <span className={clsx(
+                    'font-medium truncate',
+                    isGuardiansActive
+                      ? 'text-slate-100 dark:text-slate-100'
+                      : 'text-slate-200 dark:text-slate-300'
+                  )}>
+                    {t.tile_guardians || 'Guardians'}
+                  </span>
                 </div>
-              </button>
-            )}
+                <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{t.tile_guardians_desc || 'Manage guardians'}</p>
+              </div>
+            </button>
 
             {/* Link Student tile - always route-based */}
-            {linkStudentTile && (
-              <button
-                onClick={handleLinkStudentClick}
-                className={clsx(
-                  'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
-                  'hover:bg-slate-800 dark:hover:bg-slate-700',
-                  isLinkStudentActive
-                    ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
-                    : 'border-l-4 border-transparent'
-                )}
-              >
-                <span className={clsx(
-                  'flex-shrink-0 rounded-lg p-2',
-                  isLinkStudentActive
-                    ? 'bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900'
-                    : 'bg-slate-800 dark:bg-slate-700 text-slate-200 dark:text-slate-300'
-                )}>
-                  <LinkIcon className="h-5 w-5" />
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className={clsx(
-                      'font-medium truncate',
-                      isLinkStudentActive
-                        ? 'text-slate-100 dark:text-slate-100'
-                        : 'text-slate-200 dark:text-slate-300'
-                    )}>
-                      {linkStudentTile.title}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{linkStudentTile.desc}</p>
+            <button
+              onClick={handleLinkStudentClick}
+              className={clsx(
+                'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                'hover:bg-slate-800 dark:hover:bg-slate-700',
+                isLinkStudentActive
+                  ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
+                  : 'border-l-4 border-transparent'
+              )}
+            >
+              <span className={clsx(
+                'flex-shrink-0 rounded-lg p-2',
+                isLinkStudentActive
+                  ? 'bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900'
+                  : 'bg-slate-800 dark:bg-slate-700 text-slate-200 dark:text-slate-300'
+              )}>
+                <LinkIcon className="h-5 w-5" />
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <span className={clsx(
+                    'font-medium truncate',
+                    isLinkStudentActive
+                      ? 'text-slate-100 dark:text-slate-100'
+                      : 'text-slate-200 dark:text-slate-300'
+                  )}>
+                    {t.tile_link_student || 'Link Student'}
+                  </span>
                 </div>
-              </button>
-            )}
+                <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{t.tile_link_student_desc || 'Link a guardian to a student'}</p>
+              </div>
+            </button>
 
             {/* Menus tile - always route-based */}
-            {menusTile && (
-              <button
-                onClick={handleMenusClick}
-                className={clsx(
-                  'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
-                  'hover:bg-slate-800 dark:hover:bg-slate-700',
-                  isMenusActive
-                    ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
-                    : 'border-l-4 border-transparent'
-                )}
-              >
-                <span className={clsx(
-                  'flex-shrink-0 rounded-lg p-2',
-                  isMenusActive
-                    ? 'bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900'
-                    : 'bg-slate-800 dark:bg-slate-700 text-slate-200 dark:text-slate-300'
-                )}>
-                  <Utensils className="h-5 w-5" />
-                </span>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className={clsx(
-                      'font-medium truncate',
-                      isMenusActive
-                        ? 'text-slate-100 dark:text-slate-100'
-                        : 'text-slate-200 dark:text-slate-300'
-                    )}>
-                      {menusTile.title}
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{menusTile.desc}</p>
+            <button
+              onClick={handleMenusClick}
+              className={clsx(
+                'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                'hover:bg-slate-800 dark:hover:bg-slate-700',
+                isMenusActive
+                  ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
+                  : 'border-l-4 border-transparent'
+              )}
+            >
+              <span className={clsx(
+                'flex-shrink-0 rounded-lg p-2',
+                isMenusActive
+                  ? 'bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900'
+                  : 'bg-slate-800 dark:bg-slate-700 text-slate-200 dark:text-slate-300'
+              )}>
+                <Utensils className="h-5 w-5" />
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <span className={clsx(
+                    'font-medium truncate',
+                    isMenusActive
+                      ? 'text-slate-100 dark:text-slate-100'
+                      : 'text-slate-200 dark:text-slate-300'
+                  )}>
+                    {t.tile_menus || 'Menus'}
+                  </span>
                 </div>
-              </button>
-            )}
+                <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{t.tile_menus_desc || 'Manage daily menus'}</p>
+              </div>
+            </button>
 
             {/* Other tiles */}
             {tiles.map((tile) => {
@@ -699,11 +633,15 @@ export default function TeacherSidebar({
       {sidebarOpen && (
         <div
           className="fixed top-14 bottom-0 left-0 right-0 bg-black bg-opacity-50 z-40 md:hidden"
-          onClick={onSidebarClose}
+          onClick={handleSidebarClose}
           aria-hidden="true"
         />
       )}
     </>
   );
-}
+});
+
+TeacherSidebar.displayName = 'TeacherSidebar';
+
+export default TeacherSidebar;
 

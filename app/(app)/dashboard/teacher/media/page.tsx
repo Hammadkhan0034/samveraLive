@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Camera, Timer, Users, Bell, MessageSquare, Link as LinkIcon, Utensils, Plus } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
-import TeacherSidebar from '@/app/components/shared/TeacherSidebar';
+import TeacherSidebar, { TeacherSidebarRef } from '@/app/components/shared/TeacherSidebar';
 
 type Lang = 'is' | 'en';
 type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
@@ -19,7 +19,7 @@ export default function TeacherMediaPage() {
   const router = useRouter();
   const pathname = usePathname();
   const { user, loading: authLoading, isSigningIn } = useRequireAuth('teacher');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const sidebarRef = useRef<TeacherSidebarRef>(null);
 
   // Media state
   const [uploads, setUploads] = useState<string[]>([]); // data URLs for image previews
@@ -72,43 +72,9 @@ export default function TeacherMediaPage() {
     <div className="flex flex-col h-screen overflow-hidden md:pt-14">
       <div className="flex flex-1 overflow-hidden h-full">
         <TeacherSidebar
-          sidebarOpen={sidebarOpen}
-          onSidebarClose={() => setSidebarOpen(false)}
-          tiles={tiles}
+          ref={sidebarRef}
           pathname={pathname}
-          attendanceTile={{
-            title: t.tile_att,
-            desc: t.tile_att_desc,
-          }}
-          diapersTile={{
-            title: t.tile_diaper,
-            desc: t.tile_diaper_desc,
-          }}
-          messagesTile={{
-            title: t.tile_msg,
-            desc: t.tile_msg_desc,
-          }}
-          mediaTile={{
-            title: t.tile_media,
-            desc: t.tile_media_desc,
-            badge: uploads.length > 0 ? uploads.length : undefined,
-          }}
-          storiesTile={{
-            title: t.tile_stories,
-            desc: t.tile_stories_desc,
-          }}
-          announcementsTile={{
-            title: t.tile_announcements,
-            desc: t.tile_announcements_desc,
-          }}
-          studentsTile={{
-            title: t.tile_students,
-            desc: t.tile_students_desc,
-          }}
-          guardiansTile={{
-            title: t.tile_guardians,
-            desc: t.tile_guardians_desc,
-          }}
+          mediaBadge={uploads.length > 0 ? uploads.length : undefined}
         />
         <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900">
           <div className="p-2 md:p-6 lg:p-8">

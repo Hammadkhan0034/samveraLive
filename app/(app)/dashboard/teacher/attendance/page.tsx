@@ -9,7 +9,7 @@ import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { enText } from '@/lib/translations/en';
 import { isText } from '@/lib/translations/is';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
-import TeacherSidebar from '@/app/components/shared/TeacherSidebar';
+import TeacherSidebar, { TeacherSidebarRef } from '@/app/components/shared/TeacherSidebar';
 
 type Lang = 'is' | 'en';
 type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
@@ -25,9 +25,7 @@ export default function TeacherAttendancePage() {
   const router = useRouter();
   const pathname = usePathname();
   const { user, loading, isSigningIn } = useRequireAuth('teacher');
-  const [mounted, setMounted] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+  const sidebarRef = useRef<TeacherSidebarRef>(null);
 
   // Try to get org_id from multiple possible locations
   const userMetadata = session?.user?.user_metadata;
@@ -453,43 +451,9 @@ export default function TeacherAttendancePage() {
       <div className="flex flex-1 overflow-hidden h-full">
         {/* Sidebar */}
         <TeacherSidebar
-          sidebarOpen={sidebarOpen}
-          onSidebarClose={() => setSidebarOpen(false)}
-          tiles={tiles}
+          ref={sidebarRef}
           pathname={pathname}
-          attendanceTile={{
-            title: t.tile_att,
-            desc: t.tile_att_desc,
-            badge: kidsIn,
-          }}
-          diapersTile={{
-            title: t.tile_diaper,
-            desc: t.tile_diaper_desc,
-          }}
-          messagesTile={{
-            title: t.tile_msg,
-            desc: t.tile_msg_desc,
-          }}
-          mediaTile={{
-            title: t.tile_media,
-            desc: t.tile_media_desc,
-          }}
-          storiesTile={{
-            title: t.tile_stories,
-            desc: t.tile_stories_desc,
-          }}
-          announcementsTile={{
-            title: t.tile_announcements,
-            desc: t.tile_announcements_desc,
-          }}
-          studentsTile={{
-            title: t.tile_students,
-            desc: t.tile_students_desc,
-          }}
-          guardiansTile={{
-            title: t.tile_guardians,
-            desc: t.tile_guardians_desc,
-          }}
+          attendanceBadge={kidsIn}
         />
 
         {/* Main content area */}
@@ -500,7 +464,7 @@ export default function TeacherAttendancePage() {
               <div className="flex items-center gap-3">
                 {/* Mobile menu button */}
                 <button
-                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  onClick={() => sidebarRef.current?.open()}
                   className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
                   aria-label="Toggle sidebar"
                 >
