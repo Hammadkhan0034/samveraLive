@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
 import TeacherSidebar, { TeacherSidebarRef } from '@/app/components/shared/TeacherSidebar';
+import LoadingSkeleton from '@/app/components/shared/LoadingSkeleton';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 
 type Lang = 'is' | 'en';
@@ -502,7 +503,9 @@ export default function TeacherStoriesPage() {
               {/* Stories Table */}
               <div className="mt-6 rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
                 {loading && stories.length === 0 ? (
-                  <div className="p-6 text-slate-600 dark:text-slate-400">{t.loading_stories || 'Loading stories…'}</div>
+                  <div className="p-6">
+                    <LoadingSkeleton type="table" rows={5} />
+                  </div>
                 ) : stories.length === 0 ? (
                   <div className="p-6 text-center text-slate-600 dark:text-slate-400">{t.empty_stories || 'No stories yet.'}</div>
                 ) : (

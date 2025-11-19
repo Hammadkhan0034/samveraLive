@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
 import TeacherSidebar, { TeacherSidebarRef } from '@/app/components/shared/TeacherSidebar';
+import LoadingSkeleton from '@/app/components/shared/LoadingSkeleton';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 
 type Lang = 'is' | 'en';
@@ -291,7 +292,7 @@ export default function TeacherMenusPage() {
                   </div>
                 )}
                 {loadingMenus ? (
-                  <div className="text-center py-8 text-slate-600 dark:text-slate-400">{lang === 'is' ? 'Hleður...' : 'Loading...'}</div>
+                  <LoadingSkeleton type="table" rows={5} />
                 ) : menus.length === 0 ? (
                   <div className="text-center py-12">
                     <Utensils className="h-12 w-12 mx-auto text-slate-400 dark:text-slate-500 mb-4" />

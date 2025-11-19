@@ -10,6 +10,7 @@ import TeacherSidebar, { TeacherSidebarRef } from '@/app/components/shared/Teach
 import { GuardianTable } from '@/app/components/shared/GuardianTable';
 import { GuardianForm, type GuardianFormData } from '@/app/components/shared/GuardianForm';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
+import LoadingSkeleton from '@/app/components/shared/LoadingSkeleton';
 
 type Lang = 'is' | 'en';
 type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
@@ -247,8 +248,11 @@ export default function TeacherGuardiansPage() {
                     className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                   />
                 </div>
-                <GuardianTable
-                  guardians={paginatedGuardians.map((g: any) => ({
+                {loadingGuardians ? (
+                  <LoadingSkeleton type="table" rows={5} />
+                ) : (
+                  <GuardianTable
+                    guardians={paginatedGuardians.map((g: any) => ({
                     id: g.id,
                     first_name: g.first_name ?? ((g.full_name || '').trim().split(/\s+/)[0] || ''),
                     last_name: g.last_name ?? ((g.full_name || '').trim().split(/\s+/).slice(1).join(' ') || ''),
@@ -281,7 +285,8 @@ export default function TeacherGuardiansPage() {
                     magic_link_send_failed: lang === 'is' ? 'Tókst ekki að senda töfraslóð' : 'Failed to send magic link',
                     no_students_linked: lang === 'is' ? 'Engir nemendur tengdir' : 'No students linked',
                   }}
-                />
+                  />
+                )}
                 {filteredGuardians.length > itemsPerPage && (
                   <div className="mt-4 flex justify-end gap-2">
                     <button

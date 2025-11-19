@@ -10,6 +10,7 @@ import { useRequireAuth } from '@/lib/hooks/useAuth';
 import TeacherSidebar, { TeacherSidebarRef } from '@/app/components/shared/TeacherSidebar';
 import { MessageThreadWithParticipants, MessageItem } from '@/lib/types/messages';
 import { useMessagesRealtime } from '@/lib/hooks/useMessagesRealtime';
+import LoadingSkeleton from '@/app/components/shared/LoadingSkeleton';
 
 type Lang = 'is' | 'en';
 type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
@@ -775,7 +776,9 @@ export default function TeacherMessagesPage() {
                 {/* Conversations List */}
                 <div className="flex-1 overflow-y-auto">
                   {loadingMessages ? (
-                    <div className="p-4 text-center text-sm text-slate-500">{t.loading}</div>
+                    <div className="p-4">
+                      <LoadingSkeleton type="list" rows={5} />
+                    </div>
                   ) : filteredThreads.length === 0 ? (
                     <div className="p-4 text-center text-sm text-slate-500">{t.no_threads}</div>
                   ) : (

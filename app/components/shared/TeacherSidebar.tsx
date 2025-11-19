@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useImperativeHandle, forwardRef } from 'react';
+import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { X } from 'lucide-react';
 import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Bell, Users, Shield, Link as LinkIcon, Utensils } from 'lucide-react';
@@ -43,6 +43,7 @@ const TeacherSidebar = forwardRef<TeacherSidebarRef, TeacherSidebarProps>(({
   const router = useRouter();
   const { t } = useLanguage();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [optimisticActiveTile, setOptimisticActiveTile] = useState<string | null>(null);
 
   // Expose methods to parent via ref
   useImperativeHandle(ref, () => ({
@@ -55,8 +56,41 @@ const TeacherSidebar = forwardRef<TeacherSidebarRef, TeacherSidebarProps>(({
     setSidebarOpen(false);
   };
 
-  // Determine if a tile is active based on pathname
+  // Sync optimistic state with pathname changes
+  useEffect(() => {
+    if (!optimisticActiveTile) return;
+
+    // Map tile IDs to their expected routes
+    const tileRouteMap: Record<string, string> = {
+      'attendance': '/dashboard/teacher/attendance',
+      'diapers': '/dashboard/teacher/diapers',
+      'messages': '/dashboard/teacher/messages',
+      'media': '/dashboard/teacher/media',
+      'stories': '/dashboard/teacher/stories',
+      'announcements': '/dashboard/teacher/announcements',
+      'students': '/dashboard/teacher/students',
+      'guardians': '/dashboard/teacher/guardians',
+      'link_student': '/dashboard/teacher/link-student',
+      'menus': '/dashboard/teacher/menus',
+    };
+
+    const expectedRoute = tileRouteMap[optimisticActiveTile];
+    if (expectedRoute && pathname === expectedRoute) {
+      // Navigation completed, clear optimistic state
+      // Use setTimeout to avoid synchronous setState in effect
+      setTimeout(() => {
+        setOptimisticActiveTile(null);
+      }, 0);
+    }
+  }, [pathname, optimisticActiveTile]);
+
+  // Determine if a tile is active based on optimistic state or pathname
   const isTileActive = (tileId: string, tileRoute?: string): boolean => {
+    // Check optimistic state first for immediate feedback
+    if (optimisticActiveTile === tileId) {
+      return true;
+    }
+
     // Use pathname-based detection (route mode)
     if (tileRoute) {
       // Extract pathname from route (remove query parameters for comparison)
@@ -106,6 +140,10 @@ const TeacherSidebar = forwardRef<TeacherSidebarRef, TeacherSidebarProps>(({
   // Handle tile click
   const handleTileClick = (tile: TeacherSidebarTile) => {
     if (tile.route) {
+      // Set optimistic state immediately for instant feedback
+      if (tile.id) {
+        setOptimisticActiveTile(tile.id);
+      }
       // Route-based navigation - navigate to the new route
       router.push(tile.route);
       handleSidebarClose();
@@ -115,6 +153,7 @@ const TeacherSidebar = forwardRef<TeacherSidebarRef, TeacherSidebarProps>(({
   // Handle attendance tile click
   const handleAttendanceClick = () => {
     if (pathname !== '/dashboard/teacher/attendance') {
+      setOptimisticActiveTile('attendance');
       router.replace('/dashboard/teacher/attendance');
     }
     handleSidebarClose();
@@ -123,6 +162,7 @@ const TeacherSidebar = forwardRef<TeacherSidebarRef, TeacherSidebarProps>(({
   // Handle diapers tile click
   const handleDiapersClick = () => {
     if (pathname !== '/dashboard/teacher/diapers') {
+      setOptimisticActiveTile('diapers');
       router.replace('/dashboard/teacher/diapers');
     }
     handleSidebarClose();
@@ -131,6 +171,7 @@ const TeacherSidebar = forwardRef<TeacherSidebarRef, TeacherSidebarProps>(({
   // Handle messages tile click
   const handleMessagesClick = () => {
     if (pathname !== '/dashboard/teacher/messages') {
+      setOptimisticActiveTile('messages');
       router.replace('/dashboard/teacher/messages');
     }
     handleSidebarClose();
@@ -139,6 +180,7 @@ const TeacherSidebar = forwardRef<TeacherSidebarRef, TeacherSidebarProps>(({
   // Handle media tile click
   const handleMediaClick = () => {
     if (pathname !== '/dashboard/teacher/media') {
+      setOptimisticActiveTile('media');
       router.replace('/dashboard/teacher/media');
     }
     handleSidebarClose();
@@ -147,6 +189,7 @@ const TeacherSidebar = forwardRef<TeacherSidebarRef, TeacherSidebarProps>(({
   // Handle stories tile click
   const handleStoriesClick = () => {
     if (pathname !== '/dashboard/teacher/stories') {
+      setOptimisticActiveTile('stories');
       router.replace('/dashboard/teacher/stories');
     }
     handleSidebarClose();
@@ -155,6 +198,7 @@ const TeacherSidebar = forwardRef<TeacherSidebarRef, TeacherSidebarProps>(({
   // Handle announcements tile click
   const handleAnnouncementsClick = () => {
     if (pathname !== '/dashboard/teacher/announcements') {
+      setOptimisticActiveTile('announcements');
       router.replace('/dashboard/teacher/announcements');
     }
     handleSidebarClose();
@@ -163,6 +207,7 @@ const TeacherSidebar = forwardRef<TeacherSidebarRef, TeacherSidebarProps>(({
   // Handle students tile click
   const handleStudentsClick = () => {
     if (pathname !== '/dashboard/teacher/students') {
+      setOptimisticActiveTile('students');
       router.replace('/dashboard/teacher/students');
     }
     handleSidebarClose();
@@ -171,6 +216,7 @@ const TeacherSidebar = forwardRef<TeacherSidebarRef, TeacherSidebarProps>(({
   // Handle guardians tile click
   const handleGuardiansClick = () => {
     if (pathname !== '/dashboard/teacher/guardians') {
+      setOptimisticActiveTile('guardians');
       router.replace('/dashboard/teacher/guardians');
     }
     handleSidebarClose();
@@ -179,6 +225,7 @@ const TeacherSidebar = forwardRef<TeacherSidebarRef, TeacherSidebarProps>(({
   // Handle link student tile click
   const handleLinkStudentClick = () => {
     if (pathname !== '/dashboard/teacher/link-student') {
+      setOptimisticActiveTile('link_student');
       router.replace('/dashboard/teacher/link-student');
     }
     handleSidebarClose();
@@ -187,21 +234,23 @@ const TeacherSidebar = forwardRef<TeacherSidebarRef, TeacherSidebarProps>(({
   // Handle menus tile click
   const handleMenusClick = () => {
     if (pathname !== '/dashboard/teacher/menus') {
+      setOptimisticActiveTile('menus');
       router.replace('/dashboard/teacher/menus');
     }
     handleSidebarClose();
   };
 
-  const isAttendanceActive = pathname === '/dashboard/teacher/attendance';
-  const isDiapersActive = pathname === '/dashboard/teacher/diapers';
-  const isMessagesActive = pathname === '/dashboard/teacher/messages';
-  const isMediaActive = pathname === '/dashboard/teacher/media';
-  const isStoriesActive = pathname === '/dashboard/teacher/stories';
-  const isAnnouncementsActive = pathname === '/dashboard/teacher/announcements';
-  const isStudentsActive = pathname === '/dashboard/teacher/students';
-  const isGuardiansActive = pathname === '/dashboard/teacher/guardians';
-  const isLinkStudentActive = pathname === '/dashboard/teacher/link-student';
-  const isMenusActive = pathname === '/dashboard/teacher/menus';
+  // Use isTileActive helper for consistent optimistic state handling
+  const isAttendanceActive = isTileActive('attendance');
+  const isDiapersActive = isTileActive('diapers');
+  const isMessagesActive = isTileActive('messages');
+  const isMediaActive = isTileActive('media');
+  const isStoriesActive = isTileActive('stories');
+  const isAnnouncementsActive = isTileActive('announcements');
+  const isStudentsActive = isTileActive('students');
+  const isGuardiansActive = isTileActive('guardians');
+  const isLinkStudentActive = isTileActive('link_student');
+  const isMenusActive = isTileActive('menus');
 
   return (
     <>

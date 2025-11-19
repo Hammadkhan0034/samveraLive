@@ -11,6 +11,7 @@ import { useRequireAuth } from '@/lib/hooks/useAuth';
 import TeacherSidebar, { TeacherSidebarRef } from '@/app/components/shared/TeacherSidebar';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
+import LoadingSkeleton from '@/app/components/shared/LoadingSkeleton';
 
 type Lang = 'is' | 'en';
 type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
@@ -108,7 +109,7 @@ function StudentsPanel({
         )}
         <div className="overflow-x-auto rounded-t-lg rounded-r-lg">
           {loadingStudents ? (
-            <div className="text-center py-4 text-slate-600 dark:text-slate-400">{t.loading}</div>
+            <LoadingSkeleton type="table" rows={5} />
           ) : filteredStudents.length === 0 ? (
             <div className="text-center py-4 text-slate-500 dark:text-slate-400">
               {searchQuery ? (t.no_students_found_search || 'No students found matching your search') : t.no_students_found}

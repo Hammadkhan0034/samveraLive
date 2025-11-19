@@ -10,6 +10,7 @@ import { enText } from '@/lib/translations/en';
 import { isText } from '@/lib/translations/is';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
 import TeacherSidebar, { TeacherSidebarRef } from '@/app/components/shared/TeacherSidebar';
+import LoadingSkeleton from '@/app/components/shared/LoadingSkeleton';
 
 type Lang = 'is' | 'en';
 type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
@@ -638,7 +639,7 @@ function AttendancePanel({
       )}
       
       {loadingStudents ? (
-        <div className="text-center py-8 text-slate-600 dark:text-slate-400">{t.loading}</div>
+        <LoadingSkeleton type="cards" rows={6} />
       ) : filteredStudents.length === 0 ? (
         <div className="text-center py-8 text-slate-500 dark:text-slate-400">
           {selectedClassId === 'all' 
