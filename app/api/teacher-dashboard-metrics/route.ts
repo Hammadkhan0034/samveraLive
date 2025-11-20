@@ -4,7 +4,7 @@ import { createServerClient } from '@supabase/ssr';
 import { supabaseAdmin } from '@/lib/supabaseClient';
 import { getNoCacheHeaders } from '@/lib/cacheConfig';
 import { z } from 'zod';
-import { validateQuery, orgIdSchema, userIdSchema, classIdSchema } from '@/lib/validation';
+import { validateQuery, orgIdSchema, userIdSchema } from '@/lib/validation';
 
 async function getRequesterOrgId(userId: string): Promise<string | null> {
   if (!supabaseAdmin) return null;
@@ -126,6 +126,7 @@ export async function GET(request: Request) {
         try {
           const fetchPromises = classIdsArray.map(async (classId) => {
             try {
+              if (!supabaseAdmin) return 0;
               const { count, error } = await supabaseAdmin
                 .from('attendance')
                 .select('*', { count: 'exact', head: true })
