@@ -2,11 +2,15 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { Bell } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useNotifications } from '@/lib/hooks/useNotifications';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
 
 export function NotificationDropdown() {
   const { session, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const { t } = useLanguage();
   const userId = session?.user?.id || null;
   const orgId = session?.user?.user_metadata?.org_id || 
                 session?.user?.user_metadata?.organization_id || 
@@ -16,6 +20,7 @@ export function NotificationDropdown() {
     userId,
     orgId,
     enabled: !!userId && !!orgId && !authLoading,
+    limit: 5, // Show only latest 5 notifications in dropdown
   });
 
   // Refetch notifications when session becomes available
@@ -107,27 +112,38 @@ export function NotificationDropdown() {
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-700">
             <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-              Notifications
+              {t.notifications || 'Notifications'}
             </h3>
-            {unreadCount > 0 && (
+            <div className="flex items-center gap-3">
+              {unreadCount > 0 && (
+                <button
+                  onClick={handleMarkAllAsRead}
+                  className="text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                >
+                  {t.mark_all_as_read || 'Mark all as read'}
+                </button>
+              )}
               <button
-                onClick={handleMarkAllAsRead}
-                className="text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                onClick={() => {
+                  setIsOpen(false);
+                  router.push('/dashboard/notifications');
+                }}
+                className="text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 font-medium"
               >
-                Mark all as read
+                {t.viewAll || 'View All'}
               </button>
-            )}
+            </div>
           </div>
 
           {/* Notifications List */}
           <div className="overflow-y-auto flex-1">
             {loading ? (
               <div className="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
-                Loading notifications...
+                {t.loading_notifications || 'Loading notifications...'}
               </div>
             ) : notifications.length === 0 ? (
               <div className="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
-                No notifications
+                {t.no_notifications || 'No notifications'}
               </div>
             ) : (
               <div className="divide-y divide-slate-200 dark:divide-slate-700">

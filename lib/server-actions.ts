@@ -185,6 +185,11 @@ export async function createAnnouncement(data: {
       targetUserIds = await getOrgNotificationTargets(orgId);
     }
     
+    // Exclude the author from receiving notifications about their own announcement
+    if (authorIdForInsert) {
+      targetUserIds = targetUserIds.filter(id => id !== authorIdForInsert);
+    }
+    
     // Only create notifications if there are target users
     if (targetUserIds.length > 0 && announcement) {
       await createBulkNotifications(
@@ -506,6 +511,52 @@ export async function getNotifications(limit: number = 50, unreadOnly: boolean =
   return notifications || [];
 }
 
+export async function getPaginatedNotifications(page: number = 1, limit: number = 10) {
+  const { user } = await requireServerAuth();
+  
+  const orgId = user.user_metadata?.org_id as string | undefined || 
+                user.user_metadata?.organization_id as string | undefined;
+  
+  if (!orgId) {
+    throw new Error('Missing organization for user');
+  }
+  
+  const supabase = supabaseAdmin ?? await createSupabaseServer();
+  
+  const offset = (page - 1) * limit;
+  
+  // Get total count
+  const { count, error: countError } = await supabase
+    .from('notifications')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', user.id)
+    .eq('org_id', orgId);
+  
+  if (countError) {
+    throw new Error(`Failed to fetch notification count: ${countError.message}`);
+  }
+  
+  // Get paginated notifications
+  const { data: notifications, error } = await supabase
+    .from('notifications')
+    .select('*')
+    .eq('user_id', user.id)
+    .eq('org_id', orgId)
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+  
+  if (error) {
+    throw new Error(`Failed to fetch notifications: ${error.message}`);
+  }
+  
+  return {
+    notifications: notifications || [],
+    totalCount: count || 0,
+    totalPages: Math.ceil((count || 0) / limit),
+    currentPage: page,
+  };
+}
+
 export async function markNotificationRead(notificationId: string) {
   const { user } = await requireServerAuth();
   
@@ -561,5 +612,73 @@ export async function markAllNotificationsRead() {
     throw new Error(`Failed to mark all notifications as read: ${error.message}`);
   }
   
+  return { success: true };
+}
+
+export async function deleteNotification(notificationId: string) {
+  const { user } = await requireServerAuth();
+  
+  const orgId = user.user_metadata?.org_id as string | undefined || 
+                user.user_metadata?.organization_id as string | undefined;
+  
+  if (!orgId) {
+    throw new Error('Missing organization for user');
+  }
+  
+  const supabase = supabaseAdmin ?? await createSupabaseServer();
+  
+  // Verify the notification belongs to the user
+  const { data: notification, error: fetchError } = await supabase
+    .from('notifications')
+    .select('id, user_id, org_id, is_read')
+    .eq('id', notificationId)
+    .eq('user_id', user.id)
+    .eq('org_id', orgId)
+    .single();
+  
+  if (fetchError || !notification) {
+    throw new Error('Notification not found or access denied');
+  }
+  
+  // Delete the notification
+  const { error } = await supabase
+    .from('notifications')
+    .delete()
+    .eq('id', notificationId)
+    .eq('user_id', user.id)
+    .eq('org_id', orgId);
+  
+  if (error) {
+    throw new Error(`Failed to delete notification: ${error.message}`);
+  }
+  
+  revalidatePath('/dashboard/notifications');
+  return { success: true };
+}
+
+export async function deleteAllNotifications() {
+  const { user } = await requireServerAuth();
+  
+  const orgId = user.user_metadata?.org_id as string | undefined || 
+                user.user_metadata?.organization_id as string | undefined;
+  
+  if (!orgId) {
+    throw new Error('Missing organization for user');
+  }
+  
+  const supabase = supabaseAdmin ?? await createSupabaseServer();
+  
+  // Delete all notifications for the user
+  const { error } = await supabase
+    .from('notifications')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('org_id', orgId);
+  
+  if (error) {
+    throw new Error(`Failed to delete all notifications: ${error.message}`);
+  }
+  
+  revalidatePath('/dashboard/notifications');
   return { success: true };
 }

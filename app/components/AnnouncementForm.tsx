@@ -201,7 +201,7 @@ export default function AnnouncementForm({
 
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
-            {t.title}
+            {t.announcement_title_label}
           </label>
           <input
             type="text"

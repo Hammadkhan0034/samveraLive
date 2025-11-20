@@ -173,7 +173,7 @@ export async function getClassNotificationTargets(
 }
 
 /**
- * Get all teachers and all parents in an organization
+ * Get all teachers, principals, and all parents in an organization
  * Returns unique user IDs
  */
 export async function getOrgNotificationTargets(
@@ -198,6 +198,23 @@ export async function getOrgNotificationTargets(
     .map(t => t.id)
     .filter((id): id is string => !!id && typeof id === 'string');
 
+  // Get all principals in the org
+  const { data: principals, error: principalsError } = await supabase
+    .from('users')
+    .select('id')
+    .eq('org_id', orgId)
+    .eq('role', 'principal')
+    .eq('is_active', true)
+    .is('deleted_at', null);
+
+  if (principalsError) {
+    throw new Error(`Failed to fetch principals: ${principalsError.message}`);
+  }
+
+  const principalUserIds = (principals || [])
+    .map(p => p.id)
+    .filter((id): id is string => !!id && typeof id === 'string');
+
   // Get all parents (guardians) in the org
   // Note: In the database, the role is stored as 'guardian', not 'parent'
   const { data: parents, error: parentsError } = await supabase
@@ -216,8 +233,8 @@ export async function getOrgNotificationTargets(
     .map(p => p.id)
     .filter((id): id is string => !!id && typeof id === 'string');
 
-  // Combine and deduplicate user IDs
-  const allUserIds = [...new Set([...teacherUserIds, ...parentUserIds])];
+  // Combine and deduplicate user IDs (teachers, principals, and parents)
+  const allUserIds = [...new Set([...teacherUserIds, ...principalUserIds, ...parentUserIds])];
   
   return allUserIds;
 }

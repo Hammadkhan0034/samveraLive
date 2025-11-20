@@ -456,6 +456,11 @@ export async function POST(request: Request) {
         targetUserIds = await getOrgNotificationTargets(org_id);
       }
       
+      // Exclude the author from receiving notifications about their own story
+      if (author_id) {
+        targetUserIds = targetUserIds.filter(id => id !== author_id);
+      }
+      
       // Only create notifications if there are target users
       if (targetUserIds.length > 0 && data) {
         await createBulkNotifications(
