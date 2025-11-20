@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { X, Search, Send, Paperclip, Link as LinkIcon, Utensils, MessageSquarePlus } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';

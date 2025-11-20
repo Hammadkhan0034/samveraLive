@@ -1,6 +1,5 @@
 'use client';
 
-import React from 'react';
 import { Menu, Users, CalendarDays } from 'lucide-react';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import { useTeacherPageLayout } from './TeacherPageLayout';
