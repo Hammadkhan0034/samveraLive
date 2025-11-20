@@ -52,10 +52,17 @@ export async function GET(request: Request) {
       console.error('❌ Error fetching guardian-student relationships:', error)
       console.error('❌ Query details:', { studentId, guardianId })
       console.error('❌ Full error:', JSON.stringify(error, null, 2))
+      
+      // Return empty array instead of error for better UX
+      // This allows the parent dashboard to continue working
       return NextResponse.json({ 
-        error: error.message || 'Failed to fetch guardian-student relationships',
-        details: error.details || null
-      }, { status: 500 })
+        relationships: [],
+        total_relationships: 0,
+        error: error.message || 'Failed to fetch guardian-student relationships'
+      }, { 
+        status: 200, // Return 200 with empty data instead of 500
+        headers: getUserDataCacheHeaders()
+      })
     }
 
     return NextResponse.json({ 

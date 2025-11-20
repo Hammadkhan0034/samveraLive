@@ -193,10 +193,15 @@ export function useNotifications({
         console.log('✅ Realtime notifications subscription active');
       } else if (status === 'CHANNEL_ERROR') {
         setIsSubscribed(false);
-        console.error('❌ Realtime notifications channel error');
+        // Don't log as error - realtime might not be enabled, which is okay
+        // The app will still work with polling via refetch
+        console.warn('⚠️ Realtime notifications channel error (realtime may not be enabled)');
       } else if (status === 'TIMED_OUT') {
         setIsSubscribed(false);
         console.warn('⚠️ Realtime notifications subscription timed out');
+      } else if (status === 'CLOSED') {
+        setIsSubscribed(false);
+        console.warn('⚠️ Realtime notifications channel closed');
       }
     });
 

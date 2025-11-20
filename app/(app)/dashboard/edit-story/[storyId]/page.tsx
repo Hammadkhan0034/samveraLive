@@ -312,14 +312,26 @@ export default function EditStoryPage() {
 
       // Insert new items
       if (validItems.length > 0) {
-        const updateRes = await fetch(`/api/stories/${storyId}/items`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ items: validItems }),
-        });
+        let updateRes: Response;
+        try {
+          updateRes = await fetch(`/api/stories/${storyId}/items`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ items: validItems }),
+          });
+        } catch (fetchError: any) {
+          // Handle network errors (fetch failed)
+          console.error('❌ Network error saving story items:', fetchError);
+          throw new Error('Network error. Please check your connection and try again.');
+        }
 
         if (!updateRes.ok) {
-          const updateJson = await updateRes.json();
+          let updateJson: any;
+          try {
+            updateJson = await updateRes.json();
+          } catch {
+            throw new Error(`Failed to save story items (${updateRes.status}). Please try again.`);
+          }
           throw new Error(updateJson.error || `Failed to update story items: ${updateRes.status}`);
         }
       }

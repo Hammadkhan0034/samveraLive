@@ -198,7 +198,16 @@ export default function StoryColumn({
           }
         }
 
-        const res = await fetch(`/api/stories?${params.toString()}`, { cache: 'no-store' });
+        let res: Response;
+        try {
+          res = await fetch(`/api/stories?${params.toString()}`, { cache: 'no-store' });
+        } catch (fetchError: any) {
+          // Handle network errors (fetch failed)
+          console.error('❌ Network error fetching stories:', fetchError);
+          setStories([]);
+          setLoading(false);
+          return;
+        }
         
         // Clone response for error handling (response body can only be read once)
         const resClone = res.clone();
@@ -216,7 +225,9 @@ export default function StoryColumn({
               rawResponse: text.substring(0, 500), // First 500 chars
               params: params.toString()
             });
-            throw new Error(`Invalid response from server (${res.status}): ${text.substring(0, 200)}`);
+            setStories([]);
+            setLoading(false);
+            return;
           } catch (textError) {
             console.error('❌ Stories API: Failed to parse response:', {
               status: res.status,
@@ -224,7 +235,9 @@ export default function StoryColumn({
               parseError: e,
               params: params.toString()
             });
-            throw new Error(`Invalid response from server (${res.status})`);
+            setStories([]);
+            setLoading(false);
+            return;
           }
         }
         
@@ -239,7 +252,10 @@ export default function StoryColumn({
             params: params.toString(),
             url: `/api/stories?${params.toString()}`
           });
-          throw new Error(errorMessage);
+          // Don't throw - just set empty stories and stop loading
+          setStories([]);
+          setLoading(false);
+          return;
         }
 
         const storiesList = Array.isArray(json.stories) ? json.stories : [];

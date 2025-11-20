@@ -71,10 +71,19 @@ export default function AnnouncementList({
       }
       params.set('limit', String(limit));
 
-      const res = await fetch(`/api/announcements?${params.toString()}`, { 
-        cache: 'no-store',
-        credentials: 'include' // Ensure cookies are sent
-      });
+      let res: Response;
+      try {
+        res = await fetch(`/api/announcements?${params.toString()}`, { 
+          cache: 'no-store',
+          credentials: 'include' // Ensure cookies are sent
+        });
+      } catch (fetchError: any) {
+        // Handle network errors (fetch failed)
+        console.error('❌ Network error fetching announcements:', fetchError);
+        setError('Network error. Please check your connection and try again.');
+        setLoading(false);
+        return;
+      }
       
       if (!res.ok) {
         // Handle authentication errors gracefully - don't show error, just keep cached data
@@ -103,10 +112,23 @@ export default function AnnouncementList({
           }
         }
         
-        // For other errors, throw to show error message
-        throw new Error(errorMessage);
+        // For other errors, set error but don't throw - keep existing data
+        console.error('❌ Error loading announcements:', errorMessage);
+        setError(errorMessage);
+        setLoading(false);
+        return;
       }
-      const { announcements: data } = await res.json();
+      
+      let data: any;
+      try {
+        const json = await res.json();
+        data = json.announcements || [];
+      } catch (parseError) {
+        console.error('❌ Error parsing announcements response:', parseError);
+        setError('Invalid response from server');
+        setLoading(false);
+        return;
+      }
 
       const normalized: Announcement[] = (data || []).map((row: any) => ({
         id: row.id,

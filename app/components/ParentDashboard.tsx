@@ -66,7 +66,20 @@ export default function ParentDashboard() {
       } catch {}
 
       try {
-        const studentsRes = await fetch(`/api/guardian-students?guardianId=${guardianId}`);
+        let studentsRes: Response;
+        try {
+          studentsRes = await fetch(`/api/guardian-students?guardianId=${guardianId}`);
+        } catch (fetchError: any) {
+          // Handle network errors
+          console.error('❌ Network error fetching guardian-students:', fetchError);
+          if (isMounted) {
+            setLinkedStudents([]);
+            setDerivedClassId(classId || null);
+            setDisplayStudent(null);
+          }
+          return;
+        }
+        
         if (!studentsRes.ok) {
           const errorData = await studentsRes.json().catch(() => ({}));
           console.error('❌ Failed to fetch guardian-students:', studentsRes.status, errorData);
@@ -84,7 +97,20 @@ export default function ParentDashboard() {
         console.log('📋 Found linked student IDs:', studentIds);
 
         if (studentIds.length > 0) {
-          const studentsDetailsRes = await fetch(`/api/students?orgId=${orgId}`);
+          let studentsDetailsRes: Response;
+          try {
+            studentsDetailsRes = await fetch(`/api/students?orgId=${orgId}`);
+          } catch (fetchError: any) {
+            // Handle network errors
+            console.error('❌ Network error fetching students:', fetchError);
+            if (isMounted) {
+              setLinkedStudents([]);
+              setDerivedClassId(classId || null);
+              setDisplayStudent(null);
+            }
+            return;
+          }
+          
           if (!studentsDetailsRes.ok) {
             const errorData = await studentsDetailsRes.json().catch(() => ({}));
             console.error('❌ Failed to fetch students:', studentsDetailsRes.status, errorData);
