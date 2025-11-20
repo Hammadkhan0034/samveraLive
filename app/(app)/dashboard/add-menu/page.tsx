@@ -5,6 +5,7 @@ import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { ArrowLeft, Save, X } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useRequireAuth } from '@/lib/hooks/useAuth';
+import Loading from '@/app/components/shared/Loading';
 
 type Lang = 'is' | 'en';
 
@@ -338,16 +339,7 @@ function AddMenuPageContent() {
 
 export default function AddMenuPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-600 mx-auto mb-4"></div>
-            <p className="text-slate-600 dark:text-slate-400">Loading...</p>
-          </div>
-        </div>
-      </div>
-    }>
+    <Suspense fallback={<Loading fullScreen variant="sand" />}>
       <AddMenuPageContent />
     </Suspense>
   );
