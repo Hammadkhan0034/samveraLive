@@ -11,20 +11,12 @@ import LoadingSkeleton from '@/app/components/shared/LoadingSkeleton';
 import TeacherPageHeader from '@/app/components/shared/TeacherPageHeader';
 import TeacherPageLayout from '@/app/components/shared/TeacherPageLayout';
 
-type Lang = 'is' | 'en';
-type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
 
-// Small helpers
-function clsx(...xs: Array<string | false | undefined>) {
-  return xs.filter(Boolean).join(' ');
-}
 
-// Translations removed - using centralized translations from @/lib/translations
 
 export default function TeacherMessagesPage() {
   const { t, lang } = useLanguage();
   const { session } = useAuth();
-  const router = useRouter();
 
   // Messages state
   const [threads, setThreads] = useState<MessageThreadWithParticipants[]>([]);
@@ -444,12 +436,6 @@ export default function TeacherMessagesPage() {
   }, [threads, searchQuery, allowedGuardianIds, principals]);
 
   // Combined recipients list - Show principals, teachers, and guardians (including current user)
-  const allRecipients = useMemo(() => {
-    const principalList = principals.map(p => ({ ...p, type: 'principal' as const }));
-    const teacherList = teachers.map(t => ({ ...t, type: 'teacher' as const }));
-    const guardianList = guardians.map(g => ({ ...g, type: 'guardian' as const }));
-    return [...principalList, ...teacherList, ...guardianList];
-  }, [principals, teachers, guardians]);
 
   // Send message from chat view
   async function sendChatMessage() {
@@ -591,17 +577,6 @@ export default function TeacherMessagesPage() {
   }, [messages]);
 
   // Define tiles array (excluding messages, attendance, and diapers as they're handled separately)
-  const tiles: Array<{
-    id: TileId;
-    title: string;
-    desc: string;
-    Icon: React.ElementType;
-    badge?: string | number;
-    route?: string;
-  }> = useMemo(() => [
-      { id: 'link_student', title: t.tile_link_student || 'Link Student', desc: t.tile_link_student_desc || 'Link a guardian to a student', Icon: LinkIcon, route: '/dashboard/teacher?tab=link_student' },
-      { id: 'menus', title: t.tile_menus || 'Menus', desc: t.tile_menus_desc || 'Manage daily menus', Icon: Utensils, route: '/dashboard/teacher?tab=menus' },
-    ], [t, lang]);
 
   return (
     <TeacherPageLayout messagesBadge={messagesCount > 0 ? messagesCount : undefined}>
