@@ -6,6 +6,8 @@ import { useLanguage } from "@/lib/contexts/LanguageContext";
 import { useTheme } from "@/lib/contexts/ThemeContext";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useRouter, usePathname } from "next/navigation";
+import { NotificationDropdown } from "@/app/components/shared/NotificationDropdown";
+import { useUserRole } from "@/lib/hooks/useAuth";
 
 export default function Navbar() {
   const { isDark, toggleTheme } = useTheme();
@@ -14,6 +16,10 @@ export default function Navbar() {
   const { signOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
+  const userRole = useUserRole();
+  
+  // Hide notification bell for Admin role
+  const showNotifications = userRole !== 'admin';
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -50,6 +56,8 @@ export default function Navbar() {
             {isDark ? <Sun size={16} /> : <Moon size={16} />}
             {/* <span className="hidden sm:inline">{isDark ? t.light : t.dark}</span> */}
           </button>
+          
+          {showNotifications && <NotificationDropdown />}
           
           <div className="relative language-dropdown">
             <button

@@ -13,6 +13,12 @@ import {
 } from './supabaseServer';
 import { type SamveraRole } from './auth';
 import { supabaseAdmin } from './supabaseClient';
+import {
+  createBulkNotifications,
+  getClassNotificationTargets,
+  getOrgNotificationTargets,
+  type NotificationType,
+} from './services/notifications';
 
 // Example server actions with role gating
 
@@ -162,6 +168,41 @@ export async function createAnnouncement(data: {
 
   if (error) {
     throw new Error(`Failed to create announcement: ${error.message}`);
+  }
+  
+  // Create notifications for target users
+  try {
+    let targetUserIds: string[] = [];
+    let notificationType: NotificationType;
+    
+    if (classIdResolved) {
+      // Class-specific announcement: notify students and their parents
+      notificationType = 'announcement_class';
+      targetUserIds = await getClassNotificationTargets(classIdResolved, orgId);
+    } else {
+      // Organization-wide announcement: notify all teachers and all parents
+      notificationType = 'announcement_org';
+      targetUserIds = await getOrgNotificationTargets(orgId);
+    }
+    
+    // Only create notifications if there are target users
+    if (targetUserIds.length > 0 && announcement) {
+      await createBulkNotifications(
+        orgId,
+        targetUserIds,
+        notificationType,
+        data.title,
+        data.body,
+        {
+          announcement_id: announcement.id,
+          class_id: classIdResolved,
+          author_id: authorIdForInsert,
+        }
+      );
+    }
+  } catch (notificationError) {
+    // Log error but don't fail the announcement creation
+    console.error('Failed to create notifications for announcement:', notificationError);
   }
   
   revalidatePath('/dashboard');
@@ -428,4 +469,97 @@ export async function hasMinimumPermission(minimumRole: SamveraRole): Promise<bo
   } catch {
     return false;
   }
+}
+
+// Notification server actions
+
+export async function getNotifications(limit: number = 50, unreadOnly: boolean = false) {
+  const { user } = await requireServerAuth();
+  
+  const orgId = user.user_metadata?.org_id as string | undefined || 
+                user.user_metadata?.organization_id as string | undefined;
+  
+  if (!orgId) {
+    throw new Error('Missing organization for user');
+  }
+  
+  const supabase = supabaseAdmin ?? await createSupabaseServer();
+  
+  let query = supabase
+    .from('notifications')
+    .select('*')
+    .eq('user_id', user.id)
+    .eq('org_id', orgId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  
+  if (unreadOnly) {
+    query = query.eq('is_read', false);
+  }
+  
+  const { data: notifications, error } = await query;
+  
+  if (error) {
+    throw new Error(`Failed to fetch notifications: ${error.message}`);
+  }
+  
+  return notifications || [];
+}
+
+export async function markNotificationRead(notificationId: string) {
+  const { user } = await requireServerAuth();
+  
+  const orgId = user.user_metadata?.org_id as string | undefined || 
+                user.user_metadata?.organization_id as string | undefined;
+  
+  if (!orgId) {
+    throw new Error('Missing organization for user');
+  }
+  
+  const supabase = supabaseAdmin ?? await createSupabaseServer();
+  
+  const { error } = await supabase
+    .from('notifications')
+    .update({
+      is_read: true,
+      read_at: new Date().toISOString(),
+    })
+    .eq('id', notificationId)
+    .eq('user_id', user.id)
+    .eq('org_id', orgId);
+  
+  if (error) {
+    throw new Error(`Failed to mark notification as read: ${error.message}`);
+  }
+  
+  return { success: true };
+}
+
+export async function markAllNotificationsRead() {
+  const { user } = await requireServerAuth();
+  
+  const orgId = user.user_metadata?.org_id as string | undefined || 
+                user.user_metadata?.organization_id as string | undefined;
+  
+  if (!orgId) {
+    throw new Error('Missing organization for user');
+  }
+  
+  const supabase = supabaseAdmin ?? await createSupabaseServer();
+  
+  const { error } = await supabase
+    .from('notifications')
+    .update({
+      is_read: true,
+      read_at: new Date().toISOString(),
+    })
+    .eq('user_id', user.id)
+    .eq('org_id', orgId)
+    .eq('is_read', false);
+  
+  if (error) {
+    throw new Error(`Failed to mark all notifications as read: ${error.message}`);
+  }
+  
+  return { success: true };
 }

@@ -439,6 +439,43 @@ export async function POST(request: Request) {
       console.log('ℹ️ No items array provided or empty')
     }
 
+    // Create notifications for target users (similar to announcements)
+    try {
+      const { createBulkNotifications, getClassNotificationTargets, getOrgNotificationTargets } = await import('@/lib/services/notifications');
+      
+      let targetUserIds: string[] = [];
+      let notificationType: 'story_class' | 'story_org';
+      
+      if (finalClassId) {
+        // Class-specific story: notify students and their parents
+        notificationType = 'story_class';
+        targetUserIds = await getClassNotificationTargets(finalClassId, org_id);
+      } else {
+        // Organization-wide story: notify all teachers and all parents
+        notificationType = 'story_org';
+        targetUserIds = await getOrgNotificationTargets(org_id);
+      }
+      
+      // Only create notifications if there are target users
+      if (targetUserIds.length > 0 && data) {
+        await createBulkNotifications(
+          org_id,
+          targetUserIds,
+          notificationType,
+          title || 'New story',
+          caption,
+          {
+            story_id: data.id,
+            class_id: finalClassId,
+            author_id: author_id || null,
+          }
+        );
+      }
+    } catch (notificationError) {
+      // Log error but don't fail the story creation
+      console.error('Failed to create notifications for story:', notificationError);
+    }
+
     return NextResponse.json({ story: data, items: insertedItems }, { status: 201 })
   } catch (e: any) {
     return NextResponse.json({ error: e.message || 'Unknown error' }, { status: 500 })
