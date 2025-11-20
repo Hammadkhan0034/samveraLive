@@ -6,11 +6,19 @@ import { validateQuery, orgIdSchema } from '@/lib/validation'
 
 // GET query parameter schema
 const searchPeopleQuerySchema = z.object({
-  q: z.string().optional().default(''),
+  q: z.string().default(''),
   orgId: orgIdSchema,
-  role: z.enum(['guardian', 'student', 'all']).optional().default('all'),
-  mode: z.enum(['email', 'name', 'any']).optional().default('any'),
-  limit: z.string().transform((val) => Math.min(parseInt(val) || 10, 25)).optional().default('10'),
+  role: z.enum(['guardian', 'student', 'all']).default('all'),
+  mode: z.enum(['email', 'name', 'any']).default('any'),
+  limit: z.preprocess(
+    (val) => {
+      if (typeof val === 'string') {
+        return Math.min(parseInt(val) || 10, 25);
+      }
+      return typeof val === 'number' ? Math.min(val, 25) : 10;
+    },
+    z.number().int().nonnegative()
+  ).default(10),
 });
 
 // GET /api/search-people?q=...&orgId=...&role=guardian|student|all&mode=email|name|any&limit=10
@@ -26,6 +34,9 @@ export async function GET(request: Request) {
       return queryValidation.error
     }
     const { q, orgId, role, mode, limit } = queryValidation.data
+    
+    // Ensure limit is a number
+    const limitNum = typeof limit === 'number' ? limit : 10
 
     if (!q) {
       return NextResponse.json({ results: [], count: 0 }, { status: 200 })
@@ -39,7 +50,7 @@ export async function GET(request: Request) {
         .select('id,email,first_name,last_name,role')
         .eq('org_id', orgId)
         .eq('role', 'guardian')
-        .limit(limit)
+        .limit(limitNum)
 
       if (mode === 'email') {
         guardianQuery = guardianQuery.ilike('email', `%${q}%`)
@@ -113,7 +124,7 @@ export async function GET(request: Request) {
       const matchedUserIds = new Set(usersData.map((u: any) => u.id))
       const matchedStudents = studentsData
         .filter((s: any) => matchedUserIds.has(s.user_id))
-        .slice(0, limit)
+        .slice(0, limitNum)
 
       // Create a map of user_id -> user data for quick lookup
       const userMap = new Map(usersData.map((u: any) => [u.id, u]))
@@ -133,7 +144,7 @@ export async function GET(request: Request) {
     })()
 
     const [guardians, students] = await Promise.all([guardianPromise, studentPromise])
-    const combined = [...guardians, ...students].slice(0, limit)
+    const combined = [...guardians, ...students].slice(0, limitNum)
 
     return NextResponse.json({ results: combined, count: combined.length }, {
       headers: getUserDataCacheHeaders()

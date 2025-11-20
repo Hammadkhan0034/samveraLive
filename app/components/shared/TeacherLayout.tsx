@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Users, CalendarDays, X, Link as LinkIcon, Utensils, Menu, Bell } from 'lucide-react';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';

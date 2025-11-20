@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getUserDataCacheHeaders } from '@/lib/cacheConfig';
 import { z } from 'zod';
-import { validateQuery, validateBody, orgIdSchema, classIdSchema, userIdSchema, firstNameSchema, lastNameSchema, studentDobSchema, genderSchema, studentLanguageSchema, barngildiSchema, dateSchema, notesSchema, phoneSchema, addressSchema, ssnSchema } from '@/lib/validation';
+import { validateQuery, validateBody, orgIdSchema, classIdSchema, userIdSchema, uuidSchema, firstNameSchema, lastNameSchema, studentDobSchema, genderSchema, studentLanguageSchema, barngildiSchema, dateSchema, notesSchema, phoneSchema, addressSchema, ssnSchema } from '@/lib/validation';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;

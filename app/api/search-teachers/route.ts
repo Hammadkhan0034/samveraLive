@@ -6,11 +6,27 @@ import { validateQuery, orgIdSchema, uuidSchema } from '@/lib/validation'
 
 // GET query parameter schema
 const searchTeachersQuerySchema = z.object({
-  q: z.string().optional().default(''),
+  q: z.string().default(''),
   orgId: orgIdSchema,
-  mode: z.enum(['email', 'name', 'any']).optional().default('any'),
-  limit: z.string().transform((val) => Math.min(parseInt(val) || 10, 25)).optional().default('10'),
-  excludeIds: z.string().transform((val) => val ? val.split(',').filter(Boolean) : []).optional().default(''),
+  mode: z.enum(['email', 'name', 'any']).default('any'),
+  limit: z.preprocess(
+    (val) => {
+      if (typeof val === 'string') {
+        return Math.min(parseInt(val) || 10, 25);
+      }
+      return typeof val === 'number' ? Math.min(val, 25) : 10;
+    },
+    z.number().int().nonnegative()
+  ).default(10),
+  excludeIds: z.preprocess(
+    (val) => {
+      if (typeof val === 'string') {
+        return val ? val.split(',').filter(Boolean) : [];
+      }
+      return Array.isArray(val) ? val : [];
+    },
+    z.array(z.string())
+  ).default([]),
 }).refine((data) => {
   // Validate that excludeIds are valid UUIDs if provided
   if (data.excludeIds && data.excludeIds.length > 0) {
@@ -39,6 +55,10 @@ export async function GET(request: Request) {
       return queryValidation.error
     }
     const { q, orgId, mode, limit, excludeIds } = queryValidation.data
+    
+    // Ensure limit is a number and excludeIds is an array
+    const limitNum = typeof limit === 'number' ? limit : 10
+    const excludeIdsArray = Array.isArray(excludeIds) ? excludeIds : []
 
     if (!q) {
       return NextResponse.json({ results: [], count: 0 }, { status: 200 })
@@ -60,8 +80,8 @@ export async function GET(request: Request) {
     let teacherUserIds = (staffData || []).map((s: any) => s.user_id).filter(Boolean)
     
     // Apply exclude IDs if provided (already validated as UUIDs)
-    if (excludeIds && excludeIds.length > 0) {
-      teacherUserIds = teacherUserIds.filter((id: string) => !excludeIds.includes(id))
+    if (excludeIdsArray && excludeIdsArray.length > 0) {
+      teacherUserIds = teacherUserIds.filter((id: string) => !excludeIdsArray.includes(id))
     }
     
     if (teacherUserIds.length === 0) {
@@ -76,7 +96,7 @@ export async function GET(request: Request) {
       .eq('role', 'teacher')
       .in('id', teacherUserIds)
       .is('deleted_at', null)
-      .limit(limit)
+      .limit(limitNum)
 
     // Apply search filters based on mode
     if (mode === 'email') {

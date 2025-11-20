@@ -93,7 +93,6 @@ export function AnnouncementModal({
           orgId={orgId}
           classId={classId}
           onSuccess={handleSuccess}
-          lang={lang}
           showClassSelector={showClassSelector}
         />
       </div>

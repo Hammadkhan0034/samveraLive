@@ -9,8 +9,8 @@ import { validateQuery, validateBody, orgIdSchema, classIdSchema, userIdSchema, 
 const getStoriesQuerySchema = z.object({
   orgId: orgIdSchema,
   classId: classIdSchema.optional(),
-  includeDeleted: z.string().transform((val) => val === 'true').optional(),
-  onlyPublic: z.string().transform((val) => val === 'true').optional(),
+  includeDeleted: z.coerce.boolean().optional(),
+  onlyPublic: z.coerce.boolean().optional(),
   audience: z.enum(['principal', 'teacher', 'parent']).optional(),
   teacherClassId: uuidSchema.nullable().optional(),
   teacherClassIds: z.string().optional(), // comma-separated class ids

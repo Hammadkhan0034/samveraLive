@@ -117,6 +117,12 @@ export async function GET(request: NextRequest) {
         // Fetch guardians for all students
         const studentsWithGuardians = await Promise.all(
           students.map(async (student) => {
+            if (!supabaseAdmin) {
+              return {
+                ...student,
+                guardians: [],
+              };
+            }
             const { data: guardianRelations } = await supabaseAdmin
               .from('guardian_students')
               .select(`
