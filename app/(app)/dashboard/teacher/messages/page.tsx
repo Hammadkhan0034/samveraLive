@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { X, Search, Send, Paperclip, Link as LinkIcon, Utensils, MessageSquarePlus } from 'lucide-react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { X, Search, Send, Paperclip, MessageSquarePlus } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { MessageThreadWithParticipants, MessageItem } from '@/lib/types/messages';
