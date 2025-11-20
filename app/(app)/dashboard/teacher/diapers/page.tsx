@@ -51,7 +51,7 @@ export default function TeacherDiapersPage() {
     <TeacherPageLayout>
       {/* Content Header */}
       <DiapersPageHeader title={t.di_title} />
-      
+      <p className="mb-3 text-sm text-slate-600 dark:text-slate-400">{t.di_hint}</p>
       {/* Diapers Panel */}
       <section>
         <DiaperPanel t={t} />
@@ -82,10 +82,8 @@ function DiaperPanel({ t }: { t: typeof enText | typeof isText }) {
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-      <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">{t.di_title}</h2>
-      <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{t.di_hint}</p>
-
-      <form onSubmit={save} className="mt-4 grid gap-3 md:grid-cols-3">
+     
+      <form onSubmit={save} className="grid gap-3 md:grid-cols-3">
         <label className="text-sm text-slate-700 dark:text-slate-300">
           {t.child}
           <input

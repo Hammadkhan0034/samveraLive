@@ -100,6 +100,7 @@ export const enText = {
   announcements_list: 'School Announcements',
   announcements: 'Announcements',
   announcements_subtitle: 'View and manage school announcements',
+  announcements_hint: 'Create and manage announcements for your classes or the entire organization.',
   view_all_announcements: 'View All Announcements',
   create_announcement: 'Create Announcement',
   edit_announcement: 'Edit Announcement',
@@ -371,6 +372,7 @@ export const enText = {
   gender_other: 'Other',
 
   // Teacher Dashboard
+  teacher_dashboard: 'Teacher Dashboard',
   kids_checked_in: 'Children checked in',
   today_hint: 'Today · Demo data',
   child: 'Child',
@@ -417,6 +419,7 @@ export const enText = {
   tile_guardians_desc: 'Manage guardians',
   tile_link_student: 'Link Student',
   tile_link_student_desc: 'Link a guardian to a student.',
+  link_student: 'Link Student',
   tile_menus: 'Menus',
   tile_menus_desc: 'Manage daily menus.',
 

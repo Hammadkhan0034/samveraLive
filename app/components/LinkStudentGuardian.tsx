@@ -203,11 +203,8 @@ export default function LinkStudentGuardian({ lang = 'en' }: { lang?: Lang }) {
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800 pb-12">
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t.title}</h3>
-      </div>
-
+    <div className="rounded-2xl p-2 dark:border-slate-700 dark:bg-slate-800 pb-12">
+      
       <div className="grid gap-6 md:grid-cols-2">
         <div>
           <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">{t.guardianSearchLabel}</label>

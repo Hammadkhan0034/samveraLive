@@ -108,7 +108,7 @@ export default function TeacherDashboard() {
 
         {/* Main content area */}
         <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900">
-          <div className="p-2 md:p-6 lg:p-8">
+          <div className="p-2 md:p-2 lg:p-8">
             {/* Content Header */}
             <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div className="flex items-center gap-3">
@@ -120,7 +120,7 @@ export default function TeacherDashboard() {
                 >
                   <Menu className="h-5 w-5" />
                 </button>
-                <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.title}</h2>
+                <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.teacher_dashboard}</h2>
               </div>
               <div className="flex items-center gap-3">
                 <ProfileSwitcher />

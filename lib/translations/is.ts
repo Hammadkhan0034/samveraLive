@@ -100,6 +100,7 @@ export const isText = {
   announcements_list: 'Tilkynningar skóla',
   announcements: 'Tilkynningar',
   announcements_subtitle: 'Skoða og stjórna tilkynningum skóla',
+  announcements_hint: 'Búðu til og stjórnaðu tilkynningum fyrir hópa þína eða alla stofnunina.',
   view_all_announcements: 'Skoða allar tilkynningar',
   create_announcement: 'Búa til tilkynningu',
   edit_announcement: 'Breyta tilkynningu',
@@ -371,6 +372,7 @@ export const isText = {
   gender_other: 'Annað',
 
   // Teacher Dashboard
+  teacher_dashboard: 'Kennarayfirlit',
   kids_checked_in: 'Börn skráð inn',
   today_hint: 'Í dag · Sýnagögn',
   child: 'Barn',
@@ -417,6 +419,7 @@ export const isText = {
   tile_guardians_desc: 'Stjórna forráðamönnum',
   tile_link_student: 'Tengja nemanda',
   tile_link_student_desc: 'Tengja forráðamann við nemanda.',
+  link_student: 'Tengja nemanda',
   tile_menus: 'Matseðillar',
   tile_menus_desc: 'Sýsla með daglega matseðla.',
 

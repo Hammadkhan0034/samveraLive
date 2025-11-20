@@ -97,10 +97,11 @@ export default function TeacherAnnouncementsPage() {
 
   return (
     <TeacherPageLayout>
+      <p className="ml-6 font-semibold text-xl text-black dark:text-white">{t.announcements_title}</p>
       {/* Announcements Panel */}
       <div className="space-y-6">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-          <h2 className="text-lg font-medium mb-4 text-slate-900 dark:text-slate-100">{t.announcements_title}</h2>
+        <div className="rounded-2xl p-6">
+          {/* <h2 className="text-lg font-medium mb-4 text-slate-900 dark:text-slate-100">{t.announcements_title}</h2> */}
           <AnnouncementForm
             classId={classId}
             orgId={finalOrgId}
@@ -114,7 +115,7 @@ export default function TeacherAnnouncementsPage() {
           />
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        <div className="rounded-2xl p-6">
           <AnnouncementList
             teacherClassIds={teacherClassIds}
             orgId={finalOrgId}

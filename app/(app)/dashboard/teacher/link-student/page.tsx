@@ -25,10 +25,10 @@ export default function TeacherLinkStudentPage() {
   // Try to get org_id from multiple possible locations
   const userMetadata = session?.user?.user_metadata;
   const orgIdFromMetadata = userMetadata?.org_id || userMetadata?.organization_id || userMetadata?.orgId;
-  
+
   // If no org_id in metadata, we need to get it from the database
   const [dbOrgId, setDbOrgId] = useState<string | null>(null);
-  
+
   // Fetch org_id from database if not in metadata
   useEffect(() => {
     if (session?.user?.id && !orgIdFromMetadata) {
@@ -46,7 +46,7 @@ export default function TeacherLinkStudentPage() {
       fetchUserOrgId();
     }
   }, [session?.user?.id, orgIdFromMetadata]);
-  
+
   // Final org_id to use
   const finalOrgId = orgIdFromMetadata || dbOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID || '1db3c97c-de42-4ad2-bb72-cc0b6cda69f7';
 
@@ -59,8 +59,8 @@ export default function TeacherLinkStudentPage() {
     badge?: string | number;
     route?: string;
   }> = useMemo(() => [
-      { id: 'menus', title: t.tile_menus || 'Menus', desc: t.tile_menus_desc || 'Manage daily menus', Icon: Utensils, route: '/dashboard/teacher?tab=menus' },
-    ], [t, lang]);
+    { id: 'menus', title: t.tile_menus || 'Menus', desc: t.tile_menus_desc || 'Manage daily menus', Icon: Utensils, route: '/dashboard/teacher?tab=menus' },
+  ], [t, lang]);
 
   // Show loading state while checking authentication
   if (authLoading || (isSigningIn && !user)) {
@@ -94,6 +94,9 @@ export default function TeacherLinkStudentPage() {
           <div className="p-2 md:p-6 lg:p-8">
             {/* Link Student Panel */}
             <div className="space-y-6">
+              <div className="mb-1">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t.tile_link_student_desc}</h3>
+              </div>
               <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
                 <LinkStudentGuardian lang={lang} />
               </div>
