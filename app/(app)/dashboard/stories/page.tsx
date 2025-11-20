@@ -545,7 +545,9 @@ function StoriesPageContent() {
           togglePause();
         }}
       >
-        <div className="text-white text-center text-base leading-relaxed">{it.caption || activeStory?.title || ''}</div>
+        <div className="text-white text-center text-lg leading-relaxed whitespace-pre-wrap break-words max-w-2xl px-4">
+          {it.caption || activeStory?.title || ''}
+        </div>
       </div>
     );
   }

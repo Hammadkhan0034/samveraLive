@@ -662,7 +662,9 @@ export default function StoryColumn({
         className="w-full h-full bg-gradient-to-b from-slate-800 to-slate-900 flex items-center justify-center p-6 cursor-pointer"
         onClick={handleStoryViewerClick}
       >
-        <div className="text-white text-center text-base leading-relaxed">{it.caption || activeStory?.title || ''}</div>
+        <div className="text-white text-center text-lg leading-relaxed whitespace-pre-wrap break-words max-w-2xl px-4">
+          {it.caption || activeStory?.title || ''}
+        </div>
       </div>
     );
   }
