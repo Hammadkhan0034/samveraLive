@@ -208,6 +208,24 @@ export default function EditStoryPage() {
       return;
     }
 
+    // Ensure expires_at is in valid ISO datetime format
+    let expiresAtISO: string;
+    try {
+      if (typeof form.expires_at === 'string' && form.expires_at.trim() !== '') {
+        // If it's already an ISO string, validate it
+        const date = new Date(form.expires_at);
+        if (isNaN(date.getTime())) {
+          throw new Error('Invalid date');
+        }
+        expiresAtISO = date.toISOString();
+      } else {
+        throw new Error('expires_at is required');
+      }
+    } catch (e) {
+      setError('Please provide a valid expiration date and time');
+      return;
+    }
+
     setSubmitting(true);
     setError(null);
     try {
@@ -219,7 +237,7 @@ export default function EditStoryPage() {
         title: form.title || null,
         caption: form.caption || null,
         is_public: isTeacher ? false : form.is_public,
-        expires_at: form.expires_at,
+        expires_at: expiresAtISO,
       };
 
       const storyRes = await fetch(`/api/stories?id=${storyId}`, {
@@ -230,7 +248,10 @@ export default function EditStoryPage() {
 
       const storyJson = await storyRes.json();
       if (!storyRes.ok) {
-        throw new Error(storyJson.error || `Failed to update story: ${storyRes.status}`);
+        // Show detailed validation error if available
+        const errorMsg = storyJson.error || storyJson.message || `Failed to update story: ${storyRes.status}`;
+        const details = storyJson.details ? `\nDetails: ${storyJson.details}` : '';
+        throw new Error(`${errorMsg}${details}`);
       }
 
       // Delete old items
@@ -310,7 +331,12 @@ export default function EditStoryPage() {
         window.dispatchEvent(new Event('stories-refresh'));
       }
       
-      router.push('/dashboard/stories');
+      // Redirect based on user role
+      if (isTeacher) {
+        router.push('/dashboard/teacher/stories');
+      } else {
+        router.push('/dashboard/stories');
+      }
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -330,8 +356,8 @@ export default function EditStoryPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-        <main className="mx-auto max-w-4xl px-4 py-8 md:px-6 mt-10 ml-20">
-          <div className="mb-6 flex items-center gap-4">
+        <main className="mx-auto max-w-4xl px-4 py-8 md:px-6 ml-20">
+          <div className="mb-6 mt-14 flex items-center gap-4">
             <button
               onClick={() => router.back()}
               className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
@@ -339,8 +365,8 @@ export default function EditStoryPage() {
               <ArrowLeft className="h-4 w-4" /> {t.back}
             </button>
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.title}</h1>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.subtitle}</p>
+              <h1 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.edit_story}</h1>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.edit_story_subtitle}</p>
             </div>
           </div>
 
@@ -364,9 +390,12 @@ export default function EditStoryPage() {
                   {classes.length === 0 ? (
                     <option value="" disabled>{isTeacher ? 'Loading your classes...' : 'No classes available'}</option>
                   ) : (
-                    classes.map(c => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))
+                    <>
+                      {isTeacher && !form.class_id && <option value="" disabled>Select a Class</option>}
+                      {classes.map(c => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </>
                   )}
                 </select>
                 {isTeacher && !form.class_id && (
@@ -378,8 +407,23 @@ export default function EditStoryPage() {
                 <input
                   type="datetime-local"
                   value={toLocalInput(form.expires_at)}
-                  onChange={(e)=>setForm(f=>({...f, expires_at: new Date(e.target.value).toISOString()}))}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value) {
+                      try {
+                        const date = new Date(value);
+                        if (!isNaN(date.getTime())) {
+                          setForm(f => ({ ...f, expires_at: date.toISOString() }));
+                        } else {
+                          console.error('Invalid date value:', value);
+                        }
+                      } catch (err) {
+                        console.error('Error parsing date:', err);
+                      }
+                    }
+                  }}
                   className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                  required
                 />
               </div>
               <div>
@@ -502,14 +546,14 @@ export default function EditStoryPage() {
 
             <div className="mt-6 flex items-center justify-end gap-2">
               <button 
-                className="rounded-md px-4 py-2 text-sm text-slate-700 hover:underline dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed" 
+                className="rounded-md px-4 py-2 text-sm border border-slate-400 text-slate-700 hover:underline dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed" 
                 onClick={()=>router.push('/dashboard/stories')}
                 disabled={submitting}
               >
                 {t.cancel}
               </button>
               <button 
-                className="inline-flex items-center gap-2 rounded-md bg-slate-900 px-4 py-2 text-sm text-white disabled:opacity-60 disabled:cursor-not-allowed dark:bg-slate-100 dark:text-slate-900" 
+                className="inline-flex items-center gap-2 rounded-md bg-slate-900 px-4 py-2 text-sm text-white disabled:opacity-60 disabled:cursor-not-allowed dark:bg-black dark:text-white" 
                 disabled={submitting} 
                 onClick={submit}
               >

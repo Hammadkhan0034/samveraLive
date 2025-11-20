@@ -21,7 +21,9 @@ export default function TeacherDashboard() {
     // No tabs available in TeacherDashboard anymore
     if (tabParam) {
       // Redirect to appropriate page if needed
-      if (tabParam === 'menus') {
+      if (tabParam === 'students') {
+        router.replace('/dashboard/teacher/students');
+      } else if (tabParam === 'menus') {
         router.replace('/dashboard/teacher/menus');
       } else if (tabParam === 'link_student') {
         router.replace('/dashboard/teacher/link-student');

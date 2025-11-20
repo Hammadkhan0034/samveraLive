@@ -143,8 +143,8 @@ function AddGuardianPageContent() {
                 <ArrowLeft className="h-4 w-4" /> {t.back}
               </button>
               <div>
-                <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{editingGuardian?.id ? t.edit_guardian : t.title}</h1>
-                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{editingGuardian?.id ? '' : t.subtitle}</p>
+                <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{editingGuardian?.id ? t.edit_guardian : t.create_guardian}</h1>
+                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{editingGuardian?.id ? '' : t.create_guardian_subtitle}</p>
               </div>
             </div>
           </div>

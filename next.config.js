@@ -12,6 +12,18 @@ const nextConfig = {
     },
     // Turbopack config - empty for now, using webpack for Supabase warning suppression
     turbopack: {},
+    images: {
+      remotePatterns: [
+        {
+          protocol: 'https',
+          hostname: '**.supabase.co',
+        },
+        {
+          protocol: 'https',
+          hostname: '**.supabase.in',
+        },
+      ],
+    },
   }
   
   module.exports = nextConfig

@@ -67,48 +67,73 @@ export default function ParentDashboard() {
 
       try {
         const studentsRes = await fetch(`/api/guardian-students?guardianId=${guardianId}`);
-        if (studentsRes.ok) {
-          const studentsData = await studentsRes.json();
-          const relationships = studentsData.relationships || [];
-          const studentIds = relationships.map((r: any) => r.student_id).filter(Boolean);
+        if (!studentsRes.ok) {
+          const errorData = await studentsRes.json().catch(() => ({}));
+          console.error('❌ Failed to fetch guardian-students:', studentsRes.status, errorData);
+          if (isMounted) {
+            setLinkedStudents([]);
+            setDerivedClassId(classId || null);
+            setDisplayStudent(null);
+          }
+          return;
+        }
+        
+        const studentsData = await studentsRes.json();
+        const relationships = studentsData.relationships || [];
+        const studentIds = relationships.map((r: any) => r.student_id).filter(Boolean);
+        console.log('📋 Found linked student IDs:', studentIds);
 
-          if (studentIds.length > 0) {
-            const studentsDetailsRes = await fetch(`/api/students?orgId=${orgId}`);
-            if (studentsDetailsRes.ok) {
-              const studentsDetails = await studentsDetailsRes.json();
-              const allStudents = studentsDetails.students || [];
-              const linked = allStudents
-                .filter((s: any) => studentIds.includes(s.id))
-                .map((s: any) => ({
-                  id: s.id,
-                  first_name: s.users?.first_name || s.first_name || '',
-                  last_name: s.users?.last_name || s.last_name || null,
-                  email: s.users?.email || null,
-                  classes: s.classes || null,
-                  class_id: s.class_id || s.classes?.id || null,
-                }));
-
-              if (isMounted) {
-                setLinkedStudents(linked);
-                // Cache for instant load next time
-                try { if (typeof window !== 'undefined') localStorage.setItem(`parent_students_${guardianId}`, JSON.stringify(linked)); } catch {}
-                // Prefer metadata class_id; else use first linked student's class
-                const effClassId = classId || (linked.find((s: { class_id?: string | null }) => !!s.class_id)?.class_id || null);
-                setDerivedClassId(effClassId);
-                const first = linked[0];
-                if (first) setDisplayStudent({ name: `${first.first_name} ${first.last_name || ''}`.trim(), className: first.classes?.name });
-              }
-            }
-          } else {
+        if (studentIds.length > 0) {
+          const studentsDetailsRes = await fetch(`/api/students?orgId=${orgId}`);
+          if (!studentsDetailsRes.ok) {
+            const errorData = await studentsDetailsRes.json().catch(() => ({}));
+            console.error('❌ Failed to fetch students:', studentsDetailsRes.status, errorData);
             if (isMounted) {
               setLinkedStudents([]);
               setDerivedClassId(classId || null);
               setDisplayStudent(null);
-              try { if (typeof window !== 'undefined') localStorage.removeItem(`parent_students_${guardianId}`); } catch {}
             }
+            return;
+          }
+          
+          const studentsDetails = await studentsDetailsRes.json();
+          const allStudents = studentsDetails.students || [];
+          console.log('📋 Total students fetched:', allStudents.length);
+          
+          const linked = allStudents
+            .filter((s: any) => studentIds.includes(s.id))
+            .map((s: any) => ({
+              id: s.id,
+              first_name: s.users?.first_name || s.first_name || '',
+              last_name: s.users?.last_name || s.last_name || null,
+              email: s.users?.email || null,
+              classes: s.classes || null,
+              class_id: s.class_id || s.classes?.id || null,
+            }));
+
+          console.log('📋 Linked students after filtering:', linked.length, linked);
+          
+          if (isMounted) {
+            setLinkedStudents(linked);
+            // Cache for instant load next time
+            try { if (typeof window !== 'undefined') localStorage.setItem(`parent_students_${guardianId}`, JSON.stringify(linked)); } catch {}
+            // Prefer metadata class_id; else use first linked student's class
+            const effClassId = classId || (linked.find((s: { class_id?: string | null }) => !!s.class_id)?.class_id || null);
+            setDerivedClassId(effClassId);
+            const first = linked[0];
+            if (first) setDisplayStudent({ name: `${first.first_name} ${first.last_name || ''}`.trim(), className: first.classes?.name });
+          }
+        } else {
+          console.log('📋 No linked students found');
+          if (isMounted) {
+            setLinkedStudents([]);
+            setDerivedClassId(classId || null);
+            setDisplayStudent(null);
+            try { if (typeof window !== 'undefined') localStorage.removeItem(`parent_students_${guardianId}`); } catch {}
           }
         }
-      } catch (e) {
+      } catch (e: any) {
+        console.error('❌ Error loading linked students:', e);
         if (isMounted) {
           setLinkedStudents([]);
           setDerivedClassId(classId || null);

@@ -120,8 +120,8 @@ export const attendanceStatusSchema = z.enum(['present', 'absent', 'late', 'excu
 /**
  * Thread type enum (for messages)
  */
-export const threadTypeSchema = z.enum(['class', 'individual', 'group'], {
-  errorMap: () => ({ message: 'Invalid thread type. Must be one of: class, individual, group' })
+export const threadTypeSchema = z.enum(['dm', 'class', 'individual', 'group', 'announcement'], {
+  errorMap: () => ({ message: 'Invalid thread type. Must be one of: dm, class, individual, group, announcement' })
 });
 
 // ============================================================================

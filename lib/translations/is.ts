@@ -238,6 +238,7 @@ export const isText = {
   guardians: 'Forráðamenn',
   add_guardian: 'Bæta við forráðamanni',
   create_guardian: 'Búa til forráðamann',
+  create_guardian_subtitle: 'Bæta við nýjum forráðamanni við stofnunina þína',
   edit_guardian: 'Breyta forráðamanni',
   delete_guardian: 'Eyða forráðamanni',
   delete_guardian_confirm: 'Ertu viss um að þú viljir eyða þessum forráðamanni?',
@@ -464,6 +465,8 @@ export const isText = {
   // Stories
   add_story: 'Bæta við sögu',
   add_story_subtitle: 'Bættu við nýrri sögu í hópinn þinn',
+  edit_story: 'Breyta sögu',
+  edit_story_subtitle: 'Uppfærðu upplýsingar sögunnar',
   add: 'Bæta við',
   stories_hint: 'Sögur eru einungis sýnilegar forráðafólki barna í hópnum og hverfa eftir 24 klst.',
   view: 'Skoða',

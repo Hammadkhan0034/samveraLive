@@ -237,6 +237,7 @@ export const enText = {
   guardians: 'Guardians',
   add_guardian: 'Add Guardian',
   create_guardian: 'Create Guardian',
+  create_guardian_subtitle: 'Add a new guardian to your organization',
   edit_guardian: 'Edit Guardian',
   delete_guardian: 'Delete Guardian',
   delete_guardian_confirm: 'Are you sure you want to delete this guardian?',
@@ -464,6 +465,8 @@ export const enText = {
   // Stories
   add_story: 'Add story',
   add_story_subtitle: 'Add a new story to your class',
+  edit_story: 'Edit Story',
+  edit_story_subtitle: 'Update your story details',
   add: 'Add',
   stories_hint: 'Stories are only visible to guardians of enrolled children in this class and expire after 24 hours.',
   view: 'View',

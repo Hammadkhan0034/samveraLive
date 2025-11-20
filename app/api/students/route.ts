@@ -49,13 +49,15 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
 
-    // Check if user has principal, admin, or teacher role
+    // Check if user has principal, admin, teacher, or parent/guardian role
     const userRoles = user.user_metadata?.roles || [];
-    const hasAccess = userRoles.some((role: string) => ['principal', 'admin', 'teacher'].includes(role));
+    const activeRole = user.user_metadata?.activeRole || user.user_metadata?.role;
+    const isPrincipalAdminTeacher = userRoles.some((role: string) => ['principal', 'admin', 'teacher'].includes(role));
+    const isParentGuardian = activeRole === 'parent' || activeRole === 'guardian' || userRoles.includes('parent') || userRoles.includes('guardian');
     
-    if (!hasAccess) {
+    if (!isPrincipalAdminTeacher && !isParentGuardian) {
       return NextResponse.json({ 
-        error: 'Access denied. Principal, admin, or teacher role required.' 
+        error: 'Access denied. Valid role required.' 
       }, { status: 403 });
     }
     
@@ -65,6 +67,36 @@ export async function GET(request: Request) {
       return queryValidation.error
     }
     const { orgId, classId } = queryValidation.data
+
+    // For parents/guardians, only allow access to their linked students
+    let allowedStudentIds: string[] | null = null;
+    if (isParentGuardian && !isPrincipalAdminTeacher) {
+      // Fetch guardian-student relationships
+      const { data: relationships, error: relError } = await supabaseAdmin
+        .from('guardian_students')
+        .select('student_id')
+        .eq('guardian_id', user.id)
+      
+      if (relError) {
+        console.error('❌ Error fetching guardian-student relationships:', relError);
+        return NextResponse.json({ 
+          error: 'Failed to fetch linked students' 
+        }, { status: 500 });
+      }
+      
+      allowedStudentIds = (relationships || []).map((r: any) => r.student_id).filter(Boolean);
+      
+      // If no linked students, return empty array
+      if (allowedStudentIds.length === 0) {
+        return NextResponse.json({ 
+          students: [],
+          total_students: 0
+        }, {
+          status: 200,
+          headers: getUserDataCacheHeaders()
+        });
+      }
+    }
 
     // Build query based on filters
     let query = supabaseAdmin
@@ -104,6 +136,11 @@ export async function GET(request: Request) {
     // Filter by class if provided
     if (classId) {
       query = query.eq('class_id', classId)
+    }
+
+    // For parents/guardians, filter to only their linked students
+    if (allowedStudentIds && allowedStudentIds.length > 0) {
+      query = query.in('id', allowedStudentIds)
     }
 
     const { data: students, error } = await query

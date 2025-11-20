@@ -9,6 +9,7 @@ import { useLanguage } from '@/lib/contexts/LanguageContext';
 import LoadingSkeleton from '@/app/components/shared/LoadingSkeleton';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import TeacherPageLayout from '@/app/components/shared/TeacherPageLayout';
+import { supabase } from '@/lib/supabaseClient';
 
 type Lang = 'is' | 'en';
 type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
@@ -185,6 +186,20 @@ export default function TeacherStoriesPage() {
     }
   }
 
+  function goToNextItem() {
+    if (activeIndex < activeItems.length - 1) {
+      setActiveIndex(activeIndex + 1);
+      scheduleNext(activeItems, activeIndex + 1);
+    }
+  }
+
+  function goToPrevItem() {
+    if (activeIndex > 0) {
+      setActiveIndex(activeIndex - 1);
+      scheduleNext(activeItems, activeIndex - 1);
+    }
+  }
+
   function togglePause() {
     if (isPaused) {
       setIsPaused(false);
@@ -289,6 +304,8 @@ export default function TeacherStoriesPage() {
     const imageSrc = it.url;
     
     if (isImage && imageSrc) {
+      // Check if URL is from Supabase Storage
+      const isSupabaseUrl = imageSrc.includes('supabase.co') || imageSrc.includes('supabase');
       return (
         <>
           <Image 
@@ -302,6 +319,7 @@ export default function TeacherStoriesPage() {
               togglePause();
             }}
             priority
+            unoptimized={isSupabaseUrl}
           />
         </>
       );
@@ -469,7 +487,7 @@ export default function TeacherStoriesPage() {
               <p className="mt-4 text-sm text-slate-600 dark:text-slate-400">{t.stories_hint}</p>
               
               {/* Stories Table */}
-              <div className="mt-6 rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
+              <div className="mt-6 rounded-t-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
                 {loading && stories.length === 0 ? (
                   <div className="p-6">
                     <LoadingSkeleton type="table" rows={5} />
@@ -481,20 +499,23 @@ export default function TeacherStoriesPage() {
                     <table className="w-full">
                       <thead className="bg-black text-white">
                         <tr>
-                          <th className="px-4 py-2 text-left text-sm font-semibold text-white">{t.col_title}</th>
+                          <th className="px-4 py-2 text-left text-sm font-semibold text-white rounded-tl-xl">{t.col_title}</th>
                           <th className="px-4 py-2 text-left text-sm font-semibold text-white">{t.col_scope}</th>
                           <th className="px-4 py-2 text-left text-sm font-semibold text-white">{t.col_caption}</th>
-                          <th className="px-4 py-2 text-left text-sm font-semibold text-white">{t.actions || 'Actions'}</th>
+                          <th className="px-4 py-2 text-left text-sm font-semibold text-white rounded-tr-xl">{t.actions || 'Actions'}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
-                        {stories.map((s) => (
+                        {stories.map((s) => {
+                          const classInfo = s.class_id ? teacherClasses.find(c => c.id === s.class_id) : null;
+                          const className = classInfo ? classInfo.name : (s.class_id ? `Class ${s.class_id.substring(0, 8)}` : null);
+                          return (
                           <tr key={s.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/30">
                             <td className="px-4 py-2 text-sm text-slate-900 dark:text-slate-100">
                               {s.title || '—'}
                             </td>
                             <td className="px-4 py-2 text-sm text-slate-600 dark:text-slate-400">
-                              {s.class_id ? t.class_label : t.org_wide}
+                              {s.class_id ? (className || t.class_label) : t.org_wide}
                             </td>
                             <td className="px-4 py-2 text-sm text-slate-600 dark:text-slate-400">
                               {s.caption || t.no_caption}
@@ -528,7 +549,8 @@ export default function TeacherStoriesPage() {
                               </div>
                             </td>
                           </tr>
-                        ))}
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -538,7 +560,7 @@ export default function TeacherStoriesPage() {
               {/* Story Viewer */}
               {viewerOpen && activeStory && (
                 <div 
-                  className="fixed inset-0 z-50 bg-black" 
+                  className="fixed inset-0 z-50 bg-black flex items-center justify-center" 
                   style={{ width: '100vw', height: '100vh', top: 0, left: 0, right: 0, bottom: 0 }}
                   onClick={(e) => {
                     if (e.target === e.currentTarget) {
@@ -546,7 +568,18 @@ export default function TeacherStoriesPage() {
                     }
                   }}
                 >
-                  <div className="relative w-full h-full bg-black overflow-hidden" style={{ width: '100vw', height: '100vh', position: 'relative' }}>
+                  {/* Centered Story Container with left/right gaps (Instagram style) */}
+                  <div 
+                    className="relative bg-black overflow-hidden rounded-lg mx-auto"
+                    style={{ 
+                      width: '90%',
+                      maxWidth: '500px',
+                      height: '90vh',
+                      maxHeight: '800px',
+                      position: 'relative'
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     {/* Progress bars */}
                     <div className="absolute top-2 left-2 right-2 z-10 flex gap-1">
                       {activeItems.map((_, idx) => {
@@ -565,6 +598,26 @@ export default function TeacherStoriesPage() {
                       })}
                     </div>
                     
+                    {/* Left click area for previous */}
+                    <div 
+                      className="absolute left-0 top-0 bottom-0 w-1/3 z-20 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        goToPrevItem();
+                      }}
+                      style={{ zIndex: 20 }}
+                    />
+
+                    {/* Right click area for next */}
+                    <div 
+                      className="absolute right-0 top-0 bottom-0 w-1/3 z-20 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        goToNextItem();
+                      }}
+                      style={{ zIndex: 20 }}
+                    />
+                    
                     {/* Story content */}
                     <div 
                       className="absolute inset-0 w-full h-full" 
@@ -572,38 +625,36 @@ export default function TeacherStoriesPage() {
                         top: 0, 
                         left: 0, 
                         right: 0, 
-                        bottom: 0, 
-                        width: '100vw', 
-                        height: '100vh',
+                        bottom: 0,
                         overflow: 'hidden'
                       }}
-                      onClick={(e) => e.stopPropagation()}
                     >
                       {renderActiveItem()}
                     </div>
                     
                     {/* Close button */}
                     <button 
-                      className="absolute top-2 right-2 z-20 w-8 h-8 flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-colors" 
+                      className="absolute top-2 right-2 z-30 w-8 h-8 flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-colors" 
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
                         closeViewer(e);
                       }}
                       type="button"
-                      style={{ zIndex: 1000 }}
+                      style={{ zIndex: 30 }}
                     >
                       ✕
                     </button>
                     
                     {/* Pause/Play button */}
                     <button
-                      className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 w-12 h-12 flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-colors bg-black/30"
+                      className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-30 w-12 h-12 flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-colors bg-black/30"
                       onClick={(e) => {
                         e.stopPropagation();
                         togglePause();
                       }}
                       type="button"
+                      style={{ zIndex: 30 }}
                     >
                       {isPaused ? '▶' : '⏸'}
                     </button>
