@@ -3,7 +3,7 @@
 import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { X } from 'lucide-react';
-import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Bell, Users, Shield, Link as LinkIcon, Utensils } from 'lucide-react';
+import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Bell, Users, Shield, Link as LinkIcon, Utensils, LayoutDashboard } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 
 // Small helper
@@ -62,6 +62,7 @@ const TeacherSidebar = forwardRef<TeacherSidebarRef, TeacherSidebarProps>(({
 
     // Map tile IDs to their expected routes
     const tileRouteMap: Record<string, string> = {
+      'dashboard': '/dashboard/teacher',
       'attendance': '/dashboard/teacher/attendance',
       'diapers': '/dashboard/teacher/diapers',
       'messages': '/dashboard/teacher/messages',
@@ -104,6 +105,9 @@ const TeacherSidebar = forwardRef<TeacherSidebarRef, TeacherSidebarProps>(({
       return pathname === tileRoute;
     }
     // For special tiles, check pathname
+    if (tileId === 'dashboard') {
+      return pathname === '/dashboard/teacher';
+    }
     if (tileId === 'attendance') {
       return pathname === '/dashboard/teacher/attendance';
     }
@@ -148,6 +152,15 @@ const TeacherSidebar = forwardRef<TeacherSidebarRef, TeacherSidebarProps>(({
       router.push(tile.route);
       handleSidebarClose();
     }
+  };
+
+  // Handle dashboard tile click
+  const handleDashboardClick = () => {
+    if (pathname !== '/dashboard/teacher') {
+      setOptimisticActiveTile('dashboard');
+      router.replace('/dashboard/teacher');
+    }
+    handleSidebarClose();
   };
 
   // Handle attendance tile click
@@ -241,6 +254,7 @@ const TeacherSidebar = forwardRef<TeacherSidebarRef, TeacherSidebarProps>(({
   };
 
   // Use isTileActive helper for consistent optimistic state handling
+  const isDashboardActive = isTileActive('dashboard');
   const isAttendanceActive = isTileActive('attendance');
   const isDiapersActive = isTileActive('diapers');
   const isMessagesActive = isTileActive('messages');
@@ -275,6 +289,42 @@ const TeacherSidebar = forwardRef<TeacherSidebarRef, TeacherSidebarProps>(({
             </button>
           </div>
           <nav className="space-y-1">
+            {/* Dashboard tile - always route-based */}
+            <button
+              onClick={handleDashboardClick}
+              className={clsx(
+                'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                'hover:bg-slate-800 dark:hover:bg-slate-700',
+                isDashboardActive
+                  ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
+                  : 'border-l-4 border-transparent'
+              )}
+            >
+              <span className={clsx(
+                'flex-shrink-0 rounded-lg p-2',
+                isDashboardActive
+                  ? 'bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900'
+                  : 'bg-slate-800 dark:bg-slate-700 text-slate-200 dark:text-slate-300'
+              )}>
+                <LayoutDashboard className="h-5 w-5" />
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <span className={clsx(
+                    'font-medium truncate',
+                    isDashboardActive
+                      ? 'text-slate-100 dark:text-slate-100'
+                      : 'text-slate-200 dark:text-slate-300'
+                  )}>
+                    {t.teacher_dashboard}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">
+                  View dashboard overview
+                </p>
+              </div>
+            </button>
+
             {/* Attendance tile - always route-based */}
             <button
               onClick={handleAttendanceClick}

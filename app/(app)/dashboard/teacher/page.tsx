@@ -162,7 +162,7 @@ export default function TeacherDashboardPage() {
   });
 
   // Loading and error states
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Extract stable values from session to avoid unnecessary re-renders
@@ -189,6 +189,7 @@ export default function TeacherDashboardPage() {
         announcementsCount: 0,
         menusCount: 0,
       });
+      setIsLoading(false);
       return;
     }
 
@@ -201,6 +202,7 @@ export default function TeacherDashboardPage() {
         announcementsCount: 0,
         menusCount: 0,
       });
+      setIsLoading(false);
       return;
     }
 
