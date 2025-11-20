@@ -15,7 +15,7 @@ type Lang = 'is' | 'en';
 function SignInPageContent() {
   const router = useRouter();
   const qp = useSearchParams();
-  const { signIn, signUp, signInWithOtp, verifyEmailOtp, user, loading, isSigningIn } = useAuth();
+  const { signIn, signUp, signInWithOtp, user, loading, isSigningIn } = useAuth();
   const { isDark, toggleTheme } = useTheme();
 
   // Allow ?role=teacher|principal|parent|admin to pick the demo role for signup
@@ -36,7 +36,6 @@ function SignInPageContent() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [useOtp, setUseOtp] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
-  const [otpToken, setOtpToken] = useState('');
   const [invitationMessage, setInvitationMessage] = useState('');
 
   // Check for invitation acceptance message
