@@ -1,273 +1,418 @@
-# Samvera Cursor Rules
+# Next.js 16 Cursor Rules
 
 ## Project Overview
-Samvera is a Next.js 13 application with multi-role access control (Admin, Principal, Teacher, Parent/Guardian), multi-tenant organization support, and internationalization (English/Icelandic).
+This is a Next.js 16 application using the App Router, TypeScript, Tailwind CSS, and Supabase. Follow these rules for all code generation and modifications.
 
-## Technology Stack
-- **Framework**: Next.js 13.5.1 (App Router)
-- **Language**: TypeScript (strict mode)
-- **Database/Auth**: Supabase
-- **Styling**: Tailwind CSS with dark mode support
-- **UI Components**: Custom components with Lucide React icons, Framer Motion animations
-- **State Management**: React Context (AuthContext, LanguageContext)
+## Core Principles
 
-## Code Style & Conventions
+### 1. Component/Module-First Approach
+- **Always** organize code by feature/domain first, then by type
+- Prefer colocation: keep related files (components, hooks, utils, types) together
+- Use the `app/` directory structure for routes and layouts
+- Use `components/` directory for reusable UI components
+- Use `lib/` directory for utilities, hooks, and shared logic
+- Group related functionality in feature-based modules
 
-### TypeScript
-- Use strict TypeScript with proper type definitions
-- Prefer `interface` for object shapes, `type` for unions/intersections
-- Use `as const` for literal types when appropriate
-- Always type function parameters and return values
-- Use path aliases: `@/` maps to project root
+### 2. Shared Components
+- **Always** check `app/components/shared/` before creating new components
+- Extract common UI patterns into shared components
+- Shared components should be:
+  - Generic and reusable
+  - Well-typed with TypeScript
+  - Documented with JSDoc comments
+  - Located in `app/components/shared/`
+- Examples of shared components: buttons, inputs, modals, cards, loading states, error boundaries
 
-### File Organization
-- API routes: `app/api/[route]/route.ts`
-- Components: `app/components/` (shared in `app/components/shared/`)
-- Server utilities: `lib/`
-- Client contexts: `lib/contexts/`
-- Types: `lib/types/`
-- Hooks: `lib/hooks/`
+### 3. Next.js 16 Best Practices
 
-### Component Patterns
-- **Client Components**: Must have `'use client'` directive at the top
-- **Server Components**: Default, no directive needed
-- Use functional components with TypeScript
-- Props should be typed with interfaces
-- Use React hooks appropriately (useState, useEffect, useContext)
+#### App Router Structure
+- Use Server Components by default (React Server Components)
+- Only use `'use client'` directive when necessary (interactivity, hooks, browser APIs)
+- Leverage Server Actions for mutations instead of API routes when possible
+- Use Route Handlers (`route.ts`) for external API integrations or webhooks
+- Implement proper loading states with `loading.tsx`
+- Use `error.tsx` for error boundaries
+- Leverage `not-found.tsx` for 404 handling
 
-### Naming Conventions
-- Components: PascalCase (e.g., `GuardianForm.tsx`)
-- Files/functions: camelCase for utilities, PascalCase for components
-- Constants: UPPER_SNAKE_CASE (e.g., `GUARDIAN_ROLE_ID`)
-- API routes: HTTP methods (GET, POST, PUT, DELETE) as named exports
+#### File Naming Conventions
+- Use `page.tsx` for route pages
+- Use `layout.tsx` for layouts
+- Use `loading.tsx` for loading states
+- Use `error.tsx` for error boundaries
+- Use `not-found.tsx` for 404 pages
+- Use `route.ts` for API route handlers
+- Use `component.tsx` or `Component.tsx` for components (PascalCase)
+- Use `hook.ts` or `useHook.ts` for custom hooks
+- Use `util.ts` or `utils.ts` for utility functions
+- Use `type.ts` or `types.ts` for TypeScript types
 
-## Authentication & Authorization
+#### Server Components (Default)
+- Prefer Server Components for:
+  - Data fetching
+  - Accessing backend resources
+  - Keeping sensitive information on the server
+  - Large dependencies (reduce client bundle)
+  - Static content
+- Server Components can:
+  - Directly access databases, file systems, etc.
+  - Use async/await for data fetching
+  - Import Server-only modules
 
-### Roles
-- **Role Types**: `'admin' | 'principal' | 'teacher' | 'parent'`
-- **Role Hierarchy**: admin (4) > principal (3) > teacher (2) > parent (1)
-- **Role Paths**: Defined in `lib/auth.ts` and `middleware.ts`
-- Always check user roles before granting access
-- Use Supabase session for authentication state
+#### Client Components
+- Only use `'use client'` when you need:
+  - React hooks (useState, useEffect, useContext, etc.)
+  - Browser APIs (window, document, localStorage, etc.)
+  - Event listeners (onClick, onChange, etc.)
+  - Third-party libraries that require client-side JavaScript
+- Keep Client Components small and focused
+- Pass data from Server Components to Client Components as props
+- Use Server Actions for mutations from Client Components
 
-### Multi-Tenancy
-- All data operations must include `org_id` filtering
-- Never allow cross-organization data access
-- Validate `org_id` in all API routes
-- Use `supabaseAdmin` for server-side operations requiring elevated permissions
+#### Data Fetching
+- Use async Server Components for data fetching
+- Use `fetch` with Next.js caching by default
+- Configure caching with `cache: 'no-store'` for dynamic data
+- Use `revalidate` for ISR (Incremental Static Regeneration)
+- Use `generateStaticParams` for dynamic routes
+- Prefer Server Actions over API routes for mutations
 
-### Middleware
-- Dashboard routes are protected by middleware
-- Middleware validates session and role-based access
-- Redirects unauthorized users to `/signin`
-- Adds user context to headers for server components
+#### Server Actions
+- Define Server Actions in `lib/server-actions.ts` or colocated `actions.ts` files
+- Use `'use server'` directive at the top of Server Action files
+- Validate inputs with Zod schemas
+- Handle errors gracefully with try-catch
+- Return proper error messages to the client
 
-## Database Patterns
+#### TypeScript
+- Use strict TypeScript configuration
+- Define types in `lib/types/` directory
+- Use interfaces for object shapes
+- Use types for unions, intersections, and computed types
+- Avoid `any` - use `unknown` if type is truly unknown
+- Use type inference where possible
+- Export types from a central `types.ts` file per module
 
-### Supabase Client Usage
-- **Client-side**: Use `createBrowserClient` from `@/lib/supabaseClient`
-- **Server-side**: Use `createServerClient` from `@/lib/supabaseServer`
-- **Admin operations**: Use `supabaseAdmin` from `@/lib/supabaseClient`
-- Always handle errors from Supabase queries
-- Use `.maybeSingle()` when expecting 0 or 1 result, `.single()` when expecting exactly 1
+#### Styling
+- Use Tailwind CSS utility classes
+- Prefer Tailwind over custom CSS
+- Use CSS modules only when necessary for component-scoped styles
+- Use `globals.css` for global styles only
+- Follow mobile-first responsive design
+- Use Tailwind's dark mode utilities when applicable
 
-### Query Patterns
-- Always filter by `org_id` for organization-scoped data
-- Use `.order()` for consistent sorting (default: `created_at DESC`)
-- Select only needed fields with `.select()`
-- Validate required fields before database operations
+#### Performance
+- Use `next/image` for all images
+- Use `next/link` for client-side navigation
+- Implement proper code splitting
+- Use dynamic imports (`next/dynamic`) for heavy components
+- Optimize fonts with `next/font`
+- Use React Server Components to reduce bundle size
+- Implement proper loading states
+- Use Suspense boundaries for async components
 
-## API Route Patterns
+#### Error Handling
+- Use error boundaries (`error.tsx`) for route-level errors
+- Handle errors in Server Actions with try-catch
+- Provide user-friendly error messages
+- Log errors appropriately (server-side)
+- Use proper HTTP status codes in API routes
 
-### Structure
-```typescript
-export async function GET(request: Request) {
+#### Security
+- Never expose sensitive data to Client Components
+- Validate all user inputs with Zod
+- Use Server Actions for mutations (CSRF protection built-in)
+- Sanitize user inputs
+- Use environment variables for secrets (never commit)
+- Implement proper authentication checks in Server Components
+
+## File Organization
+
+### Directory Structure
+```
+app/
+  ├── (routes)/          # Route groups
+  │   ├── page.tsx
+  │   ├── layout.tsx
+  │   └── loading.tsx
+  ├── components/        # Reusable components
+  │   ├── shared/        # Shared/common components
+  │   └── [feature]/     # Feature-specific components
+  ├── api/               # API route handlers
+  │   └── [route]/
+  │       └── route.ts
+  └── globals.css
+
+lib/
+  ├── hooks/             # Custom React hooks
+  ├── utils/             # Utility functions
+  ├── types/             # TypeScript types
+  ├── validation/        # Zod schemas
+  └── [feature]/         # Feature-specific logic
+```
+
+### Component Organization
+- **Shared Components**: `app/components/shared/`
+  - Buttons, Inputs, Cards, Modals, etc.
+  - Should be generic and reusable
+- **Feature Components**: `app/components/[feature]/`
+  - Feature-specific components
+  - Can import from shared components
+
+## Code Generation Rules
+
+### When Creating Components
+1. **Check for existing shared components first**
+2. If creating a new shared component:
+   - Place in `app/components/shared/`
+   - Make it generic and reusable
+   - Add TypeScript types for all props
+   - Add JSDoc comments
+   - Export as named export
+3. If creating a feature component:
+   - Place in `app/components/[feature]/`
+   - Import shared components when possible
+   - Keep it focused on the feature
+
+### Component Template
+```tsx
+import { type ComponentProps } from 'react'
+
+/**
+ * [Component description]
+ * 
+ * @example
+ * ```tsx
+ * <ComponentName prop1="value" />
+ * ```
+ */
+export function ComponentName({
+  prop1,
+  ...props
+}: ComponentNameProps) {
+  return (
+    <div {...props}>
+      {/* Component content */}
+    </div>
+  )
+}
+
+export type ComponentNameProps = ComponentProps<'div'> & {
+  prop1: string
+}
+```
+
+### Server Component Template
+```tsx
+import { type Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Page Title',
+  description: 'Page description',
+}
+
+export default async function Page() {
+  // Data fetching
+  const data = await fetchData()
+  
+  return (
+    <div>
+      {/* Server Component content */}
+    </div>
+  )
+}
+```
+
+### Client Component Template
+```tsx
+'use client'
+
+import { useState } from 'react'
+
+export function ClientComponent() {
+  const [state, setState] = useState()
+  
+  return (
+    <div>
+      {/* Client Component content */}
+    </div>
+  )
+}
+```
+
+### Server Action Template
+```tsx
+'use server'
+
+import { z } from 'zod'
+import { revalidatePath } from 'next/cache'
+
+const schema = z.object({
+  // Define schema
+})
+
+export async function actionName(formData: FormData) {
   try {
-    // Validate supabaseAdmin availability
-    if (!supabaseAdmin) {
-      return NextResponse.json({ error: '...' }, { status: 500 })
-    }
+    const validated = schema.parse({
+      // Parse form data
+    })
     
-    // Validate query params/body
-    // Perform database operations
-    // Return NextResponse.json with appropriate status
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 })
+    // Perform action
+    
+    revalidatePath('/path')
+    return { success: true }
+  } catch (error) {
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Unknown error' 
+    }
   }
 }
 ```
 
-### Error Handling
-- Always use try/catch blocks
-- Return appropriate HTTP status codes (400, 401, 403, 404, 500)
-- Include descriptive error messages
-- Log errors with console.error and emoji indicators (✅ success, ❌ error)
-- Never expose sensitive information in error messages
+## Package Management
 
-### Validation
-- Validate required fields early
-- Use email regex: `/^[^\s@]+@[^\s@]+\.[^\s@]+$/`
-- Validate `org_id` is provided and not "1" (unless explicitly handling legacy)
-- Validate user permissions before data operations
+### Latest Packages (as of Next.js 16)
+- `next`: ^16.0.0
+- `react`: ^18.3.0
+- `react-dom`: ^18.3.0
+- `typescript`: ^5.7.0
+- `tailwindcss`: ^3.3.3
+- `zod`: ^3.23.8 (for validation)
+- `@supabase/ssr`: ^0.7.0
+- `@supabase/supabase-js`: ^2.45.0
 
-## Internationalization (i18n)
+### When Adding New Packages
+- Always use the latest stable version
+- Check compatibility with Next.js 16
+- Prefer packages that support React Server Components
+- Use `npm install` or `pnpm install` (check package manager in use)
 
-### Language Support
-- Supported languages: English (`'en'`) and Icelandic (`'is'`)
-- Language state managed by `LanguageContext`
-- Use `useLanguage()` hook to access translations
-- Translations stored in `LanguageContext.tsx`
+## Import Conventions
 
-### Translation Requirements
-- **ALL user-facing text** must be translatable
-- Form labels and placeholders must support translations with fallbacks
-- Use the `t` object from `useLanguage()` hook
-- Provide fallback English text when translation missing
-- Pattern: `{t.label_key || 'Fallback English Text'}`
+### Import Order
+1. React and Next.js imports
+2. Third-party library imports
+3. Internal imports (use `@/` alias)
+4. Type imports (use `type` keyword)
+5. Relative imports
 
-### Translation Keys
-- Use descriptive, hierarchical keys (e.g., `create_guardian`, `first_name_placeholder`)
-- Keep translation objects typed with `as const`
-- Add new translations to both `enText` and `isText` objects
+### Example
+```tsx
+import { useState } from 'react'
+import { type Metadata } from 'next'
+import { z } from 'zod'
 
-## Styling Guidelines
+import { Button } from '@/app/components/shared/Button'
+import { useAuth } from '@/lib/hooks/useAuth'
 
-### Tailwind CSS
-- Use utility classes for styling
-- Support dark mode: `dark:` variants for all color-related classes
-- Common color palette: `slate-*`, `blue-*`, `red-*`, `emerald-*`
-- Use consistent spacing: `p-6`, `gap-3`, `mb-4`, etc.
-- Rounded corners: `rounded-lg` or `rounded-2xl`
-- Focus states: `focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500`
+import type { User } from '@/lib/types/auth'
+```
 
-### Form Styling
-- Input fields: `rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2`
-- Buttons: `rounded-lg bg-black px-4 py-2 text-sm text-white`
-- Disabled states: `disabled:opacity-50 disabled:cursor-not-allowed`
-- Error messages: `text-red-600 dark:text-red-400`
-- Success messages: `text-emerald-600 dark:text-emerald-400`
+## Common Patterns
 
-### Responsive Design
-- Use grid layouts: `grid grid-cols-1 md:grid-cols-2 gap-3`
-- Mobile-first approach
-- Test on various screen sizes
+### Data Fetching Pattern
+```tsx
+// Server Component
+export default async function Page() {
+  const data = await fetch('...', {
+    next: { revalidate: 3600 } // ISR
+  }).then(res => res.json())
+  
+  return <DataDisplay data={data} />
+}
+```
 
-## Component Patterns
+### Form with Server Action Pattern
+```tsx
+// Server Component
+import { Form } from './Form'
 
-### Forms
-- Accept `translations` prop for all labels/placeholders
-- Provide fallback text for missing translations
-- Use controlled components with `useState`
-- Handle loading states with disabled buttons and spinners
-- Show error/success messages clearly
-- Validate inputs on both client and server
+export default function Page() {
+  return <Form />
+}
 
-### Tables
-- Use consistent column headers
-- Support sorting and filtering when appropriate
-- Include actions (edit, delete) with proper permissions
-- Show empty states when no data
+// Client Component (Form.tsx)
+'use client'
 
-### Modals
-- Use overlay with `fixed inset-0 z-50`
-- Include close button (X icon)
-- Handle ESC key and click-outside to close
-- Support both modal and page modes (`asPage` prop)
+import { useActionState } from 'react'
+import { submitAction } from '@/lib/server-actions'
 
-## Security Best Practices
+export function Form() {
+  const [state, formAction] = useActionState(submitAction, null)
+  
+  return (
+    <form action={formAction}>
+      {/* Form fields */}
+    </form>
+  )
+}
+```
 
-### Data Protection
-- Never expose sensitive data (SSN, passwords) in API responses
-- Use environment variables for secrets (`.env.local`)
-- Validate all user inputs
-- Use parameterized queries (Supabase handles this)
-- Check user permissions before data operations
+### Loading State Pattern
+```tsx
+// app/[route]/loading.tsx
+export default function Loading() {
+  return <div>Loading...</div>
+}
+```
 
-### Authentication
-- Use Supabase magic links for passwordless authentication
-- Store invitation tokens securely
-- Set appropriate expiration times (7 days for invitations)
-- Never expose service role keys in client-side code
+### Error Boundary Pattern
+```tsx
+// app/[route]/error.tsx
+'use client'
 
-## Error Handling & Logging
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string }
+  reset: () => void
+}) {
+  return (
+    <div>
+      <h2>Something went wrong!</h2>
+      <button onClick={reset}>Try again</button>
+    </div>
+  )
+}
+```
 
-### Console Logging
-- Use emoji indicators: ✅ for success, ❌ for errors
-- Include context in log messages
-- Log errors before returning API responses
-- Use `console.warn` for non-critical issues
+## Testing Considerations
+- Write tests for Server Actions
+- Test Server Components with async rendering
+- Test Client Components with React Testing Library
+- Use proper mocking for external dependencies
 
-### User-Facing Errors
-- Provide clear, actionable error messages
-- Don't expose internal implementation details
-- Use appropriate HTTP status codes
-- Include error details in development, generic messages in production
-
-## Testing & Development
-
-### Scripts
-- `npm run dev`: Start development server on port 3000
-- `npm run build`: Build for production
-- `npm run lint`: Run ESLint
-- `npm run create:admin`: Create admin user
-- `npm run create:test:all`: Create test users
-
-### Environment Variables
-- Required: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
-- Optional: `NEXT_PUBLIC_SITE_URL` (defaults to `http://localhost:3000`)
+## Accessibility
+- Use semantic HTML elements
+- Add proper ARIA labels when needed
+- Ensure keyboard navigation works
+- Maintain proper heading hierarchy
+- Use proper form labels
+- Ensure color contrast meets WCAG standards
 
 ## Code Quality
+- Use ESLint with Next.js config
+- Format code with Prettier (if configured)
+- Write self-documenting code
+- Add JSDoc comments for complex functions
+- Keep functions small and focused
+- Avoid deep nesting (max 3-4 levels)
 
-### Best Practices
-- Keep functions focused and single-purpose
-- Extract reusable logic into utilities
-- Use meaningful variable names
-- Add comments for complex business logic
-- Follow DRY (Don't Repeat Yourself) principle
-- Keep components small and composable
+## Git Conventions
+- Use descriptive commit messages
+- Keep commits focused and atomic
+- Use conventional commit format when possible
 
-### Performance
-- Use React.memo for expensive components when appropriate
-- Lazy load heavy components
-- Optimize database queries (select only needed fields)
-- Use proper indexing in database queries
-
-## Common Patterns to Follow
-
-### Creating Users
-1. Create auth entry via `createUserAuthEntry()`
-2. Create public user record in `users` table
-3. Update auth metadata with roles and org_id
-4. Send magic link if invitation flow
-5. Link to related entities (students, classes) if needed
-
-### Updating Users
-1. Validate user exists and belongs to correct org
-2. Update `users` table
-3. Update auth metadata if roles changed
-4. Return updated user data
-
-### Deleting Users
-1. Validate user exists and belongs to correct org
-2. Check for related records (soft delete preferred)
-3. Delete user record
-4. Consider cascade deletes for related data
-
-## When Adding New Features
-
-1. **Check role permissions** - Ensure proper access control
-2. **Add org_id filtering** - All queries must be org-scoped
-3. **Add translations** - Support both English and Icelandic
-4. **Handle errors** - Proper try/catch and user-friendly messages
-5. **Test dark mode** - Ensure UI works in both themes
-6. **Validate inputs** - Both client and server-side
-7. **Update types** - Add TypeScript interfaces as needed
-8. **Document** - Add comments for complex logic
-
-## Notes
-- Default password for test users: `'test123456'`
-- Guardian role ID constant: `GUARDIAN_ROLE_ID = 10`
-- Organization ID "1" is legacy and should be resolved to actual UUID
-- Magic link expiration: 7 days from creation
-- Session cookie max age: 7 days
+## Important Reminders
+1. **Always check `app/components/shared/` before creating new components**
+2. **Use Server Components by default - only add `'use client'` when necessary**
+3. **Prefer Server Actions over API routes for mutations**
+4. **Use TypeScript strictly - avoid `any`**
+5. **Follow the component/module-first organization approach**
+6. **Keep components small, focused, and reusable**
+7. **Use Tailwind CSS for styling**
+8. **Implement proper error handling and loading states**
+9. **Optimize for performance (images, fonts, code splitting)**
+10. **Validate all inputs with Zod**
 
