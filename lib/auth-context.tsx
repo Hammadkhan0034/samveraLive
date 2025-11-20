@@ -35,15 +35,69 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (sessionInitialized.current) return;
     sessionInitialized.current = true;
 
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-      if (session?.expires_at) {
-        lastRefreshTime.current = Date.now();
-      }
-    });
+    // Get initial session with network error handling
+    supabase.auth.getSession()
+      .then(({ data: { session }, error }) => {
+        // Handle network errors gracefully
+        if (error) {
+          const isNetworkError = error.name === 'AuthRetryableFetchError' || 
+                                error.message?.includes('fetch failed') ||
+                                error.status === 0;
+          
+          if (isNetworkError) {
+            console.warn('⚠️ Network error during initial session load - will retry. Error:', error.message);
+            // Don't set loading to false immediately - allow retry
+            // Try to get session from localStorage as fallback
+            if (typeof window !== 'undefined') {
+              try {
+                const cachedSession = sessionStorage.getItem('supabase.auth.token');
+                if (cachedSession) {
+                  // Session might still be valid, just network is down
+                  setLoading(false);
+                  return;
+                }
+              } catch (e) {
+                // Ignore cache errors
+              }
+            }
+            // Retry after a delay
+            setTimeout(() => {
+              supabase.auth.getSession().then(({ data: { session: retrySession } }) => {
+                setSession(retrySession);
+                setUser(retrySession?.user ?? null);
+                setLoading(false);
+                if (retrySession?.expires_at) {
+                  lastRefreshTime.current = Date.now();
+                }
+              }).catch(() => {
+                // If retry also fails, just set loading to false
+                setLoading(false);
+              });
+            }, 2000);
+            return;
+          }
+        }
+        
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+        if (session?.expires_at) {
+          lastRefreshTime.current = Date.now();
+        }
+      })
+      .catch((error) => {
+        // Handle any other errors
+        const isNetworkError = error?.name === 'AuthRetryableFetchError' || 
+                              error?.message?.includes('fetch failed') ||
+                              error?.status === 0;
+        
+        if (isNetworkError) {
+          console.warn('⚠️ Network error during session initialization:', error.message);
+        } else {
+          console.error('❌ Error getting initial session:', error);
+        }
+        setLoading(false);
+      });
 
     // Listen for auth changes
     const {

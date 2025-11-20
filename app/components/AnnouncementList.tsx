@@ -77,8 +77,6 @@ export default function AnnouncementList({
       });
       
       if (!res.ok) {
-        const err = await res.json().catch(() => ({} as any));
-        
         // Handle authentication errors gracefully - don't show error, just keep cached data
         if (res.status === 401) {
           console.warn('Authentication required for announcements, using cached data if available');
@@ -86,8 +84,27 @@ export default function AnnouncementList({
           return;
         }
         
+        // Try to parse error response, but handle cases where response might not be JSON
+        let errorMessage = `Failed to load announcements (${res.status})`;
+        try {
+          const err = await res.json();
+          if (err && typeof err === 'object' && 'error' in err) {
+            errorMessage = err.error || errorMessage;
+          }
+        } catch {
+          // If JSON parsing fails, try to get text response
+          try {
+            const text = await res.text();
+            if (text) {
+              errorMessage = text;
+            }
+          } catch {
+            // If all else fails, use default error message
+          }
+        }
+        
         // For other errors, throw to show error message
-        throw new Error(err.error || `Failed with ${res.status}`);
+        throw new Error(errorMessage);
       }
       const { announcements: data } = await res.json();
 

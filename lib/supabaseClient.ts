@@ -156,8 +156,16 @@ if (typeof window !== 'undefined') {
         : null;
       const hasRecentRateLimit = rateLimitErrorTime && (now - parseInt(rateLimitErrorTime, 10)) < 60000; // Within last minute
       
-      // Use longer wait interval if we recently hit a rate limit
-      const waitInterval = hasRecentRateLimit ? RATE_LIMIT_WAIT_INTERVAL : MIN_REFRESH_ATTEMPT_INTERVAL;
+      // Check if we have a recent network error
+      const networkErrorTime = typeof window !== 'undefined' 
+        ? sessionStorage.getItem('supabase_network_error') 
+        : null;
+      const hasRecentNetworkError = networkErrorTime && (now - parseInt(networkErrorTime, 10)) < 30000; // Within last 30 seconds
+      
+      // Use longer wait interval if we recently hit a rate limit or network error
+      const waitInterval = hasRecentRateLimit ? RATE_LIMIT_WAIT_INTERVAL : 
+                          hasRecentNetworkError ? 10000 : // 10 seconds for network errors
+                          MIN_REFRESH_ATTEMPT_INTERVAL;
 
       // If we're already refreshing or just refreshed recently, queue this request
       if (isRefreshing || (timeSinceLastCall < waitInterval && !isInitialLogin)) {
@@ -206,9 +214,10 @@ if (typeof window !== 'undefined') {
             return response;
           }
         } else {
-          // Clear rate limit flag on successful refresh
+          // Clear rate limit and network error flags on successful refresh
           if (typeof window !== 'undefined') {
             sessionStorage.removeItem('supabase_rate_limit_error');
+            sessionStorage.removeItem('supabase_network_error');
           }
         }
 
@@ -220,6 +229,38 @@ if (typeof window !== 'undefined') {
       
       return response;
     } catch (error: any) {
+      // Handle network errors gracefully
+      const isNetworkError = error?.name === 'AuthRetryableFetchError' || 
+                            error?.message?.includes('fetch failed') ||
+                            error?.status === 0 ||
+                            error?.code === 'ECONNREFUSED' ||
+                            error?.code === 'ETIMEDOUT';
+      
+      if (isNetworkError && isRefreshRequest) {
+        isRefreshing = false;
+        // For network errors during refresh, don't throw - let the session remain valid
+        // The user might still be authenticated, just network is temporarily down
+        console.warn('⚠️ Network error during token refresh - session may still be valid. Error:', error.message || error);
+        
+        // Store network error timestamp to prevent rapid retries
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem('supabase_network_error', Date.now().toString());
+        }
+        
+        // Process any queued refresh requests even on error
+        if (refreshQueue.length > 0) {
+          setTimeout(() => processRefreshQueue(), 5000); // Wait 5 seconds before retrying
+        }
+        
+        // Return a mock response to prevent Supabase from clearing the session
+        // This allows the app to continue working with cached session data
+        return new Response(JSON.stringify({ error: 'Network error' }), {
+          status: 503,
+          statusText: 'Service Unavailable',
+          headers: { 'Content-Type': 'application/json' }
+        });
+      }
+      
       if (isRefreshRequest) {
         isRefreshing = false;
         // Process any queued refresh requests even on error
@@ -227,7 +268,8 @@ if (typeof window !== 'undefined') {
           setTimeout(() => processRefreshQueue(), 100);
         }
       }
-      // Let Supabase handle all errors - just re-throw
+      
+      // For non-network errors or non-refresh requests, re-throw
       throw error;
     }
   };
