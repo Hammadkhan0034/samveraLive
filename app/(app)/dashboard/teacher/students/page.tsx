@@ -899,7 +899,7 @@ export default function TeacherStudentsPage() {
         confirmButtonText={t.delete || 'Delete'}
         cancelButtonText={t.cancel}
       />
-    </div>
+    </TeacherPageLayout>
   );
 }
 

@@ -296,9 +296,20 @@ export async function POST(request: Request) {
       created_by 
     } = bodyValidation.data
 
+    // Email is required for principals (non-student users can login)
+    if (!email) {
+      return NextResponse.json({ error: 'Email is required for principals' }, { status: 400 });
+    }
+
     // Create user auth entry
-    const displayName = [first_name, last_name].filter(Boolean).join(' ').trim() || undefined
-    const { data: authData, error: authError } = await createUserAuthEntry(email, "test123456", 'principal', displayName)
+    // TypeScript now knows email is string after the check above
+    const displayName = [first_name, last_name].filter(Boolean).join(' ').trim()
+    const { data: authData, error: authError } = await createUserAuthEntry(
+      email as string, 
+      "test123456", 
+      'principal', 
+      displayName || undefined
+    )
     if (authError) {
       const message = (authError as any)?.message || 'Error creating user auth entry'
       console.error('❌ Error creating user auth entry:', authError)

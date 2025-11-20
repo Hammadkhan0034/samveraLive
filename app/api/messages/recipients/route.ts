@@ -49,7 +49,7 @@ export async function GET(request: Request) {
       .order('last_name', { ascending: true });
 
     // Apply search filter if provided
-    if (search.trim()) {
+    if (search && search.trim()) {
       query = query.or(`first_name.ilike.%${search}%,last_name.ilike.%${search}%,email.ilike.%${search}%`);
     }
 

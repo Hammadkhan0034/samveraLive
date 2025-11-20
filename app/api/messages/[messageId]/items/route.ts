@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseClient';
 import { getRealtimeDataCacheHeaders } from '@/lib/cacheConfig';
 import { z } from 'zod';
-import { validateParams, validateQuery, uuidSchema, userIdSchema, nonNegativeIntSchema } from '@/lib/validation';
+import { validateParams, validateQuery, validateBody, uuidSchema, userIdSchema, nonNegativeIntSchema } from '@/lib/validation';
 
 // Path parameter schema
 const messageIdParamsSchema = z.object({
@@ -12,8 +12,24 @@ const messageIdParamsSchema = z.object({
 // GET query parameter schema
 const getMessageItemsQuerySchema = z.object({
   user_id: userIdSchema,
-  limit: z.string().transform((val) => Math.min(parseInt(val) || 50, 100)).optional().default('50'),
-  offset: z.string().transform((val) => Math.max(parseInt(val) || 0, 0)).optional().default('0'),
+  limit: z.preprocess(
+    (val) => {
+      if (typeof val === 'string') {
+        return Math.min(parseInt(val) || 50, 100);
+      }
+      return typeof val === 'number' ? Math.min(val, 100) : 50;
+    },
+    z.number().int().nonnegative()
+  ).default(50),
+  offset: z.preprocess(
+    (val) => {
+      if (typeof val === 'string') {
+        return Math.max(parseInt(val) || 0, 0);
+      }
+      return typeof val === 'number' ? Math.max(val, 0) : 0;
+    },
+    z.number().int().nonnegative()
+  ).default(0),
 });
 
 // POST body schema
@@ -46,6 +62,10 @@ export async function GET(
       return queryValidation.error;
     }
     const { user_id, limit, offset } = queryValidation.data;
+    
+    // Ensure limit and offset are numbers
+    const limitNum = typeof limit === 'number' ? limit : 50;
+    const offsetNum = typeof offset === 'number' ? offset : 0;
 
     // Verify user is a participant in this thread
     const { data: participant, error: participantError } = await supabaseAdmin
@@ -81,7 +101,7 @@ export async function GET(
       .eq('message_id', messageId)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+      .range(offsetNum, offsetNum + limitNum - 1);
 
     if (itemsError) {
       console.error('❌ Error fetching message items:', itemsError);
