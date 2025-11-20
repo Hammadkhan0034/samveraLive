@@ -27,13 +27,13 @@ export function useAttendance(
     try {
       setIsLoading(true);
       const classIds = classes.map(c => c.id).filter(Boolean);
+      
 
-      // Fetch attendance for all classes in parallel
       const fetchPromises = classIds.map(async (classId) => {
         try {
           const response = await fetch(
-            `/api/attendance?orgId=${orgId}&classId=${classId}&date=${date}&t=${Date.now()}`,
-            { cache: 'no-store' }
+            `/api/attendance?orgId=${orgId}&classId=${classId}&date=${date}`,
+            { next: { revalidate: 120 } }
           );
           const data = await response.json();
 
