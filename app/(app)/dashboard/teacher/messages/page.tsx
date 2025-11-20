@@ -1,17 +1,38 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { X, Search, Send, Paperclip, MessageSquarePlus } from 'lucide-react';
+import { X, Search, Send, Paperclip, MessageSquarePlus, Menu } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { MessageThreadWithParticipants, MessageItem } from '@/lib/types/messages';
 import { useMessagesRealtime } from '@/lib/hooks/useMessagesRealtime';
 import LoadingSkeleton from '@/app/components/shared/LoadingSkeleton';
-import TeacherPageHeader from '@/app/components/shared/TeacherPageHeader';
-import TeacherPageLayout from '@/app/components/shared/TeacherPageLayout';
+import ProfileSwitcher from '@/app/components/ProfileSwitcher';
+import TeacherPageLayout, { useTeacherPageLayout } from '@/app/components/shared/TeacherPageLayout';
 
-
-
+// Messages Page Header Component
+function MessagesPageHeader({ title }: { title: string }) {
+  const { sidebarRef } = useTeacherPageLayout();
+  
+  return (
+    <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div className="flex items-center gap-3">
+        {/* Mobile menu button */}
+        <button
+          onClick={() => sidebarRef.current?.open()}
+          className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+          aria-label="Toggle sidebar"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+        <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{title}</h2>
+      </div>
+      <div className="flex items-center gap-3">
+        <ProfileSwitcher />
+      </div>
+    </div>
+  );
+}
 
 export default function TeacherMessagesPage() {
   const { t, lang } = useLanguage();
@@ -579,10 +600,7 @@ export default function TeacherMessagesPage() {
 
   return (
     <TeacherPageLayout messagesBadge={messagesCount > 0 ? messagesCount : undefined}>
-      {/* Content Header */}
-      <TeacherPageHeader
-        title={t.msg_title}
-      />
+      <MessagesPageHeader title={t.msg_title} />
 
             {/* Messages Panel */}
             <div className="flex h-[calc(100vh-200px)] rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800 overflow-hidden">

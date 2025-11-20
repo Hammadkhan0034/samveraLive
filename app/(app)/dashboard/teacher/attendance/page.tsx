@@ -2,20 +2,75 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { SquareCheck as CheckSquare, MessageSquare, Camera, Timer, Users, Plus, Bell, Link as LinkIcon, Utensils } from 'lucide-react';
+import { SquareCheck as CheckSquare, MessageSquare, Camera, Timer, Users, Plus, Bell, Link as LinkIcon, Utensils, Menu, CalendarDays } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { enText } from '@/lib/translations/en';
 import { isText } from '@/lib/translations/is';
 import LoadingSkeleton from '@/app/components/shared/LoadingSkeleton';
-import TeacherPageHeader from '@/app/components/shared/TeacherPageHeader';
-import TeacherPageLayout from '@/app/components/shared/TeacherPageLayout';
+import ProfileSwitcher from '@/app/components/ProfileSwitcher';
+import TeacherPageLayout, { useTeacherPageLayout } from '@/app/components/shared/TeacherPageLayout';
 
 type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
 
 // Small helpers
 function clsx(...xs: Array<string | false | undefined>) {
   return xs.filter(Boolean).join(' ');
+}
+
+// Attendance Page Header Component
+function AttendancePageHeader({ 
+  title, 
+  label,
+  kidsIn, 
+  total, 
+  todayHint 
+}: { 
+  title: string; 
+  label: string;
+  kidsIn: number; 
+  total: number; 
+  todayHint: string;
+}) {
+  const { sidebarRef } = useTeacherPageLayout();
+  
+  return (
+    <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div className="flex items-center gap-3">
+        {/* Mobile menu button */}
+        <button
+          onClick={() => sidebarRef.current?.open()}
+          className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+          aria-label="Toggle sidebar"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+        <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{title}</h2>
+      </div>
+      <div className="flex items-center gap-3">
+        <ProfileSwitcher />
+        {/* Desktop stats */}
+        <div className="hidden md:flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+          <Users className="h-4 w-4" />
+          <span>
+            {label}:{' '}
+            <span className="font-medium">{kidsIn}</span> / {total}
+          </span>
+          <span className="mx-2 text-slate-300 dark:text-slate-600">•</span>
+          <CalendarDays className="h-4 w-4" />
+          <span>{todayHint}</span>
+        </div>
+        {/* Mobile stats */}
+        <div className="md:hidden flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+          <Users className="h-4 w-4" />
+          <span>
+            {label}:{' '}
+            <span className="font-medium">{kidsIn}</span> / {total}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function TeacherAttendancePage() {
@@ -399,15 +454,12 @@ export default function TeacherAttendancePage() {
   return (
     <TeacherPageLayout attendanceBadge={kidsIn}>
       {/* Content Header */}
-      <TeacherPageHeader
+      <AttendancePageHeader
         title={t.att_title}
-        stats={{
-          label: t.kids_checked_in,
-          value: kidsIn,
-          total: students.length,
-          showToday: true,
-          todayHint: t.today_hint,
-        }}
+        label={t.kids_checked_in}
+        kidsIn={kidsIn}
+        total={students.length}
+        todayHint={t.today_hint}
       />
       
       {/* Attendance Panel */}

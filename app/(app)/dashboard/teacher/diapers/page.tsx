@@ -4,11 +4,11 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { enText } from '@/lib/translations/en';
 import { isText } from '@/lib/translations/is';
 import { useRouter } from 'next/navigation';
-import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Users, Plus, Send, Paperclip, Bell, X, Search, ChevronLeft, ChevronRight, Edit, Trash2, Link as LinkIcon, Mail, Utensils } from 'lucide-react';
+import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Users, Plus, Send, Paperclip, Bell, X, Search, ChevronLeft, ChevronRight, Edit, Trash2, Link as LinkIcon, Mail, Utensils, Menu } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
-import TeacherPageHeader from '@/app/components/shared/TeacherPageHeader';
-import TeacherPageLayout from '@/app/components/shared/TeacherPageLayout';
+import ProfileSwitcher from '@/app/components/ProfileSwitcher';
+import TeacherPageLayout, { useTeacherPageLayout } from '@/app/components/shared/TeacherPageLayout';
 
 type Lang = 'is' | 'en';
 type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
@@ -16,6 +16,30 @@ type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'ann
 // Small helpers
 function clsx(...xs: Array<string | false | undefined>) {
   return xs.filter(Boolean).join(' ');
+}
+
+// Diapers Page Header Component
+function DiapersPageHeader({ title }: { title: string }) {
+  const { sidebarRef } = useTeacherPageLayout();
+  
+  return (
+    <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div className="flex items-center gap-3">
+        {/* Mobile menu button */}
+        <button
+          onClick={() => sidebarRef.current?.open()}
+          className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+          aria-label="Toggle sidebar"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+        <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{title}</h2>
+      </div>
+      <div className="flex items-center gap-3">
+        <ProfileSwitcher />
+      </div>
+    </div>
+  );
 }
 
 export default function TeacherDiapersPage() {
@@ -26,9 +50,7 @@ export default function TeacherDiapersPage() {
   return (
     <TeacherPageLayout>
       {/* Content Header */}
-      <TeacherPageHeader
-        title={t.di_title}
-      />
+      <DiapersPageHeader title={t.di_title} />
       
       {/* Diapers Panel */}
       <section>
