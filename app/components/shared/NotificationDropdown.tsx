@@ -6,17 +6,24 @@ import { useNotifications } from '@/lib/hooks/useNotifications';
 import { useAuth } from '@/lib/hooks/useAuth';
 
 export function NotificationDropdown() {
-  const { session } = useAuth();
+  const { session, loading: authLoading } = useAuth();
   const userId = session?.user?.id || null;
   const orgId = session?.user?.user_metadata?.org_id || 
                 session?.user?.user_metadata?.organization_id || 
                 null;
   
-  const { notifications, unreadCount, loading, markAsRead, markAllAsRead } = useNotifications({
+  const { notifications, unreadCount, loading, markAsRead, markAllAsRead, refetch } = useNotifications({
     userId,
     orgId,
-    enabled: !!userId && !!orgId,
+    enabled: !!userId && !!orgId && !authLoading,
   });
+
+  // Refetch notifications when session becomes available
+  useEffect(() => {
+    if (!authLoading && userId && orgId) {
+      refetch();
+    }
+  }, [authLoading, userId, orgId, refetch]);
 
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -84,7 +91,7 @@ export function NotificationDropdown() {
     <div className="relative notification-dropdown" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative inline-flex items-center gap-2 rounded-md border border-slate-300 dark:border-slate-700 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+        className="relative inline-flex items-center gap-2 rounded-md border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
         aria-label="Notifications"
       >
         <Bell className="h-4 w-4" />

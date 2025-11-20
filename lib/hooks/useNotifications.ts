@@ -36,25 +36,40 @@ export function useNotifications({
       setLoading(true);
       setError(null);
 
-      // Fetch notifications
-      const { data: notificationsData, error: notificationsError } = await supabase
-        .from('notifications')
-        .select('*')
-        .eq('user_id', userId)
-        .eq('org_id', orgId)
-        .order('created_at', { ascending: false })
-        .limit(limit);
+      // Fetch notifications and unread count in parallel
+      const [notificationsResult, unreadCountResult] = await Promise.all([
+        // Fetch notifications
+        supabase
+          .from('notifications')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('org_id', orgId)
+          .order('created_at', { ascending: false })
+          .limit(limit),
+        // Fetch actual unread count (not limited)
+        supabase
+          .from('notifications')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', userId)
+          .eq('org_id', orgId)
+          .eq('is_read', false)
+      ]);
 
-      if (notificationsError) {
-        throw new Error(notificationsError.message);
+      if (notificationsResult.error) {
+        throw new Error(notificationsResult.error.message);
       }
 
-      const fetchedNotifications = (notificationsData || []) as Notification[];
+      if (unreadCountResult.error) {
+        console.error('Error fetching unread count:', unreadCountResult.error);
+        // Don't throw, just use fallback
+      }
+
+      const fetchedNotifications = (notificationsResult.data || []) as Notification[];
       setNotifications(fetchedNotifications);
 
-      // Calculate unread count
-      const unread = fetchedNotifications.filter(n => !n.is_read).length;
-      setUnreadCount(unread);
+      // Use actual unread count from database
+      const actualUnreadCount = unreadCountResult.count || 0;
+      setUnreadCount(actualUnreadCount);
     } catch (err) {
       const error = err instanceof Error ? err : new Error('Failed to fetch notifications');
       setError(error);
@@ -64,10 +79,12 @@ export function useNotifications({
     }
   }, [userId, orgId, enabled, limit]);
 
-  // Initial fetch
+  // Initial fetch and refetch when userId/orgId changes (e.g., on navigation)
   useEffect(() => {
-    fetchNotifications();
-  }, [fetchNotifications]);
+    if (userId && orgId) {
+      fetchNotifications();
+    }
+  }, [userId, orgId, fetchNotifications]);
 
   // Set up real-time subscription
   useEffect(() => {
@@ -99,21 +116,22 @@ export function useNotifications({
       },
       (payload: RealtimePostgresChangesPayload<any>) => {
         const newNotification = payload.new as Notification;
-        // Only handle notifications for this user and org
-        if (newNotification.user_id === userId && newNotification.org_id === orgId) {
-          setNotifications(prev => {
-            // Check if notification already exists (avoid duplicates)
-            if (prev.some(n => n.id === newNotification.id)) {
-              return prev;
+          // Only handle notifications for this user and org
+          if (newNotification.user_id === userId && newNotification.org_id === orgId) {
+            setNotifications(prev => {
+              // Check if notification already exists (avoid duplicates)
+              if (prev.some(n => n.id === newNotification.id)) {
+                return prev;
+              }
+              // Add new notification at the beginning (limit to keep list size manageable)
+              const updated = [newNotification, ...prev].slice(0, limit);
+              return updated;
+            });
+            // Update unread count if notification is unread
+            if (!newNotification.is_read) {
+              setUnreadCount(prev => prev + 1);
             }
-            // Add new notification at the beginning
-            return [newNotification, ...prev];
-          });
-          // Update unread count if notification is unread
-          if (!newNotification.is_read) {
-            setUnreadCount(prev => prev + 1);
           }
-        }
       }
     );
 

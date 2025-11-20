@@ -199,6 +199,7 @@ export async function getOrgNotificationTargets(
     .filter((id): id is string => !!id && typeof id === 'string');
 
   // Get all parents (guardians) in the org
+  // Note: In the database, the role is stored as 'guardian', not 'parent'
   const { data: parents, error: parentsError } = await supabase
     .from('users')
     .select('id')
