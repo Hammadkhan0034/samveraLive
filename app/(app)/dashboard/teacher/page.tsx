@@ -225,8 +225,21 @@ function TeacherDashboardPageContent() {
       }
 
       if (!res.ok) {
-        const errorText = await res.text().catch(() => res.statusText);
-        throw new Error(errorText || `HTTP ${res.status}`);
+        // Try to parse as JSON first, fallback to text
+        let errorMessage = `HTTP ${res.status}`;
+        try {
+          const errorData = await res.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          // If JSON parsing fails, try text
+          try {
+            const errorText = await res.text();
+            errorMessage = errorText || errorMessage;
+          } catch {
+            // Use default error message
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       const data = await res.json();

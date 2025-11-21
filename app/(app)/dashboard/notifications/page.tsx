@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useTransition, Suspense } from 'react';
+import React, { useState, useEffect, useTransition, Suspense, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Trash2 } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
@@ -30,6 +30,7 @@ function NotificationsPageContent() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);
   const [isDeletingAll, setIsDeletingAll] = useState(false);
+  const isInitialLoadRef = useRef(true);
 
   // Load notifications
   useEffect(() => {
@@ -37,7 +38,11 @@ function NotificationsPageContent() {
     
     const loadNotifications = async () => {
       try {
-        setLoading(true);
+        // Only show full loading screen on initial load
+        if (isInitialLoadRef.current) {
+          setLoading(true);
+          isInitialLoadRef.current = false;
+        }
         setError(null);
         const result = await getPaginatedNotifications(currentPage, 10);
         setNotifications(result.notifications);
@@ -270,7 +275,7 @@ function NotificationsPageContent() {
               {/* Pagination */}
               {totalPages > 1 && (
                 <div className="border-t border-slate-200 dark:border-slate-700 px-6 py-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-end gap-2">
                     <button
                       onClick={() => handlePageChange(currentPage - 1)}
                       disabled={currentPage === 1 || isPending}
