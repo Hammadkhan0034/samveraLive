@@ -180,27 +180,11 @@ function TeacherDashboardPageContent() {
   // Single consolidated function to fetch metrics
   const fetchMetrics = useCallback(async (signal?: AbortSignal) => {
     if (!finalOrgId || !userId) {
-      setMetrics({
-        attendanceCount: 0,
-        messagesCount: 0,
-        storiesCount: 0,
-        announcementsCount: 0,
-        menusCount: 0,
-      });
-      setIsLoading(false);
       return;
     }
 
     const classIds = teacherClasses.map(c => c.id).filter(Boolean);
     if (classIds.length === 0) {
-      setMetrics({
-        attendanceCount: 0,
-        messagesCount: 0,
-        storiesCount: 0,
-        announcementsCount: 0,
-        menusCount: 0,
-      });
-      setIsLoading(false);
       return;
     }
 
