@@ -10,7 +10,7 @@ import TeacherSidebar, { TeacherSidebarRef } from '@/app/components/shared/Teach
 import { GuardianTable } from '@/app/components/shared/GuardianTable';
 import { GuardianForm, type GuardianFormData } from '@/app/components/shared/GuardianForm';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
-import LoadingSkeleton from '@/app/components/shared/LoadingSkeleton';
+import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 import Loading from '@/app/components/shared/Loading';
 
 type Lang = 'is' | 'en';

@@ -8,7 +8,7 @@ import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { enText } from '@/lib/translations/en';
 import { isText } from '@/lib/translations/is';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
-import LoadingSkeleton from '@/app/components/shared/LoadingSkeleton';
+import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import TeacherPageLayout, { useTeacherPageLayout } from '@/app/components/shared/TeacherPageLayout';
 

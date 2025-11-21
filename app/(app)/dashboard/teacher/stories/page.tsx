@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Timer, Users, Bell, MessageSquare, Camera, Link as LinkIcon, Utensils, Plus, Eye, Edit, Trash2 } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
-import LoadingSkeleton from '@/app/components/shared/LoadingSkeleton';
+import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import TeacherPageLayout from '@/app/components/shared/TeacherPageLayout';
 import { supabase } from '@/lib/supabaseClient';

@@ -7,7 +7,7 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
 import TeacherSidebar, { TeacherSidebarRef } from '@/app/components/shared/TeacherSidebar';
-import LoadingSkeleton from '@/app/components/shared/LoadingSkeleton';
+import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import Loading from '@/app/components/shared/Loading';
 

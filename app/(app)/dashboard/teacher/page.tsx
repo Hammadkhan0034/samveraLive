@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { CalendarDays, Menu, ClipboardCheck, Users, MessageSquare, FileText, Megaphone, Utensils, RefreshCw, AlertCircle } from 'lucide-react';
+import { CalendarDays, Menu, ClipboardCheck, Users, MessageSquare, FileText, Megaphone, Utensils, AlertCircle } from 'lucide-react';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -9,6 +9,7 @@ import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useTeacherOrgId } from '@/lib/hooks/useTeacherOrgId';
 import { useTeacherClasses } from '@/lib/hooks/useTeacherClasses';
 import { useTeacherStudents } from '@/lib/hooks/useTeacherStudents';
+import KPICardSkeleton from '@/app/components/loading-skeletons/KPICardSkeleton';
 import type { enText, isText } from '@/lib/translations';
 
 interface KPICard {
@@ -82,32 +83,29 @@ function TeacherDashboardContent({
 
       {/* KPIs Section */}
       <section className="mb-6">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {kpis.map(({ label, value, icon: Icon, onClick }, i) => (
-            <div
-              key={i}
-              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 cursor-pointer hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200"
-              onClick={onClick}
-            >
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-slate-600 dark:text-slate-400">{label}</div>
-                <span className="rounded-xl border border-slate-200 p-2 dark:border-slate-600">
-                  <Icon className="h-4 w-4 text-slate-700 dark:text-slate-300" />
-                </span>
+        {isLoading ? (
+          <KPICardSkeleton count={6} />
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {kpis.map(({ label, value, icon: Icon, onClick }, i) => (
+              <div
+                key={i}
+                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 cursor-pointer hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200"
+                onClick={onClick}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-slate-600 dark:text-slate-400">{label}</div>
+                  <span className="rounded-xl border border-slate-200 p-2 dark:border-slate-600">
+                    <Icon className="h-4 w-4 text-slate-700 dark:text-slate-300" />
+                  </span>
+                </div>
+                <div className="mt-3 text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                  {value}
+                </div>
               </div>
-              <div className="mt-3 text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                {isLoading ? (
-                  <div className="flex items-center gap-2">
-                    <RefreshCw className="h-5 w-5 animate-spin text-slate-400" />
-                    <span className="text-lg text-slate-400">Loading...</span>
-                  </div>
-                ) : (
-                  value
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </section>
     </>
   );

@@ -8,7 +8,7 @@ import { useTeacherOrgId } from '@/lib/hooks/useTeacherOrgId';
 import { useTeacherClasses } from '@/lib/hooks/useTeacherClasses';
 import { useTeacherStudents } from '@/lib/hooks/useTeacherStudents';
 import { useAttendance } from '@/lib/hooks/useAttendance';
-import LoadingSkeleton from '@/app/components/shared/LoadingSkeleton';
+import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import TeacherPageLayout, { useTeacherPageLayout } from '@/app/components/shared/TeacherPageLayout';
 import { StudentAttendanceCard } from '@/app/components/attendance/StudentAttendanceCard';

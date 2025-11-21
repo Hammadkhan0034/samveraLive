@@ -6,7 +6,7 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { MessageThreadWithParticipants, MessageItem } from '@/lib/types/messages';
 import { useMessagesRealtime } from '@/lib/hooks/useMessagesRealtime';
-import LoadingSkeleton from '@/app/components/shared/LoadingSkeleton';
+import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import TeacherPageLayout, { useTeacherPageLayout } from '@/app/components/shared/TeacherPageLayout';
 
