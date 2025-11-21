@@ -7,7 +7,7 @@ import { useRequireAuth } from '@/lib/hooks/useAuth';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Plus, Edit, Trash2, Eye } from 'lucide-react';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
-import Loading from '@/app/components/shared/Loading';
+import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 
 function toLocalInput(iso: string) {
   try {
@@ -701,7 +701,7 @@ function StoriesPageContent() {
 
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
             {loading && stories.length === 0 ? (
-              <div className="text-slate-600 dark:text-slate-400">{t.loading}</div>
+              <LoadingSkeleton type="table" rows={10} />
             ) : stories.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-slate-600 dark:text-slate-400">{t.empty}</p>
@@ -879,7 +879,16 @@ function StoriesPageContent() {
 
 export default function StoriesPage() {
   return (
-    <Suspense fallback={<Loading fullScreen variant="sand" />}>
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+        <div className="mx-auto max-w-6xl px-4 py-8 md:px-6">
+          <div className="mb-6 mt-14">
+            <div className="h-10 w-20 animate-pulse bg-slate-200 dark:bg-slate-700 rounded-lg"></div>
+          </div>
+          <LoadingSkeleton type="table" rows={10} />
+        </div>
+      </div>
+    }>
       <StoriesPageContent />
     </Suspense>
   );

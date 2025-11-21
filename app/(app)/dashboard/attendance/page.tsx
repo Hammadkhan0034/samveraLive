@@ -5,6 +5,7 @@ import { ArrowLeft, Calendar } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useRequireAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
+import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 
 type Lang = 'is' | 'en';
 
@@ -231,14 +232,12 @@ export default function AttendancePage() {
 
   if (loading && !user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-600 mx-auto mb-4"></div>
-            <p className="text-slate-600 dark:text-slate-400">
-              {t.loading || 'Loading...'}
-            </p>
+      <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+        <div className="mx-auto max-w-6xl px-4 py-8 md:px-6">
+          <div className="mb-6 mt-14">
+            <div className="h-10 w-20 animate-pulse bg-slate-200 dark:bg-slate-700 rounded-lg"></div>
           </div>
+          <LoadingSkeleton type="table" rows={10} />
         </div>
       </div>
     );
@@ -302,9 +301,7 @@ export default function AttendancePage() {
         {/* Attendance Table */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
           {loadingAttendance ? (
-            <div className="text-center py-8 text-slate-600 dark:text-slate-400">
-              {t.loading || 'Loading...'}
-            </div>
+            <LoadingSkeleton type="table" rows={10} className="border-0 p-0" />
           ) : attendance.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-slate-600 dark:text-slate-400 mb-2">

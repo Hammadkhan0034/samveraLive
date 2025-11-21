@@ -5,7 +5,7 @@ import { Utensils, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useRequireAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
-import Loading from '@/app/components/shared/Loading';
+import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 
 type Lang = 'is' | 'en';
 
@@ -505,7 +505,16 @@ export default function MenusViewPage() {
   };
 
   if (loading && !user && isSigningIn) {
-    return <Loading fullScreen />;
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+        <div className="mx-auto max-w-5xl px-4 py-8 md:px-6">
+          <div className="mb-6 mt-14">
+            <div className="h-10 w-20 animate-pulse bg-slate-200 dark:bg-slate-700 rounded-lg"></div>
+          </div>
+          <LoadingSkeleton type="cards" rows={3} />
+        </div>
+      </div>
+    );
   }
 
   if (!user) return null;

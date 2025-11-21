@@ -8,6 +8,7 @@ import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { getPaginatedNotifications, deleteNotification, deleteAllNotifications } from '@/lib/server-actions';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import Loading from '@/app/components/shared/Loading';
+import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 import type { Notification } from '@/lib/services/notifications';
 
 function NotificationsPageContent() {
@@ -31,18 +32,27 @@ function NotificationsPageContent() {
   const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);
   const [isDeletingAll, setIsDeletingAll] = useState(false);
   const isInitialLoadRef = useRef(true);
+  const previousPageRef = useRef(currentPage);
+  const [isPageLoading, setIsPageLoading] = useState(false);
 
   // Load notifications
   useEffect(() => {
     if (authLoading) return;
     
+    // Clear notifications immediately when page changes (except on initial load)
+    if (!isInitialLoadRef.current && previousPageRef.current !== currentPage) {
+      setNotifications([]);
+      setIsPageLoading(true);
+    } else if (isInitialLoadRef.current) {
+      // Show loading skeleton on initial load
+      setIsPageLoading(true);
+      isInitialLoadRef.current = false;
+    }
+    
+    previousPageRef.current = currentPage;
+    
     const loadNotifications = async () => {
       try {
-        // Only show full loading screen on initial load
-        if (isInitialLoadRef.current) {
-          setLoading(true);
-          isInitialLoadRef.current = false;
-        }
         setError(null);
         const result = await getPaginatedNotifications(currentPage, 10);
         setNotifications(result.notifications);
@@ -54,6 +64,7 @@ function NotificationsPageContent() {
         console.error('Error loading notifications:', err);
       } finally {
         setLoading(false);
+        setIsPageLoading(false);
       }
     };
 
@@ -155,7 +166,7 @@ function NotificationsPageContent() {
     }
   };
 
-  if (authLoading || loading) {
+  if (authLoading) {
     return <Loading fullScreen text={t.loading_notifications || 'Loading notifications...'} />;
   }
 
@@ -195,8 +206,11 @@ function NotificationsPageContent() {
         )}
 
         {/* Notifications Table */}
-        <div className="rounded-t-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800 overflow-hidden">
-          {notifications.length === 0 ? (
+        {isPageLoading ? (
+          <LoadingSkeleton type="table" rows={10} className="rounded-t-lg" />
+        ) : (
+          <div className="rounded-t-lg border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800 overflow-hidden">
+            {notifications.length === 0 ? (
             <div className="px-6 py-12 text-center text-sm text-slate-500 dark:text-slate-400">
               {t.no_notifications_found || 'No notifications found'}
             </div>
@@ -312,8 +326,9 @@ function NotificationsPageContent() {
                 </div>
               )}
             </>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Delete Confirmation Modal */}
@@ -357,7 +372,11 @@ export default function NotificationsPage() {
     <Suspense fallback={
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
-          <Loading fullScreen text="Loading notifications..." />
+          <div className="mb-6 mt-14 flex items-center gap-4">
+            <div className="h-10 w-20 animate-pulse bg-slate-200 dark:bg-slate-700 rounded-lg"></div>
+            <div className="h-8 w-48 animate-pulse bg-slate-200 dark:bg-slate-700 rounded-lg"></div>
+          </div>
+          <LoadingSkeleton type="table" rows={10} className="rounded-t-lg" />
         </div>
       </div>
     }>

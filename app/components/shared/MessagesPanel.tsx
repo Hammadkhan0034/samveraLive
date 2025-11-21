@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useMessagesRealtime } from '@/lib/hooks/useMessagesRealtime';
 import { MessageThreadWithParticipants, MessageItem } from '@/lib/types/messages';
+import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 
 type Lang = 'is' | 'en';
 type Role = 'principal' | 'teacher' | 'guardian';
@@ -1328,7 +1329,20 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
         {/* Conversations List */}
         <div className="flex-1 overflow-y-auto">
           {loading ? (
-            <div className="p-4 text-center text-sm text-slate-500">{t.loading}</div>
+            <div className="p-4 space-y-3">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="p-4 border-b border-slate-200 dark:border-slate-700">
+                  <div className="flex items-start gap-3">
+                    <div className="h-10 w-10 rounded-full animate-pulse bg-slate-200 dark:bg-slate-700"></div>
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 w-32 animate-pulse bg-slate-200 dark:bg-slate-700 rounded"></div>
+                      <div className="h-3 w-24 animate-pulse bg-slate-200 dark:bg-slate-700 rounded"></div>
+                      <div className="h-3 w-full animate-pulse bg-slate-200 dark:bg-slate-700 rounded"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : filteredThreads.length === 0 ? (
             <div className="p-4 text-center text-sm text-slate-500">{t.no_threads}</div>
           ) : (
@@ -1347,14 +1361,21 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className="font-semibold text-slate-900 dark:text-slate-100 truncate">
-                          {thread.other_participant
-                            ? `${thread.other_participant.first_name} ${thread.other_participant.last_name || ''}`.trim() || thread.other_participant.email
-                            : 'Unknown'}
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                          <div className="font-semibold text-slate-900 dark:text-slate-100 truncate">
+                            {thread.other_participant
+                              ? `${thread.other_participant.first_name} ${thread.other_participant.last_name || ''}`.trim() || thread.other_participant.email
+                              : 'Unknown'}
+                          </div>
+                          {thread.unread && (
+                            <span className="flex-shrink-0 w-2 h-2 rounded-full bg-black"></span>
+                          )}
                         </div>
-                        {thread.unread && (
-                          <span className="flex-shrink-0 w-2 h-2 rounded-full bg-black"></span>
+                        {thread.latest_item && (
+                          <span className="text-xs text-slate-400 dark:text-slate-500 whitespace-nowrap flex-shrink-0">
+                            {new Date(thread.latest_item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
                         )}
                       </div>
                       <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-1">
@@ -1366,11 +1387,6 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
                       {thread.latest_item && (
                         <p className="text-sm text-slate-600 dark:text-slate-400 truncate line-clamp-1">
                           {thread.latest_item.body}
-                        </p>
-                      )}
-                      {thread.latest_item && (
-                        <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                          {new Date(thread.latest_item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       )}
                     </div>

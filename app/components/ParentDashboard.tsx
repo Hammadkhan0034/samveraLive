@@ -8,10 +8,7 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import AnnouncementList from './AnnouncementList';
 import StoryColumn from './shared/StoryColumn';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
-import { Calendar, type CalendarEvent } from './shared/Calendar';
-import { CalendarKPICard } from './shared/CalendarKPICard';
-import { EventDetailsModal } from './shared/EventDetailsModal';
-import { getEvents } from '@/lib/server-actions';
+import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 
 export default function ParentDashboard() {
   const { t, lang } = useLanguage();
@@ -24,6 +21,7 @@ export default function ParentDashboard() {
     router.prefetch('/dashboard/stories');
     router.prefetch('/dashboard/attendance');
     router.prefetch('/dashboard/parent/messages');
+    router.prefetch('/dashboard/parent/calendar');
   }, [router]);
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
@@ -39,13 +37,6 @@ export default function ParentDashboard() {
   const [attendanceData, setAttendanceData] = useState<Array<{ studentId: string; studentName: string; className?: string; status: string; date: string }>>([]);
   const [loadingAttendance, setLoadingAttendance] = useState(false);
   
-  // Calendar state
-  const [showCalendar, setShowCalendar] = useState(false);
-  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
-  const [loadingEvents, setLoadingEvents] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
-  const [showEventDetails, setShowEventDetails] = useState(false);
-
   useEffect(() => {
     let isMounted = true;
 
@@ -426,31 +417,6 @@ export default function ParentDashboard() {
     { href: '#', title: t.attendance, desc: t.attendance_desc, Icon: ClipboardCheck },
   ];
 
-  // Load calendar events
-  useEffect(() => {
-    if (session?.user?.id && derivedClassId) {
-      loadCalendarEvents();
-    }
-  }, [session?.user?.id, derivedClassId]);
-
-  const loadCalendarEvents = async () => {
-    const orgId = (session?.user?.user_metadata as any)?.org_id;
-    if (!orgId) return;
-    
-    try {
-      setLoadingEvents(true);
-      const events = await getEvents(orgId, {
-        classId: derivedClassId,
-        userRole: 'parent',
-        userId: session?.user?.id,
-      });
-      setCalendarEvents(events as CalendarEvent[]);
-    } catch (e: any) {
-      console.error('❌ Error loading calendar events:', e.message);
-    } finally {
-      setLoadingEvents(false);
-    }
-  };
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 md:px-6">
@@ -476,11 +442,30 @@ export default function ParentDashboard() {
       {/* Shared FeatureGrid for tiles */}
       <div className="mt-6">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Calendar KPI Card */}
-          <CalendarKPICard
-            events={calendarEvents}
-            onClick={() => setShowCalendar(true)}
-          />
+          {/* Calendar Card - Same design as Notices */}
+          <button
+            onClick={() => {
+              router.prefetch('/dashboard/parent/calendar');
+              router.push('/dashboard/parent/calendar');
+            }}
+            className="block rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow dark:border-slate-700 dark:bg-slate-800 text-left w-full"
+          >
+            <div className="mb-4 flex items-center gap-3">
+              <span className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-600 dark:bg-slate-700">
+                <CalendarDays className="h-5 w-5 text-slate-600 dark:text-slate-300" />
+              </span>
+              <div className="flex-1">
+                <div className="font-semibold text-slate-900 dark:text-slate-100">
+                  {t.calendar || 'Calendar'}
+                </div>
+              </div>
+            </div>
+            {t.calendar_desc ? (
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                {t.calendar_desc}
+              </p>
+            ) : null}
+          </button>
           {items.map((item, idx) => {
             if (item.href === '#' && (item.title === t.menu || item.title === t.stories || item.title === t.attendance)) {
               // Custom menu/stories/attendance tile with onClick
@@ -566,45 +551,6 @@ export default function ParentDashboard() {
           })}
         </div>
       </div>
-
-      {/* Calendar View */}
-      {showCalendar && (
-        <div className="mt-8">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Calendar</h2>
-            <button
-              onClick={() => setShowCalendar(false)}
-              className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
-            >
-              Close
-            </button>
-          </div>
-          <Calendar
-            orgId={(session?.user?.user_metadata as any)?.org_id || ''}
-            classId={derivedClassId}
-            userRole="parent"
-            canEdit={false}
-            events={calendarEvents}
-            onEventClick={(event) => {
-              setSelectedEvent(event);
-              setShowEventDetails(true);
-            }}
-          />
-        </div>
-      )}
-
-      {/* Event Details Modal (Read-only for parents) */}
-      <EventDetailsModal
-        isOpen={showEventDetails}
-        onClose={() => {
-          setShowEventDetails(false);
-          setSelectedEvent(null);
-        }}
-        event={selectedEvent}
-        canEdit={false}
-        canDelete={false}
-        classes={linkedStudents.map(s => s.classes ? { id: s.class_id || '', name: s.classes.name } : null).filter(Boolean) as Array<{ id: string; name: string }>}
-      />
 
       {/* Feed + Schedule */}
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
@@ -717,8 +663,16 @@ export default function ParentDashboard() {
               </div>
             </div>
             {loadingAttendance ? (
-              <div className="text-center py-6 text-slate-500 dark:text-slate-400">
-                {t.loading || 'Loading...'}
+              <div className="space-y-3">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-700">
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 w-32 animate-pulse bg-slate-200 dark:bg-slate-700 rounded"></div>
+                      <div className="h-3 w-24 animate-pulse bg-slate-200 dark:bg-slate-700 rounded"></div>
+                    </div>
+                    <div className="h-6 w-20 animate-pulse bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+                  </div>
+                ))}
               </div>
             ) : attendanceData.length === 0 ? (
               <div className="text-center py-6">
