@@ -8,6 +8,10 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import AnnouncementList from './AnnouncementList';
 import StoryColumn from './shared/StoryColumn';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
+import { Calendar, type CalendarEvent } from './shared/Calendar';
+import { CalendarKPICard } from './shared/CalendarKPICard';
+import { EventDetailsModal } from './shared/EventDetailsModal';
+import { getEvents } from '@/lib/server-actions';
 
 export default function ParentDashboard() {
   const { t, lang } = useLanguage();
@@ -34,6 +38,13 @@ export default function ParentDashboard() {
   const [menusForStudents, setMenusForStudents] = useState<Array<{ studentName: string; className?: string; menu: { breakfast?: string | null; lunch?: string | null; snack?: string | null; notes?: string | null } }>>([]);
   const [attendanceData, setAttendanceData] = useState<Array<{ studentId: string; studentName: string; className?: string; status: string; date: string }>>([]);
   const [loadingAttendance, setLoadingAttendance] = useState(false);
+  
+  // Calendar state
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+  const [loadingEvents, setLoadingEvents] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [showEventDetails, setShowEventDetails] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -408,13 +419,38 @@ export default function ParentDashboard() {
 
   const items: FeatureItem[] = [
     { href: '/notices', title: t.notices, desc: t.notices_desc, Icon: Bell },
-    { href: '/calendar', title: t.calendar, desc: t.calendar_desc, Icon: CalendarDays },
     { href: '/dashboard/parent/messages', title: t.messages, desc: t.messages_desc, Icon: MessageSquare, badge: messagesCount > 0 ? messagesCount : undefined },
     { href: '/media', title: t.media, desc: t.media_desc, Icon: Camera },
     { href: '#', title: t.stories, desc: t.stories_desc, Icon: FileText },
     { href: '#', title: t.menu, desc: t.menu_desc, Icon: Utensils },
     { href: '#', title: t.attendance, desc: t.attendance_desc, Icon: ClipboardCheck },
   ];
+
+  // Load calendar events
+  useEffect(() => {
+    if (session?.user?.id && derivedClassId) {
+      loadCalendarEvents();
+    }
+  }, [session?.user?.id, derivedClassId]);
+
+  const loadCalendarEvents = async () => {
+    const orgId = (session?.user?.user_metadata as any)?.org_id;
+    if (!orgId) return;
+    
+    try {
+      setLoadingEvents(true);
+      const events = await getEvents(orgId, {
+        classId: derivedClassId,
+        userRole: 'parent',
+        userId: session?.user?.id,
+      });
+      setCalendarEvents(events as CalendarEvent[]);
+    } catch (e: any) {
+      console.error('❌ Error loading calendar events:', e.message);
+    } finally {
+      setLoadingEvents(false);
+    }
+  };
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 md:px-6">
@@ -440,6 +476,11 @@ export default function ParentDashboard() {
       {/* Shared FeatureGrid for tiles */}
       <div className="mt-6">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Calendar KPI Card */}
+          <CalendarKPICard
+            events={calendarEvents}
+            onClick={() => setShowCalendar(true)}
+          />
           {items.map((item, idx) => {
             if (item.href === '#' && (item.title === t.menu || item.title === t.stories || item.title === t.attendance)) {
               // Custom menu/stories/attendance tile with onClick
@@ -525,6 +566,45 @@ export default function ParentDashboard() {
           })}
         </div>
       </div>
+
+      {/* Calendar View */}
+      {showCalendar && (
+        <div className="mt-8">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Calendar</h2>
+            <button
+              onClick={() => setShowCalendar(false)}
+              className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+            >
+              Close
+            </button>
+          </div>
+          <Calendar
+            orgId={(session?.user?.user_metadata as any)?.org_id || ''}
+            classId={derivedClassId}
+            userRole="parent"
+            canEdit={false}
+            events={calendarEvents}
+            onEventClick={(event) => {
+              setSelectedEvent(event);
+              setShowEventDetails(true);
+            }}
+          />
+        </div>
+      )}
+
+      {/* Event Details Modal (Read-only for parents) */}
+      <EventDetailsModal
+        isOpen={showEventDetails}
+        onClose={() => {
+          setShowEventDetails(false);
+          setSelectedEvent(null);
+        }}
+        event={selectedEvent}
+        canEdit={false}
+        canDelete={false}
+        classes={linkedStudents.map(s => s.classes ? { id: s.class_id || '', name: s.classes.name } : null).filter(Boolean) as Array<{ id: string; name: string }>}
+      />
 
       {/* Feed + Schedule */}
       <div className="mt-8 grid gap-6 lg:grid-cols-2">

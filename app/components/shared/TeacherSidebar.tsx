@@ -3,7 +3,7 @@
 import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { X } from 'lucide-react';
-import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Bell, Users, Shield, Link as LinkIcon, Utensils, LayoutDashboard } from 'lucide-react';
+import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Bell, Users, Shield, Link as LinkIcon, Utensils, LayoutDashboard, CalendarDays } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 
 // Small helper
@@ -73,6 +73,7 @@ const TeacherSidebar = forwardRef<TeacherSidebarRef, TeacherSidebarProps>(({
       'guardians': '/dashboard/teacher/guardians',
       'link_student': '/dashboard/teacher/link-student',
       'menus': '/dashboard/teacher/menus',
+      'calendar': '/dashboard/teacher/calendar',
     };
 
     const expectedRoute = tileRouteMap[optimisticActiveTile];
@@ -125,6 +126,9 @@ const TeacherSidebar = forwardRef<TeacherSidebarRef, TeacherSidebarProps>(({
     }
     if (tileId === 'announcements') {
       return pathname === '/dashboard/teacher/announcements';
+    }
+    if (tileId === 'calendar') {
+      return pathname === '/dashboard/teacher/calendar';
     }
     if (tileId === 'students') {
       return pathname === '/dashboard/teacher/students';
@@ -217,6 +221,15 @@ const TeacherSidebar = forwardRef<TeacherSidebarRef, TeacherSidebarProps>(({
     handleSidebarClose();
   };
 
+  // Handle calendar tile click
+  const handleCalendarClick = () => {
+    if (pathname !== '/dashboard/teacher/calendar') {
+      setOptimisticActiveTile('calendar');
+      router.replace('/dashboard/teacher/calendar');
+    }
+    handleSidebarClose();
+  };
+
   // Handle students tile click
   const handleStudentsClick = () => {
     if (pathname !== '/dashboard/teacher/students') {
@@ -261,6 +274,7 @@ const TeacherSidebar = forwardRef<TeacherSidebarRef, TeacherSidebarProps>(({
   const isMediaActive = isTileActive('media');
   const isStoriesActive = isTileActive('stories');
   const isAnnouncementsActive = isTileActive('announcements');
+  const isCalendarActive = isTileActive('calendar');
   const isStudentsActive = isTileActive('students');
   const isGuardiansActive = isTileActive('guardians');
   const isLinkStudentActive = isTileActive('link_student');
@@ -541,6 +555,40 @@ const TeacherSidebar = forwardRef<TeacherSidebarRef, TeacherSidebarProps>(({
                   </span>
                 </div>
                 <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{t.tile_announcements_desc}</p>
+              </div>
+            </button>
+
+            {/* Calendar tile - always route-based */}
+            <button
+              onClick={handleCalendarClick}
+              className={clsx(
+                'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                'hover:bg-slate-800 dark:hover:bg-slate-700',
+                isCalendarActive
+                  ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
+                  : 'border-l-4 border-transparent'
+              )}
+            >
+              <span className={clsx(
+                'flex-shrink-0 rounded-lg p-2',
+                isCalendarActive
+                  ? 'bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900'
+                  : 'bg-slate-800 dark:bg-slate-700 text-slate-200 dark:text-slate-300'
+              )}>
+                <CalendarDays className="h-5 w-5" />
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <span className={clsx(
+                    'font-medium truncate',
+                    isCalendarActive
+                      ? 'text-slate-100 dark:text-slate-100'
+                      : 'text-slate-200 dark:text-slate-300'
+                  )}>
+                    {t.tile_calendar}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300 dark:text-slate-400 truncate mt-0.5">{t.tile_calendar_desc}</p>
               </div>
             </button>
 

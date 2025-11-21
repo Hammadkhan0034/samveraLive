@@ -1,13 +1,16 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Users, School, ChartBar as BarChart3, FileText, Plus, ListFilter as Filter, Search, CircleCheck as CheckCircle2, Circle as XCircle, Eye, EyeOff, Settings, Bell, Utensils, Megaphone, MessageSquare } from 'lucide-react';
+import { Users, School, ChartBar as BarChart3, FileText, Plus, ListFilter as Filter, Search, CircleCheck as CheckCircle2, Circle as XCircle, Eye, EyeOff, Settings, Bell, Utensils, Megaphone, MessageSquare, CalendarDays } from 'lucide-react';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import { useAuth } from '@/lib/hooks/useAuth';
 import AnnouncementList from './AnnouncementList';
 import { useRouter } from 'next/navigation';
 import StoryColumn from './shared/StoryColumn';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
+import { type CalendarEvent } from './shared/Calendar';
+import { CalendarKPICard } from './shared/CalendarKPICard';
+import { getEvents } from '@/lib/server-actions';
 
 function clsx(...xs: Array<string | false | undefined>) {
   return xs.filter(Boolean).join(' ');
@@ -260,6 +263,31 @@ export default function PrincipalDashboard() {
       console.error('❌ Error loading messages count:', e.message);
     }
   }
+
+  // Calendar state (for KPI count only)
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+
+  // Load calendar events for KPI count
+  useEffect(() => {
+    const loadCalendarEventsForKPI = async () => {
+      const orgId = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
+      if (!orgId) return;
+      
+      try {
+        const events = await getEvents(orgId, {
+          userRole: 'principal',
+          userId: session?.user?.id,
+        });
+        setCalendarEvents(events as CalendarEvent[]);
+      } catch (e: any) {
+        console.error('❌ Error loading calendar events:', e.message);
+      }
+    };
+
+    if (finalOrgId) {
+      loadCalendarEventsForKPI();
+    }
+  }, [finalOrgId, session?.user?.id]);
 
   // Listen for stories refresh event
   useEffect(() => {
@@ -651,6 +679,11 @@ export default function PrincipalDashboard() {
             </div>
           </div>
         ))}
+        {/* Calendar KPI Card */}
+        <CalendarKPICard
+          events={calendarEvents}
+          onClick={() => router.push('/dashboard/principal/calendar')}
+        />
       </div>
 
       {/* School Announcements Section */}
@@ -691,6 +724,7 @@ export default function PrincipalDashboard() {
           </ul>
         </div>
       </div>
+
 
     </main>
   );

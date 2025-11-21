@@ -198,6 +198,80 @@ export const emergencyContactSchema = notesSchema;
 export const codeSchema = z.string().max(50, { message: 'Code must be 50 characters or less' }).nullable().optional();
 
 // ============================================================================
+// Event Schemas
+// ============================================================================
+
+/**
+ * Event title schema
+ */
+export const eventTitleSchema = z.string().min(1, { message: 'Event title is required' }).max(500, { message: 'Event title must be 500 characters or less' });
+
+/**
+ * Event description schema
+ */
+export const eventDescriptionSchema = z.string().max(5000, { message: 'Event description must be 5000 characters or less' }).nullable().optional();
+
+/**
+ * Event location schema
+ */
+export const eventLocationSchema = z.string().max(200, { message: 'Event location must be 200 characters or less' }).nullable().optional();
+
+/**
+ * Event start date/time schema (ISO datetime)
+ */
+export const eventStartAtSchema = isoDateTimeSchema;
+
+/**
+ * Event end date/time schema (ISO datetime, optional, must be after start_at)
+ */
+export const eventEndAtSchema = isoDateTimeSchema.nullable().optional();
+
+/**
+ * Create event schema
+ */
+export const createEventSchema = z.object({
+  org_id: orgIdSchema,
+  class_id: classIdSchema.optional(),
+  title: eventTitleSchema,
+  description: eventDescriptionSchema,
+  start_at: eventStartAtSchema,
+  end_at: eventEndAtSchema,
+  location: eventLocationSchema,
+}).refine(
+  (data) => {
+    // If end_at is provided, it must be after start_at
+    if (data.end_at) {
+      return new Date(data.end_at) >= new Date(data.start_at);
+    }
+    return true;
+  },
+  { message: 'End date must be after or equal to start date', path: ['end_at'] }
+);
+
+/**
+ * Update event schema
+ */
+export const updateEventSchema = z.object({
+  title: eventTitleSchema.optional(),
+  description: eventDescriptionSchema,
+  start_at: eventStartAtSchema.optional(),
+  end_at: eventEndAtSchema,
+  location: eventLocationSchema,
+  class_id: classIdSchema.optional(),
+}).refine(
+  (data) => {
+    // If both start_at and end_at are provided, end_at must be after start_at
+    if (data.start_at && data.end_at) {
+      return new Date(data.end_at) >= new Date(data.start_at);
+    }
+    // If only end_at is provided, we need to check against existing start_at
+    // This will be validated in the server action
+    return true;
+  },
+  { message: 'End date must be after or equal to start date', path: ['end_at'] }
+);
+
+// ============================================================================
 // Array Schemas
 // ============================================================================
 

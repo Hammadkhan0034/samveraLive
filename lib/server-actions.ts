@@ -19,6 +19,7 @@ import {
   getOrgNotificationTargets,
   type NotificationType,
 } from './services/notifications';
+import { createEventSchema, updateEventSchema } from './validation';
 
 // Example server actions with role gating
 
@@ -681,4 +682,372 @@ export async function deleteAllNotifications() {
   
   revalidatePath('/dashboard/notifications');
   return { success: true };
+}
+
+// ============================================================================
+// Event Server Actions
+// ============================================================================
+
+export async function createEvent(data: {
+  org_id: string;
+  class_id?: string | null;
+  title: string;
+  description?: string | null;
+  start_at: string;
+  end_at?: string | null;
+  location?: string | null;
+}) {
+  // Only principals and teachers can create events
+  const { user, session } = await requireServerRoles(['principal', 'teacher']);
+  
+  const supabase = supabaseAdmin ?? await createSupabaseServer();
+  
+  // Validate input
+  const validation = createEventSchema.safeParse(data);
+  if (!validation.success) {
+    throw new Error(`Validation failed: ${validation.error.errors.map(e => e.message).join(', ')}`);
+  }
+  
+  const validatedData = validation.data;
+  
+  // Get org_id from user if not provided
+  let orgId = validatedData.org_id || (user.user_metadata?.org_id as string | undefined) || (user.user_metadata?.organization_id as string | undefined);
+  if (!orgId && supabaseAdmin) {
+    const { data: userRow } = await supabaseAdmin
+      .from('users')
+      .select('org_id')
+      .eq('id', user.id)
+      .maybeSingle();
+    orgId = (userRow as any)?.org_id as string | undefined;
+  }
+  if (!orgId) {
+    throw new Error('Organization ID is required');
+  }
+  
+  // For teachers, ensure they can only create class-based events for their assigned classes
+  if (user.user_metadata?.role === 'teacher' || user.user_metadata?.activeRole === 'teacher') {
+    if (!validatedData.class_id) {
+      throw new Error('Teachers can only create class-based events');
+    }
+    
+    // Verify teacher is assigned to this class
+    const { data: membership } = await supabase
+      .from('class_memberships')
+      .select('id')
+      .eq('class_id', validatedData.class_id)
+      .eq('user_id', user.id)
+      .eq('membership_role', 'teacher')
+      .maybeSingle();
+    
+    if (!membership) {
+      throw new Error('You are not assigned to this class');
+    }
+  }
+  
+  // Create event
+  const { data: event, error } = await supabase
+    .from('events')
+    .insert({
+      org_id: orgId,
+      class_id: validatedData.class_id || null,
+      title: validatedData.title,
+      description: validatedData.description || null,
+      start_at: validatedData.start_at,
+      end_at: validatedData.end_at || null,
+      location: validatedData.location || null,
+      created_by: user.id,
+    })
+    .select()
+    .single();
+  
+  if (error) {
+    throw new Error(`Failed to create event: ${error.message}`);
+  }
+  
+  // Create notifications for target users
+  try {
+    let targetUserIds: string[] = [];
+    let notificationType: NotificationType;
+    
+    if (validatedData.class_id) {
+      // Class-specific event: notify assigned teachers + parents of students in class
+      notificationType = 'event_created';
+      targetUserIds = await getClassNotificationTargets(validatedData.class_id, orgId);
+    } else {
+      // Organization-wide event: notify all teachers + all parents
+      notificationType = 'event_created';
+      targetUserIds = await getOrgNotificationTargets(orgId);
+    }
+    
+    // Exclude the creator from receiving notifications
+    targetUserIds = targetUserIds.filter(id => id !== user.id);
+    
+    // Only create notifications if there are target users
+    if (targetUserIds.length > 0 && event) {
+      await createBulkNotifications(
+        orgId,
+        targetUserIds,
+        notificationType,
+        `New Event: ${validatedData.title}`,
+        validatedData.description || `Event scheduled for ${new Date(validatedData.start_at).toLocaleDateString()}`,
+        {
+          event_id: event.id,
+          class_id: validatedData.class_id,
+          created_by: user.id,
+        }
+      );
+    }
+  } catch (notificationError) {
+    // Log error but don't fail the event creation
+    console.error('Failed to create notifications for event:', notificationError);
+  }
+  
+  revalidatePath('/dashboard');
+  return event;
+}
+
+export async function updateEvent(eventId: string, data: {
+  title?: string;
+  description?: string | null;
+  start_at?: string;
+  end_at?: string | null;
+  location?: string | null;
+  class_id?: string | null;
+}) {
+  // Only principals and teachers can update events
+  const { user } = await requireServerRoles(['principal', 'teacher']);
+  
+  const supabase = supabaseAdmin ?? await createSupabaseServer();
+  
+  // Get existing event to check permissions
+  const { data: existingEvent, error: fetchError } = await supabase
+    .from('events')
+    .select('*, classes(name)')
+    .eq('id', eventId)
+    .is('deleted_at', null)
+    .single();
+  
+  if (fetchError || !existingEvent) {
+    throw new Error('Event not found');
+  }
+  
+  const orgId = existingEvent.org_id;
+  
+  // Check permissions
+  if (user.user_metadata?.role === 'teacher' || user.user_metadata?.activeRole === 'teacher') {
+    // Teachers can only update their class events
+    if (!existingEvent.class_id) {
+      throw new Error('Teachers cannot update organization-wide events');
+    }
+    
+    // Verify teacher is assigned to this class
+    const { data: membership } = await supabase
+      .from('class_memberships')
+      .select('id')
+      .eq('class_id', existingEvent.class_id)
+      .eq('user_id', user.id)
+      .eq('membership_role', 'teacher')
+      .maybeSingle();
+    
+    if (!membership) {
+      throw new Error('You are not assigned to this class');
+    }
+    
+    // Teachers cannot change class_id
+    if (data.class_id !== undefined && data.class_id !== existingEvent.class_id) {
+      throw new Error('Teachers cannot change event scope');
+    }
+  }
+  
+  // Validate update data
+  const updateData: any = {};
+  if (data.title !== undefined) updateData.title = data.title;
+  if (data.description !== undefined) updateData.description = data.description;
+  if (data.start_at !== undefined) updateData.start_at = data.start_at;
+  if (data.end_at !== undefined) updateData.end_at = data.end_at;
+  if (data.location !== undefined) updateData.location = data.location;
+  if (data.class_id !== undefined && (user.user_metadata?.role === 'principal' || user.user_metadata?.activeRole === 'principal')) {
+    updateData.class_id = data.class_id;
+  }
+  
+  // Validate end_at is after start_at
+  const startAt = updateData.start_at || existingEvent.start_at;
+  const endAt = updateData.end_at !== undefined ? updateData.end_at : existingEvent.end_at;
+  if (endAt && new Date(endAt) < new Date(startAt)) {
+    throw new Error('End date must be after or equal to start date');
+  }
+  
+  // Update event
+  const { data: updatedEvent, error } = await supabase
+    .from('events')
+    .update(updateData)
+    .eq('id', eventId)
+    .select()
+    .single();
+  
+  if (error) {
+    throw new Error(`Failed to update event: ${error.message}`);
+  }
+  
+  // Create notifications for target users
+  try {
+    let targetUserIds: string[] = [];
+    const finalClassId = updateData.class_id !== undefined ? updateData.class_id : existingEvent.class_id;
+    
+    if (finalClassId) {
+      targetUserIds = await getClassNotificationTargets(finalClassId, orgId);
+    } else {
+      targetUserIds = await getOrgNotificationTargets(orgId);
+    }
+    
+    // Exclude the updater from receiving notifications
+    targetUserIds = targetUserIds.filter(id => id !== user.id);
+    
+    if (targetUserIds.length > 0 && updatedEvent) {
+      await createBulkNotifications(
+        orgId,
+        targetUserIds,
+        'event_updated',
+        `Event Updated: ${updateData.title || existingEvent.title}`,
+        `Event has been updated.${updateData.description ? ` ${updateData.description}` : ''}`,
+        {
+          event_id: updatedEvent.id,
+          class_id: finalClassId,
+          updated_by: user.id,
+        }
+      );
+    }
+  } catch (notificationError) {
+    console.error('Failed to create notifications for event update:', notificationError);
+  }
+  
+  revalidatePath('/dashboard');
+  return updatedEvent;
+}
+
+export async function deleteEvent(eventId: string) {
+  // Only principals and teachers can delete events
+  const { user } = await requireServerRoles(['principal', 'teacher']);
+  
+  const supabase = supabaseAdmin ?? await createSupabaseServer();
+  
+  // Get existing event to check permissions
+  const { data: existingEvent, error: fetchError } = await supabase
+    .from('events')
+    .select('*')
+    .eq('id', eventId)
+    .is('deleted_at', null)
+    .single();
+  
+  if (fetchError || !existingEvent) {
+    throw new Error('Event not found');
+  }
+  
+  // Check permissions
+  if (user.user_metadata?.role === 'teacher' || user.user_metadata?.activeRole === 'teacher') {
+    // Teachers can only delete their class events
+    if (!existingEvent.class_id) {
+      throw new Error('Teachers cannot delete organization-wide events');
+    }
+    
+    // Verify teacher is assigned to this class
+    const { data: membership } = await supabase
+      .from('class_memberships')
+      .select('id')
+      .eq('class_id', existingEvent.class_id)
+      .eq('user_id', user.id)
+      .eq('membership_role', 'teacher')
+      .maybeSingle();
+    
+    if (!membership) {
+      throw new Error('You are not assigned to this class');
+    }
+  }
+  
+  // Soft delete
+  const { error } = await supabase
+    .from('events')
+    .update({ deleted_at: new Date().toISOString() })
+    .eq('id', eventId);
+  
+  if (error) {
+    throw new Error(`Failed to delete event: ${error.message}`);
+  }
+  
+  revalidatePath('/dashboard');
+  return { success: true };
+}
+
+export async function getEvents(orgId: string, options?: {
+  classId?: string | null;
+  startDate?: string;
+  endDate?: string;
+  userRole?: 'principal' | 'teacher' | 'parent';
+  userId?: string;
+}) {
+  const { user } = await requireServerAuth();
+  
+  const supabase = supabaseAdmin ?? await createSupabaseServer();
+  
+  // Build query
+  let query = supabase
+    .from('events')
+    .select(`
+      *,
+      classes(name)
+    `)
+    .eq('org_id', orgId)
+    .is('deleted_at', null);
+  
+  // Apply role-based filtering
+  const role = options?.userRole || (user.user_metadata?.role as string) || (user.user_metadata?.activeRole as string);
+  
+  if (role === 'parent') {
+    // Parents: only events for their child's class or org-wide
+    if (options?.classId) {
+      query = query.or(`class_id.eq.${options.classId},class_id.is.null`);
+    } else {
+      // If no classId provided, only show org-wide events
+      query = query.is('class_id', null);
+    }
+  } else if (role === 'teacher') {
+    // Teachers: events for their assigned classes or org-wide
+    const userId = options?.userId || user.id;
+    
+    // Get teacher's assigned classes
+    const { data: memberships } = await supabase
+      .from('class_memberships')
+      .select('class_id')
+      .eq('user_id', userId)
+      .eq('membership_role', 'teacher');
+    
+    const classIds = memberships?.map(m => m.class_id) || [];
+    
+    if (classIds.length > 0) {
+      query = query.or(`class_id.in.(${classIds.join(',')}),class_id.is.null`);
+    } else {
+      // If no classes assigned, only show org-wide events
+      query = query.is('class_id', null);
+    }
+  }
+  // Principals can see all events (no additional filtering)
+  
+  // Apply date range filter
+  if (options?.startDate) {
+    query = query.gte('start_at', options.startDate);
+  }
+  if (options?.endDate) {
+    query = query.lte('start_at', options.endDate);
+  }
+  
+  // Order by start date
+  query = query.order('start_at', { ascending: true });
+  
+  const { data: events, error } = await query;
+  
+  if (error) {
+    throw new Error(`Failed to fetch events: ${error.message}`);
+  }
+  
+  return events || [];
 }

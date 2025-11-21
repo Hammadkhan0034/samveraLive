@@ -431,6 +431,8 @@ export const enText = {
   tile_stories_desc: 'Post classroom stories that expire in 24h.',
   tile_announcements: 'Announcements',
   tile_announcements_desc: 'Create and view announcements.',
+  tile_calendar: 'Calendar',
+  tile_calendar_desc: 'View and manage events',
   tile_students: 'Students',
   tile_students_desc: 'Manage your students',
   tile_guardians: 'Guardians',

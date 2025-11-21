@@ -432,6 +432,8 @@ export const isText = {
   tile_stories_desc: 'Hópsögur sem hverfa eftir 24 klst.',
   tile_announcements: 'Tilkynningar',
   tile_announcements_desc: 'Stofna og skoða tilkynningar',
+  tile_calendar: 'Dagatal',
+  tile_calendar_desc: 'Skoða og stjórna viðburðum',
   tile_students: 'Nemendur',
   tile_students_desc: 'Stjórna nemendum',
   tile_guardians: 'Forráðamenn',

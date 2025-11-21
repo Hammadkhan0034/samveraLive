@@ -21,7 +21,9 @@ export type NotificationType =
   | 'announcement_class' 
   | 'announcement_org' 
   | 'story_class' 
-  | 'story_org';
+  | 'story_org'
+  | 'event_created'
+  | 'event_updated';
 
 /**
  * Create a single notification
