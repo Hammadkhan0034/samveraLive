@@ -10,7 +10,6 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { useTeacherOrgId } from '@/lib/hooks/useTeacherOrgId';
 import { useTeacherClasses } from '@/lib/hooks/useTeacherClasses';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
-import Loading from '@/app/components/shared/Loading';
 import TeacherPageLayout from '@/app/components/shared/TeacherPageLayout';
 
 export default function TeacherCalendarPage() {
@@ -71,14 +70,6 @@ export default function TeacherCalendarPage() {
     }
   };
 
-  if (loadingEvents && calendarEvents.length === 0) {
-    return (
-      <TeacherPageLayout>
-        <Loading fullScreen text="Loading calendar..." />
-      </TeacherPageLayout>
-    );
-  }
-
   return (
     <TeacherPageLayout>
       <div>
@@ -90,7 +81,42 @@ export default function TeacherCalendarPage() {
         </div>
 
         {/* Calendar Container */}
-        <div className="rounded-2xl bg-white dark:bg-slate-800">
+        {loadingEvents && calendarEvents.length === 0 ? (
+          <div className="rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm p-6">
+            {/* Calendar Header Skeleton */}
+            <div className="mb-6 flex items-center justify-between">
+              <div className="h-8 w-32 animate-pulse bg-slate-200 dark:bg-slate-700 rounded"></div>
+              <div className="flex gap-2">
+                <div className="h-8 w-8 animate-pulse bg-slate-200 dark:bg-slate-700 rounded"></div>
+                <div className="h-8 w-8 animate-pulse bg-slate-200 dark:bg-slate-700 rounded"></div>
+              </div>
+            </div>
+            
+            {/* Calendar Grid Skeleton */}
+            <div className="space-y-2">
+              {/* Day names skeleton */}
+              <div className="grid grid-cols-7 gap-1 mb-2">
+                {Array.from({ length: 7 }).map((_, i) => (
+                  <div key={i} className="h-4 w-full animate-pulse bg-slate-200 dark:bg-slate-700 rounded"></div>
+                ))}
+              </div>
+              
+              {/* Calendar days skeleton */}
+              <div className="grid grid-cols-7 gap-1">
+                {Array.from({ length: 35 }).map((_, i) => (
+                  <div key={i} className="min-h-[80px] p-2 rounded-lg border border-slate-200 dark:border-slate-700">
+                    <div className="h-4 w-6 mb-2 animate-pulse bg-slate-200 dark:bg-slate-700 rounded"></div>
+                    <div className="space-y-1">
+                      <div className="h-3 w-full animate-pulse bg-slate-200 dark:bg-slate-700 rounded"></div>
+                      <div className="h-3 w-3/4 animate-pulse bg-slate-200 dark:bg-slate-700 rounded"></div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-2xl bg-white dark:bg-slate-800">
           <Calendar
             orgId={orgId || ''}
             userRole="teacher"
@@ -108,7 +134,8 @@ export default function TeacherCalendarPage() {
               router.push('/dashboard/teacher/calendar/add-event');
             }}
           />
-        </div>
+          </div>
+        )}
 
         {/* Event Modals */}
         <EventDetailsModal

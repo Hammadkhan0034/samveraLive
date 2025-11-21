@@ -22,6 +22,7 @@ export function useNotifications({
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [realtimeError, setRealtimeError] = useState<string | null>(null);
   const channelRef = useRef<any>(null);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const lastUserIdOrgIdRef = useRef<string>('');
@@ -233,10 +234,13 @@ export function useNotifications({
     channel.subscribe((status) => {
       if (status === 'SUBSCRIBED') {
         setIsSubscribed(true);
+        setRealtimeError(null); // Clear error on successful subscription
         console.log('✅ Realtime notifications subscription active for user:', userId, 'org:', orgId);
       } else if (status === 'CHANNEL_ERROR') {
         setIsSubscribed(false);
-        console.error('❌ Realtime notifications channel error - falling back to polling');
+        const errorMessage = 'Realtime notifications channel error - falling back to polling';
+        console.error('❌', errorMessage);
+        setRealtimeError(errorMessage);
         // Fallback: refetch notifications periodically if real-time fails
         const fallbackInterval = setInterval(() => {
           console.log('🔄 Fallback: Refetching notifications due to real-time failure');
@@ -265,6 +269,7 @@ export function useNotifications({
         clearInterval((channelRef.current as any).fallbackInterval);
       }
       cleanup();
+      setRealtimeError(null); // Clear error on cleanup
     };
   }, [userId, orgId, enabled, limit, fetchNotifications]);
 
@@ -343,6 +348,7 @@ export function useNotifications({
     unreadCount,
     loading,
     error,
+    realtimeError,
     isSubscribed,
     markAsRead,
     markAllAsRead,

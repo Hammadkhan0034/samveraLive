@@ -286,11 +286,13 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
       {/* Sidebar */}
       <aside
         className={clsx(
-          'flex-shrink-0 w-72 bg-slate-900 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 overflow-y-auto transition-transform duration-300 ease-in-out',
+          'flex-shrink-0 w-72 bg-slate-900 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transition-transform duration-300 ease-in-out',
+          'scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]',
           sidebarOpen 
-            ? 'fixed top-14 bottom-0 left-0 z-50 translate-x-0 md:relative md:top-0 md:translate-x-0' 
-            : 'fixed top-14 bottom-0 left-0 z-50 -translate-x-full md:relative md:top-0 md:translate-x-0'
+            ? 'fixed top-14 bottom-0 left-0 z-50 translate-x-0 md:sticky md:top-14 md:h-[calc(100vh-3.5rem)] md:overflow-y-auto md:translate-x-0' 
+            : 'fixed top-14 bottom-0 left-0 z-50 -translate-x-full md:sticky md:top-14 md:h-[calc(100vh-3.5rem)] md:overflow-y-auto md:translate-x-0'
         )}
+        style={{ scrollBehavior: 'smooth' }}
       >
         <div className="p-4">
           <div className="mb-4 flex items-center justify-between md:hidden">
