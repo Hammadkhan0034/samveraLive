@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useRef, createContext, useContext } from 'react';
-import { usePathname } from 'next/navigation';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
 import TeacherSidebar, { TeacherSidebarRef } from './TeacherSidebar';
 import Loading from './Loading';
@@ -35,7 +34,6 @@ export default function TeacherPageLayout({
 }: TeacherPageLayoutProps) {
   const { user, loading, isSigningIn } = useRequireAuth('teacher');
   const sidebarRef = useRef<TeacherSidebarRef>(null);
-  const pathname = usePathname();
 
   // Show loading state while checking authentication
   if (loading || (isSigningIn && !user)) {
@@ -55,7 +53,6 @@ export default function TeacherPageLayout({
           {/* Sidebar */}
           <TeacherSidebar
             ref={sidebarRef}
-            pathname={pathname}
             attendanceBadge={attendanceBadge}
             messagesBadge={messagesBadge}
             mediaBadge={mediaBadge}

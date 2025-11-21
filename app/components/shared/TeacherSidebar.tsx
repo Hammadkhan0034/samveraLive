@@ -21,7 +21,6 @@ export interface TeacherSidebarTile {
 }
 
 export interface TeacherSidebarProps {
-  pathname: string; // For route-based active state detection
   messagesBadge?: number; // Optional badge count for messages
   attendanceBadge?: number; // Optional badge count for attendance
   mediaBadge?: number; // Optional badge count for media
@@ -34,13 +33,13 @@ export interface TeacherSidebarRef {
 }
 
 const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>(({
-  pathname,
   messagesBadge,
   attendanceBadge,
   mediaBadge,
   tiles = [],
 }, ref) => {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const { t } = useLanguage();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -161,8 +160,9 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
 
   // Handle dashboard tile click
   const handleDashboardClick = () => {
+    // Set optimistic state immediately for instant feedback
+    setOptimisticActiveTile('dashboard');
     if (pathname !== '/dashboard/teacher') {
-      setOptimisticActiveTile('dashboard');
       router.replace('/dashboard/teacher');
     }
     handleSidebarClose();
@@ -170,8 +170,9 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
 
   // Handle attendance tile click
   const handleAttendanceClick = () => {
+    // Set optimistic state immediately for instant feedback
+    setOptimisticActiveTile('attendance');
     if (pathname !== '/dashboard/teacher/attendance') {
-      setOptimisticActiveTile('attendance');
       router.replace('/dashboard/teacher/attendance');
     }
     handleSidebarClose();
@@ -179,8 +180,9 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
 
   // Handle diapers tile click
   const handleDiapersClick = () => {
+    // Set optimistic state immediately for instant feedback
+    setOptimisticActiveTile('diapers');
     if (pathname !== '/dashboard/teacher/diapers') {
-      setOptimisticActiveTile('diapers');
       router.replace('/dashboard/teacher/diapers');
     }
     handleSidebarClose();
@@ -188,8 +190,9 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
 
   // Handle messages tile click
   const handleMessagesClick = () => {
+    // Set optimistic state immediately for instant feedback
+    setOptimisticActiveTile('messages');
     if (pathname !== '/dashboard/teacher/messages') {
-      setOptimisticActiveTile('messages');
       router.replace('/dashboard/teacher/messages');
     }
     handleSidebarClose();
@@ -197,8 +200,9 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
 
   // Handle media tile click
   const handleMediaClick = () => {
+    // Set optimistic state immediately for instant feedback
+    setOptimisticActiveTile('media');
     if (pathname !== '/dashboard/teacher/media') {
-      setOptimisticActiveTile('media');
       router.replace('/dashboard/teacher/media');
     }
     handleSidebarClose();
@@ -206,8 +210,9 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
 
   // Handle stories tile click
   const handleStoriesClick = () => {
+    // Set optimistic state immediately for instant feedback
+    setOptimisticActiveTile('stories');
     if (pathname !== '/dashboard/teacher/stories') {
-      setOptimisticActiveTile('stories');
       router.replace('/dashboard/teacher/stories');
     }
     handleSidebarClose();
@@ -215,8 +220,9 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
 
   // Handle announcements tile click
   const handleAnnouncementsClick = () => {
+    // Set optimistic state immediately for instant feedback
+    setOptimisticActiveTile('announcements');
     if (pathname !== '/dashboard/teacher/announcements') {
-      setOptimisticActiveTile('announcements');
       router.replace('/dashboard/teacher/announcements');
     }
     handleSidebarClose();
@@ -224,8 +230,9 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
 
   // Handle calendar tile click
   const handleCalendarClick = () => {
+    // Set optimistic state immediately for instant feedback
+    setOptimisticActiveTile('calendar');
     if (pathname !== '/dashboard/teacher/calendar') {
-      setOptimisticActiveTile('calendar');
       router.replace('/dashboard/teacher/calendar');
     }
     handleSidebarClose();
@@ -233,8 +240,9 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
 
   // Handle students tile click
   const handleStudentsClick = () => {
+    // Set optimistic state immediately for instant feedback
+    setOptimisticActiveTile('students');
     if (pathname !== '/dashboard/teacher/students') {
-      setOptimisticActiveTile('students');
       router.replace('/dashboard/teacher/students');
     }
     handleSidebarClose();
@@ -242,8 +250,9 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
 
   // Handle guardians tile click
   const handleGuardiansClick = () => {
+    // Set optimistic state immediately for instant feedback
+    setOptimisticActiveTile('guardians');
     if (pathname !== '/dashboard/teacher/guardians') {
-      setOptimisticActiveTile('guardians');
       router.replace('/dashboard/teacher/guardians');
     }
     handleSidebarClose();
@@ -251,8 +260,9 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
 
   // Handle link student tile click
   const handleLinkStudentClick = () => {
+    // Set optimistic state immediately for instant feedback
+    setOptimisticActiveTile('link_student');
     if (pathname !== '/dashboard/teacher/link-student') {
-      setOptimisticActiveTile('link_student');
       router.replace('/dashboard/teacher/link-student');
     }
     handleSidebarClose();
@@ -260,8 +270,9 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
 
   // Handle menus tile click
   const handleMenusClick = () => {
+    // Set optimistic state immediately for instant feedback
+    setOptimisticActiveTile('menus');
     if (pathname !== '/dashboard/teacher/menus') {
-      setOptimisticActiveTile('menus');
       router.replace('/dashboard/teacher/menus');
     }
     handleSidebarClose();
