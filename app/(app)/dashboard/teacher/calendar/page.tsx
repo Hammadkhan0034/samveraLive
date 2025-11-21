@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
 import { Calendar, type CalendarEvent } from '@/app/components/shared/Calendar';
 import { EventDetailsModal } from '@/app/components/shared/EventDetailsModal';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
@@ -12,6 +11,7 @@ import { useTeacherOrgId } from '@/lib/hooks/useTeacherOrgId';
 import { useTeacherClasses } from '@/lib/hooks/useTeacherClasses';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import Loading from '@/app/components/shared/Loading';
+import TeacherPageLayout from '@/app/components/shared/TeacherPageLayout';
 
 export default function TeacherCalendarPage() {
   const router = useRouter();
@@ -72,20 +72,18 @@ export default function TeacherCalendarPage() {
   };
 
   if (loadingEvents && calendarEvents.length === 0) {
-    return <Loading fullScreen text="Loading calendar..." />;
+    return (
+      <TeacherPageLayout>
+        <Loading fullScreen text="Loading calendar..." />
+      </TeacherPageLayout>
+    );
   }
 
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900">
-      <div className="mx-auto max-w-7xl px-4 py-8 md:px-6">
+    <TeacherPageLayout>
+      <div>
         {/* Header */}
-        <div className="mb-6 flex items-center gap-4">
-          <button
-            onClick={() => router.back()}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-          >
-            <ArrowLeft className="h-4 w-4" /> {t.back}
-          </button>
+        <div className="mb-6">
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
             {t.tile_calendar || 'Calendar'}
           </h1>
@@ -94,61 +92,61 @@ export default function TeacherCalendarPage() {
         {/* Calendar Container */}
         <div className="rounded-2xl bg-white dark:bg-slate-800">
           <Calendar
-        orgId={orgId || ''}
-        userRole="teacher"
-        canEdit={true}
-        events={calendarEvents}
-        classes={teacherClasses}
-        onEventClick={(event) => {
-          setSelectedEvent(event);
-          setShowEventDetails(true);
-        }}
-        onDateClick={() => {
-          router.push('/dashboard/teacher/calendar/add-event');
-        }}
-        onCreateClick={() => {
-          router.push('/dashboard/teacher/calendar/add-event');
-        }}
+            orgId={orgId || ''}
+            userRole="teacher"
+            canEdit={true}
+            events={calendarEvents}
+            classes={teacherClasses}
+            onEventClick={(event) => {
+              setSelectedEvent(event);
+              setShowEventDetails(true);
+            }}
+            onDateClick={() => {
+              router.push('/dashboard/teacher/calendar/add-event');
+            }}
+            onCreateClick={() => {
+              router.push('/dashboard/teacher/calendar/add-event');
+            }}
           />
         </div>
 
         {/* Event Modals */}
-      <EventDetailsModal
-        isOpen={showEventDetails}
-        onClose={() => {
-          setShowEventDetails(false);
-          setSelectedEvent(null);
-        }}
-        event={selectedEvent}
-        canEdit={true}
-        canDelete={true}
-        onEdit={() => {
-          setShowEventDetails(false);
-          if (selectedEvent) {
-            router.push(`/dashboard/teacher/calendar/edit-event/${selectedEvent.id}`);
-          }
-        }}
-        onDelete={() => {
-          setShowEventDetails(false);
-          setEventToDelete(selectedEvent?.id || null);
-          setShowDeleteConfirm(true);
-        }}
-        classes={teacherClasses}
-      />
+        <EventDetailsModal
+          isOpen={showEventDetails}
+          onClose={() => {
+            setShowEventDetails(false);
+            setSelectedEvent(null);
+          }}
+          event={selectedEvent}
+          canEdit={true}
+          canDelete={true}
+          onEdit={() => {
+            setShowEventDetails(false);
+            if (selectedEvent) {
+              router.push(`/dashboard/teacher/calendar/edit-event/${selectedEvent.id}`);
+            }
+          }}
+          onDelete={() => {
+            setShowEventDetails(false);
+            setEventToDelete(selectedEvent?.id || null);
+            setShowDeleteConfirm(true);
+          }}
+          classes={teacherClasses}
+        />
 
-      <DeleteConfirmationModal
-        isOpen={showDeleteConfirm}
-        onClose={() => {
-          setShowDeleteConfirm(false);
-          setEventToDelete(null);
-        }}
-        onConfirm={handleDeleteEvent}
-        title={t.delete_event_confirm}
-        message={t.delete_event_message}
-        loading={deletingEvent}
-      />
+        <DeleteConfirmationModal
+          isOpen={showDeleteConfirm}
+          onClose={() => {
+            setShowDeleteConfirm(false);
+            setEventToDelete(null);
+          }}
+          onConfirm={handleDeleteEvent}
+          title={t.delete_event_confirm}
+          message={t.delete_event_message}
+          loading={deletingEvent}
+        />
       </div>
-    </div>
+    </TeacherPageLayout>
   );
 }
 

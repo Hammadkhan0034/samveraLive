@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useImperativeHandle, forwardRef, useEffect } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import React, { useState, useImperativeHandle, forwardRef, useEffect, Suspense } from 'react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { X } from 'lucide-react';
 import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Bell, Users, Shield, Link as LinkIcon, Utensils, LayoutDashboard, CalendarDays } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
@@ -33,7 +33,7 @@ export interface TeacherSidebarRef {
   close: () => void;
 }
 
-const TeacherSidebar = forwardRef<TeacherSidebarRef, TeacherSidebarProps>(({
+const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>(({
   pathname,
   messagesBadge,
   attendanceBadge,
@@ -41,6 +41,7 @@ const TeacherSidebar = forwardRef<TeacherSidebarRef, TeacherSidebarProps>(({
   tiles = [],
 }, ref) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useLanguage();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [optimisticActiveTile, setOptimisticActiveTile] = useState<string | null>(null);
@@ -785,6 +786,16 @@ const TeacherSidebar = forwardRef<TeacherSidebarRef, TeacherSidebarProps>(({
         />
       )}
     </>
+  );
+});
+
+TeacherSidebarContent.displayName = 'TeacherSidebarContent';
+
+const TeacherSidebar = forwardRef<TeacherSidebarRef, TeacherSidebarProps>((props, ref) => {
+  return (
+    <Suspense fallback={<div className="w-72 bg-slate-900 dark:bg-slate-800" />}>
+      <TeacherSidebarContent {...props} ref={ref} />
+    </Suspense>
   );
 });
 
