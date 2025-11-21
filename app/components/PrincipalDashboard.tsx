@@ -9,7 +9,6 @@ import { useRouter } from 'next/navigation';
 import StoryColumn from './shared/StoryColumn';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { type CalendarEvent } from './shared/Calendar';
-import { CalendarKPICard } from './shared/CalendarKPICard';
 import { getEvents } from '@/lib/server-actions';
 
 function clsx(...xs: Array<string | false | undefined>) {
@@ -679,11 +678,33 @@ export default function PrincipalDashboard() {
             </div>
           </div>
         ))}
-        {/* Calendar KPI Card */}
-        <CalendarKPICard
-          events={calendarEvents}
-          onClick={() => router.push('/dashboard/principal/calendar')}
-        />
+        {/* Calendar KPI Card - Inline */}
+        {(() => {
+          const today = new Date();
+          const currentMonth = today.getMonth();
+          const currentYear = today.getFullYear();
+          const currentMonthEvents = calendarEvents.filter(event => {
+            const eventDate = new Date(event.start_at);
+            return eventDate.getMonth() === currentMonth && eventDate.getFullYear() === currentYear;
+          });
+          
+          return (
+            <div
+              onClick={() => router.push('/dashboard/principal/calendar')}
+              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 cursor-pointer hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200"
+            >
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-slate-600 dark:text-slate-400">{t.tile_calendar || 'Calendar'}</div>
+                <span className="rounded-xl border border-slate-200 p-2 dark:border-slate-600">
+                  <CalendarDays className="h-4 w-4 text-slate-700 dark:text-slate-300" />
+                </span>
+              </div>
+              <div className="mt-3 text-2xl font-semibold text-slate-900 dark:text-slate-100">
+                {currentMonthEvents.length}
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       {/* School Announcements Section */}

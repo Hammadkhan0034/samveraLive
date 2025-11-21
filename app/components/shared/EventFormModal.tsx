@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
 import type { CalendarEvent } from './Calendar';
 
 export interface EventFormData {
@@ -38,6 +39,7 @@ export function EventFormModal({
   userRole,
   canSelectClass,
 }: EventFormModalProps) {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState<EventFormData>({
     title: '',
     description: '',
@@ -107,7 +109,7 @@ export function EventFormModal({
       <div className="w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-800 p-6 shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-            {initialData ? 'Edit Event' : 'Create Event'}
+            {initialData ? t.edit_event : t.create_event}
           </h3>
           <button
             onClick={onClose}
@@ -127,7 +129,7 @@ export function EventFormModal({
           {/* Title */}
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-              Title <span className="text-red-500">*</span>
+              {t.event_title} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -135,7 +137,7 @@ export function EventFormModal({
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
-              placeholder="Event title"
+              placeholder={t.event_title_placeholder}
             />
           </div>
 
@@ -143,14 +145,14 @@ export function EventFormModal({
           {canSelectClass && (
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                Scope
+                {t.event_scope}
               </label>
               <select
                 value={formData.class_id || ''}
                 onChange={(e) => setFormData({ ...formData, class_id: e.target.value || null })}
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
               >
-                <option value="">Organization-wide (All classes)</option>
+                <option value="">{t.event_scope_org_wide}</option>
                 {classes.map(cls => (
                   <option key={cls.id} value={cls.id}>
                     {cls.name}
@@ -163,7 +165,7 @@ export function EventFormModal({
           {/* Start Date/Time */}
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-              Start Date & Time <span className="text-red-500">*</span>
+              {t.event_start_date} <span className="text-red-500">*</span>
             </label>
             <input
               type="datetime-local"
@@ -177,7 +179,7 @@ export function EventFormModal({
           {/* End Date/Time */}
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-              End Date & Time (Optional)
+              {t.event_end_date} ({t.optional})
             </label>
             <input
               type="datetime-local"
@@ -191,28 +193,28 @@ export function EventFormModal({
           {/* Location */}
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-              Location (Optional)
+              {t.event_location} ({t.optional})
             </label>
             <input
               type="text"
               value={formData.location || ''}
               onChange={(e) => setFormData({ ...formData, location: e.target.value || null })}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
-              placeholder="Event location"
+              placeholder={t.event_location_placeholder}
             />
           </div>
 
           {/* Description */}
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-              Description (Optional)
+              {t.event_description} ({t.optional})
             </label>
             <textarea
               value={formData.description || ''}
               onChange={(e) => setFormData({ ...formData, description: e.target.value || null })}
               rows={4}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100"
-              placeholder="Event description"
+              placeholder={t.event_description_placeholder}
             />
           </div>
 
@@ -224,7 +226,7 @@ export function EventFormModal({
               disabled={loading}
               className="flex-1 rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
             >
-              Cancel
+              {t.cancel}
             </button>
             <button
               type="submit"
@@ -234,10 +236,10 @@ export function EventFormModal({
               {loading ? (
                 <div className="flex items-center justify-center gap-2">
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                  {initialData ? 'Updating...' : 'Creating...'}
+                  {initialData ? t.updating_event : t.creating_event}
                 </div>
               ) : (
-                initialData ? 'Update Event' : 'Create Event'
+                initialData ? t.update_event : t.create_event
               )}
             </button>
           </div>

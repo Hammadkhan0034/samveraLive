@@ -4,10 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
 import { Calendar, type CalendarEvent } from '@/app/components/shared/Calendar';
-import { EventFormModal, type EventFormData } from '@/app/components/shared/EventFormModal';
 import { EventDetailsModal } from '@/app/components/shared/EventDetailsModal';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
-import { createEvent, updateEvent, deleteEvent, getEvents } from '@/lib/server-actions';
+import { deleteEvent, getEvents } from '@/lib/server-actions';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useTeacherOrgId } from '@/lib/hooks/useTeacherOrgId';
 import { useTeacherClasses } from '@/lib/hooks/useTeacherClasses';
@@ -24,12 +23,10 @@ export default function TeacherCalendarPage() {
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
-  const [showEventForm, setShowEventForm] = useState(false);
   const [showEventDetails, setShowEventDetails] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [eventToDelete, setEventToDelete] = useState<string | null>(null);
-  const [eventFormError, setEventFormError] = useState<string | null>(null);
-  const [eventFormLoading, setEventFormLoading] = useState(false);
+  const [deletingEvent, setDeletingEvent] = useState(false);
 
   // Load calendar events
   useEffect(() => {
@@ -55,66 +52,12 @@ export default function TeacherCalendarPage() {
     }
   };
 
-  const handleCreateEvent = async (data: EventFormData) => {
-    try {
-      setEventFormLoading(true);
-      setEventFormError(null);
-      if (!orgId) throw new Error('Organization ID is required');
-      
-      // Teachers can only create class-based events
-      if (!data.class_id) {
-        throw new Error('Teachers can only create class-based events');
-      }
-      
-      await createEvent({
-        org_id: orgId,
-        class_id: data.class_id,
-        title: data.title,
-        description: data.description,
-        start_at: data.start_at,
-        end_at: data.end_at,
-        location: data.location,
-      });
-      
-      setShowEventForm(false);
-      await loadCalendarEvents();
-    } catch (error: any) {
-      setEventFormError(error.message || 'Failed to create event');
-    } finally {
-      setEventFormLoading(false);
-    }
-  };
-
-  const handleUpdateEvent = async (data: EventFormData) => {
-    if (!selectedEvent) return;
-    
-    try {
-      setEventFormLoading(true);
-      setEventFormError(null);
-      
-      await updateEvent(selectedEvent.id, {
-        title: data.title,
-        description: data.description,
-        start_at: data.start_at,
-        end_at: data.end_at,
-        location: data.location,
-        class_id: data.class_id,
-      });
-      
-      setShowEventForm(false);
-      setSelectedEvent(null);
-      await loadCalendarEvents();
-    } catch (error: any) {
-      setEventFormError(error.message || 'Failed to update event');
-    } finally {
-      setEventFormLoading(false);
-    }
-  };
 
   const handleDeleteEvent = async () => {
     if (!eventToDelete) return;
     
     try {
+      setDeletingEvent(true);
       await deleteEvent(eventToDelete);
       setShowDeleteConfirm(false);
       setEventToDelete(null);
@@ -123,6 +66,8 @@ export default function TeacherCalendarPage() {
       await loadCalendarEvents();
     } catch (error: any) {
       console.error('Failed to delete event:', error);
+    } finally {
+      setDeletingEvent(false);
     }
   };
 
@@ -158,35 +103,16 @@ export default function TeacherCalendarPage() {
           setSelectedEvent(event);
           setShowEventDetails(true);
         }}
-        onDateClick={(date) => {
-          setSelectedEvent(null);
-          setShowEventForm(true);
+        onDateClick={() => {
+          router.push('/dashboard/teacher/calendar/add-event');
         }}
         onCreateClick={() => {
-          setSelectedEvent(null);
-          setShowEventForm(true);
+          router.push('/dashboard/teacher/calendar/add-event');
         }}
           />
         </div>
 
         {/* Event Modals */}
-      <EventFormModal
-        isOpen={showEventForm}
-        onClose={() => {
-          setShowEventForm(false);
-          setSelectedEvent(null);
-          setEventFormError(null);
-        }}
-        onSubmit={selectedEvent ? handleUpdateEvent : handleCreateEvent}
-        initialData={selectedEvent}
-        loading={eventFormLoading}
-        error={eventFormError}
-        orgId={orgId || ''}
-        classes={teacherClasses}
-        userRole="teacher"
-        canSelectClass={false} // Teachers can only create class-based events
-      />
-
       <EventDetailsModal
         isOpen={showEventDetails}
         onClose={() => {
@@ -198,7 +124,9 @@ export default function TeacherCalendarPage() {
         canDelete={true}
         onEdit={() => {
           setShowEventDetails(false);
-          setShowEventForm(true);
+          if (selectedEvent) {
+            router.push(`/dashboard/teacher/calendar/edit-event/${selectedEvent.id}`);
+          }
         }}
         onDelete={() => {
           setShowEventDetails(false);
@@ -215,8 +143,9 @@ export default function TeacherCalendarPage() {
           setEventToDelete(null);
         }}
         onConfirm={handleDeleteEvent}
-        title="Delete Event"
-        message="Are you sure you want to delete this event? This action cannot be undone."
+        title={t.delete_event_confirm}
+        message={t.delete_event_message}
+        loading={deletingEvent}
       />
       </div>
     </div>

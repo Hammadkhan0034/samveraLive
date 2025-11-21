@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { X, Edit, Trash2, Calendar, MapPin, Users } from 'lucide-react';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
 import type { CalendarEvent } from './Calendar';
 
 export interface EventDetailsModalProps {
@@ -25,6 +26,7 @@ export function EventDetailsModal({
   onDelete,
   classes = [],
 }: EventDetailsModalProps) {
+  const { t } = useLanguage();
   if (!isOpen || !event) return null;
 
   const startDate = new Date(event.start_at);
@@ -65,7 +67,7 @@ export function EventDetailsModal({
       <div className="w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-800 p-6 shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-            Event Details
+            {t.event_details}
           </h3>
           <button
             onClick={onClose}
@@ -112,7 +114,7 @@ export function EventDetailsModal({
             <Users className="h-5 w-5 text-slate-500 dark:text-slate-400 mt-0.5" />
             <div>
               <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                {classInfo ? `Class: ${classInfo.name}` : 'Organization-wide'}
+                {classInfo ? `${t.event_scope_class}: ${classInfo.name}` : t.event_scope_org_wide}
               </div>
             </div>
           </div>
@@ -121,7 +123,7 @@ export function EventDetailsModal({
           {event.description && (
             <div>
               <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                Description
+                {t.event_description}
               </h4>
               <p className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap">
                 {event.description}
@@ -138,7 +140,7 @@ export function EventDetailsModal({
                   className="flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
                 >
                   <Edit className="h-4 w-4" />
-                  Edit
+                  {t.edit}
                 </button>
               )}
               {canDelete && onDelete && (
@@ -147,7 +149,7 @@ export function EventDetailsModal({
                   className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600"
                 >
                   <Trash2 className="h-4 w-4" />
-                  Delete
+                  {t.delete_event}
                 </button>
               )}
             </div>

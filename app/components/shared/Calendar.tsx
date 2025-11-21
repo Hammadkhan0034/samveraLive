@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
 
 export interface CalendarEvent {
   id: string;
@@ -41,6 +42,7 @@ export function Calendar({
   onCreateClick,
   classes = [],
 }: CalendarProps) {
+  const { t } = useLanguage();
   const [currentDate, setCurrentDate] = useState(new Date());
 
   // Get first day of month and number of days
@@ -165,7 +167,7 @@ export function Calendar({
               className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
             >
               <Plus className="h-4 w-4" />
-              New Event
+              {t.new_event || 'New Event'}
             </button>
           )}
         </div>

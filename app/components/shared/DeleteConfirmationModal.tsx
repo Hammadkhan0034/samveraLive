@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { X } from 'lucide-react';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
 
 interface DeleteConfirmationModalProps {
   isOpen: boolean;
@@ -31,11 +32,12 @@ export function DeleteConfirmationModal({
   cancelButtonText,
   translations
 }: DeleteConfirmationModalProps) {
+  const { t: tLang } = useLanguage();
   if (!isOpen) return null;
 
   const t = translations || {};
-  const confirmText = confirmButtonText || t.confirm_delete || 'Delete';
-  const cancelText = cancelButtonText || t.cancel || 'Cancel';
+  const confirmText = confirmButtonText || t.confirm_delete || tLang.delete || 'Delete';
+  const cancelText = cancelButtonText || t.cancel || tLang.cancel || 'Cancel';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -76,12 +78,12 @@ export function DeleteConfirmationModal({
           <button
             onClick={onConfirm}
             disabled={loading}
-            className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-red-700 dark:hover:bg-red-600"
+            className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed dark:bg-red-700"
           >
             {loading ? (
               <div className="flex items-center justify-center gap-2">
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                Deleting...
+                {tLang.deleting || 'Deleting...'}
               </div>
             ) : (
               confirmText
