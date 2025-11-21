@@ -88,12 +88,13 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
 
   // Determine if a tile is active based on optimistic state or pathname
   const isTileActive = (tileId: string, tileRoute?: string): boolean => {
-    // Check optimistic state first for immediate feedback
-    if (optimisticActiveTile === tileId) {
-      return true;
+    // If there's an optimistic active tile, only that tile should be active
+    // This prevents multiple tiles from being active during navigation
+    if (optimisticActiveTile !== null) {
+      return optimisticActiveTile === tileId;
     }
 
-    // Use pathname-based detection (route mode)
+    // Use pathname-based detection (route mode) when no optimistic state
     if (tileRoute) {
       // Extract pathname from route (remove query parameters for comparison)
       const routePathname = tileRoute.split('?')[0];
