@@ -438,7 +438,6 @@ export const enText = {
   menu_title: 'Add Menu',
   menu_subtitle: 'Create a new menu for a specific date.',
   date: 'Date',
-  optional: 'Optional',
   all_classes: 'All Classes (Org-wide)',
   breakfast_placeholder: 'Enter breakfast menu',
   lunch_placeholder: 'Enter lunch menu',

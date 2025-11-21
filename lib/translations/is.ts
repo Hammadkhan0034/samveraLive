@@ -439,7 +439,6 @@ export const isText = {
   menu_title: 'Bæta við matseðli',
   menu_subtitle: 'Búðu til nýjan matseðil fyrir ákveðna dagsetningu.',
   date: 'Dagsetning',
-  optional: 'Valfrjálst',
   all_classes: 'Allir hópar (Stofnunarmiðað)',
   breakfast_placeholder: 'Sláðu inn morgunmat',
   lunch_placeholder: 'Sláðu inn hádegismat',
