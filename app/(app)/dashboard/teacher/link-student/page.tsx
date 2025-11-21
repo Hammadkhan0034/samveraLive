@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { Bell, Timer, Users, MessageSquare, Camera, Link as LinkIcon, Utensils } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
@@ -19,7 +19,6 @@ export default function TeacherLinkStudentPage() {
   const { t, lang } = useLanguage();
   const { session } = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
   const { user, loading: authLoading, isSigningIn } = useRequireAuth('teacher');
   const sidebarRef = useRef<TeacherSidebarRef>(null);
 
@@ -78,7 +77,6 @@ export default function TeacherLinkStudentPage() {
       <div className="flex flex-1 overflow-hidden h-full">
         <TeacherSidebar
           ref={sidebarRef}
-          pathname={pathname}
         />
         <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900">
           <div className="p-2 md:p-6 lg:p-8">
