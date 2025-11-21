@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback, Suspense } from 'react';
 import { CalendarDays, Menu, ClipboardCheck, Users, MessageSquare, FileText, Megaphone, Utensils, AlertCircle } from 'lucide-react';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import { useAuth } from '@/lib/hooks/useAuth';
@@ -111,7 +111,7 @@ function TeacherDashboardContent({
   );
 }
 
-export default function TeacherDashboardPage() {
+function TeacherDashboardPageContent() {
   const { t, lang } = useLanguage();
   const { session } = useAuth();
   const router = useRouter();
@@ -432,5 +432,19 @@ export default function TeacherDashboardPage() {
         onRetry={handleRetry}
       />
     </TeacherPageLayout>
+  );
+}
+
+export default function TeacherDashboardPage() {
+  return (
+    <Suspense fallback={
+      <TeacherPageLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <KPICardSkeleton count={6} />
+        </div>
+      </TeacherPageLayout>
+    }>
+      <TeacherDashboardPageContent />
+    </Suspense>
   );
 }

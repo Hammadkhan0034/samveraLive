@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useTransition } from 'react';
+import React, { useState, useEffect, useTransition, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Trash2 } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
@@ -10,7 +10,7 @@ import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmat
 import Loading from '@/app/components/shared/Loading';
 import type { Notification } from '@/lib/services/notifications';
 
-export default function NotificationsPage() {
+function NotificationsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { session, loading: authLoading } = useAuth();
@@ -344,6 +344,20 @@ export default function NotificationsPage() {
         cancelButtonText={t.cancel || 'Cancel'}
       />
     </div>
+  );
+}
+
+export default function NotificationsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8">
+          <Loading fullScreen text="Loading notifications..." />
+        </div>
+      </div>
+    }>
+      <NotificationsPageContent />
+    </Suspense>
   );
 }
 
