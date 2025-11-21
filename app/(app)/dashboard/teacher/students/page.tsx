@@ -79,7 +79,8 @@ function StudentsPanel({
   onAddStudent,
   onEditStudent,
   onDeleteStudent,
-  teacherClasses
+  teacherClasses,
+  hasLoadedOnce
 }: {
   t: typeof enText | typeof isText;
   students: any[];
@@ -89,6 +90,7 @@ function StudentsPanel({
   onEditStudent?: (student: any) => void;
   onDeleteStudent?: (studentId: string) => void;
   teacherClasses?: any[];
+  hasLoadedOnce?: boolean;
 }) {
   // Search and pagination state
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -159,7 +161,7 @@ function StudentsPanel({
           </div>
         )}
         <div className="overflow-x-auto rounded-t-lg rounded-r-lg">
-          {loadingStudents ? (
+          {loadingStudents || !hasLoadedOnce ? (
             <LoadingSkeleton type="table" rows={5} />
           ) : filteredStudents.length === 0 ? (
             <div className="text-center py-4 text-slate-500 dark:text-slate-400">
@@ -341,8 +343,9 @@ export default function TeacherStudentsPage() {
 
   // Students from assigned classes
   const [students, setStudents] = useState<Array<{ id: string; first_name: string; last_name: string | null; dob: string | null; gender: string; class_id: string | null; created_at: string; classes?: any; guardians?: Array<{ id: string; relation: string; users?: { id: string; full_name: string; email: string } }> }>>([]);
-  const [loadingStudents, setLoadingStudents] = useState(false);
+  const [loadingStudents, setLoadingStudents] = useState(true);
   const [studentError, setStudentError] = useState<string | null>(null);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
   // Edit and Delete student states
   const [isEditStudentModalOpen, setIsEditStudentModalOpen] = useState(false);
@@ -406,6 +409,7 @@ export default function TeacherStudentsPage() {
       if (teacherClasses.length === 0) {
         console.log('No classes assigned to teacher, skipping students load');
         setStudents([]);
+        setHasLoadedOnce(true);
         return;
       }
 
@@ -413,6 +417,7 @@ export default function TeacherStudentsPage() {
       if (!finalOrgId) {
         console.warn('⚠️ No orgId available, skipping students load');
         setStudents([]);
+        setHasLoadedOnce(true);
         return;
       }
 
@@ -479,6 +484,7 @@ export default function TeacherStudentsPage() {
 
       setStudents(allStudents);
       console.log(`✅ Total students loaded: ${allStudents.length}`);
+      setHasLoadedOnce(true);
       
       // Cache the data
       if (typeof window !== 'undefined') {
@@ -487,6 +493,7 @@ export default function TeacherStudentsPage() {
     } catch (error: any) {
       console.error('❌ Error loading students:', error);
       setStudentError(error.message || 'Failed to load students');
+      setHasLoadedOnce(true);
       // Don't clear students on error - keep cached data if available
       if (typeof window !== 'undefined') {
         try {
@@ -541,7 +548,12 @@ export default function TeacherStudentsPage() {
             }
             if (cachedStudents) {
               const parsed = JSON.parse(cachedStudents);
-              if (Array.isArray(parsed)) setStudents(parsed);
+              if (Array.isArray(parsed)) {
+                setStudents(parsed);
+                // If we have cached students, mark as loaded to avoid showing "no students found" initially
+                setHasLoadedOnce(true);
+                setLoadingStudents(false);
+              }
             }
           } catch (e) {
             // Ignore cache parsing errors
@@ -714,7 +726,8 @@ export default function TeacherStudentsPage() {
         onAddStudent={() => router.push('/dashboard/add-student')} 
         onEditStudent={openEditStudentModal} 
         onDeleteStudent={openDeleteConfirm} 
-        teacherClasses={teacherClasses} 
+        teacherClasses={teacherClasses}
+        hasLoadedOnce={hasLoadedOnce}
       />
 
       {/* Edit Student Modal */}

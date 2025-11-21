@@ -16,19 +16,18 @@ export function NotificationDropdown() {
                 session?.user?.user_metadata?.organization_id || 
                 null;
   
-  const { notifications, unreadCount, loading, markAsRead, markAllAsRead, refetch } = useNotifications({
+  // Only enable notifications when we have both userId and orgId, and auth is not loading
+  const isEnabled = !!userId && !!orgId && !authLoading;
+  
+  const { notifications, unreadCount, loading, markAsRead, markAllAsRead } = useNotifications({
     userId,
     orgId,
-    enabled: !!userId && !!orgId && !authLoading,
+    enabled: isEnabled,
     limit: 5, // Show only latest 5 notifications in dropdown
   });
 
-  // Refetch notifications when session becomes available
-  useEffect(() => {
-    if (!authLoading && userId && orgId) {
-      refetch();
-    }
-  }, [authLoading, userId, orgId, refetch]);
+  // Note: No manual refetch needed - useNotifications hook handles initial fetch
+  // and real-time subscription handles updates automatically
 
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -137,7 +136,7 @@ export function NotificationDropdown() {
 
           {/* Notifications List */}
           <div className="overflow-y-auto flex-1">
-            {loading ? (
+            {loading && notifications.length === 0 ? (
               <div className="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
                 {t.loading_notifications || 'Loading notifications...'}
               </div>

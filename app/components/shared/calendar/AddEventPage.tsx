@@ -146,7 +146,7 @@ export function AddEventPage({ userRole, calendarRoute }: AddEventPageProps) {
   const content = (
     <div className={userRole === 'teacher' ? '' : 'min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900'}>
       <div className={userRole === 'teacher' ? 'flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900' : ''}>
-        <div className={userRole === 'teacher' ? 'mx-auto max-w-7xl px-4 py-8 md:px-6' : 'mx-auto max-w-4xl py-8 md:px-6'}>
+        <div className={userRole === 'teacher' ? 'mx-auto max-w-7xl px-4 py-8 md:px-6' : 'mx-auto max-w-6xl py-8 md:px-6'}>
           {/* Header */}
           <div className={`mb-6 flex items-center gap-4 ${userRole === 'principal' ? 'mt-14' : ''}`}>
             <button
