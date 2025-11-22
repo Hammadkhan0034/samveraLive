@@ -1,79 +1,177 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Bell, Timer, Users, MessageSquare, Camera, Link as LinkIcon, Utensils, Plus, Edit, Trash2 } from 'lucide-react';
+import { Utensils, Plus, Edit, Trash2 } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
-import TeacherSidebar, { TeacherSidebarRef } from '@/app/components/shared/TeacherSidebar';
+import { useTeacherOrgId } from '@/lib/hooks/useTeacherOrgId';
+import TeacherSidebar from '@/app/components/shared/TeacherSidebar';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import Loading from '@/app/components/shared/Loading';
+import type { MenuWithClass } from '@/lib/types/menus';
+import type { TeacherClass } from '@/lib/types/attendance';
 
-type Lang = 'is' | 'en';
-type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
-
-// Translations removed - using centralized translations from @/lib/translations
+function formatMenuDate(dateString: string | undefined, lang: 'is' | 'en'): string {
+  if (!dateString) return '—';
+  
+  if (typeof window === 'undefined') return '';
+  
+  const date = new Date(dateString);
+  const locale = lang === 'is' ? 'is-IS' : 'en-US';
+  
+  if (dateString.includes('T')) {
+    return date.toLocaleDateString(locale, {
+      weekday: 'short',
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  }
+  
+  return date.toLocaleDateString(locale);
+}
 
 export default function TeacherMenusPage() {
   const { lang, t } = useLanguage();
   const { session } = useAuth();
   const router = useRouter();
   const { user, loading: authLoading, isSigningIn } = useRequireAuth('teacher');
-  const sidebarRef = useRef<TeacherSidebarRef>(null);
+  const { orgId: finalOrgId } = useTeacherOrgId();
 
-  // Try to get org_id from multiple possible locations
-  const userMetadata = session?.user?.user_metadata;
-  const orgIdFromMetadata = userMetadata?.org_id || userMetadata?.organization_id || userMetadata?.orgId;
-  
-  // If no org_id in metadata, we need to get it from the database
-  const [dbOrgId, setDbOrgId] = useState<string | null>(null);
-  
-  // Fetch org_id from database if not in metadata
-  useEffect(() => {
-    if (session?.user?.id && !orgIdFromMetadata) {
-      const fetchUserOrgId = async () => {
-        try {
-          const response = await fetch(`/api/user-org-id?user_id=${session.user.id}`);
-          const data = await response.json();
-          if (response.ok && data.org_id) {
-            setDbOrgId(data.org_id);
-          }
-        } catch (error) {
-          console.error('Failed to fetch user org_id:', error);
-        }
-      };
-      fetchUserOrgId();
-    }
-  }, [session?.user?.id, orgIdFromMetadata]);
-  
-  // Final org_id to use
-  const finalOrgId = orgIdFromMetadata || dbOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID || '1db3c97c-de42-4ad2-bb72-cc0b6cda69f7';
-
-  // Menu state
-  const [menus, setMenus] = useState<Array<{ id: string; org_id: string; class_id?: string | null; day: string; breakfast?: string | null; lunch?: string | null; snack?: string | null; notes?: string | null; created_at?: string; classes?: { id: string; name: string } }>>([]);
+  const [menus, setMenus] = useState<MenuWithClass[]>([]);
   const [loadingMenus, setLoadingMenus] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [menuToDelete, setMenuToDelete] = useState<string | null>(null);
   const [deletingMenu, setDeletingMenu] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [teacherClasses, setTeacherClasses] = useState<Array<{ id: string; name: string }>>([]);
+  const [teacherClasses, setTeacherClasses] = useState<TeacherClass[]>([]);
 
-  // Load menus on mount
+  const loadCachedData = useCallback((userId: string) => {
+    if (typeof window === 'undefined') return { menus: null, classes: null };
+    
+    try {
+      const cachedMenus = localStorage.getItem(`teacher_menus_cache_${userId}`);
+      const cachedClasses = localStorage.getItem('teacher_classes_cache');
+      
+      return {
+        menus: cachedMenus ? JSON.parse(cachedMenus) : null,
+        classes: cachedClasses ? JSON.parse(cachedClasses) : null,
+      };
+    } catch {
+      return { menus: null, classes: null };
+    }
+  }, []);
+
+  const fetchTeacherClasses = useCallback(async (userId: string): Promise<TeacherClass[]> => {
+    try {
+      const res = await fetch(`/api/teacher-classes?userId=${userId}&t=${Date.now()}`, { 
+        cache: 'no-store' 
+      });
+      const data = await res.json();
+      const classes = (data.classes || []) as TeacherClass[];
+      
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('teacher_classes_cache', JSON.stringify(classes));
+      }
+      
+      return classes;
+    } catch (error) {
+      console.warn('⚠️ Error loading teacher classes:', error);
+      return [];
+    }
+  }, []);
+
+  const fetchMenus = useCallback(async (
+    orgId: string, 
+    userId: string, 
+    classes: TeacherClass[]
+  ): Promise<MenuWithClass[]> => {
+    try {
+      const res = await fetch(`/api/menus?orgId=${orgId}&createdBy=${userId}`, { 
+        cache: 'no-store' 
+      });
+      const json = await res.json();
+      
+      if (res.status === 429) {
+        setError('Too many requests. Please wait a moment and try again.');
+        throw new Error('Rate limit');
+      }
+      
+      if (!res.ok) {
+        throw new Error(json.error || `Failed with ${res.status}`);
+      }
+      
+      const allMenus: MenuWithClass[] = (json.menus || []).map((m: MenuWithClass) => ({
+        ...m,
+        classes: m.class_id ? (classes.find(c => c.id === m.class_id) || null) : null
+      }));
+      
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(`teacher_menus_cache_${userId}`, JSON.stringify(allMenus));
+      }
+      
+      return allMenus;
+    } catch (error) {
+      if (error instanceof Error && (error.message.includes('rate limit') || error.message.includes('429'))) {
+        setError('Request rate limit reached. Please wait a moment and refresh.');
+        console.warn('⚠️ Rate limit reached, using cached data');
+        throw error;
+      }
+      throw error;
+    }
+  }, []);
+
+  const loadMenus = useCallback(async () => {
+    if (!finalOrgId || !session?.user?.id) return;
+    
+    const cached = loadCachedData(session.user.id);
+    if (cached.menus && Array.isArray(cached.menus)) {
+      setMenus(cached.menus);
+    }
+    
+    try {
+      setLoadingMenus(true);
+      setError(null);
+      
+      let classes: TeacherClass[] = [];
+      if (cached.classes && Array.isArray(cached.classes)) {
+        classes = cached.classes;
+        setTeacherClasses(cached.classes);
+      } else {
+        classes = await fetchTeacherClasses(session.user.id);
+        if (classes.length > 0) {
+          setTeacherClasses(classes);
+        }
+      }
+      
+      const allMenus = await fetchMenus(finalOrgId, session.user.id, classes);
+      setMenus(allMenus);
+    } catch (error) {
+      console.error('❌ Error loading menus:', error);
+      if (error instanceof Error) {
+        setError(error.message || 'Failed to load menus');
+      } else {
+        setError('Failed to load menus');
+      }
+    } finally {
+      setLoadingMenus(false);
+    }
+  }, [finalOrgId, session?.user?.id, loadCachedData, fetchTeacherClasses, fetchMenus]);
+
   useEffect(() => {
     if (finalOrgId && session?.user?.id) {
       loadMenus();
     }
-  }, [finalOrgId, session?.user?.id]);
+  }, [finalOrgId, session?.user?.id, loadMenus]);
 
-  // Listen for menu updates (when menu is created/edited from add-menu page)
   useEffect(() => {
     if (typeof window === 'undefined') return;
     
     const handleMenuUpdate = () => {
-      // Clear cache and reload
       if (session?.user?.id) {
         localStorage.removeItem(`teacher_menus_cache_${session.user.id}`);
       }
@@ -84,7 +182,6 @@ export default function TeacherMenusPage() {
     
     window.addEventListener('menu-updated', handleMenuUpdate);
     
-    // Also check localStorage flag on mount
     if (session?.user?.id) {
       const menuUpdated = localStorage.getItem('menu_data_updated');
       if (menuUpdated === 'true') {
@@ -96,97 +193,7 @@ export default function TeacherMenusPage() {
     return () => {
       window.removeEventListener('menu-updated', handleMenuUpdate);
     };
-  }, [finalOrgId, session?.user?.id]);
-
-  async function loadMenus() {
-    if (!finalOrgId || !session?.user?.id) return;
-    
-    // Load cached data first
-    if (typeof window !== 'undefined') {
-      try {
-        const cachedMenus = localStorage.getItem(`teacher_menus_cache_${session.user.id}`);
-        const cachedClasses = localStorage.getItem('teacher_classes_cache');
-        if (cachedMenus) {
-          const parsed = JSON.parse(cachedMenus);
-          if (Array.isArray(parsed)) setMenus(parsed);
-        }
-        if (cachedClasses) {
-          const parsed = JSON.parse(cachedClasses);
-          if (Array.isArray(parsed)) setTeacherClasses(parsed);
-        }
-      } catch (e) {
-        // Ignore cache errors
-      }
-    }
-    
-    try {
-      setLoadingMenus(true);
-      setError(null);
-      
-      // Load teacher classes (use cache if available)
-      let classes: any[] = [];
-      if (teacherClasses.length === 0) {
-        try {
-          const teacherClassesRes = await fetch(`/api/teacher-classes?userId=${session.user.id}&t=${Date.now()}`, { cache: 'no-store' });
-          const teacherClassesData = await teacherClassesRes.json();
-          classes = teacherClassesData.classes || [];
-          setTeacherClasses(classes);
-          
-          // Cache classes
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('teacher_classes_cache', JSON.stringify(classes));
-          }
-        } catch (e: any) {
-          console.warn('⚠️ Error loading teacher classes:', e.message);
-          // Continue with cached classes if available
-          classes = teacherClasses;
-        }
-      } else {
-        classes = teacherClasses;
-      }
-      
-      // Optimize: Use single API call to get all menus for the user
-      // Instead of multiple calls per class, fetch all at once
-      let allMenus: any[] = [];
-      try {
-        const res = await fetch(`/api/menus?orgId=${finalOrgId}&createdBy=${session.user.id}`, { cache: 'no-store' });
-        const json = await res.json();
-        
-        if (res.ok && json.menus) {
-          allMenus = (json.menus || []).map((m: any) => ({
-            ...m,
-            classes: m.class_id ? (classes.find((c: any) => c.id === m.class_id) || null) : null
-          }));
-        } else if (res.status === 429) {
-          // Rate limit error
-          setError('Too many requests. Please wait a moment and try again.');
-          // Use cached data if available
-          return;
-        } else {
-          throw new Error(json.error || `Failed with ${res.status}`);
-        }
-      } catch (fetchError: any) {
-        if (fetchError.message?.includes('rate limit') || fetchError.message?.includes('429')) {
-          setError('Request rate limit reached. Please wait a moment and refresh.');
-          console.warn('⚠️ Rate limit reached, using cached data');
-          return;
-        }
-        throw fetchError;
-      }
-      
-      setMenus(allMenus);
-      
-      // Cache menus
-      if (typeof window !== 'undefined') {
-        localStorage.setItem(`teacher_menus_cache_${session.user.id}`, JSON.stringify(allMenus));
-      }
-    } catch (e: any) {
-      console.error('❌ Error loading menus:', e);
-      setError(e.message || 'Failed to load menus');
-    } finally {
-      setLoadingMenus(false);
-    }
-  }
+  }, [finalOrgId, session?.user?.id, loadMenus]);
 
   function openDeleteModal(menuId: string) {
     setMenuToDelete(menuId);
@@ -217,39 +224,32 @@ export default function TeacherMenusPage() {
         throw new Error(json.error || `Failed to delete menu: ${res.status}`);
       }
       
-      // Remove from local state
-      setMenus(prev => prev.filter(m => m.id !== menuToDelete));
-      
-      // Update cache
-      if (typeof window !== 'undefined' && session?.user?.id) {
-        const updatedMenus = menus.filter(m => m.id !== menuToDelete);
-        localStorage.setItem(`teacher_menus_cache_${session.user.id}`, JSON.stringify(updatedMenus));
-      }
+      setMenus(prev => {
+        const updated = prev.filter(m => m.id !== menuToDelete);
+        
+        if (typeof window !== 'undefined' && session?.user?.id) {
+          localStorage.setItem(`teacher_menus_cache_${session.user.id}`, JSON.stringify(updated));
+        }
+        
+        return updated;
+      });
       
       closeDeleteModal();
-    } catch (e: any) {
-      setDeleteError(e.message);
+    } catch (error) {
+      if (error instanceof Error) {
+        setDeleteError(error.message);
+      } else {
+        setDeleteError('Failed to delete menu');
+      }
     } finally {
       setDeletingMenu(false);
     }
   }
 
-  // Define tiles array (excluding menus as it's handled separately)
-  const tiles: Array<{
-    id: TileId;
-    title: string;
-    desc: string;
-    Icon: React.ElementType;
-    badge?: string | number;
-    route?: string;
-  }> = useMemo(() => [], [t, lang]);
-
-  // Show loading state while checking authentication
   if (authLoading || (isSigningIn && !user)) {
     return <Loading fullScreen text="Loading menus page..." />;
   }
 
-  // Safety check: if user is still not available after loading, don't render
   if (!authLoading && !isSigningIn && !user) {
     return null;
   }
@@ -257,12 +257,9 @@ export default function TeacherMenusPage() {
   return (
     <div className="flex flex-col h-screen overflow-hidden md:pt-14">
       <div className="flex flex-1 overflow-hidden h-full">
-        <TeacherSidebar
-          ref={sidebarRef}
-        />
+        <TeacherSidebar />
         <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900">
           <div className="p-2 md:p-6 lg:p-8">
-            {/* Menus Panel */}
             <div className="space-y-6">
               <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
                 <div className="mb-4 flex items-center justify-between">
@@ -318,24 +315,9 @@ export default function TeacherMenusPage() {
                         {menus.map((menu) => (
                           <tr key={menu.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30">
                             <td className="py-2 px-4 text-sm text-slate-900 dark:text-slate-100">
-                              {menu.day ? (
-                                <span suppressHydrationWarning>
-                                  {typeof window !== 'undefined' ? new Date(menu.day).toLocaleDateString(lang === 'is' ? 'is-IS' : 'en-US', {
-                                    weekday: 'short',
-                                    year: 'numeric',
-                                    month: 'short',
-                                    day: 'numeric'
-                                  }) : ''}
-                                </span>
-                              ) : (
-                                menu.created_at ? (
-                                  <span suppressHydrationWarning>
-                                    {typeof window !== 'undefined' ? new Date(menu.created_at).toLocaleDateString(lang === 'is' ? 'is-IS' : 'en-US') : ''}
-                                  </span>
-                                ) : (
-                                  '—'
-                                )
-                              )}
+                              <span suppressHydrationWarning>
+                                {formatMenuDate(menu.day || menu.created_at, lang)}
+                              </span>
                             </td>
                             <td className="py-2 px-4 text-sm text-slate-600 dark:text-slate-400">
                               {menu.classes?.name || (menu.class_id ? `Class ${menu.class_id.substring(0, 8)}...` : lang === 'is' ? 'Allir hópar' : 'All Classes')}
@@ -383,7 +365,6 @@ export default function TeacherMenusPage() {
                   </div>
                 )}
 
-                {/* Delete Confirmation Modal */}
                 <DeleteConfirmationModal
                   isOpen={isDeleteModalOpen}
                   onClose={closeDeleteModal}
