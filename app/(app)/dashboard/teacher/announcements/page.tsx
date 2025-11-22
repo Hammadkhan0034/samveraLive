@@ -100,19 +100,21 @@ export default function TeacherAnnouncementsPage() {
 
   return (
     <TeacherPageLayout>
-      <div className="ml-6 mb-6 flex items-center justify-between">
-        <p className="font-semibold text-xl text-black dark:text-white">{t.announcements_title}</p>
-        <button
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-black dark:bg-black text-white rounded-md hover:bg-slate-900 transition-colors"
-        >
-          <Plus className="h-4 w-4" />
-          {t.create_announcement}
-        </button>
-      </div>
       {/* Announcements Panel */}
       <div className="space-y-6">
-        <div className="rounded-2xl p-6">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">
+              {t.announcements_title}
+            </h2>
+            <button
+              onClick={() => setShowForm(true)}
+              className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
+            >
+              <Plus className="h-4 w-4" />
+              {t.create_announcement}
+            </button>
+          </div>
           <AnnouncementList
             teacherClassIds={teacherClassIds}
             orgId={finalOrgId}
