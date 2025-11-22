@@ -55,13 +55,13 @@ function AcceptStaffInvitationContent() {
       console.log('✅ Invitation validated:', data.invitation);
       setInvitation(data.invitation);
       
-      // Check if user is authenticated
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log('👤 Current session:', session?.user?.email || 'No session');
+      // Check if user is authenticated (use getUser() to verify with server - secure)
+      const { data: { user }, error } = await supabase.auth.getUser();
+      console.log('👤 Current user:', user?.email || 'No user');
       
-      if (session && session.user) {
+      if (user) {
         console.log('✅ User authenticated, accepting invitation...');
-        await acceptInvitation(session.user.id);
+        await acceptInvitation(user.id);
       } else {
         console.log('⏳ Waiting for authentication...');
         setLoading(false);

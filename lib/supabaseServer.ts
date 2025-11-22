@@ -55,9 +55,9 @@ export async function getServerUser() {
     return { user: null, session: null, error };
   }
   
-  // Optionally fetch session if needed downstream
-  const { data: { session } } = await supabase.auth.getSession();
-  return { user, session: session ?? null, error: null };
+  // User is authenticated via getUser() - session is not needed for authentication
+  // If session is required downstream, it can be fetched separately
+  return { user, session: null, error: null };
 }
 
 export async function requireServerAuth() {

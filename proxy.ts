@@ -55,8 +55,8 @@ export async function proxy(req: NextRequest) {
       }
     );
 
-    // Get the current session
-    const { data: { session }, error } = await supabase.auth.getSession();
+    // Get the current user (authenticates with server - secure)
+    const { data: { user }, error } = await supabase.auth.getUser();
 
     // Handle fetch/network errors differently from authentication errors
     if (error) {
@@ -81,8 +81,8 @@ export async function proxy(req: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    // If no session and no error (shouldn't happen, but handle it)
-    if (!session?.user) {
+    // If no user and no error (shouldn't happen, but handle it)
+    if (!user) {
       const url = req.nextUrl.clone();
       url.pathname = '/signin';
       if (!searchParams.get('next')) {
@@ -91,8 +91,8 @@ export async function proxy(req: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    const userRoles = (session.user.user_metadata?.roles || []) as SamveraRole[];
-    const activeRole = session.user.user_metadata?.activeRole as SamveraRole | undefined;
+    const userRoles = (user.user_metadata?.roles || []) as SamveraRole[];
+    const activeRole = user.user_metadata?.activeRole as SamveraRole | undefined;
 
     // Validate user has at least one role
     if (userRoles.length === 0) {
@@ -130,7 +130,7 @@ export async function proxy(req: NextRequest) {
     }
 
     // Add user context to headers for server components
-    res.headers.set('x-user-id', session.user.id);
+    res.headers.set('x-user-id', user.id);
     res.headers.set('x-user-roles', JSON.stringify(userRoles));
     res.headers.set('x-user-active-role', activeRole || userRoles[0]);
 

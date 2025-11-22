@@ -10,7 +10,8 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        const { data, error } = await supabase.auth.getSession();
+        // Use getUser() to authenticate with server (secure)
+        const { data: { user }, error } = await supabase.auth.getUser();
         
         if (error) {
           console.error('Auth callback error:', error);
@@ -18,9 +19,9 @@ export default function AuthCallback() {
           return;
         }
 
-        if (data.session?.user) {
+        if (user) {
           // User is authenticated, redirect based on role
-          const userRole = data.session.user.user_metadata?.role || 'teacher';
+          const userRole = user.user_metadata?.role || 'teacher';
           
           // Update user as active in public.users table
           const response = await fetch('/api/staff/verify', {
@@ -29,8 +30,8 @@ export default function AuthCallback() {
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              userId: data.session.user.id,
-              email: data.session.user.email
+              userId: user.id,
+              email: user.email
             }),
           });
 
@@ -53,7 +54,7 @@ export default function AuthCallback() {
             router.push('/signin?error=verification_failed');
           }
         } else {
-          router.push('/signin?error=no_session');
+          router.push('/signin?error=no_user');
         }
       } catch (error) {
         console.error('Callback error:', error);
