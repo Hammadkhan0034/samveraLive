@@ -1,19 +1,61 @@
 'use client';
 
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Bell, Timer, Users, MessageSquare, Camera, Link as LinkIcon, Utensils, Plus, Search, Edit, Trash2, X, Menu, CalendarDays } from 'lucide-react';
+import { Users, Plus, Search, Edit, Trash2, Menu, CalendarDays } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
+import { useTeacherOrgId } from '@/lib/hooks/useTeacherOrgId';
 import { enText } from '@/lib/translations/en';
 import { isText } from '@/lib/translations/is';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import TeacherPageLayout, { useTeacherPageLayout } from '@/app/components/shared/TeacherPageLayout';
+import { StudentForm, type StudentFormData } from '@/app/components/shared/StudentForm';
 
-type Lang = 'is' | 'en';
-type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
+// Type definitions
+interface TeacherClass {
+  id: string;
+  name: string;
+}
+
+interface GuardianUser {
+  id: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+}
+
+interface Guardian {
+  id: string;
+  relation: string;
+  users?: GuardianUser;
+}
+
+interface Student {
+  id: string;
+  first_name?: string;
+  last_name?: string | null;
+  dob?: string | null;
+  gender?: string;
+  class_id?: string | null;
+  created_at: string;
+  medical_notes_encrypted?: string;
+  allergies_encrypted?: string;
+  emergency_contact_encrypted?: string;
+  users?: {
+    first_name?: string;
+    last_name?: string;
+    dob?: string;
+    gender?: string;
+  };
+  classes?: {
+    id: string;
+    name: string;
+  };
+  guardians?: Guardian[];
+}
 
 // Translations removed - using centralized translations from @/lib/translations
 
@@ -70,6 +112,24 @@ function StudentsPageHeader({
   );
 }
 
+// Helper function to format date
+function formatDate(dateString: string | null | undefined): string {
+  if (!dateString) return '-';
+  if (typeof window === 'undefined') return '';
+  try {
+    return new Date(dateString).toLocaleDateString();
+  } catch {
+    return '-';
+  }
+}
+
+// Helper function to get student name
+function getStudentName(student: Student): string {
+  const firstName = student.users?.first_name || student.first_name || '';
+  const lastName = student.users?.last_name || student.last_name || '';
+  return `${firstName} ${lastName}`.trim() || '-';
+}
+
 // StudentsPanel Component
 function StudentsPanel({
   t,
@@ -79,17 +139,15 @@ function StudentsPanel({
   onAddStudent,
   onEditStudent,
   onDeleteStudent,
-  teacherClasses,
   hasLoadedOnce
 }: {
   t: typeof enText | typeof isText;
-  students: any[];
+  students: Student[];
   loadingStudents: boolean;
   studentError: string | null;
   onAddStudent: () => void;
-  onEditStudent?: (student: any) => void;
+  onEditStudent?: (student: Student) => void;
   onDeleteStudent?: (studentId: string) => void;
-  teacherClasses?: any[];
   hasLoadedOnce?: boolean;
 }) {
   // Search and pagination state
@@ -103,8 +161,8 @@ function StudentsPanel({
     
     const query = searchQuery.toLowerCase();
     return students.filter((student) => {
-      const firstName = ((student as any).users?.first_name || student.first_name || '').toLowerCase();
-      const lastName = ((student as any).users?.last_name || student.last_name || '').toLowerCase();
+      const firstName = (student.users?.first_name || student.first_name || '').toLowerCase();
+      const lastName = (student.users?.last_name || student.last_name || '').toLowerCase();
       const fullName = `${firstName} ${lastName}`.trim();
       const className = (student.classes?.name || '').toLowerCase();
       
@@ -197,28 +255,24 @@ function StudentsPanel({
                   <tr key={student.id} className="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
                     <td className="py-2 px-4">
                       <div className="font-medium text-[13px] text-slate-900 dark:text-slate-100">
-                        {(student as any).users?.first_name || student.first_name || ''} {(student as any).users?.last_name || student.last_name || ''}
+                        {getStudentName(student)}
                       </div>
                     </td>
                     <td className="py-2 px-4 text-sm text-black dark:text-slate-400">
-                      {(student as any).users?.dob ? (
-                        <span suppressHydrationWarning>{typeof window !== 'undefined' ? new Date((student as any).users.dob).toLocaleDateString() : ''}</span>
-                      ) : student.dob ? (
-                        <span suppressHydrationWarning>{typeof window !== 'undefined' ? new Date(student.dob).toLocaleDateString() : ''}</span>
-                      ) : (
-                        '-'
-                      )}
+                      <span suppressHydrationWarning>
+                        {formatDate(student.users?.dob || student.dob)}
+                      </span>
                     </td>
                     <td className="py-2 px-4 text-sm text-black dark:text-slate-400">
-                      {(student as any).users?.gender || student.gender || '-'}
+                      {student.users?.gender || student.gender || '-'}
                     </td>
                     <td className="py-2 px-4 text-sm text-black dark:text-slate-400">
                       {student.classes?.name || '-'}
                     </td>
                     <td className="py-2 px-4 text-sm text-black dark:text-slate-400">
-                      {((student as any).guardians && Array.isArray((student as any).guardians) && (student as any).guardians.length > 0) ? (
+                      {student.guardians && Array.isArray(student.guardians) && student.guardians.length > 0 ? (
                         <div className="flex flex-col gap-1">
-                          {(student as any).guardians.map((guardian: any, idx: number) => {
+                          {student.guardians.map((guardian, idx) => {
                             const guardianName = guardian.users 
                               ? `${guardian.users.first_name || ''} ${guardian.users.last_name || ''}`.trim()
                               : null;
@@ -305,69 +359,33 @@ function StudentsPanel({
 }
 
 export default function TeacherStudentsPage() {
-  const { t, lang } = useLanguage();
+  const { t } = useLanguage();
   const { session } = useAuth();
   const router = useRouter();
-
-  // Try to get org_id from multiple possible locations
-  const userMetadata = session?.user?.user_metadata;
-  const orgIdFromMetadata = userMetadata?.org_id || userMetadata?.organization_id || userMetadata?.orgId;
-  
-  // If no org_id in metadata, we need to get it from the database
-  const [dbOrgId, setDbOrgId] = useState<string | null>(null);
-  
-  // Fetch org_id from database if not in metadata
-  useEffect(() => {
-    if (session?.user?.id && !orgIdFromMetadata) {
-      const fetchUserOrgId = async () => {
-        try {
-          const response = await fetch(`/api/user-org-id?user_id=${session.user.id}`);
-          const data = await response.json();
-          if (response.ok && data.org_id) {
-            setDbOrgId(data.org_id);
-          }
-        } catch (error) {
-          console.error('Failed to fetch user org_id:', error);
-        }
-      };
-      fetchUserOrgId();
-    }
-  }, [session?.user?.id, orgIdFromMetadata]);
-  
-  // Final org_id to use
-  const finalOrgId = orgIdFromMetadata || dbOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID || '1db3c97c-de42-4ad2-bb72-cc0b6cda69f7';
+  const { orgId: finalOrgId } = useTeacherOrgId();
 
   // Teacher classes
-  const [teacherClasses, setTeacherClasses] = useState<any[]>([]);
+  const [teacherClasses, setTeacherClasses] = useState<TeacherClass[]>([]);
   const [loadingClasses, setLoadingClasses] = useState(false);
 
   // Students from assigned classes
-  const [students, setStudents] = useState<Array<{ id: string; first_name: string; last_name: string | null; dob: string | null; gender: string; class_id: string | null; created_at: string; classes?: any; guardians?: Array<{ id: string; relation: string; users?: { id: string; full_name: string; email: string } }> }>>([]);
+  const [students, setStudents] = useState<Student[]>([]);
   const [loadingStudents, setLoadingStudents] = useState(true);
   const [studentError, setStudentError] = useState<string | null>(null);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
 
   // Edit and Delete student states
   const [isEditStudentModalOpen, setIsEditStudentModalOpen] = useState(false);
-  const [editingStudent, setEditingStudent] = useState<any>(null);
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [deletingStudentId, setDeletingStudentId] = useState<string | null>(null);
+  const [updateError, setUpdateError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [updatingStudent, setUpdatingStudent] = useState(false);
   const [deletingStudent, setDeletingStudent] = useState(false);
-  const [editingStudentForm, setEditingStudentForm] = useState({
-    first_name: '',
-    last_name: '',
-    dob: '',
-    gender: 'unknown',
-    medical_notes: '',
-    allergies: '',
-    emergency_contact: '',
-    class_id: '',
-    guardian_ids: [] as string[]
-  });
 
   // Load teacher classes
-  async function loadTeacherClasses(showLoading = true) {
+  const loadTeacherClasses = useCallback(async (showLoading = true) => {
     try {
       if (showLoading) setLoadingClasses(true);
       const userId = session?.user?.id;
@@ -381,7 +399,7 @@ export default function TeacherStudentsPage() {
       const data = await response.json();
 
       if (response.ok) {
-        const classesData = data.classes || [];
+        const classesData = (data.classes || []) as TeacherClass[];
         setTeacherClasses(classesData);
 
         // Cache the data
@@ -389,7 +407,6 @@ export default function TeacherStudentsPage() {
           localStorage.setItem('teacher_classes_cache', JSON.stringify(classesData));
         }
       } else {
-        // Set empty array on error
         setTeacherClasses([]);
       }
     } catch (error) {
@@ -397,17 +414,16 @@ export default function TeacherStudentsPage() {
     } finally {
       if (showLoading) setLoadingClasses(false);
     }
-  }
+  }, [session?.user?.id]);
 
   // Load students from assigned classes
-  async function loadStudents(showLoading = true) {
+  const loadStudents = useCallback(async (showLoading = true) => {
     try {
       if (showLoading) setLoadingStudents(true);
       setStudentError(null);
 
       // Get teacher's assigned classes first
       if (teacherClasses.length === 0) {
-        console.log('No classes assigned to teacher, skipping students load');
         setStudents([]);
         setHasLoadedOnce(true);
         return;
@@ -415,28 +431,24 @@ export default function TeacherStudentsPage() {
 
       // Validate orgId before making requests
       if (!finalOrgId) {
-        console.warn('⚠️ No orgId available, skipping students load');
         setStudents([]);
         setHasLoadedOnce(true);
         return;
       }
 
       const classIds = teacherClasses.map(cls => cls.id);
-      console.log('Loading students for classes:', classIds, 'Org ID:', finalOrgId);
 
       // Load students for each class
-      const allStudents = [];
+      const allStudents: Student[] = [];
       for (const classId of classIds) {
         try {
           const url = `/api/students?orgId=${finalOrgId}&classId=${classId}&t=${Date.now()}`;
-          console.log(`📋 Fetching students for class ${classId}:`, url);
           
           const response = await fetch(url, { 
             cache: 'no-store',
             credentials: 'include'
           });
           
-          // Check if fetch succeeded before trying to parse JSON
           if (!response.ok) {
             const errorText = await response.text().catch(() => 'Unknown error');
             let errorData;
@@ -446,195 +458,167 @@ export default function TeacherStudentsPage() {
               errorData = { error: errorText || `HTTP ${response.status}` };
             }
             
-            // Handle authentication errors gracefully
             if (response.status === 401 || errorData.error?.includes('Authentication')) {
-              console.warn(`⚠️ Authentication required for class ${classId}. Skipping...`);
-            } else {
-              console.error(`❌ Error loading students for class ${classId}:`, errorData.error || `HTTP ${response.status}`);
+              // Skip authentication errors silently
+              continue;
             }
-            continue; // Skip this class and continue with others
+            continue;
           }
 
           const data = await response.json();
 
           if (data.students && Array.isArray(data.students)) {
             // Enhance students with class names
-            const enhancedStudents = (data.students || []).map((student: any) => {
+            const enhancedStudents = (data.students || []).map((student: Student) => {
               const classInfo = teacherClasses.find(cls => cls.id === student.class_id);
               return {
                 ...student,
                 classes: {
-                  id: student.class_id,
+                  id: student.class_id || '',
                   name: classInfo?.name || `Class ${student.class_id?.slice(0, 8)}...`
                 }
               };
             });
             allStudents.push(...enhancedStudents);
-            console.log(`✅ Loaded ${enhancedStudents.length} student(s) for class ${classId}`);
-          } else {
-            console.warn(`⚠️ No students array in response for class ${classId}`);
           }
-        } catch (fetchError: any) {
-          // Handle network errors, JSON parsing errors, etc.
-          console.error(`❌ Fetch error loading students for class ${classId}:`, fetchError.message || fetchError);
+        } catch (fetchError) {
           // Continue with other classes instead of failing completely
           continue;
         }
       }
 
       setStudents(allStudents);
-      console.log(`✅ Total students loaded: ${allStudents.length}`);
       setHasLoadedOnce(true);
       
       // Cache the data
       if (typeof window !== 'undefined') {
         localStorage.setItem('teacher_students_cache', JSON.stringify(allStudents));
       }
-    } catch (error: any) {
-      console.error('❌ Error loading students:', error);
-      setStudentError(error.message || 'Failed to load students');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load students';
+      setStudentError(errorMessage);
       setHasLoadedOnce(true);
       // Don't clear students on error - keep cached data if available
       if (typeof window !== 'undefined') {
         try {
           const cached = localStorage.getItem('teacher_students_cache');
           if (cached) {
-            const cachedStudents = JSON.parse(cached);
+            const cachedStudents = JSON.parse(cached) as Student[];
             setStudents(cachedStudents);
-            console.log('📦 Using cached students data due to error');
           }
-        } catch (e) {
+        } catch {
           // Ignore cache errors
         }
       }
     } finally {
       if (showLoading) setLoadingStudents(false);
     }
-  }
+  }, [teacherClasses, finalOrgId]);
 
-  // Create table and load data
-  async function createTableAndLoadData(shouldLoadData = false) {
+  // Create table if needed
+  const createTableIfNeeded = useCallback(async () => {
     try {
-      console.log('🏗️ Creating student_requests table...');
-      const createResponse = await fetch('/api/create-student-requests-table', {
+      await fetch('/api/create-student-requests-table', {
         method: 'POST'
       });
-
-      const createData = await createResponse.json();
-      console.log('📊 Create table result:', createData);
-
-      if (createResponse.ok) {
-        console.log('✅ Table created successfully');
-      } else {
-        console.error('❌ Failed to create table:', createData.error);
-      }
     } catch (error) {
-      console.error('💥 Error creating table:', error);
+      // Silently fail - table creation is not critical
     }
-  }
+  }, []);
 
-  // Load data on mount
+  // Load data on mount and when dependencies change
   useEffect(() => {
-    const loadAllData = async () => {
-      try {
-        if (typeof window !== 'undefined') {
-          try {
-            const cachedClasses = localStorage.getItem('teacher_classes_cache');
-            const cachedStudents = localStorage.getItem('teacher_students_cache');
-            
-            if (cachedClasses) {
-              const parsed = JSON.parse(cachedClasses);
-              if (Array.isArray(parsed)) setTeacherClasses(parsed);
-            }
-            if (cachedStudents) {
-              const parsed = JSON.parse(cachedStudents);
-              if (Array.isArray(parsed)) {
-                setStudents(parsed);
-                // If we have cached students, mark as loaded to avoid showing "no students found" initially
-                setHasLoadedOnce(true);
-                setLoadingStudents(false);
-              }
-            }
-          } catch (e) {
-            // Ignore cache parsing errors
-          }
-        }
+    if (!session?.user?.id || !finalOrgId) return;
 
-        if (session?.user?.id) {
-          await Promise.allSettled([
-            loadTeacherClasses(false)
-          ]);
+    const loadAllData = async () => {
+      // Load cached data first for instant display
+      if (typeof window !== 'undefined') {
+        try {
+          const cachedClasses = localStorage.getItem('teacher_classes_cache');
+          const cachedStudents = localStorage.getItem('teacher_students_cache');
+          
+          if (cachedClasses) {
+            const parsed = JSON.parse(cachedClasses);
+            if (Array.isArray(parsed)) setTeacherClasses(parsed);
+          }
+          if (cachedStudents) {
+            const parsed = JSON.parse(cachedStudents);
+            if (Array.isArray(parsed)) {
+              setStudents(parsed);
+              setHasLoadedOnce(true);
+              setLoadingStudents(false);
+            }
+          }
+        } catch {
+          // Ignore cache parsing errors
         }
-      } catch (error) {
-        console.error('Error loading initial data:', error);
       }
+
+      // Load fresh data
+      await loadTeacherClasses(false);
     };
     
     loadAllData();
-  }, [session?.user?.id, finalOrgId]);
+  }, [session?.user?.id, finalOrgId, loadTeacherClasses]);
 
   // Load students when teacher classes are loaded
   useEffect(() => {
+    if (!session?.user?.id || !finalOrgId) return;
+
     if (teacherClasses.length > 0) {
-      console.log('Teacher classes loaded, fetching students...', teacherClasses);
-      Promise.allSettled([
-        loadStudents(false)
-      ]);
-    } else if (session?.user?.id && !loadingClasses && teacherClasses.length === 0) {
-      console.log('No classes found yet, attempting to load...');
+      createTableIfNeeded();
+      loadStudents(false);
+    } else if (!loadingClasses) {
       loadTeacherClasses(false);
     }
-  }, [teacherClasses, session?.user?.id, loadingClasses]);
+  }, [teacherClasses.length, session?.user?.id, finalOrgId, loadingClasses, loadStudents, loadTeacherClasses, createTableIfNeeded]);
 
-  // Load students when classes are available
-  useEffect(() => {
-    if (session?.user?.id && teacherClasses.length > 0) {
-      // Create table if needed and load data
-      createTableAndLoadData(true);
-      
-      // Load immediately
-      loadStudents(false);
-    }
-  }, [session?.user?.id, teacherClasses.length]);
-
-  // Edit and Delete handlers
-  function openEditStudentModal(student: any) {
-    setEditingStudent(student);
-    const userData = (student as any).users || {};
-    
-    setEditingStudentForm({
+  // Map student to StudentFormData
+  const mapStudentToFormData = useCallback((student: Student): StudentFormData => {
+    const userData = student.users || {};
+    return {
+      id: student.id,
       first_name: userData.first_name || student.first_name || '',
       last_name: userData.last_name || student.last_name || '',
       dob: userData.dob || student.dob || '',
       gender: (userData.gender || student.gender || 'unknown').toLowerCase(),
+      class_id: student.class_id || '',
       medical_notes: student.medical_notes_encrypted || '',
       allergies: student.allergies_encrypted || '',
       emergency_contact: student.emergency_contact_encrypted || '',
-      class_id: student.class_id || '',
-      guardian_ids: []
-    });
-    
-    setIsEditStudentModalOpen(true);
-  }
+      org_id: finalOrgId,
+      guardian_ids: [],
+      phone: '',
+      address: '',
+      registration_time: '',
+      start_date: '',
+      barngildi: 0,
+      student_language: 'english',
+      social_security_number: ''
+    };
+  }, [finalOrgId]);
 
-  async function handleUpdateStudent(e: React.FormEvent) {
-    e.preventDefault();
+  // Edit and Delete handlers
+  const openEditStudentModal = useCallback((student: Student) => {
+    setEditingStudent(student);
+    setUpdateError(null);
+    setIsEditStudentModalOpen(true);
+  }, []);
+
+  const handleUpdateStudent = useCallback(async (formData: StudentFormData) => {
     if (!editingStudent) return;
 
     try {
       setUpdatingStudent(true);
+      setUpdateError(null);
 
       const response = await fetch(`/api/students`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: editingStudent.id,
-          ...editingStudentForm,
-          org_id: finalOrgId,
-          medical_notes: editingStudentForm.medical_notes,
-          allergies: editingStudentForm.allergies,
-          emergency_contact: editingStudentForm.emergency_contact,
-          guardian_ids: editingStudentForm.guardian_ids || []
+          ...formData,
+          org_id: finalOrgId
         })
       });
 
@@ -643,28 +627,30 @@ export default function TeacherStudentsPage() {
       if (response.ok) {
         setIsEditStudentModalOpen(false);
         setEditingStudent(null);
-        // Reload students in the background without showing loading state
         loadStudents(false);
       } else {
-        alert(`Error: ${data.error}`);
+        setUpdateError(data.error || 'Failed to update student');
       }
-    } catch (error: any) {
-      alert(`Error: ${error.message}`);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update student';
+      setUpdateError(errorMessage);
     } finally {
       setUpdatingStudent(false);
     }
-  }
+  }, [editingStudent, finalOrgId, loadStudents]);
 
-  function openDeleteConfirm(studentId: string) {
+  const openDeleteConfirm = useCallback((studentId: string) => {
     setDeletingStudentId(studentId);
+    setDeleteError(null);
     setIsDeleteConfirmOpen(true);
-  }
+  }, []);
 
-  async function handleDeleteStudent() {
+  const handleDeleteStudent = useCallback(async () => {
     if (!deletingStudentId) return;
 
     try {
       setDeletingStudent(true);
+      setDeleteError(null);
       
       // Optimistically remove student from UI
       setStudents(prev => prev.filter(s => s.id !== deletingStudentId));
@@ -678,34 +664,65 @@ export default function TeacherStudentsPage() {
       if (response.ok) {
         setIsDeleteConfirmOpen(false);
         setDeletingStudentId(null);
-        // Refresh in background to ensure data consistency
         loadStudents(false);
       } else {
         // Revert optimistic update on error
         loadStudents(false);
-        alert(`Error: ${data.error}`);
+        setDeleteError(data.error || 'Failed to delete student');
       }
-    } catch (error: any) {
+    } catch (error) {
       // Revert optimistic update on error
       loadStudents(false);
-      alert(`Error: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete student';
+      setDeleteError(errorMessage);
     } finally {
       setDeletingStudent(false);
     }
-  }
+  }, [deletingStudentId, loadStudents]);
 
-  // Define tiles array
-  const tiles: Array<{
-    id: TileId;
-    title: string;
-    desc: string;
-    Icon: React.ElementType;
-    badge?: string | number;
-    route?: string;
-  }> = useMemo(() => [
-      { id: 'link_student', title: t.tile_link_student || 'Link Student', desc: t.tile_link_student_desc || 'Link a guardian to a student', Icon: LinkIcon, route: '/dashboard/teacher?tab=link_student' },
-      { id: 'menus', title: t.tile_menus || 'Menus', desc: t.tile_menus_desc || 'Manage daily menus', Icon: Utensils, route: '/dashboard/teacher?tab=menus' },
-    ], [t, lang]);
+  // Prepare translations for StudentForm
+  const studentFormTranslations = useMemo(() => ({
+    create_student: t.create_student || 'Create Student',
+    edit_student: t.edit_student || 'Edit Student',
+    student_first_name: t.student_first_name,
+    student_last_name: t.student_last_name,
+    student_dob: t.student_dob,
+    student_gender: t.student_gender,
+    student_class: t.student_class,
+    student_guardians: t.guardians || 'Guardians',
+    student_medical_notes: t.student_medical_notes,
+    student_allergies: t.student_allergies,
+    student_emergency_contact: t.student_emergency_contact,
+    student_phone: t.student_phone || '',
+    student_registration_time: t.student_registration_time || '',
+    student_address: t.student_address || '',
+    student_start_date: t.student_start_date || '',
+    student_child_value: t.student_child_value || '',
+    student_language: t.student_language || '',
+    student_social_security_number: t.student_social_security_number || '',
+    student_registration_time_placeholder: t.student_registration_time_placeholder || '',
+    student_social_security_number_placeholder: t.student_social_security_number_placeholder || '',
+    student_phone_placeholder: t.student_phone_placeholder || '',
+    student_child_value_placeholder: t.student_child_value_placeholder || '',
+    student_address_placeholder: t.student_address_placeholder || '',
+    student_first_name_placeholder: t.student_first_name_placeholder,
+    student_last_name_placeholder: t.student_last_name_placeholder,
+    student_medical_notes_placeholder: t.student_medical_notes_placeholder,
+    student_allergies_placeholder: t.student_allergies_placeholder,
+    student_emergency_contact_placeholder: t.student_emergency_contact_placeholder,
+    gender_unknown: t.gender_unknown,
+    gender_male: t.gender_male,
+    gender_female: t.gender_female,
+    gender_other: t.gender_other,
+    no_class_assigned: t.select_class || 'Select Class',
+    no_guardians_available: t.no_guardians_available || 'No guardians available',
+    student_age_requirement: t.student_age_requirement || '',
+    create: t.create || 'Create',
+    update: t.update || 'Update',
+    cancel: t.cancel,
+    creating: t.creating || 'Creating...',
+    updating: t.updating || 'Updating...'
+  }), [t]);
 
   return (
     <TeacherPageLayout>
@@ -726,175 +743,27 @@ export default function TeacherStudentsPage() {
         onAddStudent={() => router.push('/dashboard/add-student')} 
         onEditStudent={openEditStudentModal} 
         onDeleteStudent={openDeleteConfirm} 
-        teacherClasses={teacherClasses}
         hasLoadedOnce={hasLoadedOnce}
       />
 
       {/* Edit Student Modal */}
       {isEditStudentModalOpen && editingStudent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="w-full max-w-md rounded-2xl bg-white p-4 shadow-xl dark:bg-slate-800 max-h-[90vh] overflow-y-auto">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t.edit_student || 'Edit Student'}</h3>
-              <button
-                onClick={() => {
-                  setIsEditStudentModalOpen(false);
-                  setEditingStudent(null);
-                }}
-                className="rounded-lg p-1 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleUpdateStudent} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    {t.student_first_name}
-                  </label>
-                  <input
-                    type="text"
-                    value={editingStudentForm.first_name}
-                    onChange={(e) => setEditingStudentForm(prev => ({ ...prev, first_name: e.target.value }))}
-                    placeholder={t.student_first_name_placeholder}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    {t.student_last_name}
-                  </label>
-                  <input
-                    type="text"
-                    value={editingStudentForm.last_name}
-                    onChange={(e) => setEditingStudentForm(prev => ({ ...prev, last_name: e.target.value }))}
-                    placeholder={t.student_last_name_placeholder}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    {t.student_dob}
-                  </label>
-                  <input
-                    type="date"
-                    value={editingStudentForm.dob}
-                    onChange={(e) => setEditingStudentForm(prev => ({ ...prev, dob: e.target.value }))}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    {t.student_gender}
-                  </label>
-                  <select
-                    value={editingStudentForm.gender}
-                    onChange={(e) => setEditingStudentForm(prev => ({ ...prev, gender: e.target.value }))}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
-                  >
-                    <option value="unknown">{t.gender_unknown}</option>
-                    <option value="male">{t.gender_male}</option>
-                    <option value="female">{t.gender_female}</option>
-                    <option value="other">{t.gender_other}</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    {t.student_class}
-                  </label>
-                  <select
-                    value={editingStudentForm.class_id}
-                    onChange={(e) => setEditingStudentForm(prev => ({ ...prev, class_id: e.target.value }))}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
-                  >
-                    <option value="">{t.select_class}</option>
-                    {teacherClasses && teacherClasses.map((cls) => (
-                      <option key={cls.id} value={cls.id}>
-                        {cls.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    {t.student_medical_notes}
-                  </label>
-                  <textarea
-                    value={editingStudentForm.medical_notes}
-                    onChange={(e) => setEditingStudentForm(prev => ({ ...prev, medical_notes: e.target.value }))}
-                    placeholder={t.student_medical_notes_placeholder}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
-                    rows={2}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    {t.student_allergies}
-                  </label>
-                  <textarea
-                    value={editingStudentForm.allergies}
-                    onChange={(e) => setEditingStudentForm(prev => ({ ...prev, allergies: e.target.value }))}
-                    placeholder={t.student_allergies_placeholder}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
-                    rows={2}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  {t.student_emergency_contact}
-                </label>
-                <textarea
-                  value={editingStudentForm.emergency_contact}
-                  onChange={(e) => setEditingStudentForm(prev => ({ ...prev, emergency_contact: e.target.value }))}
-                  placeholder={t.student_emergency_contact_placeholder}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
-                  rows={2}
-                />
-              </div>
-
-              <div className="flex gap-3 pt-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsEditStudentModalOpen(false);
-                    setEditingStudent(null);
-                  }}
-                  disabled={loadingStudents}
-                  className="flex-1 rounded-lg border border-slate-300 px-4 py-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
-                >
-                  {t.cancel}
-                </button>
-                <button
-                  type="submit"
-                  disabled={updatingStudent}
-                  className="flex-1 rounded-lg bg-black px-4 py-2 text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 dark:bg-black"
-                >
-                  {updatingStudent ? (
-                    <>
-                      <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      {t.updating || 'Updating...'}
-                    </>
-                  ) : (
-                    t.update || 'Update'
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <StudentForm
+          isOpen={isEditStudentModalOpen}
+          onClose={() => {
+            setIsEditStudentModalOpen(false);
+            setEditingStudent(null);
+            setUpdateError(null);
+          }}
+          onSubmit={handleUpdateStudent}
+          initialData={mapStudentToFormData(editingStudent)}
+          loading={updatingStudent}
+          error={updateError}
+          guardians={[]}
+          classes={teacherClasses}
+          orgId={finalOrgId}
+          translations={studentFormTranslations}
+        />
       )}
 
       {/* Delete Confirmation Modal */}
@@ -903,6 +772,7 @@ export default function TeacherStudentsPage() {
         onClose={() => {
           setIsDeleteConfirmOpen(false);
           setDeletingStudentId(null);
+          setDeleteError(null);
         }}
         onConfirm={handleDeleteStudent}
         title={t.delete_student || 'Delete Student'}
@@ -911,7 +781,15 @@ export default function TeacherStudentsPage() {
         confirmButtonText={t.delete || 'Delete'}
         cancelButtonText={t.cancel}
       />
+      
+      {/* Delete Error Display */}
+      {deleteError && (
+        <div className="fixed bottom-4 right-4 z-50 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400 shadow-lg">
+          {deleteError}
+        </div>
+      )}
     </TeacherPageLayout>
   );
 }
+
 
