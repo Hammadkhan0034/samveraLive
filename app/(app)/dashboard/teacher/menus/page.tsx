@@ -10,8 +10,9 @@ import { useTeacherOrgId } from '@/lib/hooks/useTeacherOrgId';
 import TeacherSidebar from '@/app/components/shared/TeacherSidebar';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
+import { MenuFormModal, type MenuFormData } from '@/app/components/shared/MenuFormModal';
 import Loading from '@/app/components/shared/Loading';
-import type { MenuWithClass } from '@/lib/types/menus';
+import type { MenuWithClass, Menu } from '@/lib/types/menus';
 import type { TeacherClass } from '@/lib/types/attendance';
 
 function formatMenuDate(dateString: string | undefined, lang: 'is' | 'en'): string {
@@ -49,6 +50,10 @@ export default function TeacherMenusPage() {
   const [deletingMenu, setDeletingMenu] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [teacherClasses, setTeacherClasses] = useState<TeacherClass[]>([]);
+  const [isMenuModalOpen, setIsMenuModalOpen] = useState(false);
+  const [editingMenu, setEditingMenu] = useState<Menu | null>(null);
+  const [submittingMenu, setSubmittingMenu] = useState(false);
+  const [menuError, setMenuError] = useState<string | null>(null);
 
   const loadCachedData = useCallback((userId: string) => {
     if (typeof window === 'undefined') return { menus: null, classes: null };
@@ -246,6 +251,86 @@ export default function TeacherMenusPage() {
     }
   }
 
+  function openMenuModal(menu?: MenuWithClass) {
+    if (menu) {
+      // Convert MenuWithClass to Menu for editing
+      const menuForEdit: Menu = {
+        id: menu.id,
+        org_id: menu.org_id,
+        class_id: menu.class_id,
+        day: menu.day,
+        breakfast: menu.breakfast,
+        lunch: menu.lunch,
+        snack: menu.snack,
+        notes: menu.notes,
+        is_public: menu.is_public,
+        created_at: menu.created_at,
+        updated_at: menu.updated_at,
+      };
+      setEditingMenu(menuForEdit);
+    } else {
+      setEditingMenu(null);
+    }
+    setMenuError(null);
+    setIsMenuModalOpen(true);
+  }
+
+  function closeMenuModal() {
+    setIsMenuModalOpen(false);
+    setEditingMenu(null);
+    setMenuError(null);
+  }
+
+  async function handleMenuSubmit(data: MenuFormData & { id?: string; created_by?: string | null }) {
+    if (!finalOrgId || !session?.user?.id) {
+      setMenuError('Missing organization or user information');
+      return;
+    }
+
+    setSubmittingMenu(true);
+    setMenuError(null);
+
+    try {
+      const url = '/api/menus';
+      const method = editingMenu ? 'PUT' : 'POST';
+      
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.error || `Failed with ${res.status}`);
+      }
+
+      // Set flag to trigger refresh on menus-list and menus-view pages
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('menu_data_updated', 'true');
+        // Dispatch custom event for instant update
+        window.dispatchEvent(new Event('menu-updated'));
+      }
+
+      // Refresh menus list
+      if (finalOrgId && session.user.id) {
+        await loadMenus();
+      }
+
+      closeMenuModal();
+    } catch (error) {
+      console.error('❌ Error submitting menu:', error);
+      if (error instanceof Error) {
+        setMenuError(error.message);
+      } else {
+        setMenuError('Failed to submit menu');
+      }
+      throw error; // Re-throw so modal can handle it
+    } finally {
+      setSubmittingMenu(false);
+    }
+  }
+
   if (authLoading || (isSigningIn && !user)) {
     return <Loading fullScreen text="Loading menus page..." />;
   }
@@ -265,7 +350,7 @@ export default function TeacherMenusPage() {
                 <div className="mb-4 flex items-center justify-between">
                   <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">{t.tile_menus || 'Menus'}</h2>
                   <button
-                    onClick={() => router.push('/dashboard/add-menu')}
+                    onClick={() => openMenuModal()}
                     className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
                   >
                     <Plus className="h-4 w-4" /> {lang === 'is' ? 'Bæta við matseðli' : 'Add Menu'}
@@ -341,7 +426,7 @@ export default function TeacherMenusPage() {
                             <td className="py-2 px-4">
                               <div className="flex items-center gap-2">
                                 <button
-                                  onClick={() => router.push(`/dashboard/add-menu?id=${menu.id}`)}
+                                  onClick={() => openMenuModal(menu)}
                                   className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2 py-1 text-[13px] hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
                                   title={t.edit || 'Edit'}
                                 >
@@ -376,6 +461,20 @@ export default function TeacherMenusPage() {
                   confirmButtonText={t.delete || 'Delete'}
                   cancelButtonText={t.cancel || 'Cancel'}
                 />
+
+                {finalOrgId && session?.user?.id && (
+                  <MenuFormModal
+                    isOpen={isMenuModalOpen}
+                    onClose={closeMenuModal}
+                    onSubmit={handleMenuSubmit}
+                    initialData={editingMenu}
+                    orgId={finalOrgId}
+                    classes={teacherClasses.map(c => ({ id: c.id, name: c.name }))}
+                    userId={session.user.id}
+                    loading={submittingMenu}
+                    error={menuError}
+                  />
+                )}
               </div>
             </div>
           </div>
