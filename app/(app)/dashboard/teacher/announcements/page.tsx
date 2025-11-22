@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Bell, Timer, Users, MessageSquare, Camera, Link as LinkIcon, Utensils } from 'lucide-react';
+import { Bell, Timer, Users, MessageSquare, Camera, Link as LinkIcon, Utensils, Plus, X } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import AnnouncementForm from '@/app/components/AnnouncementForm';
@@ -82,6 +82,9 @@ export default function TeacherAnnouncementsPage() {
     ? teacherClasses.map(c => c.id).filter(Boolean) 
     : (classId ? [classId] : []);
 
+  // State for form visibility
+  const [showForm, setShowForm] = useState(false);
+
   // Define tiles array (excluding announcements, attendance, diapers, messages, media, and stories as they're handled separately)
   const tiles: Array<{
     id: TileId;
@@ -97,24 +100,18 @@ export default function TeacherAnnouncementsPage() {
 
   return (
     <TeacherPageLayout>
-      <p className="ml-6 font-semibold text-xl text-black dark:text-white">{t.announcements_title}</p>
+      <div className="ml-6 mb-6 flex items-center justify-between">
+        <p className="font-semibold text-xl text-black dark:text-white">{t.announcements_title}</p>
+        <button
+          onClick={() => setShowForm(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-black dark:bg-black text-white rounded-md hover:bg-slate-900 transition-colors"
+        >
+          <Plus className="h-4 w-4" />
+          {t.create_announcement}
+        </button>
+      </div>
       {/* Announcements Panel */}
       <div className="space-y-6">
-        <div className="rounded-2xl p-6">
-          {/* <h2 className="text-lg font-medium mb-4 text-slate-900 dark:text-slate-100">{t.announcements_title}</h2> */}
-          <AnnouncementForm
-            classId={classId}
-            orgId={finalOrgId}
-            showClassSelector={true}
-            onSuccess={() => {
-              // Trigger refresh event instead of reload
-              if (typeof window !== 'undefined') {
-                window.dispatchEvent(new Event('announcements-refresh'));
-              }
-            }}
-          />
-        </div>
-
         <div className="rounded-2xl p-6">
           <AnnouncementList
             teacherClassIds={teacherClassIds}
@@ -123,6 +120,44 @@ export default function TeacherAnnouncementsPage() {
           />
         </div>
       </div>
+
+      {/* Announcement Form Modal */}
+      {showForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={() => setShowForm(false)}>
+          <div 
+            className="w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-800 shadow-xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sticky top-0 z-10 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                {t.create_announcement}
+              </h3>
+              <button
+                onClick={() => setShowForm(false)}
+                className="rounded-lg p-1 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-colors"
+                aria-label="Close form"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="p-6">
+              <AnnouncementForm
+                classId={classId}
+                orgId={finalOrgId}
+                showClassSelector={true}
+                onSuccess={() => {
+                  // Trigger refresh event instead of reload
+                  if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new Event('announcements-refresh'));
+                  }
+                  // Hide form after successful submission
+                  setShowForm(false);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </TeacherPageLayout>
   );
 }
