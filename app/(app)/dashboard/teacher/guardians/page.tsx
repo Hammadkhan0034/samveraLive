@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { Bell, Timer, Users, MessageSquare, Camera, Link as LinkIcon, Utensils, Plus } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { Plus } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
@@ -13,15 +12,35 @@ import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmat
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 import Loading from '@/app/components/shared/Loading';
 
-type Lang = 'is' | 'en';
-type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
-
 // Translations removed - using centralized translations from @/lib/translations
+
+/**
+ * Parse guardian name from various formats
+ * Handles both first_name/last_name and full_name formats
+ */
+function parseGuardianName(guardian: any): { first_name: string; last_name: string } {
+  if (guardian.first_name || guardian.last_name) {
+    return {
+      first_name: guardian.first_name ?? '',
+      last_name: guardian.last_name ?? '',
+    };
+  }
+  
+  const fullName = (guardian.full_name || '').trim();
+  if (!fullName) {
+    return { first_name: '', last_name: '' };
+  }
+  
+  const parts = fullName.split(/\s+/);
+  return {
+    first_name: parts[0] || '',
+    last_name: parts.slice(1).join(' ') || '',
+  };
+}
 
 export default function TeacherGuardiansPage() {
   const { lang, t } = useLanguage();
   const { session } = useAuth();
-  const router = useRouter();
   const { user, loading: authLoading, isSigningIn } = useRequireAuth('teacher');
   const sidebarRef = useRef<TeacherSidebarRef>(null);
 
@@ -75,15 +94,7 @@ export default function TeacherGuardiansPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
-  // Load guardians and orgs
-  useEffect(() => {
-    if (finalOrgId) {
-      loadGuardians();
-      loadOrgs();
-    }
-  }, [finalOrgId]);
-
-  async function loadGuardians() {
+  const loadGuardians = useCallback(async () => {
     if (!finalOrgId) return;
     try {
       setLoadingGuardians(true);
@@ -98,9 +109,9 @@ export default function TeacherGuardiansPage() {
     } finally {
       setLoadingGuardians(false);
     }
-  }
+  }, [finalOrgId]);
 
-  async function loadOrgs() {
+  const loadOrgs = useCallback(async () => {
     try {
       const res = await fetch('/api/orgs', { cache: 'no-store' });
       const json = await res.json();
@@ -109,7 +120,15 @@ export default function TeacherGuardiansPage() {
     } catch (e: any) {
       console.error('❌ Error loading organizations:', e.message);
     }
-  }
+  }, []);
+
+  // Load guardians and orgs
+  useEffect(() => {
+    if (finalOrgId) {
+      loadGuardians();
+      loadOrgs();
+    }
+  }, [finalOrgId, loadGuardians, loadOrgs]);
 
   async function submitGuardian(data: GuardianFormData) {
     try {
@@ -139,10 +158,11 @@ export default function TeacherGuardiansPage() {
   }
 
   function openEditGuardianModal(guardian: any) {
+    const { first_name, last_name } = parseGuardianName(guardian);
     setGuardianForm({
       id: guardian.id,
-      first_name: guardian.first_name ?? ((guardian.full_name || '').split(/\s+/)[0] || ''),
-      last_name: guardian.last_name ?? ((guardian.full_name || '').split(/\s+/).slice(1).join(' ') || ''),
+      first_name,
+      last_name,
       email: guardian.email ?? '',
       phone: guardian.phone ?? '',
       org_id: guardian.org_id || finalOrgId || '',
@@ -174,28 +194,85 @@ export default function TeacherGuardiansPage() {
     }
   }
 
-  const filteredGuardians = searchQuery ? guardians.filter((g: any) => {
+  const filteredGuardians = useMemo(() => {
+    if (!searchQuery) return guardians;
     const q = searchQuery.trim().toLowerCase();
-    const first = ((g.first_name ?? ((g.full_name || '').split(/\s+/)[0] || ''))).toLowerCase();
-    const last = ((g.last_name ?? (((g.full_name || '').split(/\s+/).slice(1).join(' ')) || ''))).toLowerCase();
-    const email = ((g.email || '')).toLowerCase();
-    return first.includes(q) || last.includes(q) || `${first} ${last}`.includes(q) || email.includes(q);
-  }) : guardians;
+    return guardians.filter((g: any) => {
+      const { first_name, last_name } = parseGuardianName(g);
+      const first = first_name.toLowerCase();
+      const last = last_name.toLowerCase();
+      const email = (g.email || '').toLowerCase();
+      return first.includes(q) || last.includes(q) || `${first} ${last}`.includes(q) || email.includes(q);
+    });
+  }, [guardians, searchQuery]);
 
-  const paginatedGuardians = filteredGuardians.slice((currentPage-1)*itemsPerPage, (currentPage-1)*itemsPerPage + itemsPerPage);
+  const paginatedGuardians = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    const end = start + itemsPerPage;
+    return filteredGuardians.slice(start, end).map((g: any) => {
+      const { first_name, last_name } = parseGuardianName(g);
+      return {
+        id: g.id,
+        first_name,
+        last_name,
+        email: g.email ?? null,
+        phone: g.phone ?? null,
+        is_active: g.is_active ?? true,
+      };
+    });
+  }, [filteredGuardians, currentPage, itemsPerPage]);
 
-  // Define tiles array (excluding guardians as it's handled separately)
-  const tiles: Array<{
-    id: TileId;
-    title: string;
-    desc: string;
-    Icon: React.ElementType;
-    badge?: string | number;
-    route?: string;
-  }> = useMemo(() => [
-      { id: 'link_student', title: t.tile_link_student || 'Link Student', desc: t.tile_link_student_desc || 'Link a guardian to a student', Icon: LinkIcon, route: '/dashboard/teacher?tab=link_student' },
-      { id: 'menus', title: t.tile_menus || 'Menus', desc: t.tile_menus_desc || 'Manage daily menus', Icon: Utensils, route: '/dashboard/teacher?tab=menus' },
-    ], [t, lang]);
+  const totalPages = useMemo(() => Math.ceil(filteredGuardians.length / itemsPerPage), [filteredGuardians.length, itemsPerPage]);
+
+  const tableTranslations = useMemo(() => ({
+    guardians: t.tile_guardians || 'Guardians',
+    first_name: lang === 'is' ? 'Fornafn' : 'First Name',
+    last_name: lang === 'is' ? 'Eftirnafn' : 'Last Name',
+    email: lang === 'is' ? 'Netfang' : 'Email',
+    phone: lang === 'is' ? 'Sími' : 'Phone',
+    status: lang === 'is' ? 'Staða' : 'Status',
+    active: lang === 'is' ? 'Virkur' : 'Active',
+    inactive: lang === 'is' ? 'Óvirkur' : 'Inactive',
+    actions: lang === 'is' ? 'Aðgerðir' : 'Actions',
+    create: lang === 'is' ? 'Búa til' : 'Create',
+    no_guardians: lang === 'is' ? 'Engir forráðamenn' : 'No guardians',
+    no_guardians_loading: lang === 'is' ? 'Hleður...' : 'Loading...',
+    edit: lang === 'is' ? 'Breyta' : 'Edit',
+    delete: lang === 'is' ? 'Eyða' : 'Delete',
+    send_magic_link: lang === 'is' ? 'Senda töfraslóð' : 'Send Magic Link',
+    sending: lang === 'is' ? 'Sendi...' : 'Sending...',
+    magic_link_sent: lang === 'is' ? 'Töfraslóð send' : 'Magic link sent',
+    magic_link_send_failed: lang === 'is' ? 'Tókst ekki að senda töfraslóð' : 'Failed to send magic link',
+    no_students_linked: lang === 'is' ? 'Engir nemendur tengdir' : 'No students linked',
+  }), [t, lang]);
+
+  const formTranslations = useMemo(() => ({
+    create_guardian: lang === 'is' ? 'Búa til forráðamann' : 'Create Guardian',
+    edit_guardian: lang === 'is' ? 'Breyta forráðamanni' : 'Edit Guardian',
+    first_name: lang === 'is' ? 'Fornafn' : 'First Name',
+    last_name: lang === 'is' ? 'Eftirnafn' : 'Last Name',
+    email: lang === 'is' ? 'Netfang' : 'Email',
+    phone: lang === 'is' ? 'Sími' : 'Phone',
+    organization: lang === 'is' ? 'Stofnun' : 'Organization',
+    status: lang === 'is' ? 'Staða' : 'Status',
+    active: lang === 'is' ? 'Virkur' : 'Active',
+    inactive: lang === 'is' ? 'Óvirkur' : 'Inactive',
+    create: lang === 'is' ? 'Búa til' : 'Create',
+    update: lang === 'is' ? 'Uppfæra' : 'Update',
+    cancel: lang === 'is' ? 'Hætta við' : 'Cancel',
+    creating: lang === 'is' ? 'Býr til...' : 'Creating...',
+    updating: lang === 'is' ? 'Uppfærir...' : 'Updating...',
+    first_name_placeholder: lang === 'is' ? 'Sláðu inn fornafn' : 'Enter first name',
+    last_name_placeholder: lang === 'is' ? 'Sláðu inn eftirnafn' : 'Enter last name',
+    email_placeholder: lang === 'is' ? 'Sláðu inn netfang' : 'Enter email address',
+    phone_placeholder: lang === 'is' ? 'Sláðu inn símanúmer' : 'Enter phone number',
+    status_placeholder: lang === 'is' ? 'Veldu stöðu' : 'Select status',
+  }), [lang]);
+
+  const deleteModalTranslations = useMemo(() => ({
+    confirm_delete: lang === 'is' ? 'Eyða' : 'Delete',
+    cancel: lang === 'is' ? 'Hætta við' : 'Cancel',
+  }), [lang]);
 
   // Show loading state while checking authentication
   if (authLoading || (isSigningIn && !user)) {
@@ -240,39 +317,12 @@ export default function TeacherGuardiansPage() {
                   <LoadingSkeleton type="table" rows={5} />
                 ) : (
                   <GuardianTable
-                    guardians={paginatedGuardians.map((g: any) => ({
-                    id: g.id,
-                    first_name: g.first_name ?? ((g.full_name || '').trim().split(/\s+/)[0] || ''),
-                    last_name: g.last_name ?? ((g.full_name || '').trim().split(/\s+/).slice(1).join(' ') || ''),
-                    email: g.email ?? null,
-                    phone: g.phone ?? null,
-                    is_active: g.is_active ?? true,
-                  }))}
-                  error={guardianError}
-                  onEdit={openEditGuardianModal}
-                  onDelete={openDeleteGuardianModal}
-                  onCreate={openCreateGuardianModal}
-                  translations={{
-                    guardians: t.tile_guardians || 'Guardians',
-                    first_name: lang === 'is' ? 'Fornafn' : 'First Name',
-                    last_name: lang === 'is' ? 'Eftirnafn' : 'Last Name',
-                    email: lang === 'is' ? 'Netfang' : 'Email',
-                    phone: lang === 'is' ? 'Sími' : 'Phone',
-                    status: lang === 'is' ? 'Staða' : 'Status',
-                    active: lang === 'is' ? 'Virkur' : 'Active',
-                    inactive: lang === 'is' ? 'Óvirkur' : 'Inactive',
-                    actions: lang === 'is' ? 'Aðgerðir' : 'Actions',
-                    create: lang === 'is' ? 'Búa til' : 'Create',
-                    no_guardians: lang === 'is' ? 'Engir forráðamenn' : 'No guardians',
-                    no_guardians_loading: lang === 'is' ? 'Hleður...' : 'Loading...',
-                    edit: lang === 'is' ? 'Breyta' : 'Edit',
-                    delete: lang === 'is' ? 'Eyða' : 'Delete',
-                    send_magic_link: lang === 'is' ? 'Senda töfraslóð' : 'Send Magic Link',
-                    sending: lang === 'is' ? 'Sendi...' : 'Sending...',
-                    magic_link_sent: lang === 'is' ? 'Töfraslóð send' : 'Magic link sent',
-                    magic_link_send_failed: lang === 'is' ? 'Tókst ekki að senda töfraslóð' : 'Failed to send magic link',
-                    no_students_linked: lang === 'is' ? 'Engir nemendur tengdir' : 'No students linked',
-                  }}
+                    guardians={paginatedGuardians}
+                    error={guardianError}
+                    onEdit={openEditGuardianModal}
+                    onDelete={openDeleteGuardianModal}
+                    onCreate={openCreateGuardianModal}
+                    translations={tableTranslations}
                   />
                 )}
                 {filteredGuardians.length > itemsPerPage && (
@@ -284,10 +334,10 @@ export default function TeacherGuardiansPage() {
                     >
                       {lang === 'is' ? 'Fyrri' : 'Prev'}
                     </button>
-                    <span className="px-3 py-1.5 text-sm">{currentPage} / {Math.ceil(filteredGuardians.length / itemsPerPage)}</span>
+                    <span className="px-3 py-1.5 text-sm">{currentPage} / {totalPages}</span>
                     <button
                       onClick={() => setCurrentPage(p => p + 1)}
-                      disabled={currentPage >= Math.ceil(filteredGuardians.length / itemsPerPage)}
+                      disabled={currentPage >= totalPages}
                       className="rounded-lg border border-slate-400 px-3 py-1.5 text-sm disabled:opacity-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                     >
                       {lang === 'is' ? 'Næsta' : 'Next'}
@@ -302,28 +352,7 @@ export default function TeacherGuardiansPage() {
                   loading={submittingGuardian}
                   error={guardianError}
                   orgs={orgs}
-                  translations={{
-                    create_guardian: lang === 'is' ? 'Búa til forráðamann' : 'Create Guardian',
-                    edit_guardian: lang === 'is' ? 'Breyta forráðamanni' : 'Edit Guardian',
-                    first_name: lang === 'is' ? 'Fornafn' : 'First Name',
-                    last_name: lang === 'is' ? 'Eftirnafn' : 'Last Name',
-                    email: lang === 'is' ? 'Netfang' : 'Email',
-                    phone: lang === 'is' ? 'Sími' : 'Phone',
-                    organization: lang === 'is' ? 'Stofnun' : 'Organization',
-                    status: lang === 'is' ? 'Staða' : 'Status',
-                    active: lang === 'is' ? 'Virkur' : 'Active',
-                    inactive: lang === 'is' ? 'Óvirkur' : 'Inactive',
-                    create: lang === 'is' ? 'Búa til' : 'Create',
-                    update: lang === 'is' ? 'Uppfæra' : 'Update',
-                    cancel: lang === 'is' ? 'Hætta við' : 'Cancel',
-                    creating: lang === 'is' ? 'Býr til...' : 'Creating...',
-                    updating: lang === 'is' ? 'Uppfærir...' : 'Updating...',
-                    first_name_placeholder: lang === 'is' ? 'Sláðu inn fornafn' : 'Enter first name',
-                    last_name_placeholder: lang === 'is' ? 'Sláðu inn eftirnafn' : 'Enter last name',
-                    email_placeholder: lang === 'is' ? 'Sláðu inn netfang' : 'Enter email address',
-                    phone_placeholder: lang === 'is' ? 'Sláðu inn símanúmer' : 'Enter phone number',
-                    status_placeholder: lang === 'is' ? 'Veldu stöðu' : 'Select status',
-                  }}
+                  translations={formTranslations}
                 />
                 <DeleteConfirmationModal
                   isOpen={isDeleteGuardianModalOpen}
@@ -333,10 +362,7 @@ export default function TeacherGuardiansPage() {
                   message={lang === 'is' ? 'Ertu viss um að þú viljir eyða þessum forráðamanni?' : 'Are you sure you want to delete this guardian?'}
                   loading={deletingGuardian}
                   error={guardianError}
-                  translations={{
-                    confirm_delete: lang === 'is' ? 'Eyða' : 'Delete',
-                    cancel: lang === 'is' ? 'Hætta við' : 'Cancel',
-                  }}
+                  translations={deleteModalTranslations}
                 />
               </div>
             </div>
