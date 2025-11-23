@@ -163,6 +163,11 @@ function SignInPageContent() {
   }
 
 
+  // Show loading state while checking authentication to prevent flash
+  if (loading) {
+    return <Loading fullScreen />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">    
       <div className="relative flex min-h-screen items-center justify-center px-4 py-10">

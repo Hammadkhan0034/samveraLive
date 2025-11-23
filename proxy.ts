@@ -30,6 +30,72 @@ export async function proxy(req: NextRequest) {
   try {
     const { pathname, searchParams } = req.nextUrl;
 
+    // Handle sign-in route - redirect authenticated users
+    if (pathname === '/signin') {
+      // Create a Supabase client configured to use cookies
+      const res = NextResponse.next();
+      const supabase = createServerClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        {
+          cookies: {
+            getAll() {
+              return req.cookies.getAll();
+            },
+            setAll(cookiesToSet) {
+              cookiesToSet.forEach(({ name, value, options }) => {
+                req.cookies.set(name, value);
+                res.cookies.set(name, value, options);
+              });
+            },
+          },
+        }
+      );
+
+      // Get the current user (authenticates with server - secure)
+      const { data: { user }, error } = await supabase.auth.getUser();
+
+      // Handle fetch/network errors differently from authentication errors
+      if (error) {
+        // Check if it's a network/fetch error (retryable) vs auth error
+        const isNetworkError = error.message?.includes('fetch failed') || 
+                             error.message?.includes('timeout') ||
+                             error.name === 'AuthRetryableFetchError' ||
+                             error.status === 0;
+        
+        if (isNetworkError) {
+          // For network errors, allow request to continue - client-side will handle retry
+          return res;
+        }
+        
+        // For actual auth errors (not network), allow access to sign-in page
+        return res;
+      }
+
+      // If user is authenticated, redirect to their dashboard
+      if (user) {
+        const userMetadata = user.user_metadata as UserMetadata | undefined;
+        const userRoles = (userMetadata?.roles || []) as SamveraRole[];
+        const activeRole = userMetadata?.activeRole as SamveraRole | undefined;
+
+        // If user has roles, redirect to appropriate dashboard
+        if (userRoles.length > 0 || activeRole) {
+          const preferredRole: SamveraRole = (activeRole && userRoles.includes(activeRole))
+            ? activeRole
+            : userRoles.length > 0
+            ? userRoles[0]
+            : 'parent'; // fallback
+          
+          const url = req.nextUrl.clone();
+          url.pathname = ROLE_PATHS[preferredRole];
+          return NextResponse.redirect(url);
+        }
+      }
+
+      // If no user or no roles, allow access to sign-in page
+      return res;
+    }
+
     // Only protect dashboard routes
     if (!pathname.startsWith('/dashboard')) {
       return NextResponse.next();
@@ -156,7 +222,7 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = { 
-  // Apply proxy to all dashboard routes
-  matcher: ['/dashboard/:path*']
+  // Apply proxy to signin and all dashboard routes
+  matcher: ['/signin', '/dashboard/:path*']
 };
 
