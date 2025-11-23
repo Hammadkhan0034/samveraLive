@@ -48,6 +48,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
 
+    // Get existing user data from database if available
+    const { data: existingUser } = await supabaseAdmin
+      .from('users')
+      .select('full_name')
+      .eq('id', user_id)
+      .maybeSingle()
+
     // Update invitation as accepted
     const { error: acceptError } = await supabaseAdmin
       .from('invitations')
@@ -68,7 +75,7 @@ export async function POST(request: Request) {
         id: user_id,
         email: invitation.email,
         phone: invitation.phone,
-        full_name: authUser.user.user_metadata?.full_name || '',
+        full_name: existingUser?.full_name || '',
         role_id: invitation.role_id,
         is_active: true,
         metadata: {

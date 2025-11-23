@@ -4,6 +4,7 @@ import { createUserAuthEntry } from 'app/core/createAuthEntry'
 import { getUserDataCacheHeaders } from '@/lib/cacheConfig'
 import { z } from 'zod'
 import { validateQuery, validateBody, orgIdSchema, uuidSchema, firstNameSchema, lastNameSchema, emailSchema, phoneSchema } from '@/lib/validation'
+import { type UserMetadata } from '@/lib/types/auth'
 
 // Note: Some databases may not have a dedicated role_id column on public.users
 // We'll avoid relying on role_id in this route
@@ -323,20 +324,16 @@ export async function POST(request: Request) {
     // Generate UUID if not provided
     const principalId = (authData as any).user.id
     
-    // Update auth user metadata to include displayName and profile fields
+    // Update auth user metadata
     try {
+      const userMetadata: UserMetadata = {
+        roles: ['principal'],
+        activeRole: 'principal',
+        org_id,
+      };
+      
       await supabaseAdmin.auth.admin.updateUserById(principalId, {
-        user_metadata: {
-          full_name: displayName || '',
-          name: displayName || '',
-          displayName: displayName || '',
-          first_name: first_name || '',
-          last_name: last_name || '',
-          org_id,
-          phone: phone || null,
-          roles: ['principal'],
-          activeRole: 'principal',
-        }
+        user_metadata: userMetadata,
       })
     } catch (e) {
       console.warn('⚠️ Failed to update auth metadata for principal:', e)

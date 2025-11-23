@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabaseClient';
+import { type UserMetadata } from '@/lib/types/auth';
 
 export default function AuthCallback() {
   const router = useRouter();
@@ -21,7 +22,8 @@ export default function AuthCallback() {
 
         if (user) {
           // User is authenticated, redirect based on role
-          const userRole = user.user_metadata?.role || 'teacher';
+          const userMetadata = user.user_metadata as UserMetadata | undefined;
+          const userRole = userMetadata?.activeRole || userMetadata?.roles?.[0] || 'teacher';
           
           // Update user as active in public.users table
           const response = await fetch('/api/staff/verify', {

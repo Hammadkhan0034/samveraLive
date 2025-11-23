@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabaseClient'
 import { createSupabaseServer } from '@/lib/supabaseServer'
 import { z } from 'zod'
 import { validateBody, userIdSchema, orgIdSchema } from '@/lib/validation'
+import { type UserMetadata } from '@/lib/types/auth'
 
 const STAFF_ROLE_ID = 20
 
@@ -78,8 +79,8 @@ export async function POST(request: Request) {
     const userUpsertData: any = {
       id: user.id,
       email: user.email,
-      first_name: user.user_metadata?.first_name || existingUser?.first_name || user.user_metadata?.name?.split(' ')[0] || user.email?.split('@')[0] || 'Teacher',
-      last_name: user.user_metadata?.last_name || existingUser?.last_name || (user.user_metadata?.name ? user.user_metadata.name.split(' ').slice(1).join(' ') : null),
+      first_name: existingUser?.first_name || user.email?.split('@')[0] || 'Teacher',
+      last_name: existingUser?.last_name || null,
       org_id: org_id,
       is_active: true,
       role: userRole
@@ -103,19 +104,16 @@ export async function POST(request: Request) {
     }
     
     // Update auth user metadata with role and org_id
+    const userMetadata: UserMetadata = {
+      roles: ['teacher'],
+      activeRole: 'teacher',
+      org_id: org_id,
+    };
+    
     const { error: metadataError } = await supabaseAdmin.auth.admin.updateUserById(
       user.id,
       {
-        user_metadata: {
-          ...user.user_metadata,
-          roles: ['teacher'],
-          activeRole: 'teacher',
-          role: 'teacher',
-          role_id: STAFF_ROLE_ID,
-          org_id: org_id,
-          first_name: userData?.first_name || user.user_metadata?.first_name,
-          last_name: userData?.last_name || user.user_metadata?.last_name
-        }
+        user_metadata: userMetadata,
       }
     )
 

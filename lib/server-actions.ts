@@ -11,7 +11,7 @@ import {
   requireServerClassAccess,
   createSupabaseServer 
 } from './supabaseServer';
-import { type SamveraRole } from './auth';
+import { type SamveraRole, type UserMetadata } from './auth';
 import { supabaseAdmin } from './supabaseClient';
 import {
   createBulkNotifications,
@@ -34,7 +34,8 @@ export async function createAnnouncement(data: {
   
   const supabase = supabaseAdmin ?? await createSupabaseServer();
   // Priority: explicit orgId -> user metadata -> admin users table -> class fallback
-  let orgId = data.orgId || (user.user_metadata?.org_id as string | undefined) || (user.user_metadata?.organization_id as string | undefined);
+  const userMetadata = user.user_metadata as UserMetadata | undefined;
+  let orgId = data.orgId || userMetadata?.org_id;
   if (!orgId && supabaseAdmin) {
     const { data: userRow } = await supabaseAdmin
       .from('users')
@@ -115,8 +116,19 @@ export async function createAnnouncement(data: {
     // classId was explicitly set to null (org-wide announcement)
     classIdResolved = null;
   } else {
-    // classId was not provided (undefined), check metadata as fallback
-    classIdResolved = (user.user_metadata?.class_id as string | undefined) || null;
+    // classId was not provided (undefined), check class_memberships table as fallback
+    if (supabaseAdmin && orgId) {
+      const { data: membership } = await supabaseAdmin
+        .from('class_memberships')
+        .select('class_id')
+        .eq('user_id', user.id)
+        .eq('org_id', orgId)
+        .limit(1)
+        .maybeSingle();
+      classIdResolved = (membership as any)?.class_id || null;
+    } else {
+      classIdResolved = null;
+    }
   }
   
   // Only auto-provision a default class if classId was undefined (not provided) AND user is a teacher
@@ -221,11 +233,18 @@ export async function updateUserRole(userId: string, newRoles: SamveraRole[], ac
   
   const supabase = await createSupabaseServer();
   
+  // Get existing metadata to preserve org_id
+  const { data: existingUser } = await supabase.auth.admin.getUserById(userId);
+  const existingMetadata = existingUser?.user?.user_metadata as Partial<UserMetadata> | undefined;
+  
+  const userMetadata: UserMetadata = {
+    roles: newRoles,
+    activeRole: activeRole || newRoles[0],
+    ...(existingMetadata?.org_id ? { org_id: existingMetadata.org_id } : {}),
+  };
+  
   const { error } = await supabase.auth.admin.updateUserById(userId, {
-    user_metadata: {
-      roles: newRoles,
-      activeRole: activeRole || newRoles[0],
-    }
+    user_metadata: userMetadata
   });
   
   if (error) {
@@ -266,7 +285,8 @@ export async function updateAnnouncement(announcementId: string, data: {
   }
   
   // Validate org_id matches user's org
-  const userOrgId = (user.user_metadata?.org_id as string | undefined) || (user.user_metadata?.organization_id as string | undefined);
+  const userMetadata = user.user_metadata as UserMetadata | undefined;
+  const userOrgId = userMetadata?.org_id;
   if (!isAdmin && announcement.org_id && userOrgId && announcement.org_id !== userOrgId) {
     throw new Error('Cannot update announcement from different organization');
   }
@@ -482,8 +502,8 @@ export async function hasMinimumPermission(minimumRole: SamveraRole): Promise<bo
 export async function getNotifications(limit: number = 50, unreadOnly: boolean = false) {
   const { user } = await requireServerAuth();
   
-  const orgId = user.user_metadata?.org_id as string | undefined || 
-                user.user_metadata?.organization_id as string | undefined;
+  const userMetadata = user.user_metadata as UserMetadata | undefined;
+  const orgId = userMetadata?.org_id;
   
   if (!orgId) {
     throw new Error('Missing organization for user');
@@ -515,8 +535,8 @@ export async function getNotifications(limit: number = 50, unreadOnly: boolean =
 export async function getPaginatedNotifications(page: number = 1, limit: number = 10) {
   const { user } = await requireServerAuth();
   
-  const orgId = user.user_metadata?.org_id as string | undefined || 
-                user.user_metadata?.organization_id as string | undefined;
+  const userMetadata = user.user_metadata as UserMetadata | undefined;
+  const orgId = userMetadata?.org_id;
   
   if (!orgId) {
     throw new Error('Missing organization for user');
@@ -561,8 +581,8 @@ export async function getPaginatedNotifications(page: number = 1, limit: number 
 export async function markNotificationRead(notificationId: string) {
   const { user } = await requireServerAuth();
   
-  const orgId = user.user_metadata?.org_id as string | undefined || 
-                user.user_metadata?.organization_id as string | undefined;
+  const userMetadata = user.user_metadata as UserMetadata | undefined;
+  const orgId = userMetadata?.org_id;
   
   if (!orgId) {
     throw new Error('Missing organization for user');
@@ -590,8 +610,8 @@ export async function markNotificationRead(notificationId: string) {
 export async function markAllNotificationsRead() {
   const { user } = await requireServerAuth();
   
-  const orgId = user.user_metadata?.org_id as string | undefined || 
-                user.user_metadata?.organization_id as string | undefined;
+  const userMetadata = user.user_metadata as UserMetadata | undefined;
+  const orgId = userMetadata?.org_id;
   
   if (!orgId) {
     throw new Error('Missing organization for user');
@@ -619,8 +639,8 @@ export async function markAllNotificationsRead() {
 export async function deleteNotification(notificationId: string) {
   const { user } = await requireServerAuth();
   
-  const orgId = user.user_metadata?.org_id as string | undefined || 
-                user.user_metadata?.organization_id as string | undefined;
+  const userMetadata = user.user_metadata as UserMetadata | undefined;
+  const orgId = userMetadata?.org_id;
   
   if (!orgId) {
     throw new Error('Missing organization for user');
@@ -660,8 +680,8 @@ export async function deleteNotification(notificationId: string) {
 export async function deleteAllNotifications() {
   const { user } = await requireServerAuth();
   
-  const orgId = user.user_metadata?.org_id as string | undefined || 
-                user.user_metadata?.organization_id as string | undefined;
+  const userMetadata = user.user_metadata as UserMetadata | undefined;
+  const orgId = userMetadata?.org_id;
   
   if (!orgId) {
     throw new Error('Missing organization for user');
@@ -711,7 +731,8 @@ export async function createEvent(data: {
   const validatedData = validation.data;
   
   // Get org_id from user if not provided
-  let orgId = validatedData.org_id || (user.user_metadata?.org_id as string | undefined) || (user.user_metadata?.organization_id as string | undefined);
+  const userMetadata = user.user_metadata as UserMetadata | undefined;
+  let orgId = validatedData.org_id || userMetadata?.org_id;
   if (!orgId && supabaseAdmin) {
     const { data: userRow } = await supabaseAdmin
       .from('users')
@@ -725,7 +746,7 @@ export async function createEvent(data: {
   }
   
   // For teachers, ensure they can only create class-based events for their assigned classes
-  if (user.user_metadata?.role === 'teacher' || user.user_metadata?.activeRole === 'teacher') {
+  if (userMetadata?.activeRole === 'teacher' || userMetadata?.roles?.includes('teacher')) {
     if (!validatedData.class_id) {
       throw new Error('Teachers can only create class-based events');
     }
@@ -834,7 +855,8 @@ export async function updateEvent(eventId: string, data: {
   const orgId = existingEvent.org_id;
   
   // Check permissions
-  if (user.user_metadata?.role === 'teacher' || user.user_metadata?.activeRole === 'teacher') {
+  const userMetadata = user.user_metadata as UserMetadata | undefined;
+  if (userMetadata?.activeRole === 'teacher' || userMetadata?.roles?.includes('teacher')) {
     // Teachers can only update their class events
     if (!existingEvent.class_id) {
       throw new Error('Teachers cannot update organization-wide events');
@@ -866,7 +888,8 @@ export async function updateEvent(eventId: string, data: {
   if (data.start_at !== undefined) updateData.start_at = data.start_at;
   if (data.end_at !== undefined) updateData.end_at = data.end_at;
   if (data.location !== undefined) updateData.location = data.location;
-  if (data.class_id !== undefined && (user.user_metadata?.role === 'principal' || user.user_metadata?.activeRole === 'principal')) {
+  const userMetadata = user.user_metadata as UserMetadata | undefined;
+  if (data.class_id !== undefined && (userMetadata?.activeRole === 'principal' || userMetadata?.roles?.includes('principal'))) {
     updateData.class_id = data.class_id;
   }
   
@@ -944,7 +967,8 @@ export async function deleteEvent(eventId: string) {
   }
   
   // Check permissions
-  if (user.user_metadata?.role === 'teacher' || user.user_metadata?.activeRole === 'teacher') {
+  const userMetadata = user.user_metadata as UserMetadata | undefined;
+  if (userMetadata?.activeRole === 'teacher' || userMetadata?.roles?.includes('teacher')) {
     // Teachers can only delete their class events
     if (!existingEvent.class_id) {
       throw new Error('Teachers cannot delete organization-wide events');
@@ -1000,7 +1024,8 @@ export async function getEvents(orgId: string, options?: {
     .is('deleted_at', null);
   
   // Apply role-based filtering
-  const role = options?.userRole || (user.user_metadata?.role as string) || (user.user_metadata?.activeRole as string);
+  const userMetadata = user.user_metadata as UserMetadata | undefined;
+  const role = options?.userRole || userMetadata?.activeRole || userMetadata?.roles?.[0];
   
   if (role === 'parent') {
     // Parents: only events for their child's class or org-wide

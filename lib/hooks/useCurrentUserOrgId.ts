@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { type UserMetadata } from '@/lib/types/auth';
 
 /**
  * Universal hook to resolve current user's organization ID from multiple sources.
@@ -17,11 +18,8 @@ export function useCurrentUserOrgId() {
   const [hasLoggedOut, setHasLoggedOut] = useState(false);
 
   // Try to get org_id from metadata first (fastest, no API call)
-  const userMetadata = session?.user?.user_metadata;
-  const orgIdFromMetadata = 
-    userMetadata?.org_id || 
-    userMetadata?.organization_id || 
-    userMetadata?.orgId;
+  const userMetadata = session?.user?.user_metadata as UserMetadata | undefined;
+  const orgIdFromMetadata = userMetadata?.org_id;
 
   // Fetch org_id from database if not in metadata
   useEffect(() => {

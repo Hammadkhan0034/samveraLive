@@ -4,6 +4,7 @@ import { createServerClient } from '@supabase/ssr'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 import { z } from 'zod'
 import { validateBody, orgIdSchema, classIdSchema, uuidSchema } from '@/lib/validation'
+import { type UserMetadata, type SamveraRole } from '@/lib/types/auth'
 
 // POST body schema
 const provisionOrgBodySchema = z.object({
@@ -72,12 +73,10 @@ export async function POST(request: Request) {
     const allowed = rawEmail && /@.*\.(edu|org|gov|com)$/i.test(rawEmail)
     const email = allowed ? rawEmail : `user+${user.id.slice(0,8)}@samvera.com`
 
-    const fullName = (user.user_metadata?.full_name || user.user_metadata?.name || '') as string
-
     const upsertUser: Record<string, any> = {
       id: user.id,
       email,
-      full_name: fullName || 'User',
+      full_name: 'User',
       org_id: orgId,
       is_active: true,
       metadata: user.user_metadata || {},
@@ -92,7 +91,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: `Failed to upsert domain user: ${userUpErr.message}` }, { status: 500 })
     }
 
-    // 3) Update auth metadata to include org_id, optional class_id, roles
+    // 3) Update auth metadata to include org_id and roles
     const roles: string[] = Array.isArray(user.user_metadata?.roles) ? user.user_metadata.roles : []
     const activeRole: string | undefined = (user.user_metadata?.activeRole as string | undefined)
     const defaultRole = roles.length ? roles[0] : 'teacher'
@@ -100,13 +99,11 @@ export async function POST(request: Request) {
     const finalRoles = roles.length ? roles : [defaultRole]
     const finalActive = activeRole && finalRoles.includes(activeRole) ? activeRole : finalRoles[0]
 
-    const newMetadata = {
-      ...user.user_metadata,
+    const newMetadata: UserMetadata = {
+      roles: finalRoles as SamveraRole[],
+      activeRole: finalActive as SamveraRole,
       org_id: orgId,
-      ...(classId ? { class_id: classId } : {}),
-      roles: finalRoles,
-      activeRole: finalActive,
-    }
+    };
 
     const { error: updErr } = await supabase.auth.updateUser({ data: newMetadata })
     if (updErr) {

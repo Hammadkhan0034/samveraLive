@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
             .from('users')
             .insert({
               id: userId,
-              full_name: authUser.user.user_metadata?.full_name || 'Unknown',
+              full_name: 'Unknown',
               email: authUser.user.email,
               org_id: authUser.user.user_metadata?.org_id || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID,
               is_active: true

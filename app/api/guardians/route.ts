@@ -4,6 +4,7 @@ import { getUserDataCacheHeaders } from '@/lib/cacheConfig'
 import { requireServerAuth } from '@/lib/supabaseServer'
 import { z } from 'zod'
 import { validateQuery, validateBody, orgIdSchema, userIdSchema, firstNameSchema, lastNameSchema, emailSchema, phoneSchema, addressSchema, ssnSchema } from '@/lib/validation'
+import { type UserMetadata } from '@/lib/types/auth'
 
 // Guardian role ID
 const GUARDIAN_ROLE_ID = 10
@@ -115,19 +116,17 @@ export async function POST(request: Request) {
     // Create auth user if it doesn't exist
     if (!existingAuthUser) {
       const defaultPassword = 'test123456'
+      const userMetadata: UserMetadata = {
+        roles: ['parent'],
+        activeRole: 'parent',
+        org_id: actualOrgId,
+      };
+      
       const { data: newAuthUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
         email,
         password: defaultPassword,
         email_confirm: true, // Auto-confirm email
-        user_metadata: {
-          roles: ['parent'],
-          activeRole: 'parent',
-          role: 'parent',
-          org_id: actualOrgId,
-          first_name: (first_name || '').trim(),
-          last_name: (last_name || '').trim() || null,
-          ...(student_id ? { student_id } : {}),
-        }
+        user_metadata: userMetadata,
       })
 
       if (createError) {
@@ -190,16 +189,16 @@ export async function POST(request: Request) {
       studentClassId = studentRow?.class_id ?? null
     }
 
-    // Update auth user metadata with org and class scope
+    // Update auth user metadata with org
     try {
+      const userMetadata: UserMetadata = {
+        roles: ['parent'],
+        activeRole: 'parent',
+        org_id: actualOrgId,
+      };
+      
       await supabaseAdmin.auth.admin.updateUserById(guardianId, {
-        user_metadata: {
-          roles: ['parent'],
-          activeRole: 'parent',
-          org_id: actualOrgId,
-          ...(studentClassId ? { class_id: studentClassId } : {}),
-          ...(student_id ? { student_id } : {}),
-        },
+        user_metadata: userMetadata,
       })
     } catch (e) {
       // Continue - metadata update is non-critical

@@ -5,6 +5,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { z } from 'zod'
 import { validateQuery, validateBody, orgIdSchema, userIdSchema, nameSchema, codeSchema, classIdSchema } from '@/lib/validation'
+import { type UserMetadata } from '@/lib/types/auth'
 
 // Teacher role ID
 const TEACHER_ROLE_ID = 20
@@ -298,37 +299,7 @@ export async function POST(request: Request) {
 
     // If teacher_id provided, assign teacher to class
     if (teacher_id) {
-      // Get current teacher metadata
-      const { data: teacher } = await supabaseAdmin
-        .from('users')
-        .select('metadata')
-        .eq('id', teacher_id)
-        .single()
-
-      // Update teacher metadata with class_id
-      const updatedMetadata = {
-        ...(teacher?.metadata || {}),
-        class_id: newClass.id
-      }
-
-      const { error: updateError } = await supabaseAdmin
-        .from('users')
-        .update({ metadata: updatedMetadata })
-        .eq('id', teacher_id)
-
-      if (updateError) {
-        // Continue - metadata update is non-critical
-      }
-
-      // Also update auth.users metadata
-      await supabaseAdmin.auth.admin.updateUserById(teacher_id, {
-        user_metadata: {
-          ...updatedMetadata,
-          class_id: newClass.id
-        }
-      })
-
-      // Also create class_memberships row with org_id
+      // Create class_memberships row with org_id
       const { error: cmError } = await supabaseAdmin
         .from('class_memberships')
         .insert({
@@ -393,32 +364,6 @@ export async function PUT(request: Request) {
 
     // If teacher_id provided, update assignment
     if (teacher_id) {
-      // Get current teacher metadata
-      const { data: teacher } = await supabaseAdmin
-        .from('users')
-        .select('metadata')
-        .eq('id', teacher_id)
-        .single()
-
-      // Update teacher metadata with class_id
-      const updatedMetadata = {
-        ...(teacher?.metadata || {}),
-        class_id: id
-      }
-
-      await supabaseAdmin
-        .from('users')
-        .update({ metadata: updatedMetadata })
-        .eq('id', teacher_id)
-
-      // Also update auth.users metadata
-      await supabaseAdmin.auth.admin.updateUserById(teacher_id, {
-        user_metadata: {
-          ...updatedMetadata,
-          class_id: id
-        }
-      })
-
       // Create/ensure class_memberships with org_id
       // First fetch class org_id
       let classOrgId: string | null = null

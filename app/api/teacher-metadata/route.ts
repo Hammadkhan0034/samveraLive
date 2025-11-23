@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { getUserDataCacheHeaders } from '@/lib/cacheConfig'
 import { z } from 'zod'
 import { validateQuery, validateBody, userIdSchema, orgIdSchema, classIdSchema } from '@/lib/validation'
+import { type UserMetadata } from '@/lib/types/auth'
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,7 +19,6 @@ const getTeacherMetadataQuerySchema = z.object({
 const postTeacherMetadataBodySchema = z.object({
   user_id: userIdSchema,
   org_id: orgIdSchema,
-  class_id: classIdSchema.optional(),
 });
 
 export async function GET(request: Request) {
@@ -52,13 +52,22 @@ export async function GET(request: Request) {
       console.log('⚠️ No user data found, creating default values');
       return NextResponse.json({ 
         org_id: process.env.NEXT_PUBLIC_DEFAULT_ORG_ID || 'default-org',
-        class_id: 'default-class'
+        class_ids: []
       })
     }
 
+    // Get class_ids from class_memberships table
+    const { data: memberships } = await supabaseAdmin
+      .from('class_memberships')
+      .select('class_id')
+      .eq('user_id', user_id)
+      .eq('org_id', userData.org_id)
+
+    const class_ids = (memberships || []).map((m: any) => m.class_id)
+
     return NextResponse.json({ 
       org_id: userData.org_id,
-      class_id: userData.metadata?.class_id || null
+      class_ids: class_ids
     }, {
       headers: getUserDataCacheHeaders()
     })
@@ -78,9 +87,9 @@ export async function POST(request: Request) {
     if (!bodyValidation.success) {
       return bodyValidation.error
     }
-    const { user_id, org_id, class_id } = bodyValidation.data
+    const { user_id, org_id } = bodyValidation.data
     
-    console.log('📝 Updating user metadata:', { user_id, org_id, class_id });
+    console.log('📝 Updating user metadata:', { user_id, org_id });
 
     // Get current user metadata
     const { data: user, error: userError } = await supabaseAdmin.auth.admin.getUserById(user_id)
@@ -94,12 +103,13 @@ export async function POST(request: Request) {
 
     console.log('👤 Current user metadata:', user.user.user_metadata);
 
-    // Update user metadata with org_id and class_id
-    const updatedMetadata = {
-      ...user.user.user_metadata,
+    // Update user metadata with org_id only
+    const existingMetadata = user.user.user_metadata as Partial<UserMetadata> | undefined;
+    const updatedMetadata: UserMetadata = {
+      roles: existingMetadata?.roles || ['teacher'],
+      activeRole: existingMetadata?.activeRole || 'teacher',
       org_id: org_id,
-      ...(class_id ? { class_id: class_id } : {})
-    }
+    };
 
     console.log('🔄 Updated metadata:', updatedMetadata);
 

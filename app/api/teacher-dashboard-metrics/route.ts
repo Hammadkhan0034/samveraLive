@@ -5,6 +5,7 @@ import { supabaseAdmin } from '@/lib/supabaseClient';
 import { getNoCacheHeaders } from '@/lib/cacheConfig';
 import { z } from 'zod';
 import { validateQuery, orgIdSchema, userIdSchema } from '@/lib/validation';
+import { type UserMetadata } from '@/lib/types/auth';
 
 import { getCurrentUserOrgId, MissingOrgIdError } from '@/lib/server-helpers';
 
@@ -253,7 +254,8 @@ export async function GET(request: Request) {
       // 5. Announcements count: Total announcements for the teacher
       (async () => {
         try {
-          const finalUserRole = userRole || (user.user_metadata?.role || user.user_metadata?.activeRole || 'teacher') as string;
+          const userMetadata = user.user_metadata as UserMetadata | undefined;
+          const finalUserRole = userRole || userMetadata?.activeRole || userMetadata?.roles?.[0] || 'teacher';
           const teacherClassIdsString = classIdsArray.join(',');
           
           let query = supabaseAdmin

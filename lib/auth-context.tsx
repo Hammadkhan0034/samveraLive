@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase, markUserLoggedIn } from './supabaseClient';
-import { type SamveraRole } from './auth';
+import { type SamveraRole, type UserMetadata } from './auth';
 
 interface AuthContextType {
   user: User | null;
@@ -124,7 +124,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             if (!hasRoles && typeof window !== 'undefined') {
               const pendingRole = (localStorage.getItem('samvera_pending_role') || '') as SamveraRole | '';
               if (pendingRole) {
-                await supabase.auth.updateUser({ data: { roles: [pendingRole], activeRole: pendingRole } });
+                const existingMetadata = session.user.user_metadata as Partial<UserMetadata> | undefined;
+                const userMetadata: UserMetadata = {
+                  roles: [pendingRole],
+                  activeRole: pendingRole,
+                  ...(existingMetadata?.org_id ? { org_id: existingMetadata.org_id } : {}),
+                };
+                await supabase.auth.updateUser({ data: userMetadata });
                 localStorage.removeItem('samvera_pending_role');
               }
             }
@@ -375,15 +381,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       for (const testEmail of emailVariations) {
         try {
           console.log('Trying email:', testEmail);
+          const userMetadata: UserMetadata = {
+            roles: [userRole],
+            activeRole: userRole,
+            ...(fullName ? { full_name: fullName } : {}),
+          };
+          
           const { data, error } = await supabase.auth.signUp({
             email: testEmail,
             password,
             options: {
-              data: {
-                roles: [userRole],
-                activeRole: userRole,
-                full_name: fullName || '',
-              },
+              data: userMetadata,
             },
           });
           
@@ -484,11 +492,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!hasRoles && typeof window !== 'undefined') {
           const pendingRole = localStorage.getItem('samvera_pending_role') as SamveraRole | null;
           if (pendingRole) {
+            const existingMetadata = data.user.user_metadata as Partial<UserMetadata> | undefined;
+            const userMetadata: UserMetadata = {
+              roles: [pendingRole],
+              activeRole: pendingRole,
+              ...(existingMetadata?.org_id ? { org_id: existingMetadata.org_id } : {}),
+              ...(existingMetadata?.class_id ? { class_id: existingMetadata.class_id } : {}),
+              ...(existingMetadata?.full_name ? { full_name: existingMetadata.full_name } : {}),
+              ...(existingMetadata?.first_name ? { first_name: existingMetadata.first_name } : {}),
+              ...(existingMetadata?.last_name ? { last_name: existingMetadata.last_name } : {}),
+              ...(existingMetadata?.phone ? { phone: existingMetadata.phone } : {}),
+              ...(existingMetadata?.student_id ? { student_id: existingMetadata.student_id } : {}),
+              ...(existingMetadata?.default_password_set !== undefined ? { default_password_set: existingMetadata.default_password_set } : {}),
+            };
             await supabase.auth.updateUser({
-              data: {
-                roles: [pendingRole],
-                activeRole: pendingRole,
-              },
+              data: userMetadata,
             });
             localStorage.removeItem('samvera_pending_role');
           }

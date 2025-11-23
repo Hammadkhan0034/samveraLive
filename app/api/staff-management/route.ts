@@ -5,6 +5,7 @@ import { getCurrentUserOrgId, MissingOrgIdError } from '@/lib/server-helpers'
 import { getUserDataCacheHeaders } from '@/lib/cacheConfig'
 import { z } from 'zod'
 import { validateBody, validateQuery, firstNameSchema, lastNameSchema, emailSchema, roleSchema, phoneSchema, addressSchema, ssnSchema, classIdSchema, userIdSchema, uuidSchema } from '@/lib/validation'
+import { type UserMetadata } from '@/lib/types/auth'
 // Invitation email handled via Supabase Admin API (inviteUserByEmail)
 
 // Staff/Teacher role ID
@@ -398,18 +399,17 @@ export async function POST(request: Request) {
     if (!existingAuthUser) {
       console.log('📝 Creating new auth user with default password...')
       const defaultPassword = 'test123456'
+      const userMetadata: UserMetadata = {
+        roles: [role],
+        activeRole: role,
+        org_id: org_id,
+      };
+      
       const { data: newAuthUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
         email,
         password: defaultPassword,
         email_confirm: true, // Auto-confirm email
-        user_metadata: {
-          roles: [role],
-          activeRole: role,
-          role: role ,
-          org_id: org_id,
-          first_name: (first_name || '').trim(),
-          last_name: (last_name || '').trim() || null
-        }
+        user_metadata: userMetadata,
       })
 
       if (createError) {

@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { type SamveraRole } from './auth';
+import { type SamveraRole, type UserMetadata } from './auth';
 
 export const createSupabaseServer = async () => {
   const cookieStore = await cookies();
@@ -82,8 +82,9 @@ export async function requireServerAuth() {
 export async function requireServerRole(requiredRole: SamveraRole) {
   const { user, session } = await requireServerAuth();
   
-  const userRoles = user.user_metadata?.roles || [];
-  const activeRole = user.user_metadata?.activeRole;
+  const userMetadata = user.user_metadata as UserMetadata | undefined;
+  const userRoles = userMetadata?.roles || [];
+  const activeRole = userMetadata?.activeRole;
   
   if (!userRoles.includes(requiredRole)) {
     throw new Error(`Role '${requiredRole}' required. User has roles: ${userRoles.join(', ')}`);
@@ -95,8 +96,9 @@ export async function requireServerRole(requiredRole: SamveraRole) {
 export async function requireServerRoles(requiredRoles: SamveraRole[]) {
   const { user, session } = await requireServerAuth();
   
-  const userRoles = user.user_metadata?.roles || [];
-  const activeRole = user.user_metadata?.activeRole;
+  const userMetadata = user.user_metadata as UserMetadata | undefined;
+  const userRoles = userMetadata?.roles || [];
+  const activeRole = userMetadata?.activeRole;
   
   const hasRequiredRole = requiredRoles.some(role => userRoles.includes(role));
   
@@ -118,8 +120,9 @@ const ROLE_HIERARCHY: Record<SamveraRole, number> = {
 export async function requireServerRoleLevel(minimumRole: SamveraRole) {
   const { user, session } = await requireServerAuth();
   
-  const userRoles = user.user_metadata?.roles || [];
-  const activeRole = user.user_metadata?.activeRole;
+  const userMetadata = user.user_metadata as UserMetadata | undefined;
+  const userRoles = userMetadata?.roles || [];
+  const activeRole = userMetadata?.activeRole;
   
   const userMaxLevel = Math.max(...userRoles.map((role: SamveraRole) => ROLE_HIERARCHY[role] || 0));
   const requiredLevel = ROLE_HIERARCHY[minimumRole];
@@ -135,7 +138,8 @@ export async function requireServerRoleLevel(minimumRole: SamveraRole) {
 export async function requireServerOrgAccess(orgId: string) {
   const { user, session } = await requireServerAuth();
   
-  const userOrgId = user.user_metadata?.org_id;
+  const userMetadata = user.user_metadata as UserMetadata | undefined;
+  const userOrgId = userMetadata?.org_id;
   
   if (userOrgId !== orgId) {
     throw new Error(`Access denied to organization ${orgId}`);
@@ -147,11 +151,12 @@ export async function requireServerOrgAccess(orgId: string) {
 export async function requireServerClassAccess(classId: string) {
   const { user, session } = await requireServerAuth();
   
-  const userClassId = user.user_metadata?.class_id;
-  const userOrgId = user.user_metadata?.org_id;
+  const userMetadata = user.user_metadata as UserMetadata | undefined;
+  const userClassId = userMetadata?.class_id;
+  const userOrgId = userMetadata?.org_id;
   
   // Teachers and principals can access their class
-  const userRoles = user.user_metadata?.roles || [];
+  const userRoles = userMetadata?.roles || [];
   const canAccessClass = userRoles.includes('teacher') || userRoles.includes('principal') || userRoles.includes('admin');
   
   if (!canAccessClass || (userClassId && userClassId !== classId)) {

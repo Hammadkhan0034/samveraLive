@@ -1,6 +1,7 @@
 // Helper function to create test users for development
 // This bypasses email validation by using admin privileges
 import { supabaseAdmin } from '@/lib/supabaseClient';
+import { type UserMetadata } from '@/lib/types/auth';
 
 export async function createUserAuthEntry (
   email: string, 
@@ -16,15 +17,16 @@ export async function createUserAuthEntry (
     console.log('Creating  user auth entry with admin privileges...');
     
     // Create user with admin client
+    const userMetadata: UserMetadata = {
+      roles: [role],
+      activeRole: role,
+    };
+    
     const { data, error } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
       email_confirm: true, // Auto-confirm email
-      user_metadata: {
-        roles: [role],
-        activeRole: role,
-        full_name: fullName || '',
-      }
+      user_metadata: userMetadata,
     });
 
     if (error) {

@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
+import { type UserMetadata } from '@/lib/types/auth'
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
@@ -45,14 +46,15 @@ export async function GET(request: Request) {
       try {
         // Set default password for the guardian
         const defaultPassword = 'test123456'
+        const userMetadata: UserMetadata = {
+          roles: ['parent'],
+          activeRole: 'parent',
+          ...(org_id ? { org_id } : {}),
+        };
+        
         await supabaseAdmin.auth.admin.updateUserById(sessionData.user.id, {
           password: defaultPassword,
-          user_metadata: {
-            roles: ['parent'],
-            activeRole: 'parent',
-            org_id: org_id || undefined,
-            default_password_set: true,
-          }
+          user_metadata: userMetadata,
         })
         console.log('✅ Default password set for guardian:', guardian_id)
       } catch (updateError) {

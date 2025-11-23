@@ -1,6 +1,7 @@
 import { requireServerAuth } from './supabaseServer';
 import { supabaseAdmin } from './supabaseClient';
 import type { User } from '@supabase/supabase-js';
+import { type UserMetadata } from './types/auth';
 
 /**
  * Custom error class for missing organization ID
@@ -22,10 +23,8 @@ export class MissingOrgIdError extends Error {
  */
 async function getOrgIdFromUser(user: User): Promise<string> {
   // Step 1: Check user_metadata first (fastest, no DB query)
-  const orgIdFromMetadata = 
-    user.user_metadata?.org_id || 
-    user.user_metadata?.organization_id || 
-    user.user_metadata?.orgId;
+  const userMetadata = user.user_metadata as UserMetadata | undefined;
+  const orgIdFromMetadata = userMetadata?.org_id;
   
   if (orgIdFromMetadata) {
     return orgIdFromMetadata;

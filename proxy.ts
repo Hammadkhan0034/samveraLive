@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
-import { type SamveraRole } from '@/lib/auth';
+import { type SamveraRole, type UserMetadata } from '@/lib/auth';
 
 const ROLE_PATHS: Record<SamveraRole, string> = {
   teacher: '/dashboard/teacher',
@@ -91,8 +91,9 @@ export async function proxy(req: NextRequest) {
       return NextResponse.redirect(url);
     }
 
-    const userRoles = (user.user_metadata?.roles || []) as SamveraRole[];
-    const activeRole = user.user_metadata?.activeRole as SamveraRole | undefined;
+    const userMetadata = user.user_metadata as UserMetadata | undefined;
+    const userRoles = (userMetadata?.roles || []) as SamveraRole[];
+    const activeRole = userMetadata?.activeRole as SamveraRole | undefined;
 
     // Validate user has at least one role
     if (userRoles.length === 0) {

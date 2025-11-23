@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 import { createSupabaseServer } from '@/lib/supabaseServer'
+import { type UserMetadata } from '@/lib/types/auth'
 
 export async function GET(request: Request) {
   try {
@@ -45,14 +46,21 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Your email does not match the invitation email' }, { status: 403 })
     }
 
+    // Get existing user data from database if available
+    const { data: existingUser } = await supabaseAdmin
+      .from('users')
+      .select('first_name,last_name')
+      .eq('id', user.id)
+      .maybeSingle()
+
     // Upsert users row as guardian
     const { error: upsertError } = await supabaseAdmin
       .from('users')
       .upsert({
         id: user.id,
         email: user.email,
-        first_name: (user.user_metadata as any)?.first_name || null,
-        last_name: (user.user_metadata as any)?.last_name || null,
+        first_name: existingUser?.first_name || null,
+        last_name: existingUser?.last_name || null,
         role: 'guardian' as any,
         org_id,
         is_active: true,
@@ -77,25 +85,16 @@ export async function GET(request: Request) {
       .update({ accepted_by: user.id, accepted_at: new Date().toISOString() })
       .eq('id', invitation.id)
 
-    // Update auth metadata for scoping
+    // Update auth metadata
     try {
-      // Fetch class_id for the student to scope
-      let class_id: string | null = null
-      if (student_id) {
-        const { data: studentRow } = await supabaseAdmin
-          .from('students')
-          .select('class_id')
-          .eq('id', student_id)
-          .maybeSingle()
-        class_id = studentRow?.class_id ?? null
-      }
+      const userMetadata: UserMetadata = {
+        roles: ['parent'],
+        activeRole: 'parent',
+        org_id,
+      };
+      
       await supabaseAdmin.auth.admin.updateUserById(user.id, {
-        user_metadata: {
-          roles: ['parent'],
-          activeRole: 'parent',
-          org_id,
-          ...(class_id ? { class_id } : {}),
-        },
+        user_metadata: userMetadata,
       })
     } catch {}
 
