@@ -8,6 +8,7 @@ import { EventDetailsModal } from '@/app/components/shared/EventDetailsModal';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import { deleteEvent, getEvents } from '@/lib/server-actions';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 
@@ -16,7 +17,8 @@ export default function PrincipalCalendarPage() {
   const { t } = useLanguage();
   const { session } = useAuth();
   
-  const [orgId, setOrgId] = useState<string | null>(null);
+  // Use universal hook to get org_id (checks metadata first, then API, handles logout if missing)
+  const { orgId } = useCurrentUserOrgId();
   const [classes, setClasses] = useState<Array<{ id: string; name: string }>>([]);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
@@ -25,28 +27,6 @@ export default function PrincipalCalendarPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [eventToDelete, setEventToDelete] = useState<string | null>(null);
   const [deletingEvent, setDeletingEvent] = useState(false);
-
-  // Get orgId from user metadata
-  useEffect(() => {
-    if (session?.user?.id) {
-      const userMetadata = session?.user?.user_metadata as any;
-      const fetchedOrgId = userMetadata?.org_id || userMetadata?.organization_id || userMetadata?.orgId;
-      
-      if (fetchedOrgId) {
-        setOrgId(fetchedOrgId);
-      } else {
-        // Fetch from API if not in metadata
-        fetch(`/api/user-org-id?user_id=${session.user.id}`, { credentials: 'include' })
-          .then(res => res.json())
-          .then(data => {
-            if (data.org_id) {
-              setOrgId(data.org_id);
-            }
-          })
-          .catch(err => console.error('Failed to fetch org_id:', err));
-      }
-    }
-  }, [session?.user?.id]);
 
   // Load classes
   useEffect(() => {

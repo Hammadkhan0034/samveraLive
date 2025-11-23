@@ -1,13 +1,8 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 import { getUserDataCacheHeaders } from '@/lib/cacheConfig'
-import { z } from 'zod'
-import { validateQuery, userIdSchema } from '@/lib/validation'
-
-// GET query parameter schema
-const getUserOrgIdQuerySchema = z.object({
-  user_id: userIdSchema,
-});
+import { requireServerAuth } from '@/lib/supabaseServer'
+import { getCurrentUserOrgId, MissingOrgIdError } from '@/lib/server-helpers'
 
 export async function GET(request: Request) {
   try {
@@ -18,37 +13,25 @@ export async function GET(request: Request) {
       }, { status: 500 })
     }
     
-    const { searchParams } = new URL(request.url)
-    const queryValidation = validateQuery(getUserOrgIdQuerySchema, searchParams)
-    if (!queryValidation.success) {
-      return queryValidation.error
-    }
-    const { user_id: userId } = queryValidation.data
-
-    // Get user's org_id from the database
-    const { data: userData, error } = await supabaseAdmin
-      .from('users')
-      .select('org_id')
-      .eq('id', userId)
-      .single()
-
-    if (error) {
-      console.error('❌ Error fetching user org_id:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    if (!userData) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 })
-    }
+    // Use the universal helper which checks metadata first, then database
+    const orgId = await getCurrentUserOrgId();
 
     return NextResponse.json({ 
-      org_id: userData.org_id
+      org_id: orgId
     }, { 
       status: 200,
       headers: getUserDataCacheHeaders()
     })
 
   } catch (err: any) {
+    // Handle MissingOrgIdError specifically
+    if (err instanceof MissingOrgIdError) {
+      return NextResponse.json({ 
+        error: 'Organization ID not found',
+        code: 'MISSING_ORG_ID'
+      }, { status: 401 })
+    }
+    
     console.error('❌ Error in user-org-id GET:', err)
     return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 })
   }

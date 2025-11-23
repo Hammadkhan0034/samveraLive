@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Users, School, ChartBar as BarChart3, FileText, Plus, ListFilter as Filter, Search, CircleCheck as CheckCircle2, Circle as XCircle, Eye, EyeOff, Settings, Bell, Utensils, Megaphone, MessageSquare, CalendarDays } from 'lucide-react';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 import AnnouncementList from './AnnouncementList';
 import { useRouter } from 'next/navigation';
 import StoryColumn from './shared/StoryColumn';
@@ -20,33 +21,8 @@ export default function PrincipalDashboard() {
   const { session } = useAuth?.() || {} as any;
   const router = useRouter();
 
-  // Try to get org_id from multiple possible locations
-  const userMetadata = session?.user?.user_metadata;
-  const orgId = userMetadata?.org_id || userMetadata?.organization_id || userMetadata?.orgId;
-  
-  // If no org_id in metadata, we need to get it from the database
-  const [dbOrgId, setDbOrgId] = useState<string | null>(null);
-  
-  // Fetch org_id from database if not in metadata
-  useEffect(() => {
-    if (session?.user?.id && !orgId) {
-      const fetchUserOrgId = async () => {
-        try {
-          const response = await fetch(`/api/user-org-id?user_id=${session.user.id}`, { credentials: 'include' });
-          const data = await response.json();
-          if (response.ok && data.org_id) {
-            setDbOrgId(data.org_id);
-          }
-        } catch (error) {
-          console.error('Failed to fetch user org_id:', error);
-        }
-      };
-      fetchUserOrgId();
-    }
-  }, [session?.user?.id, orgId]);
-  
-  // Fallback to default org ID if not found in metadata
-  const finalOrgId = orgId || dbOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
+  // Use universal hook to get org_id (checks metadata first, then API, handles logout if missing)
+  const { orgId: finalOrgId } = useCurrentUserOrgId();
 
   // Store user and org IDs in sessionStorage for cache lookup in menus-list
   useEffect(() => {

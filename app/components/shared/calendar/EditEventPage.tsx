@@ -6,6 +6,7 @@ import { ArrowLeft } from 'lucide-react';
 import { updateEvent, getEvents } from '@/lib/server-actions';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useTeacherOrgId } from '@/lib/hooks/useTeacherOrgId';
+import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 import { useTeacherClasses } from '@/lib/hooks/useTeacherClasses';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import Loading from '@/app/components/shared/Loading';
@@ -29,7 +30,7 @@ export function EditEventPage({ userRole, calendarRoute, eventId }: EditEventPag
   const { classes: teacherClasses } = useTeacherClasses();
   
   // Principal-specific state
-  const [principalOrgId, setPrincipalOrgId] = useState<string | null>(null);
+  const { orgId: principalOrgId } = useCurrentUserOrgId();
   const [principalClasses, setPrincipalClasses] = useState<Array<{ id: string; name: string }>>([]);
   
   const [event, setEvent] = useState<CalendarEvent | null>(null);
@@ -48,27 +49,6 @@ export function EditEventPage({ userRole, calendarRoute, eventId }: EditEventPag
   // Get orgId based on role
   const orgId = userRole === 'teacher' ? teacherOrgId : principalOrgId;
   const classes = userRole === 'teacher' ? teacherClasses : principalClasses;
-
-  // Principal: Get orgId from user metadata
-  useEffect(() => {
-    if (userRole === 'principal' && session?.user?.id) {
-      const userMetadata = session?.user?.user_metadata as any;
-      const fetchedOrgId = userMetadata?.org_id || userMetadata?.organization_id || userMetadata?.orgId;
-      
-      if (fetchedOrgId) {
-        setPrincipalOrgId(fetchedOrgId);
-      } else {
-        fetch(`/api/user-org-id?user_id=${session.user.id}`, { credentials: 'include' })
-          .then(res => res.json())
-          .then(data => {
-            if (data.org_id) {
-              setPrincipalOrgId(data.org_id);
-            }
-          })
-          .catch(err => console.error('Failed to fetch org_id:', err));
-      }
-    }
-  }, [userRole, session?.user?.id]);
 
   // Principal: Load classes
   useEffect(() => {

@@ -4,6 +4,7 @@ import React, { useEffect, useState, Suspense, useRef } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useRequireAuth } from '@/lib/hooks/useAuth';
+import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { StudentForm, type StudentFormData } from '@/app/components/shared/StudentForm';
 import Loading from '@/app/components/shared/Loading';
@@ -14,32 +15,10 @@ function AddStudentPageContent() {
   const { user, loading, isSigningIn } = useRequireAuth();
   const { t } = useLanguage();
 
-  // Try to get org_id from multiple possible locations
-  const userMetadata = user?.user_metadata;
-  const orgId = userMetadata?.org_id || userMetadata?.organization_id || userMetadata?.orgId;
+  // Use universal hook to get org_id (checks metadata first, then API, handles logout if missing)
+  const { orgId: finalOrgId } = useCurrentUserOrgId();
   // All users (teachers and principals) create students directly with approved status
   const defaultStatus: 'pending' | 'approved' = 'approved';
-
-  const [dbOrgId, setDbOrgId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (user?.id && !orgId) {
-      const fetchUserOrgId = async () => {
-        try {
-          const response = await fetch(`/api/user-org-id?user_id=${user.id}`);
-          const data = await response.json();
-          if (response.ok && data.org_id) {
-            setDbOrgId(data.org_id);
-          }
-        } catch (error) {
-          console.error('Failed to fetch user org_id:', error);
-        }
-      };
-      fetchUserOrgId();
-    }
-  }, [user?.id, orgId]);
-
-  const finalOrgId = orgId || dbOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID || '';
 
   // Guardians and classes required for the form
   const [guardians, setGuardians] = useState<Array<{ id: string; email: string | null; full_name?: string; first_name?: string; last_name?: string }>>([]);

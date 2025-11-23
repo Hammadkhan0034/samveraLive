@@ -4,6 +4,7 @@ import React, { useEffect, useState, Suspense } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useRequireAuth } from '@/lib/hooks/useAuth';
+import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { GuardianForm, type GuardianFormData } from '@/app/components/shared/GuardianForm';
 import Loading from '@/app/components/shared/Loading';
@@ -14,28 +15,8 @@ function AddGuardianPageContent() {
   const { user, loading, isSigningIn } = useRequireAuth();
   const { t } = useLanguage();
 
-  const userMetadata = user?.user_metadata;
-  const orgId = userMetadata?.org_id || userMetadata?.organization_id || userMetadata?.orgId;
-  const [dbOrgId, setDbOrgId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (user?.id && !orgId) {
-      const fetchUserOrgId = async () => {
-        try {
-          const response = await fetch(`/api/user-org-id?user_id=${user.id}`);
-          const data = await response.json();
-          if (response.ok && data.org_id) {
-            setDbOrgId(data.org_id);
-          }
-        } catch (error) {
-          console.error('Failed to fetch user org_id:', error);
-        }
-      };
-      fetchUserOrgId();
-    }
-  }, [user?.id, orgId]);
-
-  const finalOrgId = ((orgId ?? dbOrgId) ?? process.env.NEXT_PUBLIC_DEFAULT_ORG_ID) ?? '';
+  // Use universal hook to get org_id (checks metadata first, then API, handles logout if missing)
+  const { orgId: finalOrgId } = useCurrentUserOrgId();
 
   // orgs (for validation/display if needed)
   const [orgs, setOrgs] = useState<Array<{ id: string; name: string }>>([]);

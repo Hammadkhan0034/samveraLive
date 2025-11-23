@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 import { requireServerRoles, requireServerOrgAccess, requireServerAuth } from '@/lib/supabaseServer'
+import { getCurrentUserOrgId, MissingOrgIdError } from '@/lib/server-helpers'
 import { getUserDataCacheHeaders } from '@/lib/cacheConfig'
 import { z } from 'zod'
 import { validateBody, validateQuery, firstNameSchema, lastNameSchema, emailSchema, roleSchema, phoneSchema, addressSchema, ssnSchema, classIdSchema, userIdSchema, uuidSchema } from '@/lib/validation'
@@ -8,21 +9,6 @@ import { validateBody, validateQuery, firstNameSchema, lastNameSchema, emailSche
 
 // Staff/Teacher role ID
 const STAFF_ROLE_ID = 20
-
-// Helper to derive org_id from authenticated user
-async function getRequesterOrgIdOrThrow(): Promise<string> {
-  if (!supabaseAdmin) {
-    throw new Error('Admin client not configured')
-  }
-  const { user } = await requireServerAuth()
-  const metaOrg = user.user_metadata?.org_id || user.user_metadata?.organization_id || user.user_metadata?.orgId
-  if (metaOrg) return metaOrg
-  const { data, error } = await supabaseAdmin.from('users').select('org_id').eq('id', user.id).single()
-  if (error || !data?.org_id) {
-    throw new Error('Organization not found')
-  }
-  return data.org_id
-}
 
 export async function GET(request: Request) {
   try {
@@ -44,7 +30,18 @@ export async function GET(request: Request) {
       throw new Error(`One of roles [principal, admin, teacher, guardian, 'parent'] required. User has roles: ${userRoles.join(', ')}`)
     }
     
-    const orgId = await getRequesterOrgIdOrThrow()
+    let orgId: string;
+    try {
+      orgId = await getCurrentUserOrgId();
+    } catch (err) {
+      if (err instanceof MissingOrgIdError) {
+        return NextResponse.json({ 
+          error: 'Organization ID not found',
+          code: 'MISSING_ORG_ID'
+        }, { status: 401 });
+      }
+      throw err;
+    }
 
     // Get all staff members from staff table, joining with users table
     const { data: staffData, error: staffErr } = await supabaseAdmin
@@ -310,7 +307,18 @@ export async function POST(request: Request) {
     // Enforce role and derive org_id and created_by from authenticated user
     await requireServerRoles(['principal', 'admin'] as any)
     const { user } = await requireServerAuth()
-    const org_id = await getRequesterOrgIdOrThrow()
+    let org_id: string;
+    try {
+      org_id = await getCurrentUserOrgId();
+    } catch (err) {
+      if (err instanceof MissingOrgIdError) {
+        return NextResponse.json({ 
+          error: 'Organization ID not found',
+          code: 'MISSING_ORG_ID'
+        }, { status: 401 });
+      }
+      throw err;
+    }
     const created_by = user.id
 
     const body = await request.json()
@@ -551,7 +559,18 @@ export async function PUT(request: Request) {
 
     // Enforce role and verify org access
     await requireServerRoles(['principal', 'admin'] as any)
-    const requesterOrgId = await getRequesterOrgIdOrThrow()
+    let requesterOrgId: string;
+    try {
+      requesterOrgId = await getCurrentUserOrgId();
+    } catch (err) {
+      if (err instanceof MissingOrgIdError) {
+        return NextResponse.json({ 
+          error: 'Organization ID not found',
+          code: 'MISSING_ORG_ID'
+        }, { status: 401 });
+      }
+      throw err;
+    }
     
     const { data: targetUser, error: targetErr } = await supabaseAdmin
       .from('users')
@@ -685,7 +704,18 @@ export async function DELETE(request: Request) {
 
     // Enforce role and verify org access
     await requireServerRoles(['principal', 'admin'] as any)
-    const requesterOrgId = await getRequesterOrgIdOrThrow()
+    let requesterOrgId: string;
+    try {
+      requesterOrgId = await getCurrentUserOrgId();
+    } catch (err) {
+      if (err instanceof MissingOrgIdError) {
+        return NextResponse.json({ 
+          error: 'Organization ID not found',
+          code: 'MISSING_ORG_ID'
+        }, { status: 401 });
+      }
+      throw err;
+    }
     
     const { data: targetUser, error: targetErr } = await supabaseAdmin
       .from('users')

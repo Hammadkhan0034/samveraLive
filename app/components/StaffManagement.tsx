@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Edit, Trash2, Users, X, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 
@@ -24,24 +25,8 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
   // Use lang prop if provided, otherwise use current language from context
   const lang = propLang || contextLang;
 
-  // Resolve org id (metadata -> DB -> env fallback)
-  const userMetadata = session?.user?.user_metadata;
-  const orgIdFromMeta = userMetadata?.org_id || userMetadata?.organization_id || userMetadata?.orgId;
-  const [dbOrgId, setDbOrgId] = useState<string | null>(null);
-  useEffect(() => {
-    if (session?.user?.id && !orgIdFromMeta) {
-      (async () => {
-        try {
-          const response = await fetch(`/api/user-org-id?user_id=${session.user.id}`);
-          const data = await response.json();
-          if (response.ok && data.org_id) setDbOrgId(data.org_id);
-        } catch (e) {
-          console.error('Failed to fetch user org_id:', e);
-        }
-      })();
-    }
-  }, [session?.user?.id, orgIdFromMeta]);
-  const finalOrgId = orgIdFromMeta || dbOrgId;
+  // Use universal hook to get org_id (checks metadata first, then API, handles logout if missing)
+  const { orgId: finalOrgId } = useCurrentUserOrgId();
 
   // Classes dropdown
   const [classesForDropdown, setClassesForDropdown] = useState<Array<{ id: string; name: string; code: string | null }>>([]);

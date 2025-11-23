@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Search, Link as LinkIcon, X, Check, UserSearch, GraduationCap } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 import EmptyState from './EmptyState';
 
 type Lang = 'en' | 'is';
@@ -86,24 +87,8 @@ function useDebounced<T>(value: T, delayMs: number) {
 export default function LinkStudentGuardian({ lang = 'en' }: { lang?: Lang }) {
   const { user } = useAuth();
   const t = useMemo(() => TEXTS[lang] || TEXTS.en, [lang]);
-  const orgIdFromMeta = (user?.user_metadata as any)?.org_id as string | undefined;
-  const [resolvedOrgId, setResolvedOrgId] = useState<string | undefined>(orgIdFromMeta || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID);
-
-  // Fallback: fetch org_id for current user if not in metadata
-  useEffect(() => {
-    let ignore = false;
-    async function fetchOrg() {
-      if (resolvedOrgId || !user?.id) return;
-      try {
-        const res = await fetch(`/api/user-org-id?user_id=${user.id}`);
-        if (!res.ok) return;
-        const data = await res.json();
-        if (!ignore && data?.org_id) setResolvedOrgId(data.org_id);
-      } catch {}
-    }
-    fetchOrg();
-    return () => { ignore = true; };
-  }, [user?.id, resolvedOrgId]);
+  // Use universal hook to get org_id (checks metadata first, then API, handles logout if missing)
+  const { orgId: resolvedOrgId } = useCurrentUserOrgId();
 
   const [modeGuardian, setModeGuardian] = useState<'email' | 'name'>('any' as any);
   const [modeStudent, setModeStudent] = useState<'email' | 'name'>('any' as any);

@@ -6,18 +6,7 @@ import { getNoCacheHeaders } from '@/lib/cacheConfig';
 import { z } from 'zod';
 import { validateQuery, orgIdSchema, userIdSchema } from '@/lib/validation';
 
-async function getRequesterOrgId(userId: string): Promise<string | null> {
-  if (!supabaseAdmin) return null;
-  
-  const { data, error } = await supabaseAdmin
-    .from('users')
-    .select('org_id')
-    .eq('id', userId)
-    .maybeSingle();
-  
-  if (error || !data) return null;
-  return data.org_id;
-}
+import { getCurrentUserOrgId, MissingOrgIdError } from '@/lib/server-helpers';
 
 // GET query parameter schema
 const getMetricsQuerySchema = z.object({

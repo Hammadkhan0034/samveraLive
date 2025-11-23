@@ -3,21 +3,9 @@ import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import { supabaseAdmin } from '@/lib/supabaseClient';
 import { getRealtimeDataCacheHeaders } from '@/lib/cacheConfig';
+import { getCurrentUserOrgId, MissingOrgIdError } from '@/lib/server-helpers';
 import { z } from 'zod';
 import { validateQuery, validateBody, userIdSchema, threadTypeSchema, uuidSchema } from '@/lib/validation';
-
-async function getRequesterOrgId(userId: string): Promise<string | null> {
-  if (!supabaseAdmin) return null;
-  
-  const { data, error } = await supabaseAdmin
-    .from('users')
-    .select('org_id')
-    .eq('id', userId)
-    .maybeSingle();
-  
-  if (error || !data) return null;
-  return data.org_id;
-}
 
 export async function GET(request: Request) {
   try {
@@ -84,10 +72,17 @@ export async function GET(request: Request) {
       }, { status: 403 });
     }
 
-    const orgId = await getRequesterOrgId(user.id);
-    
-    if (!orgId) {
-      return NextResponse.json({ error: 'Organization ID not found' }, { status: 400 });
+    let orgId: string;
+    try {
+      orgId = await getCurrentUserOrgId(user);
+    } catch (err) {
+      if (err instanceof MissingOrgIdError) {
+        return NextResponse.json({ 
+          error: 'Organization ID not found',
+          code: 'MISSING_ORG_ID'
+        }, { status: 401 });
+      }
+      throw err;
     }
 
     const { searchParams } = new URL(request.url);
@@ -279,10 +274,17 @@ export async function POST(request: Request) {
     if (!user) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
-    const orgId = await getRequesterOrgId(user.id);
-    
-    if (!orgId) {
-      return NextResponse.json({ error: 'Organization ID not found' }, { status: 400 });
+    let orgId: string;
+    try {
+      orgId = await getCurrentUserOrgId(user);
+    } catch (err) {
+      if (err instanceof MissingOrgIdError) {
+        return NextResponse.json({ 
+          error: 'Organization ID not found',
+          code: 'MISSING_ORG_ID'
+        }, { status: 401 });
+      }
+      throw err;
     }
 
     const body = await request.json();
@@ -442,10 +444,17 @@ export async function PUT(request: Request) {
     if (!user) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
-    const orgId = await getRequesterOrgId(user.id);
-    
-    if (!orgId) {
-      return NextResponse.json({ error: 'Organization ID not found' }, { status: 400 });
+    let orgId: string;
+    try {
+      orgId = await getCurrentUserOrgId(user);
+    } catch (err) {
+      if (err instanceof MissingOrgIdError) {
+        return NextResponse.json({ 
+          error: 'Organization ID not found',
+          code: 'MISSING_ORG_ID'
+        }, { status: 401 });
+      }
+      throw err;
     }
 
     const body = await request.json();
@@ -551,10 +560,17 @@ export async function DELETE(request: Request) {
     if (!user) {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
-    const orgId = await getRequesterOrgId(user.id);
-    
-    if (!orgId) {
-      return NextResponse.json({ error: 'Organization ID not found' }, { status: 400 });
+    let orgId: string;
+    try {
+      orgId = await getCurrentUserOrgId(user);
+    } catch (err) {
+      if (err instanceof MissingOrgIdError) {
+        return NextResponse.json({ 
+          error: 'Organization ID not found',
+          code: 'MISSING_ORG_ID'
+        }, { status: 401 });
+      }
+      throw err;
     }
 
     const { searchParams } = new URL(request.url);

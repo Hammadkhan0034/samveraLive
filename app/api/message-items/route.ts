@@ -1,22 +1,10 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseClient';
 import { requireServerAuth } from '@/lib/supabaseServer';
+import { getCurrentUserOrgId, MissingOrgIdError } from '@/lib/server-helpers';
 import { getRealtimeDataCacheHeaders } from '@/lib/cacheConfig';
 import { z } from 'zod';
 import { validateQuery, validateBody, uuidSchema } from '@/lib/validation';
-
-async function getRequesterOrgId(userId: string): Promise<string | null> {
-  if (!supabaseAdmin) return null;
-  
-  const { data, error } = await supabaseAdmin
-    .from('users')
-    .select('org_id')
-    .eq('id', userId)
-    .maybeSingle();
-  
-  if (error || !data) return null;
-  return data.org_id;
-}
 
 export async function GET(request: Request) {
   try {
@@ -25,10 +13,17 @@ export async function GET(request: Request) {
     }
 
     const { user } = await requireServerAuth();
-    const orgId = await getRequesterOrgId(user.id);
-    
-    if (!orgId) {
-      return NextResponse.json({ error: 'Organization ID not found' }, { status: 400 });
+    let orgId: string;
+    try {
+      orgId = await getCurrentUserOrgId(user);
+    } catch (err) {
+      if (err instanceof MissingOrgIdError) {
+        return NextResponse.json({ 
+          error: 'Organization ID not found',
+          code: 'MISSING_ORG_ID'
+        }, { status: 401 });
+      }
+      throw err;
     }
 
     const { searchParams } = new URL(request.url);
@@ -98,10 +93,17 @@ export async function POST(request: Request) {
     }
 
     const { user } = await requireServerAuth();
-    const orgId = await getRequesterOrgId(user.id);
-    
-    if (!orgId) {
-      return NextResponse.json({ error: 'Organization ID not found' }, { status: 400 });
+    let orgId: string;
+    try {
+      orgId = await getCurrentUserOrgId(user);
+    } catch (err) {
+      if (err instanceof MissingOrgIdError) {
+        return NextResponse.json({ 
+          error: 'Organization ID not found',
+          code: 'MISSING_ORG_ID'
+        }, { status: 401 });
+      }
+      throw err;
     }
 
     const body = await request.json();
@@ -172,10 +174,17 @@ export async function PUT(request: Request) {
     }
 
     const { user } = await requireServerAuth();
-    const orgId = await getRequesterOrgId(user.id);
-    
-    if (!orgId) {
-      return NextResponse.json({ error: 'Organization ID not found' }, { status: 400 });
+    let orgId: string;
+    try {
+      orgId = await getCurrentUserOrgId(user);
+    } catch (err) {
+      if (err instanceof MissingOrgIdError) {
+        return NextResponse.json({ 
+          error: 'Organization ID not found',
+          code: 'MISSING_ORG_ID'
+        }, { status: 401 });
+      }
+      throw err;
     }
 
     const body = await request.json();
@@ -244,10 +253,17 @@ export async function DELETE(request: Request) {
     }
 
     const { user } = await requireServerAuth();
-    const orgId = await getRequesterOrgId(user.id);
-    
-    if (!orgId) {
-      return NextResponse.json({ error: 'Organization ID not found' }, { status: 400 });
+    let orgId: string;
+    try {
+      orgId = await getCurrentUserOrgId(user);
+    } catch (err) {
+      if (err instanceof MissingOrgIdError) {
+        return NextResponse.json({ 
+          error: 'Organization ID not found',
+          code: 'MISSING_ORG_ID'
+        }, { status: 401 });
+      }
+      throw err;
     }
 
     const { searchParams } = new URL(request.url);

@@ -5,6 +5,7 @@ import { Plus } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
+import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 import TeacherSidebar, { TeacherSidebarRef } from '@/app/components/shared/TeacherSidebar';
 import { GuardianTable } from '@/app/components/shared/GuardianTable';
 import { GuardianForm, type GuardianFormData } from '@/app/components/shared/GuardianForm';
@@ -44,33 +45,8 @@ export default function TeacherGuardiansPage() {
   const { user, loading: authLoading, isSigningIn } = useRequireAuth('teacher');
   const sidebarRef = useRef<TeacherSidebarRef>(null);
 
-  // Try to get org_id from multiple possible locations
-  const userMetadata = session?.user?.user_metadata;
-  const orgIdFromMetadata = userMetadata?.org_id || userMetadata?.organization_id || userMetadata?.orgId;
-  
-  // If no org_id in metadata, we need to get it from the database
-  const [dbOrgId, setDbOrgId] = useState<string | null>(null);
-  
-  // Fetch org_id from database if not in metadata
-  useEffect(() => {
-    if (session?.user?.id && !orgIdFromMetadata) {
-      const fetchUserOrgId = async () => {
-        try {
-          const response = await fetch(`/api/user-org-id?user_id=${session.user.id}`);
-          const data = await response.json();
-          if (response.ok && data.org_id) {
-            setDbOrgId(data.org_id);
-          }
-        } catch (error) {
-          console.error('Failed to fetch user org_id:', error);
-        }
-      };
-      fetchUserOrgId();
-    }
-  }, [session?.user?.id, orgIdFromMetadata]);
-  
-  // Final org_id to use
-  const finalOrgId = orgIdFromMetadata || dbOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID || '1db3c97c-de42-4ad2-bb72-cc0b6cda69f7';
+  // Use universal hook to get org_id (checks metadata first, then API, handles logout if missing)
+  const { orgId: finalOrgId } = useCurrentUserOrgId();
 
   // Guardian state
   const [guardians, setGuardians] = useState<Array<any>>([]);
