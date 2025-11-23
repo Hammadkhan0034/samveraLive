@@ -46,10 +46,14 @@ export async function GET(request: Request) {
       try {
         // Set default password for the guardian
         const defaultPassword = 'test123456'
+        const actualOrgId = org_id || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID || ''
+        if (!actualOrgId) {
+          throw new Error('org_id is required but not provided')
+        }
         const userMetadata: UserMetadata = {
           roles: ['parent'],
           activeRole: 'parent',
-          ...(org_id ? { org_id } : {}),
+          org_id: actualOrgId,
         };
         
         await supabaseAdmin.auth.admin.updateUserById(sessionData.user.id, {

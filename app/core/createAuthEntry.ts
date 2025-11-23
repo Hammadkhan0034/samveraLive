@@ -1,12 +1,12 @@
 // Helper function to create test users for development
 // This bypasses email validation by using admin privileges
 import { supabaseAdmin } from '@/lib/supabaseClient';
-import { type UserMetadata } from '@/lib/types/auth';
+import { type UserMetadata, type SamveraRole } from '@/lib/types/auth';
 
 export async function createUserAuthEntry (
   email: string, 
   password: string, 
-  role: 'parent' | 'teacher' | 'principal' | 'admin' = 'parent',
+  role: SamveraRole = 'parent',
   fullName?: string
 ) {
   if (!supabaseAdmin) {
@@ -17,9 +17,14 @@ export async function createUserAuthEntry (
     console.log('Creating  user auth entry with admin privileges...');
     
     // Create user with admin client
+    const orgId = process.env.NEXT_PUBLIC_DEFAULT_ORG_ID || '';
+    if (!orgId) {
+      throw new Error('NEXT_PUBLIC_DEFAULT_ORG_ID is required but not configured');
+    }
     const userMetadata: UserMetadata = {
       roles: [role],
       activeRole: role,
+      org_id: orgId,
     };
     
     const { data, error } = await supabaseAdmin.auth.admin.createUser({

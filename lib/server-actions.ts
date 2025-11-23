@@ -237,10 +237,15 @@ export async function updateUserRole(userId: string, newRoles: SamveraRole[], ac
   const { data: existingUser } = await supabase.auth.admin.getUserById(userId);
   const existingMetadata = existingUser?.user?.user_metadata as Partial<UserMetadata> | undefined;
   
+  const orgId = existingMetadata?.org_id || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID || '';
+  if (!orgId) {
+    throw new Error('org_id is required but not found in user metadata and no default is configured');
+  }
+  
   const userMetadata: UserMetadata = {
     roles: newRoles,
     activeRole: activeRole || newRoles[0],
-    ...(existingMetadata?.org_id ? { org_id: existingMetadata.org_id } : {}),
+    org_id: orgId,
   };
   
   const { error } = await supabase.auth.admin.updateUserById(userId, {

@@ -1,6 +1,9 @@
 // /lib/auth.ts
 export type SamveraRole = 'teacher' | 'principal' | 'parent' | 'admin';
 
+// Re-export UserMetadata from types
+export type { UserMetadata } from './types/auth';
+
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
 function setCookie(name: string, value: string, maxAge = COOKIE_MAX_AGE) {

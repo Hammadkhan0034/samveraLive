@@ -90,7 +90,7 @@ export async function GET(request: Request) {
       const userMetadata: UserMetadata = {
         roles: ['parent'],
         activeRole: 'parent',
-        org_id,
+        org_id: org_id!, // Already validated above
       };
       
       await supabaseAdmin.auth.admin.updateUserById(user.id, {

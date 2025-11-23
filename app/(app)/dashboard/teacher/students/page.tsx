@@ -586,7 +586,7 @@ export default function TeacherStudentsPage() {
       medical_notes: student.medical_notes_encrypted || '',
       allergies: student.allergies_encrypted || '',
       emergency_contact: student.emergency_contact_encrypted || '',
-      org_id: finalOrgId,
+      org_id: finalOrgId || '',
       guardian_ids: [],
       phone: '',
       address: '',
@@ -761,7 +761,7 @@ export default function TeacherStudentsPage() {
           error={updateError}
           guardians={[]}
           classes={teacherClasses}
-          orgId={finalOrgId}
+          orgId={finalOrgId || ''}
           translations={studentFormTranslations}
         />
       )}

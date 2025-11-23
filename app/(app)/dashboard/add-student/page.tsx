@@ -41,7 +41,7 @@ function AddStudentPageContent() {
     }
     const loadStudent = async () => {
       try {
-        const res = await fetch(`/api/students?id=${encodeURIComponent(id)}&orgId=${encodeURIComponent(finalOrgId)}`, { cache: 'no-store' });
+        const res = await fetch(`/api/students?id=${encodeURIComponent(id)}&orgId=${encodeURIComponent(finalOrgId ?? '')}`, { cache: 'no-store' });
         const json = await res.json();
         if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
         const s = json.student || json.students?.find((x: any) => x.id === id);

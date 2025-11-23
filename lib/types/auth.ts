@@ -1,6 +1,6 @@
 // Authentication and user types for Supabase integration
 
-export type SamveraRole = 'teacher' | 'principal' | 'parent';
+export type SamveraRole = 'teacher' | 'principal' | 'parent' | 'admin';
 
 /**
  * Standardized interface for Supabase user_metadata
@@ -12,7 +12,7 @@ export interface UserMetadata {
   /** Currently active role for the user */
   activeRole: SamveraRole;
   /** Organization ID the user belongs to */
-  org_id?: string;
+  org_id: string;
 }
 
 export interface User {

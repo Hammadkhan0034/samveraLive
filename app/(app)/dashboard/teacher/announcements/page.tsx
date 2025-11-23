@@ -72,7 +72,7 @@ export default function TeacherAnnouncementsPage() {
           </div>
           <AnnouncementList
             teacherClassIds={teacherClassIds}
-            orgId={finalOrgId}
+            orgId={finalOrgId as string}
             lang={lang}
           />
         </div>
@@ -100,7 +100,7 @@ export default function TeacherAnnouncementsPage() {
             <div className="p-6">
               <AnnouncementForm
                 classId={classId}
-                orgId={finalOrgId}
+                orgId={finalOrgId as string}
                 showClassSelector={true}
                 onSuccess={() => {
                   // Trigger refresh event instead of reload

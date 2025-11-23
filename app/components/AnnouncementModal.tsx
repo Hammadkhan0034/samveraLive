@@ -87,14 +87,16 @@ export function AnnouncementModal({
           </button>
         </div>
 
-        <AnnouncementForm
-          mode={mode}
-          initialData={initialData}
-          orgId={orgId}
-          classId={classId}
-          onSuccess={handleSuccess}
-          showClassSelector={showClassSelector}
-        />
+        {orgId && (
+          <AnnouncementForm
+            mode={mode}
+            initialData={initialData}
+            orgId={orgId}
+            classId={classId}
+            onSuccess={handleSuccess}
+            showClassSelector={showClassSelector}
+          />
+        )}
       </div>
     </div>
   );

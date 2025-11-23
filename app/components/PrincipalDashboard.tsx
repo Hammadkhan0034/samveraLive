@@ -24,6 +24,9 @@ export default function PrincipalDashboard() {
   // Use universal hook to get org_id (checks metadata first, then API, handles logout if missing)
   const { orgId: finalOrgId } = useCurrentUserOrgId();
 
+  // Get user metadata from session
+  const userMetadata = session?.user?.user_metadata;
+
   // Store user and org IDs in sessionStorage for cache lookup in menus-list
   useEffect(() => {
     if (session?.user?.id && finalOrgId && typeof window !== 'undefined') {
@@ -690,7 +693,7 @@ export default function PrincipalDashboard() {
             <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">{t.announcements_list}</h3>
           </div>
           <AnnouncementList
-            orgId={finalOrgId}
+            orgId={finalOrgId as string}
             userId={session?.user?.id}
             userRole={(userMetadata?.role || userMetadata?.activeRole || 'principal') as string}
             showAuthor={true}

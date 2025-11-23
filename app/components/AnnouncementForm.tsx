@@ -7,7 +7,7 @@ import { useLanguage } from '@/lib/contexts/LanguageContext';
 
 interface AnnouncementFormProps {
   classId?: string;
-  orgId?: string;
+  orgId: string;
   onSuccess?: () => void;
   showClassSelector?: boolean; // New prop to show class selector
   mode?: 'create' | 'edit';

@@ -125,10 +125,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               const pendingRole = (localStorage.getItem('samvera_pending_role') || '') as SamveraRole | '';
               if (pendingRole) {
                 const existingMetadata = session.user.user_metadata as Partial<UserMetadata> | undefined;
+                const orgId = existingMetadata?.org_id || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID || '';
+                if (!orgId) {
+                  console.warn('org_id not found in metadata, skipping role update');
+                  return;
+                }
                 const userMetadata: UserMetadata = {
                   roles: [pendingRole],
                   activeRole: pendingRole,
-                  ...(existingMetadata?.org_id ? { org_id: existingMetadata.org_id } : {}),
+                  org_id: orgId,
                 };
                 await supabase.auth.updateUser({ data: userMetadata });
                 localStorage.removeItem('samvera_pending_role');
@@ -381,10 +386,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       for (const testEmail of emailVariations) {
         try {
           console.log('Trying email:', testEmail);
+          const orgId = process.env.NEXT_PUBLIC_DEFAULT_ORG_ID || '';
+          if (!orgId) {
+            throw new Error('NEXT_PUBLIC_DEFAULT_ORG_ID is required but not configured');
+          }
           const userMetadata: UserMetadata = {
             roles: [userRole],
             activeRole: userRole,
-            ...(fullName ? { full_name: fullName } : {}),
+            org_id: orgId,
           };
           
           const { data, error } = await supabase.auth.signUp({
@@ -493,17 +502,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const pendingRole = localStorage.getItem('samvera_pending_role') as SamveraRole | null;
           if (pendingRole) {
             const existingMetadata = data.user.user_metadata as Partial<UserMetadata> | undefined;
+            const orgId = existingMetadata?.org_id || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID || '';
+            if (!orgId) {
+              console.warn('org_id not found in metadata, skipping role update');
+              return { error: null };
+            }
             const userMetadata: UserMetadata = {
               roles: [pendingRole],
               activeRole: pendingRole,
-              ...(existingMetadata?.org_id ? { org_id: existingMetadata.org_id } : {}),
-              ...(existingMetadata?.class_id ? { class_id: existingMetadata.class_id } : {}),
-              ...(existingMetadata?.full_name ? { full_name: existingMetadata.full_name } : {}),
-              ...(existingMetadata?.first_name ? { first_name: existingMetadata.first_name } : {}),
-              ...(existingMetadata?.last_name ? { last_name: existingMetadata.last_name } : {}),
-              ...(existingMetadata?.phone ? { phone: existingMetadata.phone } : {}),
-              ...(existingMetadata?.student_id ? { student_id: existingMetadata.student_id } : {}),
-              ...(existingMetadata?.default_password_set !== undefined ? { default_password_set: existingMetadata.default_password_set } : {}),
+              org_id: orgId,
             };
             await supabase.auth.updateUser({
               data: userMetadata,

@@ -16,7 +16,7 @@ type Lang = 'is' | 'en';
 
 export default function GuardiansPage() {
   const { t, lang } = useLanguage();
-  const { user, loading, isSigningIn } = useRequireAuth();
+  const { user, loading, isSigningIn, session } = useRequireAuth();
   const router = useRouter();
 
   // Use universal hook to get org_id (checks metadata first, then API, handles logout if missing)
@@ -223,6 +223,7 @@ export default function GuardiansPage() {
   if (!user) return null;
 
   // Check if user is a teacher
+  const userMetadata = user.user_metadata || session?.user?.user_metadata;
   const role = (userMetadata?.role || userMetadata?.user_role || userMetadata?.app_role || userMetadata?.activeRole || '').toString().toLowerCase();
   const isTeacher = role === 'teacher' || (userMetadata?.roles && Array.isArray(userMetadata.roles) && userMetadata.roles.includes('teacher'));
 

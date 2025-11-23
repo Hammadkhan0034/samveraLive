@@ -42,7 +42,7 @@ function AddGuardianPageContent() {
     if (!id) { setEditingGuardian(null); return; }
     const loadGuardian = async () => {
       try {
-        const res = await fetch(`/api/guardians?id=${encodeURIComponent(id)}&orgId=${encodeURIComponent(finalOrgId)}`, { cache: 'no-store' });
+        const res = await fetch(`/api/guardians?id=${encodeURIComponent(id)}&orgId=${encodeURIComponent(finalOrgId ?? '')}`, { cache: 'no-store' });
         const json = await res.json();
         if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
         const g = json.guardian || json.guardians?.find((x: any) => x.id === id);

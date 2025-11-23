@@ -152,7 +152,8 @@ export async function requireServerClassAccess(classId: string) {
   const { user, session } = await requireServerAuth();
   
   const userMetadata = user.user_metadata as UserMetadata | undefined;
-  const userClassId = userMetadata?.class_id;
+  // class_id is no longer in UserMetadata, access it directly from user_metadata if needed
+  const userClassId = (user.user_metadata as any)?.class_id;
   const userOrgId = userMetadata?.org_id;
   
   // Teachers and principals can access their class

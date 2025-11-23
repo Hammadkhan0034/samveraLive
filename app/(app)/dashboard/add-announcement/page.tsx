@@ -112,7 +112,7 @@ function AddAnnouncementContent() {
           <AnnouncementForm
             mode={editingAnnouncement?.id ? 'edit' : 'create'}
             initialData={editingAnnouncement || undefined}
-            orgId={finalOrgId}
+            orgId={finalOrgId as string}
             onSuccess={handleSuccess}
             showClassSelector={true}
           />
