@@ -27,48 +27,60 @@ interface LanguageProviderProps {
   children: ReactNode;
 }
 
+// Default language: 'en'
+const DEFAULT_LANG: Lang = 'en';
+
 export const LanguageProvider = ({ children }: LanguageProviderProps) => {
   const { user } = useAuth();
-  // Always start with 'en' to match server-side rendering
-  // This prevents hydration mismatches
-  // Use lazy initialization to avoid setState in effect
-  const [lang, setLangState] = useState<Lang>(() => {
-    if (typeof window === 'undefined') return 'en';
-    const saved = localStorage.getItem('samvera_lang') as Lang | null;
-    return (saved === 'is' || saved === 'en') ? saved : 'en';
-  });
   const [mounted] = useState(() => typeof window !== 'undefined');
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch language from database on mount if user is logged in
+  // Always start with default to prevent hydration mismatch
+  // Server and client both start with 'en'
+  const [lang, setLangState] = useState<Lang>(DEFAULT_LANG);
+
+  // Initialize from localStorage after mount (if not logged in)
+  // Or fetch from database (if logged in)
   useEffect(() => {
-    const fetchLanguage = async () => {
-      if (!user?.id || !mounted) {
-        setIsLoading(false);
-        return;
+    if (!mounted) return;
+
+    const initializeLanguage = async () => {
+      // If user is logged in, fetch from database
+      if (user?.id) {
+        try {
+          const response = await fetch('/api/user-preferences');
+          if (response.ok) {
+            const data = await response.json();
+            const dbLanguage = data.language as Lang;
+            
+            if (dbLanguage && (dbLanguage === 'is' || dbLanguage === 'en')) {
+              setLangState(dbLanguage);
+              // Sync localStorage with database
+              localStorage.setItem('samvera_lang', dbLanguage);
+              setIsLoading(false);
+              return;
+            }
+          }
+        } catch (error) {
+          console.error('Failed to fetch language preference:', error);
+          // Fallback to localStorage
+        }
       }
 
-      try {
-        const response = await fetch('/api/user-preferences');
-        if (response.ok) {
-          const data = await response.json();
-          const dbLanguage = data.language as Lang;
-          
-          if (dbLanguage && (dbLanguage === 'is' || dbLanguage === 'en')) {
-            setLangState(dbLanguage);
-            // Sync localStorage with database
-            localStorage.setItem('samvera_lang', dbLanguage);
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch language preference:', error);
-        // Fallback to localStorage
-      } finally {
-        setIsLoading(false);
+      // If not logged in or fetch failed, use localStorage
+      const saved = localStorage.getItem('samvera_lang') as Lang | null;
+      if (saved && (saved === 'is' || saved === 'en')) {
+        setLangState(saved);
+      } else {
+        // No localStorage, use default and save it
+        setLangState(DEFAULT_LANG);
+        localStorage.setItem('samvera_lang', DEFAULT_LANG);
       }
+      
+      setIsLoading(false);
     };
 
-    fetchLanguage();
+    initializeLanguage();
   }, [user?.id, mounted]);
 
   // Save language preference to localStorage when it changes
@@ -87,6 +99,8 @@ export const LanguageProvider = ({ children }: LanguageProviderProps) => {
     const saveLanguage = async () => {
       try {
         await updateUserLanguage(lang);
+        // Ensure localStorage is in sync
+        localStorage.setItem('samvera_lang', lang);
       } catch (error) {
         console.error('Failed to save language preference:', error);
         // Continue with localStorage fallback
@@ -100,7 +114,11 @@ export const LanguageProvider = ({ children }: LanguageProviderProps) => {
 
   const setLang = useCallback((newLang: Lang) => {
     setLangState(newLang);
-  }, []);
+    // Immediately update localStorage
+    if (mounted) {
+      localStorage.setItem('samvera_lang', newLang);
+    }
+  }, [mounted]);
 
   const t = lang === 'is' ? isText : enText;
 

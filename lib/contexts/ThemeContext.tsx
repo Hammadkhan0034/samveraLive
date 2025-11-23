@@ -28,61 +28,73 @@ interface ThemeProviderProps {
   children: ReactNode;
 }
 
+// Default theme: 'dark' (not 'system')
+const DEFAULT_THEME: ThemeMode = 'dark';
+
 export const ThemeProvider = ({ children }: ThemeProviderProps) => {
   const { user } = useAuth();
   const [mounted] = useState(() => typeof window !== 'undefined');
   const [isLoading, setIsLoading] = useState(true);
 
-  // Initialize theme from localStorage or system preference
-  const getInitialTheme = useCallback((): ThemeMode => {
-    if (typeof window === "undefined") return 'system';
-    const saved = localStorage.getItem("theme") as ThemeMode | null;
-    return (saved === 'light' || saved === 'dark' || saved === 'system') ? saved : 'system';
-  }, []);
-
-  const [theme, setThemeState] = useState<ThemeMode>(getInitialTheme);
+  // Always start with default to prevent hydration mismatch
+  // Server and client both start with 'dark'
+  const [theme, setThemeState] = useState<ThemeMode>(DEFAULT_THEME);
+  const [isDark, setIsDarkState] = useState(true); // Default to dark
 
   // Compute isDark based on theme mode
   const getIsDark = useCallback((currentTheme: ThemeMode): boolean => {
     if (currentTheme === 'system') {
-      if (typeof window === 'undefined') return false;
+      if (typeof window === 'undefined') return true; // Default to dark on server
       return window.matchMedia("(prefers-color-scheme: dark)").matches;
     }
     return currentTheme === 'dark';
   }, []);
 
-  const [isDark, setIsDarkState] = useState(() => getIsDark(getInitialTheme()));
-
-  // Fetch theme from database on mount if user is logged in
+  // Initialize from localStorage after mount (if not logged in)
+  // Or fetch from database (if logged in)
   useEffect(() => {
-    const fetchTheme = async () => {
-      if (!user?.id || !mounted) {
-        setIsLoading(false);
-        return;
+    if (!mounted) return;
+
+    const initializeTheme = async () => {
+      // If user is logged in, fetch from database
+      if (user?.id) {
+        try {
+          const response = await fetch('/api/user-preferences');
+          if (response.ok) {
+            const data = await response.json();
+            const dbTheme = data.theme as ThemeMode;
+            
+            if (dbTheme && (dbTheme === 'light' || dbTheme === 'dark' || dbTheme === 'system')) {
+              setThemeState(dbTheme);
+              setIsDarkState(getIsDark(dbTheme));
+              // Sync localStorage with database
+              localStorage.setItem('theme', dbTheme);
+              setIsLoading(false);
+              return;
+            }
+          }
+        } catch (error) {
+          console.error('Failed to fetch theme preference:', error);
+          // Fallback to localStorage
+        }
       }
 
-      try {
-        const response = await fetch('/api/user-preferences');
-        if (response.ok) {
-          const data = await response.json();
-          const dbTheme = data.theme as ThemeMode;
-          
-          if (dbTheme && (dbTheme === 'light' || dbTheme === 'dark' || dbTheme === 'system')) {
-            setThemeState(dbTheme);
-            // Sync localStorage with database
-            localStorage.setItem('theme', dbTheme);
-            setIsDarkState(getIsDark(dbTheme));
-          }
-        }
-      } catch (error) {
-        console.error('Failed to fetch theme preference:', error);
-        // Fallback to localStorage
-      } finally {
-        setIsLoading(false);
+      // If not logged in or fetch failed, use localStorage
+      const saved = localStorage.getItem("theme") as ThemeMode | null;
+      if (saved && (saved === 'light' || saved === 'dark' || saved === 'system')) {
+        setThemeState(saved);
+        setIsDarkState(getIsDark(saved));
+      } else {
+        // No localStorage, use default and save it
+        setThemeState(DEFAULT_THEME);
+        setIsDarkState(true);
+        localStorage.setItem('theme', DEFAULT_THEME);
       }
+      
+      setIsLoading(false);
     };
 
-    fetchTheme();
+    initializeTheme();
   }, [user?.id, mounted, getIsDark]);
 
   // Listen to system preference changes when theme is 'system'
@@ -129,6 +141,8 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
     const saveTheme = async () => {
       try {
         await updateUserTheme(theme);
+        // Ensure localStorage is in sync
+        localStorage.setItem("theme", theme);
       } catch (error) {
         console.error('Failed to save theme preference:', error);
         // Continue with localStorage fallback
@@ -142,21 +156,29 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
 
   const setTheme = useCallback((newTheme: ThemeMode) => {
     setThemeState(newTheme);
-  }, []);
+    // Immediately update localStorage
+    if (mounted) {
+      localStorage.setItem("theme", newTheme);
+    }
+  }, [mounted]);
 
   const setIsDark = useCallback((dark: boolean) => {
-    // When manually setting isDark, update theme accordingly
-    setThemeState(dark ? 'dark' : 'light');
-  }, []);
+    const newTheme = dark ? 'dark' : 'light';
+    setThemeState(newTheme);
+    if (mounted) {
+      localStorage.setItem("theme", newTheme);
+    }
+  }, [mounted]);
 
   const toggleTheme = useCallback(() => {
-    // Cycle through: light → dark → system → light
     setThemeState(prev => {
-      if (prev === 'light') return 'dark';
-      if (prev === 'dark') return 'system';
-      return 'light';
+      const newTheme = prev === 'light' ? 'dark' : prev === 'dark' ? 'system' : 'light';
+      if (mounted) {
+        localStorage.setItem("theme", newTheme);
+      }
+      return newTheme;
     });
-  }, []);
+  }, [mounted]);
 
   return (
     <ThemeContext.Provider value={{ isDark, theme, setTheme, setIsDark, toggleTheme }}>

@@ -37,6 +37,12 @@ function SignInPageContent() {
   const [useOtp, setUseOtp] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [invitationMessage, setInvitationMessage] = useState('');
+  const [mounted, setMounted] = useState(false);
+
+  // Ensure component is mounted before rendering theme-dependent content
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Check for invitation acceptance message
   useEffect(() => {
@@ -217,7 +223,9 @@ function SignInPageContent() {
                 onClick={toggleTheme}
                 className="inline-flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-1.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
               >
-                {theme === 'light' ? (
+                {!mounted ? (
+                  <Moon size={16} /> // Default to dark icon during SSR
+                ) : theme === 'light' ? (
                   <Sun size={16} />
                 ) : theme === 'dark' ? (
                   <Moon size={16} />

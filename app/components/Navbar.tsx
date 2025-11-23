@@ -12,6 +12,7 @@ import { useUserRole } from "@/lib/hooks/useAuth";
 export default function Navbar() {
   const { isDark, theme, toggleTheme } = useTheme();
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { lang, setLang, t } = useLanguage();
   const { signOut } = useAuth();
   const router = useRouter();
@@ -20,6 +21,11 @@ export default function Navbar() {
   
   // Hide notification bell for Admin role
   const showNotifications = userRole !== 'admin';
+
+  // Ensure component is mounted before rendering theme-dependent content
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -59,7 +65,9 @@ export default function Navbar() {
             className="inline-flex items-center gap-2 rounded-md border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
             suppressHydrationWarning
           >
-            {theme === 'light' ? (
+            {!mounted ? (
+              <Moon size={16} /> // Default to dark icon during SSR
+            ) : theme === 'light' ? (
               <Sun size={16} />
             ) : theme === 'dark' ? (
               <Moon size={16} />
