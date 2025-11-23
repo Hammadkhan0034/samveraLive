@@ -272,6 +272,82 @@ export const updateEventSchema = z.object({
 );
 
 // ============================================================================
+// Health Log Schemas
+// ============================================================================
+
+/**
+ * Health log type enum schema
+ */
+export const healthLogTypeSchema = z.enum([
+  'diaper_wet',
+  'diaper_dirty',
+  'diaper_mixed',
+  'temperature',
+  'medication',
+  'nap',
+  'symptom',
+  'injury',
+  'meal',
+  'other'
+], {
+  errorMap: () => ({ message: 'Invalid health log type' })
+});
+
+/**
+ * Temperature schema (30-45 Celsius range)
+ */
+export const temperatureSchema = z.number()
+  .min(30, { message: 'Temperature must be at least 30°C' })
+  .max(45, { message: 'Temperature must be at most 45°C' })
+  .nullable()
+  .optional();
+
+/**
+ * Severity schema (1-5 range)
+ */
+export const severitySchema = z.number()
+  .int({ message: 'Severity must be an integer' })
+  .min(1, { message: 'Severity must be at least 1' })
+  .max(5, { message: 'Severity must be at most 5' })
+  .nullable()
+  .optional();
+
+/**
+ * JSONB data schema (flexible object)
+ */
+export const healthLogDataSchema = z.record(z.unknown()).default({}).or(z.object({}).default({}));
+
+/**
+ * Create health log schema
+ */
+export const createHealthLogSchema = z.object({
+  org_id: orgIdSchema,
+  class_id: classIdSchema.optional(),
+  student_id: studentIdSchema,
+  type: healthLogTypeSchema,
+  recorded_at: isoDateTimeSchema,
+  temperature_celsius: temperatureSchema,
+  data: healthLogDataSchema.optional(),
+  notes: notesSchema,
+  severity: severitySchema,
+  recorded_by: userIdSchema,
+});
+
+/**
+ * Update health log schema
+ */
+export const updateHealthLogSchema = z.object({
+  id: uuidSchema,
+  student_id: studentIdSchema.optional(),
+  type: healthLogTypeSchema.optional(),
+  recorded_at: isoDateTimeSchema.optional(),
+  temperature_celsius: temperatureSchema,
+  data: healthLogDataSchema.optional(),
+  notes: notesSchema,
+  severity: severitySchema,
+});
+
+// ============================================================================
 // Array Schemas
 // ============================================================================
 
