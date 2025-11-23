@@ -310,8 +310,8 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
           {/* App Logo */}
           <div className="py-6 mb-4 flex items-center justify-start px-4">
             <div className="flex items-center gap-2 font-semibold text-slate-100 dark:text-slate-100">
-              <span className="inline-block rounded-md bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900 py-1.5 px-3.5 text-lg">S</span>
-              <span className="text-lg">Samvera</span>
+              <span className="inline-block rounded-md bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900 py-2 px-4 text-2xl">S</span>
+              <span className="text-2xl ml-2">Samvera</span>
             </div>
           </div>
           
