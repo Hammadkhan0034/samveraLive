@@ -4,6 +4,7 @@ import React, { useRef, createContext, useContext } from 'react';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
 import TeacherSidebar, { TeacherSidebarRef } from './TeacherSidebar';
 import Loading from './Loading';
+import Navbar from '@/app/components/Navbar';
 
 interface TeacherPageLayoutProps {
   children: React.ReactNode;
@@ -47,18 +48,21 @@ export default function TeacherPageLayout({
 
   return (
     <TeacherPageLayoutContext.Provider value={{ sidebarRef }}>
-      <div className="flex flex-col h-screen overflow-hidden md:pt-14">
-        {/* Main content area with sidebar and content - starts below navbar */}
-        <div className="flex flex-1 overflow-hidden h-full">
-          {/* Sidebar */}
-          <TeacherSidebar
-            ref={sidebarRef}
-            attendanceBadge={attendanceBadge}
-            messagesBadge={messagesBadge}
-            mediaBadge={mediaBadge}
-          />
+      <div className="flex h-screen overflow-hidden">
+        {/* Sidebar - full height on left */}
+        <TeacherSidebar
+          ref={sidebarRef}
+          attendanceBadge={attendanceBadge}
+          messagesBadge={messagesBadge}
+          mediaBadge={mediaBadge}
+        />
 
-          {/* Main content area */}
+        {/* Right side: navbar + content column */}
+        <div className="flex flex-col flex-1 overflow-hidden">
+          {/* Navbar - positioned beside sidebar */}
+          <Navbar variant="static" />
+          
+          {/* Main content area - below navbar */}
           <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900">
             <div className="p-2 md:p-6 lg:p-8">
               {children}

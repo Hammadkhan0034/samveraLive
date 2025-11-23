@@ -9,7 +9,11 @@ import { useRouter, usePathname } from "next/navigation";
 import { NotificationDropdown } from "@/app/components/shared/NotificationDropdown";
 import { useUserRole } from "@/lib/hooks/useAuth";
 
-export default function Navbar() {
+interface NavbarProps {
+  variant?: 'fixed' | 'static';
+}
+
+export default function Navbar({ variant = 'fixed' }: NavbarProps) {
   const { isDark, theme, toggleTheme } = useTheme();
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -44,8 +48,10 @@ export default function Navbar() {
     };
   }, [isLangDropdownOpen]);
 
+  const positionClass = variant === 'fixed' ? 'fixed top-0 left-0 w-full' : 'relative w-full';
+  
   return (
-    <nav className="fixed top-0 left-0 w-full z-50 border-b border-sand-200 bg-slate-900 backdrop-blur supports-[backdrop-filter]:bg-sand-50/80 dark:border-slate-700 dark:bg-slate-900 dark:supports-[backdrop-filter]:bg-slate-900/80">
+    <nav className={`${positionClass} z-50 border-b border-sand-200 bg-slate-900 backdrop-blur supports-[backdrop-filter]:bg-sand-50/80 dark:border-slate-700 dark:bg-slate-900 dark:supports-[backdrop-filter]:bg-slate-900/80`}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
         <div className="flex items-center gap-1 font-semibold text-slate-900 dark:text-slate-100">
           <span className="inline-block rounded-md bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-0.5 px-2.5">S</span>

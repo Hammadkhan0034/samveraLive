@@ -301,8 +301,8 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
           'flex-shrink-0 w-72 bg-slate-900 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transition-transform duration-300 ease-in-out',
           'scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]',
           sidebarOpen 
-            ? 'fixed top-14 bottom-0 left-0 z-50 translate-x-0 md:sticky md:top-14 md:h-[calc(100vh-3.5rem)] md:overflow-y-auto md:translate-x-0' 
-            : 'fixed top-14 bottom-0 left-0 z-50 -translate-x-full md:sticky md:top-14 md:h-[calc(100vh-3.5rem)] md:overflow-y-auto md:translate-x-0'
+            ? 'fixed top-0 bottom-0 left-0 z-50 translate-x-0 md:sticky md:top-0 md:h-screen md:overflow-y-auto md:translate-x-0' 
+            : 'fixed top-0 bottom-0 left-0 z-50 -translate-x-full md:sticky md:top-0 md:h-screen md:overflow-y-auto md:translate-x-0'
         )}
         style={{ scrollBehavior: 'smooth' }}
       >
@@ -794,7 +794,7 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
-          className="fixed top-14 bottom-0 left-0 right-0 bg-black bg-opacity-50 z-40 md:hidden"
+          className="fixed top-0 bottom-0 left-0 right-0 bg-black bg-opacity-50 z-40 md:hidden"
           onClick={handleSidebarClose}
           aria-hidden="true"
         />

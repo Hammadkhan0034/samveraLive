@@ -5,8 +5,9 @@ import Navbar from '@/app/components/Navbar'; // your navbar component
 
 export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  // Hide navbar on landing page (/) and signin page (/signin)
-  const hideNavbar = pathname === '/' || pathname === '/signin' || pathname.startsWith('/signin?');
+  // Hide navbar on landing page (/), signin page (/signin), and teacher dashboard routes
+  // Teacher dashboard handles its own navbar layout
+  const hideNavbar = pathname === '/' || pathname === '/signin' || pathname.startsWith('/signin?') || pathname.startsWith('/dashboard/teacher');
 
   return (
     <>
