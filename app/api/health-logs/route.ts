@@ -16,10 +16,8 @@ import {
   updateHealthLogSchema,
 } from '@/lib/validation';
 
-// GET query parameter schema
+// GET query parameter schema - only optional filters, no orgId or recordedBy
 const getHealthLogsQuerySchema = z.object({
-  orgId: orgIdSchema.optional(),
-  recordedBy: userIdSchema.optional(),
   studentId: studentIdSchema.optional(),
   type: z.enum([
     'diaper_wet',
@@ -36,8 +34,10 @@ const getHealthLogsQuerySchema = z.object({
 });
 
 export async function GET(request: Request) {
+  let user: any;
   try {
-    const { user } = await requireServerAuth();
+    const authResult = await requireServerAuth();
+    user = authResult.user;
 
     // Check if user has a valid role (principal, admin, teacher, or parent)
     const userRoles = user.user_metadata?.roles || [];
@@ -81,23 +81,21 @@ export async function GET(request: Request) {
     if (!queryValidation.success) {
       return queryValidation.error;
     }
-    const { orgId, recordedBy, studentId, type } = queryValidation.data;
+    const { studentId, type } = queryValidation.data;
 
-    // Get user's org_id if not provided
-    let finalOrgId = orgId;
-    if (!finalOrgId) {
-      try {
-        finalOrgId = await getCurrentUserOrgId();
-      } catch (err) {
-        // If org_id cannot be determined, return empty results
-        return NextResponse.json(
-          { healthLogs: [], total_logs: 0 },
-          {
-            status: 200,
-            headers: getStableDataCacheHeaders(),
-          }
-        );
-      }
+    // Get org_id from authenticated user (server-side)
+    let finalOrgId: string;
+    try {
+      finalOrgId = await getCurrentUserOrgId(user);
+    } catch (err) {
+      // If org_id cannot be determined, return empty results
+      return NextResponse.json(
+        { healthLogs: [], total_logs: 0 },
+        {
+          status: 200,
+          headers: getStableDataCacheHeaders(),
+        }
+      );
     }
 
     // Build query with joins
@@ -143,17 +141,25 @@ export async function GET(request: Request) {
       .is('deleted_at', null)
       .order('recorded_at', { ascending: false });
 
-    // Filter by recorded_by (teacher's user ID)
-    if (recordedBy) {
-      query = query.eq('recorded_by', recordedBy);
-    }
+    // Role-based filtering:
+    // - Teachers/Parents: only their own logs
+    // - Admins/Principals: all logs in their org
+    const userRoles = user.user_metadata?.roles || [];
+    const isAdminOrPrincipal = userRoles.some((role: string) =>
+      ['admin', 'principal'].includes(role)
+    );
 
-    // Filter by student_id if provided
+    if (!isAdminOrPrincipal) {
+      // Teachers and parents only see their own logs
+      query = query.eq('recorded_by', user.id);
+    }
+    // Admins/Principals see all logs in the org (no recorded_by filter)
+
+    // Optional filters
     if (studentId) {
       query = query.eq('student_id', studentId);
     }
 
-    // Filter by type if provided
     if (type) {
       query = query.eq('type', type);
     }
@@ -220,7 +226,6 @@ export async function POST(request: Request) {
       return bodyValidation.error;
     }
     const {
-      org_id,
       class_id,
       student_id,
       type,
@@ -229,8 +234,18 @@ export async function POST(request: Request) {
       data,
       notes,
       severity,
-      recorded_by,
     } = bodyValidation.data;
+
+    // Get org_id from authenticated user (server-side)
+    let org_id: string;
+    try {
+      org_id = await getCurrentUserOrgId(user);
+    } catch (err) {
+      return NextResponse.json(
+        { error: 'Unable to determine organization. Please contact support.' },
+        { status: 400 }
+      );
+    }
 
     // Ensure class_id is null if not provided or empty string
     const finalClassId = class_id && class_id.trim() !== '' ? class_id : null;
@@ -240,16 +255,24 @@ export async function POST(request: Request) {
     if (!finalClassIdToUse) {
       const { data: student } = await supabaseAdmin
         .from('students')
-        .select('class_id')
+        .select('class_id, org_id')
         .eq('id', student_id)
         .maybeSingle();
 
       if (student?.class_id) {
         finalClassIdToUse = student.class_id;
       }
+
+      // Verify student belongs to the same org
+      if (student?.org_id && student.org_id !== org_id) {
+        return NextResponse.json(
+          { error: 'Student does not belong to your organization.' },
+          { status: 403 }
+        );
+      }
     }
 
-    // Insert new health log
+    // Insert new health log - always use authenticated user's ID
     const { data: inserted, error: insertError } = await supabaseAdmin
       .from('health_logs')
       .insert({
@@ -262,7 +285,7 @@ export async function POST(request: Request) {
         data: data || {},
         notes: notes || null,
         severity: severity || null,
-        recorded_by: recorded_by || user.id,
+        recorded_by: user.id, // Always use authenticated user
         deleted_at: null,
       })
       .select(
@@ -346,7 +369,7 @@ export async function PUT(request: Request) {
     const { id, student_id, type, recorded_at, temperature_celsius, data, notes, severity } =
       bodyValidation.data;
 
-    // Verify ownership (recorded_by matches user)
+    // Verify ownership and org access
     const { data: existing, error: fetchError } = await supabaseAdmin
       .from('health_logs')
       .select('recorded_by, org_id')
@@ -356,6 +379,24 @@ export async function PUT(request: Request) {
 
     if (fetchError || !existing) {
       return NextResponse.json({ error: 'Health log not found' }, { status: 404 });
+    }
+
+    // Verify user's org matches log's org
+    let userOrgId: string;
+    try {
+      userOrgId = await getCurrentUserOrgId(user);
+    } catch (err) {
+      return NextResponse.json(
+        { error: 'Unable to determine organization. Please contact support.' },
+        { status: 400 }
+      );
+    }
+
+    if (existing.org_id !== userOrgId) {
+      return NextResponse.json(
+        { error: 'Access denied. This health log belongs to a different organization.' },
+        { status: 403 }
+      );
     }
 
     // Check if user is the creator or has admin/principal role
@@ -474,16 +515,34 @@ export async function DELETE(request: Request) {
     }
     const { id } = queryValidation.data;
 
-    // Verify ownership (recorded_by matches user)
+    // Verify ownership and org access
     const { data: existing, error: fetchError } = await supabaseAdmin
       .from('health_logs')
-      .select('recorded_by')
+      .select('recorded_by, org_id')
       .eq('id', id)
       .is('deleted_at', null)
       .single();
 
     if (fetchError || !existing) {
       return NextResponse.json({ error: 'Health log not found' }, { status: 404 });
+    }
+
+    // Verify user's org matches log's org
+    let userOrgId: string;
+    try {
+      userOrgId = await getCurrentUserOrgId(user);
+    } catch (err) {
+      return NextResponse.json(
+        { error: 'Unable to determine organization. Please contact support.' },
+        { status: 400 }
+      );
+    }
+
+    if (existing.org_id !== userOrgId) {
+      return NextResponse.json(
+        { error: 'Access denied. This health log belongs to a different organization.' },
+        { status: 403 }
+      );
     }
 
     // Check if user is the creator or has admin/principal role

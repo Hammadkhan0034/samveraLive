@@ -183,7 +183,7 @@ function StudentSearchDropdownWrapper({
 export interface HealthLogFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: HealthLogFormData & { id?: string; org_id?: string; recorded_by?: string }) => Promise<void>;
+  onSubmit: (data: HealthLogFormData & { id?: string }) => Promise<void>;
   initialData?: HealthLog | null;
   orgId: string;
   classes: TeacherClass[];
@@ -268,7 +268,7 @@ export function HealthLogFormModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!orgId || !formData.student_id || !formData.recorded_at) {
+    if (!formData.student_id || !formData.recorded_at) {
       setError(t.missing_fields || 'Missing required fields');
       return;
     }
@@ -279,19 +279,16 @@ export function HealthLogFormModal({
       // Convert datetime-local to ISO string
       const recordedAt = new Date(formData.recorded_at).toISOString();
 
+      // org_id and recorded_by are now set server-side from authenticated user
       const submitData = initialData
         ? {
             id: initialData.id,
             ...formData,
             recorded_at: recordedAt,
-            org_id: orgId,
-            recorded_by: userId,
           }
         : {
             ...formData,
             recorded_at: recordedAt,
-            org_id: orgId,
-            recorded_by: userId,
           };
 
       await onSubmit(submitData);

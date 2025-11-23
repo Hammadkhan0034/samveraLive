@@ -319,9 +319,9 @@ export const healthLogDataSchema = z.record(z.unknown()).default({}).or(z.object
 
 /**
  * Create health log schema
+ * Note: org_id and recorded_by are set server-side from authenticated user
  */
 export const createHealthLogSchema = z.object({
-  org_id: orgIdSchema,
   class_id: classIdSchema.optional(),
   student_id: studentIdSchema,
   type: healthLogTypeSchema,
@@ -330,7 +330,6 @@ export const createHealthLogSchema = z.object({
   data: healthLogDataSchema.optional(),
   notes: notesSchema,
   severity: severitySchema,
-  recorded_by: userIdSchema,
 });
 
 /**

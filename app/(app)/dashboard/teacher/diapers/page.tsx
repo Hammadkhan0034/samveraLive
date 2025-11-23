@@ -300,6 +300,9 @@ function DiaperPanel({ t }: { t: typeof enText | typeof isText }) {
   const [deletingLog, setDeletingLog] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
+  // Filter state
+  const [selectedFilterType, setSelectedFilterType] = useState<string>('all');
+
   // Load teacher classes
   const loadTeacherClasses = useCallback(async () => {
     if (!session?.user?.id) return;
@@ -322,16 +325,17 @@ function DiaperPanel({ t }: { t: typeof enText | typeof isText }) {
     }
   }, [session?.user?.id]);
 
-  // Load health logs
-  const loadHealthLogs = useCallback(async () => {
-    if (!orgId || !session?.user?.id) return;
+  // Load health logs with optional type filter
+  const loadHealthLogs = useCallback(async (filterType?: string) => {
+    if (!session?.user?.id) return;
     try {
       setLoadingLogs(true);
       setError(null);
-      const response = await fetch(
-        `/api/health-logs?orgId=${orgId}&recordedBy=${session.user.id}`,
-        { cache: 'no-store' }
-      );
+      // Build URL with type filter if provided and not 'all'
+      const url = filterType && filterType !== 'all'
+        ? `/api/health-logs?type=${encodeURIComponent(filterType)}`
+        : '/api/health-logs';
+      const response = await fetch(url, { cache: 'no-store' });
       const data = await response.json();
       if (response.ok && data.healthLogs) {
         setHealthLogs(data.healthLogs as HealthLogWithRelations[]);
@@ -346,18 +350,19 @@ function DiaperPanel({ t }: { t: typeof enText | typeof isText }) {
     } finally {
       setLoadingLogs(false);
     }
-  }, [orgId, session?.user?.id]);
+  }, [session?.user?.id]);
 
   // Load data on mount
   useEffect(() => {
     loadTeacherClasses();
   }, [loadTeacherClasses]);
 
+  // Load data on mount and when filter changes
   useEffect(() => {
-    if (orgId && session?.user?.id) {
-      loadHealthLogs();
+    if (session?.user?.id) {
+      loadHealthLogs(selectedFilterType);
     }
-  }, [orgId, session?.user?.id, loadHealthLogs]);
+  }, [session?.user?.id, selectedFilterType, loadHealthLogs]);
 
   // Modal handlers
   function openModal(log?: HealthLog) {
@@ -377,10 +382,10 @@ function DiaperPanel({ t }: { t: typeof enText | typeof isText }) {
   }
 
   async function handleLogSubmit(
-    data: HealthLogFormData & { id?: string; org_id?: string; recorded_by?: string }
+    data: HealthLogFormData & { id?: string }
   ) {
-    if (!orgId || !session?.user?.id) {
-      setLogError('Missing organization or user information');
+    if (!session?.user?.id) {
+      setLogError('Authentication required');
       return;
     }
 
@@ -391,6 +396,7 @@ function DiaperPanel({ t }: { t: typeof enText | typeof isText }) {
       const url = '/api/health-logs';
       const method = editingLog ? 'PUT' : 'POST';
 
+      // org_id and recorded_by are now set server-side from authenticated user
       const payload = editingLog
         ? {
             id: editingLog.id,
@@ -403,7 +409,6 @@ function DiaperPanel({ t }: { t: typeof enText | typeof isText }) {
             data: data.data || {},
           }
         : {
-            org_id: orgId,
             student_id: data.student_id,
             type: data.type,
             recorded_at: data.recorded_at,
@@ -411,7 +416,6 @@ function DiaperPanel({ t }: { t: typeof enText | typeof isText }) {
             notes: data.notes,
             severity: data.severity,
             data: data.data || {},
-            recorded_by: session.user.id,
           };
 
       const res = await fetch(url, {
@@ -482,16 +486,30 @@ function DiaperPanel({ t }: { t: typeof enText | typeof isText }) {
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">
           {t.di_title || 'Health Logs'}
         </h2>
-        <button
-          onClick={() => openModal()}
-          className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
-        >
-          <Plus className="h-4 w-4" /> {lang === 'is' ? 'Bæta við skráningu' : 'Add Log'}
-        </button>
+        <div className="flex items-center gap-3">
+          <select
+            value={selectedFilterType}
+            onChange={(e) => setSelectedFilterType(e.target.value)}
+            className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+          >
+            <option value="all">{lang === 'is' ? 'Allt' : 'All'}</option>
+            {Object.entries(HEALTH_LOG_TYPE_LABELS).map(([type, labels]) => (
+              <option key={type} value={type}>
+                {lang === 'is' ? labels.is : labels.en}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={() => openModal()}
+            className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
+          >
+            <Plus className="h-4 w-4" /> {lang === 'is' ? 'Bæta við skráningu' : 'Add Log'}
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -506,9 +524,13 @@ function DiaperPanel({ t }: { t: typeof enText | typeof isText }) {
         <div className="text-center py-12">
           <Baby className="h-12 w-12 mx-auto text-slate-400 dark:text-slate-500 mb-4" />
           <p className="text-slate-600 dark:text-slate-400">
-            {lang === 'is'
-              ? 'Engar heilsuskráningar fundust. Smelltu á "Bæta við skráningu" til að búa til eina.'
-              : 'No health logs found. Click "Add Log" to create one.'}
+            {selectedFilterType === 'all'
+              ? lang === 'is'
+                ? 'Engar heilsuskráningar fundust. Smelltu á "Bæta við skráningu" til að búa til eina.'
+                : 'No health logs found. Click "Add Log" to create one.'
+              : lang === 'is'
+                ? 'Engar heilsuskráningar fundust fyrir valda gerð.'
+                : 'No health logs found for the selected type.'}
           </p>
         </div>
       ) : (
