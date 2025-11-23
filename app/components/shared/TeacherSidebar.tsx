@@ -307,6 +307,14 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
         style={{ scrollBehavior: 'smooth' }}
       >
         <div className="p-4">
+          {/* App Logo */}
+          <div className="py-6 mb-4 flex items-center justify-center">
+            <div className="flex items-center gap-2 font-semibold text-slate-100 dark:text-slate-100">
+              <span className="inline-block rounded-md bg-slate-100 dark:bg-slate-100 text-slate-900 dark:text-slate-900 py-1.5 px-3.5 text-lg">S</span>
+              <span className="text-lg">Samvera</span>
+            </div>
+          </div>
+          
           <div className="mb-4 flex items-center justify-between md:hidden">
             <h2 className="text-lg font-semibold text-slate-100 dark:text-slate-100">Menu</h2>
             <button

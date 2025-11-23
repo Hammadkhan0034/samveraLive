@@ -53,10 +53,13 @@ export default function Navbar({ variant = 'fixed' }: NavbarProps) {
   return (
     <nav className={`${positionClass} z-50 border-b border-sand-200 bg-slate-900 backdrop-blur supports-[backdrop-filter]:bg-sand-50/80 dark:border-slate-700 dark:bg-slate-900 dark:supports-[backdrop-filter]:bg-slate-900/80`}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
-        <div className="flex items-center gap-1 font-semibold text-slate-900 dark:text-slate-100">
-          <span className="inline-block rounded-md bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-0.5 px-2.5">S</span>
-          <span>Samvera</span>
-        </div>
+        {variant === 'fixed' && (
+          <div className="flex items-center gap-1 font-semibold text-slate-900 dark:text-slate-100">
+            <span className="inline-block rounded-md bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-0.5 px-2.5">S</span>
+            <span>Samvera</span>
+          </div>
+        )}
+        {variant === 'static' && <div />}
         <div className="flex items-center gap-2">
           <button
             type="button"
