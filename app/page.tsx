@@ -7,13 +7,13 @@ import { useTheme } from '@/lib/contexts/ThemeContext';
 import { motion } from 'framer-motion';
 import {
   CalendarDays, MessageSquare, Shield, Camera, Baby, ShoppingBag, CheckSquare,
-  Cloud, Users, ArrowRight, PlayCircle, Timer, Plus, Bell, Globe, Sun, Moon, ChevronDown
+  Cloud, Users, ArrowRight, PlayCircle, Timer, Plus, Bell, Globe, Sun, Moon, ChevronDown, Monitor
 } from 'lucide-react';
 
 
 export default function SamveraLanding() {
   const { lang, setLang, t } = useLanguage();
-  const { isDark, toggleTheme } = useTheme();
+  const { isDark, theme, toggleTheme } = useTheme();
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
 
   // Close dropdown when clicking outside
@@ -71,22 +71,46 @@ export default function SamveraLanding() {
           <div className="flex items-center gap-2 md:hidden">
             <button
               type="button"
-              aria-label={isDark ? "Activate light mode" : "Activate dark mode"}
+              aria-label={
+                theme === 'light' 
+                  ? "Switch to dark mode" 
+                  : theme === 'dark' 
+                  ? "Switch to system mode" 
+                  : "Switch to light mode"
+              }
               onClick={toggleTheme}
               className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:border-slate-600 dark:hover:bg-slate-700"
             >
-              {isDark ? <Sun size={16} /> : <Moon size={16} />}
+              {theme === 'light' ? (
+                <Sun size={16} />
+              ) : theme === 'dark' ? (
+                <Moon size={16} />
+              ) : (
+                <Monitor size={16} />
+              )}
             </button>
             <a className="rounded-xl bg-slate-900 dark:bg-slate-100 px-3 py-1.5 text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200" href="/signin">{t.nav_signin}</a>
           </div>
           <div className="ml-4 hidden md:flex items-center gap-3">
             <button
               type="button"
-              aria-label={isDark ? "Activate light mode" : "Activate dark mode"}
+              aria-label={
+                theme === 'light' 
+                  ? "Switch to dark mode" 
+                  : theme === 'dark' 
+                  ? "Switch to system mode" 
+                  : "Switch to light mode"
+              }
               onClick={toggleTheme}
               className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:border-slate-600 dark:hover:bg-slate-700"
             >
-              {isDark ? <Sun size={16} /> : <Moon size={16} />}
+              {theme === 'light' ? (
+                <Sun size={16} />
+              ) : theme === 'dark' ? (
+                <Moon size={16} />
+              ) : (
+                <Monitor size={16} />
+              )}
             </button>
             <div className="relative language-dropdown">
               <button

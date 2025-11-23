@@ -3,7 +3,7 @@
 import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, Sun, Moon, Globe, ChevronDown, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, Sun, Moon, Globe, ChevronDown, ArrowRight, Monitor } from 'lucide-react';
 import { type SamveraRole } from '@/lib/auth';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useTheme } from '@/lib/contexts/ThemeContext';
@@ -16,7 +16,7 @@ function SignInPageContent() {
   const router = useRouter();
   const qp = useSearchParams();
   const { signIn, signUp, signInWithOtp, user, loading, isSigningIn } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
+  const { isDark, theme, toggleTheme } = useTheme();
 
   // Allow ?role=teacher|principal|parent|admin to pick the demo role for signup
   const queryRole = qp?.get('role');
@@ -202,11 +202,23 @@ function SignInPageContent() {
             >
               <button
                 type="button"
-                aria-label={isDark ? "Activate light mode" : "Activate dark mode"}
+                aria-label={
+                  theme === 'light' 
+                    ? "Switch to dark mode" 
+                    : theme === 'dark' 
+                    ? "Switch to system mode" 
+                    : "Switch to light mode"
+                }
                 onClick={toggleTheme}
                 className="inline-flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-1.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
               >
-                {isDark ? <Sun size={16} /> : <Moon size={16} />}
+                {theme === 'light' ? (
+                  <Sun size={16} />
+                ) : theme === 'dark' ? (
+                  <Moon size={16} />
+                ) : (
+                  <Monitor size={16} />
+                )}
               </button>
               
               <div className="relative language-dropdown">

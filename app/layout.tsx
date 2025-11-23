@@ -51,15 +51,15 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         />
       </head>
       <body>
-        <ThemeProvider>
-          <LanguageProvider>
-            <AuthProvider>
+        <AuthProvider>
+          <ThemeProvider>
+            <LanguageProvider>
               <LayoutWrapper> 
                 {children}
               </LayoutWrapper>
-            </AuthProvider>
-          </LanguageProvider>
-        </ThemeProvider>
+            </LanguageProvider>
+          </ThemeProvider>
+        </AuthProvider>
       </body>
     </html>
   );

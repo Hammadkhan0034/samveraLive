@@ -888,7 +888,6 @@ export async function updateEvent(eventId: string, data: {
   if (data.start_at !== undefined) updateData.start_at = data.start_at;
   if (data.end_at !== undefined) updateData.end_at = data.end_at;
   if (data.location !== undefined) updateData.location = data.location;
-  const userMetadata = user.user_metadata as UserMetadata | undefined;
   if (data.class_id !== undefined && (userMetadata?.activeRole === 'principal' || userMetadata?.roles?.includes('principal'))) {
     updateData.class_id = data.class_id;
   }
@@ -1075,4 +1074,65 @@ export async function getEvents(orgId: string, options?: {
   }
   
   return events || [];
+}
+
+/**
+ * Update user theme preference
+ */
+export async function updateUserTheme(theme: 'light' | 'dark' | 'system') {
+  const { user } = await requireServerAuth();
+  const supabase = supabaseAdmin ?? await createSupabaseServer();
+  
+  const { error } = await supabase
+    .from('users')
+    .update({ theme })
+    .eq('id', user.id);
+  
+  if (error) {
+    throw new Error(`Failed to update theme: ${error.message}`);
+  }
+  
+  return { success: true };
+}
+
+/**
+ * Update user language preference
+ */
+export async function updateUserLanguage(language: 'en' | 'is') {
+  const { user } = await requireServerAuth();
+  const supabase = supabaseAdmin ?? await createSupabaseServer();
+  
+  const { error } = await supabase
+    .from('users')
+    .update({ language })
+    .eq('id', user.id);
+  
+  if (error) {
+    throw new Error(`Failed to update language: ${error.message}`);
+  }
+  
+  return { success: true };
+}
+
+/**
+ * Get user preferences from database
+ */
+export async function getUserPreferences() {
+  const { user } = await requireServerAuth();
+  const supabase = supabaseAdmin ?? await createSupabaseServer();
+  
+  const { data, error } = await supabase
+    .from('users')
+    .select('theme, language')
+    .eq('id', user.id)
+    .maybeSingle();
+  
+  if (error) {
+    throw new Error(`Failed to fetch preferences: ${error.message}`);
+  }
+  
+  return {
+    theme: (data?.theme as 'light' | 'dark' | 'system') || 'system',
+    language: (data?.language as 'en' | 'is') || 'en',
+  };
 }
