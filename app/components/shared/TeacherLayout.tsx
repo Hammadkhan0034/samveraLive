@@ -88,7 +88,7 @@ export default function TeacherLayout({
     <div className="flex flex-col h-[calc(100vh-3.5rem)] overflow-hidden pt-14">
       {/* Dashboard header - spans full width */}
       {!hideHeader && (
-      <div className="flex-shrink-0 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-4 md:px-6">
+      <div className="flex-shrink-0 border-b border-slate-200 dark:border-slate-900 bg-white dark:bg-slate-900 px-4 py-4 md:px-6">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-3">
             {/* Mobile menu button */}

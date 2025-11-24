@@ -1160,7 +1160,7 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
   }
 
   return (
-    <div className="flex h-[calc(100vh-200px)] rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800 overflow-hidden">
+    <div className="flex h-[calc(100vh-160px)] rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800 overflow-hidden">
       {/* Left Sidebar - Conversations List */}
       <div className="w-1/3 border-r border-slate-200 dark:border-slate-700 flex flex-col">
         {/* Header with New Conversation Button */}

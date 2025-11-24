@@ -48,6 +48,15 @@ function StoriesPageContent() {
   const orgId = userMetadata?.org_id || userMetadata?.organization_id || userMetadata?.orgId;
   const classId = userMetadata?.class_id || null;
 
+  // Determine user role to conditionally show/hide create button
+  const roleRaw = String(
+    userMetadata?.role || userMetadata?.user_type || userMetadata?.account_type || userMetadata?.type || userMetadata?.activeRole || ''
+  ).toLowerCase();
+  const isTeacher = /teacher/.test(roleRaw);
+  const isParent = /parent|guardian/.test(roleRaw);
+  const isPrincipal = /principal|admin|head/.test(roleRaw);
+  const canCreateStory = isTeacher || isPrincipal;
+
   const [stories, setStories] = useState<Story[]>([]);
   const [loading, setLoading] = useState(false);
   const [hydratedFromCache, setHydratedFromCache] = useState(false);
@@ -683,14 +692,16 @@ function StoriesPageContent() {
                 <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.subtitle}</p>
               </div>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => router.push('/dashboard/add-story')}
-                className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
-              >
-                <Plus className="h-4 w-4" /> {t.create_story}
-              </button>
-            </div>
+            {canCreateStory && (
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => router.push('/dashboard/add-story')}
+                  className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
+                >
+                  <Plus className="h-4 w-4" /> {t.create_story}
+                </button>
+              </div>
+            )}
           </div>
 
           {error && (
@@ -707,29 +718,37 @@ function StoriesPageContent() {
                 <p className="text-slate-600 dark:text-slate-400">{t.empty}</p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-black text-white">
-                    <tr>
-                      <th className="px-4 py-2 text-left text-sm font-semibold text-white">{t.col_title}</th>
-                      <th className="px-4 py-2 text-left text-sm font-semibold text-white">{t.col_scope}</th>
-                      <th className="px-4 py-2 text-left text-sm font-semibold text-white">{t.col_caption}</th>
-                      <th className="px-4 py-2 text-left text-sm font-semibold text-white">{t.actions}</th>
+              <div className="overflow-x-auto overflow-hidden border border-slate-200 dark:border-slate-700 rounded-xl">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-black">
+                      <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300 rounded-tl-xl">
+                        {t.col_title}
+                      </th>
+                      <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                        {t.col_scope}
+                      </th>
+                      <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                        {t.col_caption}
+                      </th>
+                      <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300 rounded-tr-xl">
+                        {t.actions}
+                      </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
+                  <tbody>
                     {stories.map((s) => (
-                      <tr key={s.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/30">
-                        <td className="px-4 py-2 text-sm text-slate-900 dark:text-slate-100">
+                      <tr key={s.id} className="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                        <td className="text-left py-2 px-4 text-sm text-slate-900 dark:text-slate-100">
                           {s.title || '—'}
                         </td>
-                        <td className="px-4 py-2 text-sm text-slate-600 dark:text-slate-400">
+                        <td className="text-left py-2 px-4 text-sm text-slate-600 dark:text-slate-400">
                           {s.class_id ? t.class_label : t.org_wide}
                         </td>
-                        <td className="px-4 py-2 text-sm text-slate-600 dark:text-slate-400">
+                        <td className="text-left py-2 px-4 text-sm text-slate-600 dark:text-slate-400">
                           {s.caption || t.no_caption}
                         </td>
-                        <td className="px-4 py-2">
+                        <td className="text-left py-2 px-4">
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => openStoryViewer(s)}

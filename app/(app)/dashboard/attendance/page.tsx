@@ -320,25 +320,25 @@ export default function AttendancePage() {
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-black text-white sticky top-0 z-10">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">
+              <div className="overflow-x-auto overflow-hidden border border-slate-200 dark:border-slate-700 rounded-xl">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="bg-black sticky top-0 z-10">
+                      <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300 rounded-tl-xl">
                         {t.col_date || 'Date'}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">
+                      <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
                         {t.col_student_name || 'Student Name'}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">
+                      <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
                         {t.col_class || 'Class'}
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">
+                      <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300 rounded-tr-xl">
                         {t.col_status || 'Status'}
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                  <tbody>
                     {paginatedAttendance.map((record) => {
                       // Validate record structure
                       if (!record || !record.id || !record.date || !record.status) {
@@ -352,17 +352,17 @@ export default function AttendancePage() {
                       const className = record.students?.classes?.name || t.no_class || 'No Class';
 
                       return (
-                        <tr key={record.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-slate-100">
+                        <tr key={record.id} className="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                          <td className="text-left py-2 px-4 text-sm text-slate-900 dark:text-slate-100">
                             {formatDate(record.date)}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900 dark:text-slate-100">
+                          <td className="text-left py-2 px-4 text-sm text-slate-900 dark:text-slate-100">
                             {studentName}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600 dark:text-slate-400">
+                          <td className="text-left py-2 px-4 text-sm text-slate-600 dark:text-slate-400">
                             {className}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <td className="text-left py-2 px-4 text-sm">
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(record.status)}`}>
                               {getStatusLabel(record.status)}
                             </span>

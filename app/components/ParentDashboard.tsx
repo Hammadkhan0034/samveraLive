@@ -455,26 +455,24 @@ export default function ParentDashboard() {
       {/* Shared FeatureGrid for tiles */}
       <div className="mt-6">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Calendar Card - Same design as Notices */}
+          {/* Calendar Card - Same design as Teacher Dashboard KPI */}
           <button
             onClick={() => {
               router.prefetch('/dashboard/parent/calendar');
               router.push('/dashboard/parent/calendar');
             }}
-            className="block rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow dark:border-slate-700 dark:bg-slate-800 text-left w-full"
+            className="block rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200 dark:border-slate-700 dark:bg-slate-800 text-left w-full cursor-pointer"
           >
-            <div className="mb-4 flex items-center gap-3">
-              <span className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-600 dark:bg-slate-700">
-                <CalendarDays className="h-5 w-5 text-slate-600 dark:text-slate-300" />
-              </span>
-              <div className="flex-1">
-                <div className="font-semibold text-slate-900 dark:text-slate-100">
-                  {t.calendar || 'Calendar'}
-                </div>
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-slate-600 dark:text-slate-400">
+                {t.calendar || 'Calendar'}
               </div>
+              <span className="rounded-xl border border-slate-200 p-2 dark:border-slate-600">
+                <CalendarDays className="h-4 w-4 text-slate-700 dark:text-slate-300" />
+              </span>
             </div>
             {t.calendar_desc ? (
-              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+              <p className="mt-3 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
                 {t.calendar_desc}
               </p>
             ) : null}
@@ -504,22 +502,20 @@ export default function ParentDashboard() {
                       router.push('/dashboard/attendance');
                     }
                   }}
-                  className="block rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow dark:border-slate-700 dark:bg-slate-800 text-left w-full"
+                  className="block rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200 dark:border-slate-700 dark:bg-slate-800 text-left w-full cursor-pointer"
                 >
-                  <div className="mb-4 flex items-center gap-3">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-slate-600 dark:text-slate-400">
+                      {item.title}
+                    </div>
                     {item.Icon ? (
-                      <span className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-600 dark:bg-slate-700">
-                        <item.Icon className="h-5 w-5 text-slate-600 dark:text-slate-300" />
+                      <span className="rounded-xl border border-slate-200 p-2 dark:border-slate-600">
+                        <item.Icon className="h-4 w-4 text-slate-700 dark:text-slate-300" />
                       </span>
                     ) : null}
-                    <div className="flex-1">
-                      <div className="font-semibold text-slate-900 dark:text-slate-100">
-                        {item.title}
-                      </div>
-                    </div>
                   </div>
                   {item.desc ? (
-                    <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                    <p className="mt-3 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
                       {item.desc}
                     </p>
                   ) : null}
@@ -535,27 +531,25 @@ export default function ParentDashboard() {
                     router.push(item.href);
                   }
                 }}
-                className="block rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow dark:border-slate-700 dark:bg-slate-800 text-left w-full"
+                className="block rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200 dark:border-slate-700 dark:bg-slate-800 text-left w-full cursor-pointer"
               >
-                <div className="mb-4 flex items-center gap-3">
-                  {item.Icon ? (
-                    <span className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-600 dark:bg-slate-700">
-                      <item.Icon className="h-5 w-5 text-slate-600 dark:text-slate-300" />
-                    </span>
-                  ) : null}
-                  <div className="flex-1">
-                    <div className="font-semibold text-slate-900 dark:text-slate-100">
-                      {item.title}
-                    </div>
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-slate-600 dark:text-slate-400">
+                    {item.title}
                     {item.badge !== undefined ? (
-                      <span className="ml-auto rounded-full border border-slate-200 bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                      <span className="ml-2 rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300">
                         {item.badge}
                       </span>
                     ) : null}
                   </div>
+                  {item.Icon ? (
+                    <span className="rounded-xl border border-slate-200 p-2 dark:border-slate-600">
+                      <item.Icon className="h-4 w-4 text-slate-700 dark:text-slate-300" />
+                    </span>
+                  ) : null}
                 </div>
                 {item.desc ? (
-                  <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                  <p className="mt-3 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
                     {item.desc}
                   </p>
                 ) : null}
@@ -750,19 +744,23 @@ export default function ParentDashboard() {
         {linkedStudents.length > 0 && (
           <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
             <h3 className="text-md font-medium text-slate-900 dark:text-slate-100 mb-3">{t.my_students || 'My Students'}</h3>
-            <div className="overflow-x-auto rounded-lg">
-              <table className="w-full text-sm">
+            <div className="overflow-x-auto overflow-hidden border border-slate-200 dark:border-slate-700 rounded-xl">
+              <table className="w-full border-collapse">
                 <thead>
-                  <tr className="bg-black text-white dark:bg-slate-800">
-                    <th className="text-left py-2 px-4">{t.student_name || 'Name'}</th>
-                    <th className="text-left py-2 px-4">{t.student_class || 'Class'}</th>
+                  <tr className="bg-black">
+                    <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300 rounded-tl-xl">
+                      {t.student_name || 'Name'}
+                    </th>
+                    <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300 rounded-tr-xl">
+                      {t.student_class || 'Class'}
+                    </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="bg-white dark:bg-slate-800">
                   {linkedStudents.map((s) => (
-                    <tr key={s.id} className="border-b border-slate-100 dark:border-slate-700">
-                      <td className="py-2 px-4 text-slate-900 dark:text-slate-100">{s.first_name} {s.last_name || ''}</td>
-                      <td className="py-2 px-4 text-slate-600 dark:text-slate-300">{s.classes?.name || '-'}</td>
+                    <tr key={s.id} className="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                      <td className="text-left py-2 px-4 text-sm text-slate-900 dark:text-slate-100">{s.first_name} {s.last_name || ''}</td>
+                      <td className="text-left py-2 px-4 text-sm text-slate-600 dark:text-slate-300">{s.classes?.name || '-'}</td>
                     </tr>
                   ))}
                 </tbody>
