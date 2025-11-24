@@ -256,13 +256,22 @@ export default function PrincipalDashboard() {
           userRole: 'principal',
           userId: session?.user?.id,
         });
-        setCalendarEvents(events as CalendarEvent[]);
+        
+        // Validate that events is an array
+        if (Array.isArray(events)) {
+          setCalendarEvents(events as CalendarEvent[]);
+        } else {
+          console.warn('⚠️ Calendar events response is not an array:', events);
+          setCalendarEvents([]);
+        }
       } catch (e: any) {
-        console.error('❌ Error loading calendar events:', e.message);
+        // Silently fail for calendar events - it's not critical for dashboard
+        console.error('❌ Error loading calendar events:', e?.message || e?.toString() || 'Unknown error');
+        setCalendarEvents([]);
       }
     };
 
-    if (finalOrgId) {
+    if (finalOrgId && session?.user?.id) {
       loadCalendarEventsForKPI();
     }
   }, [finalOrgId, session?.user?.id]);
@@ -687,7 +696,7 @@ export default function PrincipalDashboard() {
       </div>
 
       {/* School Announcements Section */}
-      <div className="mt-8">
+      <div className="mt-4">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
           <div className="mb-4">
             <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">{t.announcements_list}</h3>

@@ -739,28 +739,38 @@ function ClassesPageContent() {
               {t.overview_hint}
             </div>
           </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
-              <thead className="bg-black text-white">
-                <tr>
-                  <th className="px-4 py-2 text-white">{t.col_name}</th>
-                  <th className="px-4 py-2 text-white">{t.col_students}</th>
-                  <th className="px-4 py-2 text-white">{t.col_staff}</th>
-                  <th className="px-4 py-2 text-white">{t.col_visible}</th>
-                  <th className="px-4 py-2 text-white">{t.col_actions}</th>
+          <div className="overflow-x-auto overflow-hidden border border-slate-200 dark:border-slate-700 rounded-xl">
+            <table className="min-w-full border-collapse">
+              <thead>
+                <tr className="bg-black">
+                  <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300 rounded-tl-xl">
+                    {t.col_name}
+                  </th>
+                  <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                    {t.col_students}
+                  </th>
+                  <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                    {t.col_staff}
+                  </th>
+                  <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                    {t.col_visible}
+                  </th>
+                  <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300 rounded-tr-xl">
+                    {t.col_actions}
+                  </th>
                 </tr>
               </thead>
-              <tbody className="[&_tr:not(:last-child)]:border-b [&_tr:not(:last-child)]:border-slate-200 dark:[&_tr:not(:last-child)]:border-slate-600">
+              <tbody>
                 {classes.map((cls) => (
-                  <tr key={cls.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-700/50">
-                    <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">{cls.name}</td>
-                    <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
+                  <tr key={cls.id} className="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                    <td className="text-left py-2 px-4 text-sm font-medium text-slate-900 dark:text-slate-100">{cls.name}</td>
+                    <td className="text-left py-2 px-4 text-sm text-slate-600 dark:text-slate-400">
                       {classStudentCounts[cls.id] || 0}
                     </td>
-                    <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
+                    <td className="text-left py-2 px-4 text-sm text-slate-600 dark:text-slate-400">
                       {cls.assigned_teachers?.length || 0}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="text-left py-2 px-4 text-sm">
                       <span
                         className={clsx(
                           'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs',
@@ -770,7 +780,7 @@ function ClassesPageContent() {
                         <CheckCircle2 className="h-3.5 w-3.5" /> {t.visible_yes}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="text-left py-2 px-4 text-sm">
                       <div className="flex items-center gap-2 flex-wrap">
                         <button
                           onClick={() => openClassDetailsModal(cls)}
@@ -814,7 +824,7 @@ function ClassesPageContent() {
 
                 {classes.length === 0 && (
                   <tr>
-                    <td className="px-4 py-6 text-slate-500 dark:text-slate-400" colSpan={5}>
+                    <td className="text-left py-2 px-4 text-sm text-slate-600 dark:text-slate-400 text-center py-4" colSpan={5}>
                       {t.empty}
                     </td>
                   </tr>
