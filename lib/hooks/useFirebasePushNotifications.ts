@@ -40,6 +40,7 @@ export function useFirebasePushNotifications(
         }
 
         // Convert payload data to Notification object
+        // The notification data comes from the push payload
         const notification: Notification = {
           id: notificationData.notificationId || '',
           org_id: notificationData.orgId || '',
@@ -47,7 +48,12 @@ export function useFirebasePushNotifications(
           type: notificationData.type || '',
           title: payload.notification?.title || notificationData.title || '',
           body: payload.notification?.body || notificationData.body || null,
-          data: notificationData,
+          // Extract the actual data object (excluding metadata fields)
+          data: Object.fromEntries(
+            Object.entries(notificationData).filter(
+              ([key]) => !['notificationId', 'orgId', 'userId', 'type', 'title', 'body', 'priority', 'expiresAt'].includes(key)
+            )
+          ),
           is_read: false,
           read_at: null,
           priority: notificationData.priority || 'normal',

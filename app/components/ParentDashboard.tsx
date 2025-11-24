@@ -16,7 +16,7 @@ export default function ParentDashboard() {
   const { session } = useAuth();
   const router = useRouter();
   
-  // Get notifications and realtime error
+  // Get notifications
   const userId = session?.user?.id || null;
   const orgId = session?.user?.user_metadata?.org_id || 
                 session?.user?.user_metadata?.organization_id || 

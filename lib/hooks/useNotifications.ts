@@ -67,7 +67,24 @@ export function useNotifications({
       }
 
       const fetchedNotifications = (notificationsResult.data || []) as Notification[];
-      setNotifications(fetchedNotifications);
+      
+      // Merge with existing notifications to preserve any push notifications that haven't been fetched yet
+      setNotifications(prev => {
+        // Create a map of existing notifications by ID
+        const existingMap = new Map(prev.map(n => [n.id, n]));
+        
+        // Add/update with fetched notifications
+        fetchedNotifications.forEach(n => {
+          existingMap.set(n.id, n);
+        });
+        
+        // Convert back to array, sort by created_at, and limit
+        const merged = Array.from(existingMap.values())
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+          .slice(0, limit);
+        
+        return merged;
+      });
 
       // Use actual unread count from database
       const actualUnreadCount = unreadCountResult.count || 0;
@@ -103,6 +120,8 @@ export function useNotifications({
     // Only handle notifications for this user and org
     if (newNotification.user_id === userId && newNotification.org_id === orgId) {
       console.log('🔔 New notification received via Firebase push:', newNotification.id);
+      
+      // Immediately update the UI with the push notification data
       setNotifications(prev => {
         // Check if notification already exists (avoid duplicates)
         if (prev.some(n => n.id === newNotification.id)) {
@@ -111,8 +130,10 @@ export function useNotifications({
         }
         // Add new notification at the beginning (limit to keep list size manageable)
         const updated = [newNotification, ...prev].slice(0, limit);
+        console.log('✅ Notification added to state instantly:', newNotification.id);
         return updated;
       });
+      
       // Update unread count if notification is unread
       if (!newNotification.is_read) {
         setUnreadCount(prev => {
@@ -121,8 +142,12 @@ export function useNotifications({
           return newCount;
         });
       }
-      // Refetch to ensure we have the latest data from database
-      fetchNotifications(false);
+      
+      // Fetch the actual notification from database after a short delay to ensure it's saved
+      // This ensures we have the complete data from the database, but won't remove the push notification
+      setTimeout(() => {
+        fetchNotifications(false);
+      }, 1000);
     }
   }, [userId, orgId, limit, fetchNotifications]);
 
