@@ -475,6 +475,7 @@ export const isText = {
   // Attendance
   att_title: 'Mæting & Inn-/útstimplun',
   att_mark_all_in: 'Skrá alla inn',
+  save_attendance: 'Vista mæting',
 
   // Diapers/Health
   di_title: 'Bleyju- og heilsuskráning',

@@ -436,7 +436,18 @@ export default function TeacherStoriesPage() {
                 </button>
                 
                 {loading ? (
-                  <div className="flex items-center text-sm text-slate-600 dark:text-slate-400">Loading...</div>
+                  <>
+                    {Array.from({ length: 5 }).map((_, index) => (
+                      <div key={index} className="flex w-20 flex-col items-center gap-1">
+                        <span className="rounded-full bg-gradient-to-tr from-slate-300 to-slate-400 p-0.5">
+                          <span className="block rounded-full bg-white p-0.5">
+                            <span className="h-16 w-16 rounded-full bg-slate-200 dark:bg-slate-600 animate-pulse"></span>
+                          </span>
+                        </span>
+                        <span className="h-3 w-16 bg-slate-200 dark:bg-slate-600 rounded animate-pulse"></span>
+                      </div>
+                    ))}
+                  </>
                 ) : (
                   Object.values(storiesByClass).map((group) => (
                     group.stories.map((story) => (

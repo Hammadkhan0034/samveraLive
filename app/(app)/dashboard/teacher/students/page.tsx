@@ -208,7 +208,7 @@ function StudentsPanel({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t.search_students_placeholder || 'Search students...'}
-                className="pl-10 pr-4 py-1 rounded-lg border border-slate-300 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 w-64"
+                className="pl-10 pr-4 py-1.5 rounded-lg border border-slate-300 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 w-64"
               />
             </div>
           </div>
@@ -218,7 +218,7 @@ function StudentsPanel({
             {studentError}
           </div>
         )}
-        <div className="overflow-x-auto rounded-t-lg rounded-r-lg">
+        <div className="overflow-x-auto overflow-hidden border border-slate-200 dark:border-slate-700 rounded-xl">
           {loadingStudents || !hasLoadedOnce ? (
             <LoadingSkeleton type="table" rows={5} />
           ) : filteredStudents.length === 0 ? (
@@ -230,7 +230,7 @@ function StudentsPanel({
               <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-black">
-                  <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                  <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300 rounded-tl-xl">
                     {t.student_name}
                   </th>
                   <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
@@ -245,7 +245,7 @@ function StudentsPanel({
                   <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
                     {t.guardians || 'Guardians'}
                   </th>
-                  <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                  <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300 rounded-tr-xl">
                     {t.actions || 'Actions'}
                   </th>
                 </tr>
@@ -316,7 +316,7 @@ function StudentsPanel({
               
               {/* Pagination Controls - Always show when there is at least 1 student */}
               {filteredStudents.length > 0 && (
-                <div className="mt-4 flex items-center justify-end gap-2">
+                <div className="mt-3 mb-3 mr-3 flex items-center justify-end gap-2">
                   <button
                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                     disabled={currentPage === 1}
@@ -332,8 +332,8 @@ function StudentsPanel({
                         onClick={() => setCurrentPage(page)}
                         className={`px-3 py-1.5 text-sm rounded-lg ${
                           currentPage === page
-                            ? 'bg-white text-black dark:bg-slate-800 border border-slate-300'
-                            : 'border border-slate-300 hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-700 dark:text-slate-200'
+                            ? 'bg-white text-black dark:bg-slate-800 dark:text-white border border-slate-300'
+                            : 'border border-slate-300 hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-700 text-black dark:text-white'
                         }`}
                       >
                         {page}

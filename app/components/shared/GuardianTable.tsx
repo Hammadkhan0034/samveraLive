@@ -59,16 +59,16 @@ export function GuardianTable({
         </div>
       )}
 
-      <div className="rounded-md">
-        <table className="w-full text-sm">
+      <div className="rounded-md overflow-hidden border border-slate-200 dark:border-slate-700">
+        <table className="w-full text-sm border-collapse">
           <thead className="sticky top-0 bg-black text-white dark:bg-black z-10">
             <tr className="text-center text-slate-600 dark:text-slate-300">
-              <th className="py-2 pr-1 text-white">{t.first_name || 'First Name'}</th>
+              <th className="py-2 pr-1 text-white rounded-tl-xl">{t.first_name || 'First Name'}</th>
               <th className="py-2 pr-1 text-white">{t.last_name || 'Last Name'}</th>
               <th className="py-2 pr-1 text-white">{t.email}</th>
               <th className="py-2 pr-1 text-white">{t.phone}</th>
               <th className="py-2 pr-1 text-white">{t.status}</th>
-              <th className="py-2 pr-1 text-white">{t.actions}</th>
+              <th className="py-2 pr-1 text-white rounded-tr-xl">{t.actions}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">

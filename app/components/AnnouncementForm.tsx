@@ -157,7 +157,7 @@ export default function AnnouncementForm({
 
   return (
     <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6">
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-3">
         {showClassSelector && (
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
@@ -166,7 +166,7 @@ export default function AnnouncementForm({
             <select
               value={selectedClassId}
               onChange={(e) => setSelectedClassId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:text-slate-200"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-black dark:bg-slate-700 dark:text-slate-200"
             >
               <option value="">{t.select_class_optional}</option>
               {loadingClasses ? (
@@ -207,7 +207,7 @@ export default function AnnouncementForm({
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+            className="w-full px-3 py-2 text-md border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-black dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
             placeholder={t.title_placeholder}
             required
           />
@@ -220,8 +220,8 @@ export default function AnnouncementForm({
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            rows={4}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+            rows={2}
+            className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-black dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
             placeholder={t.message_placeholder}
             required
           />
@@ -251,14 +251,14 @@ export default function AnnouncementForm({
                 setSelectedClassId('');
               }
             }}
-            className="px-4 py-2 text-gray-700 dark:text-slate-300 bg-gray-100 dark:bg-slate-700 rounded-md hover:bg-gray-200 dark:hover:bg-slate-600"
+            className="px-4 py-2 text-md text-gray-700 dark:text-slate-300 bg-gray-100 dark:bg-slate-700 rounded-md hover:bg-gray-200 dark:hover:bg-slate-600"
           >
             {t.clear}
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-4 py-2 bg-black dark:bg-black text-white rounded-md hover:bg-slate-900 disabled:opacity-50"
+            className="px-4 py-2 text-md bg-black dark:bg-slate-700 text-white rounded-md hover:bg-slate-900 disabled:opacity-50"
           >
             {isSubmitting 
               ? (mode === 'edit' ? t.updating : t.creating) 

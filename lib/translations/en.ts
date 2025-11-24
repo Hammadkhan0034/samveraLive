@@ -474,6 +474,7 @@ export const enText = {
   // Attendance
   att_title: 'Attendance & Check-in',
   att_mark_all_in: 'Mark all present',
+  save_attendance: 'Save Attendance',
 
   // Diapers/Health
   di_title: 'Diapers & Health Log',

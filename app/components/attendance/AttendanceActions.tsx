@@ -25,7 +25,7 @@ export const AttendanceActions = React.memo<AttendanceActionsProps>(
       <button
         onClick={onSave}
         disabled={!hasUnsavedChanges || isSaving || disabled}
-        className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-emerald-700 dark:hover:bg-emerald-600"
+        className="inline-flex items-center gap-2 rounded-xl bg-black border border-slate-300 hover:bg-slate-700 px-4 py-2 text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed  dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
       >
         {isSaving ? (
           <>
@@ -54,7 +54,7 @@ export const AttendanceActions = React.memo<AttendanceActionsProps>(
         ) : (
           <>
             <CheckSquare className="h-4 w-4" />
-            {t.save || 'Save'}
+            {t.save_attendance || 'Save Attendance'}
           </>
         )}
       </button>

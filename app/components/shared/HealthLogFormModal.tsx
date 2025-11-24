@@ -309,7 +309,7 @@ export function HealthLogFormModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-800 p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+      <div className="w-full max-w-xl rounded-2xl bg-white dark:bg-slate-800 p-6 shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
             {initialData ? (lang === 'is' ? 'Breyta heilsuskráningu' : 'Edit Health Log') : (lang === 'is' ? 'Búa til heilsuskráningu' : 'Create Health Log')}
@@ -328,7 +328,7 @@ export function HealthLogFormModal({
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
               {t.child} <span className="text-red-500">*</span>
