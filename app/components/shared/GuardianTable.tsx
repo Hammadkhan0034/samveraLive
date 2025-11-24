@@ -48,8 +48,8 @@ export function GuardianTable({
   translations: t
 }: GuardianTableProps) {
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl p-6 shadow-lg border border-slate-200 dark:border-slate-700">
-      <div className="flex items-center justify-between mb-4">
+    <div className="bg-white dark:bg-slate-800 rounded-xl pt-6 pb-6 pr-6 ml-6 dark:border-slate-700">
+      <div className="flex items-center justify-between">
         {/* <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t.guardians}</h3> */}
       </div>
 

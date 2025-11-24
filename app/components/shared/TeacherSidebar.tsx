@@ -298,7 +298,7 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
       {/* Sidebar */}
       <aside
         className={clsx(
-          'flex-shrink-0 w-72 bg-slate-900 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transition-transform duration-300 ease-in-out',
+          'flex-shrink-0 w-[280px] bg-slate-900 dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 transition-transform duration-300 ease-in-out',
           'scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]',
           sidebarOpen 
             ? 'fixed top-0 bottom-0 left-0 z-50 translate-x-0 md:sticky md:top-0 md:h-screen md:overflow-y-auto md:translate-x-0' 
@@ -325,12 +325,12 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
               <X className="h-5 w-5" />
             </button>
           </div>
-          <nav className="space-y-1">
+          <nav className="space-y-1 px-2">
             {/* Dashboard tile - always route-based */}
             <button
               onClick={handleDashboardClick}
               className={clsx(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                'w-full flex items-center gap-3 px-2 py-3 rounded-lg text-left transition-colors',
                 'hover:bg-slate-800 dark:hover:bg-slate-700',
                 isDashboardActive
                   ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
@@ -366,7 +366,7 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
             <button
               onClick={handleAttendanceClick}
               className={clsx(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                'w-full flex items-center gap-3 px-2 py-3 rounded-lg text-left transition-colors',
                 'hover:bg-slate-800 dark:hover:bg-slate-700',
                 isAttendanceActive
                   ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
@@ -405,7 +405,7 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
             <button
               onClick={handleDiapersClick}
               className={clsx(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                'w-full flex items-center gap-3 px-2 py-3 rounded-lg text-left transition-colors',
                 'hover:bg-slate-800 dark:hover:bg-slate-700',
                 isDiapersActive
                   ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
@@ -439,7 +439,7 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
             <button
               onClick={handleMessagesClick}
               className={clsx(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                'w-full flex items-center gap-3 px-2 py-3 rounded-lg text-left transition-colors',
                 'hover:bg-slate-800 dark:hover:bg-slate-700',
                 isMessagesActive
                   ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
@@ -478,7 +478,7 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
             <button
               onClick={handleMediaClick}
               className={clsx(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                'w-full flex items-center gap-3 px-2 py-3 rounded-lg text-left transition-colors',
                 'hover:bg-slate-800 dark:hover:bg-slate-700',
                 isMediaActive
                   ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
@@ -517,7 +517,7 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
             <button
               onClick={handleStoriesClick}
               className={clsx(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                'w-full flex items-center gap-3 px-2 py-3 rounded-lg text-left transition-colors',
                 'hover:bg-slate-800 dark:hover:bg-slate-700',
                 isStoriesActive
                   ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
@@ -551,7 +551,7 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
             <button
               onClick={handleAnnouncementsClick}
               className={clsx(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                'w-full flex items-center gap-3 px-2 py-3 rounded-lg text-left transition-colors',
                 'hover:bg-slate-800 dark:hover:bg-slate-700',
                 isAnnouncementsActive
                   ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
@@ -585,7 +585,7 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
             <button
               onClick={handleCalendarClick}
               className={clsx(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                'w-full flex items-center gap-3 px-2 py-3 rounded-lg text-left transition-colors',
                 'hover:bg-slate-800 dark:hover:bg-slate-700',
                 isCalendarActive
                   ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
@@ -619,7 +619,7 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
             <button
               onClick={handleStudentsClick}
               className={clsx(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                'w-full flex items-center gap-3 px-2 py-3 rounded-lg text-left transition-colors',
                 'hover:bg-slate-800 dark:hover:bg-slate-700',
                 isStudentsActive
                   ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
@@ -653,7 +653,7 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
             <button
               onClick={handleGuardiansClick}
               className={clsx(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                'w-full flex items-center gap-3 px-2 py-3 rounded-lg text-left transition-colors',
                 'hover:bg-slate-800 dark:hover:bg-slate-700',
                 isGuardiansActive
                   ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
@@ -687,7 +687,7 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
             <button
               onClick={handleLinkStudentClick}
               className={clsx(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                'w-full flex items-center gap-3 px-2 py-3 rounded-lg text-left transition-colors',
                 'hover:bg-slate-800 dark:hover:bg-slate-700',
                 isLinkStudentActive
                   ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
@@ -721,7 +721,7 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
             <button
               onClick={handleMenusClick}
               className={clsx(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                'w-full flex items-center gap-3 px-2 py-3 rounded-lg text-left transition-colors',
                 'hover:bg-slate-800 dark:hover:bg-slate-700',
                 isMenusActive
                   ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'
@@ -759,7 +759,7 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
                   key={tile.id}
                   onClick={() => handleTileClick(tile)}
                   className={clsx(
-                    'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors',
+                    'w-full flex items-center gap-3 px-2 py-3 rounded-lg text-left transition-colors',
                     'hover:bg-slate-800 dark:hover:bg-slate-700',
                     isActive
                       ? 'bg-slate-800 dark:bg-slate-700 border-l-4 border-slate-100 dark:border-slate-100'

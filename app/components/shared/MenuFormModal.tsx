@@ -117,7 +117,7 @@ export function MenuFormModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-800 p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+      <div className="w-full max-w-xl rounded-2xl bg-white dark:bg-slate-800 p-6 shadow-xl max-h-[90vh] overflow-y-auto">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
             {initialData ? t.edit_menu : t.add_menu || 'Add Menu'}
@@ -136,7 +136,7 @@ export function MenuFormModal({
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-1.5">
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
               {t.date} <span className="text-red-500">*</span>
@@ -168,43 +168,43 @@ export function MenuFormModal({
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-              {t.breakfast}
-            </label>
-            <input
-              type="text"
-              value={formData.breakfast || ''}
-              onChange={(e) => setFormData({ ...formData, breakfast: e.target.value })}
-              className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
-              placeholder={t.breakfast_placeholder}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-              {t.lunch}
-            </label>
-            <input
-              type="text"
-              value={formData.lunch || ''}
-              onChange={(e) => setFormData({ ...formData, lunch: e.target.value })}
-              className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
-              placeholder={t.lunch_placeholder}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-              {t.snack}
-            </label>
-            <input
-              type="text"
-              value={formData.snack || ''}
-              onChange={(e) => setFormData({ ...formData, snack: e.target.value })}
-              className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
-              placeholder={t.snack_placeholder}
-            />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                {t.breakfast}
+              </label>
+              <input
+                type="text"
+                value={formData.breakfast || ''}
+                onChange={(e) => setFormData({ ...formData, breakfast: e.target.value })}
+                className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                placeholder={t.breakfast_placeholder}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                {t.lunch}
+              </label>
+              <input
+                type="text"
+                value={formData.lunch || ''}
+                onChange={(e) => setFormData({ ...formData, lunch: e.target.value })}
+                className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                placeholder={t.lunch_placeholder}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                {t.snack}
+              </label>
+              <input
+                type="text"
+                value={formData.snack || ''}
+                onChange={(e) => setFormData({ ...formData, snack: e.target.value })}
+                className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                placeholder={t.snack_placeholder}
+              />
+            </div>
           </div>
 
           <div>

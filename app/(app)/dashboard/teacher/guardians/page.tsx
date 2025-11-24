@@ -1,17 +1,15 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Plus } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
-import { useRequireAuth } from '@/lib/hooks/useAuth';
 import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
-import TeacherSidebar, { TeacherSidebarRef } from '@/app/components/shared/TeacherSidebar';
 import { GuardianTable } from '@/app/components/shared/GuardianTable';
 import { GuardianForm, type GuardianFormData } from '@/app/components/shared/GuardianForm';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
-import Loading from '@/app/components/shared/Loading';
+import TeacherPageLayout from '@/app/components/shared/TeacherPageLayout';
 
 // Translations removed - using centralized translations from @/lib/translations
 
@@ -42,8 +40,6 @@ function parseGuardianName(guardian: any): { first_name: string; last_name: stri
 export default function TeacherGuardiansPage() {
   const { lang, t } = useLanguage();
   const { session } = useAuth();
-  const { user, loading: authLoading, isSigningIn } = useRequireAuth('teacher');
-  const sidebarRef = useRef<TeacherSidebarRef>(null);
 
   // Use universal hook to get org_id (checks metadata first, then API, handles logout if missing)
   const { orgId: finalOrgId } = useCurrentUserOrgId();
@@ -250,43 +246,27 @@ export default function TeacherGuardiansPage() {
     cancel: lang === 'is' ? 'Hætta við' : 'Cancel',
   }), [lang]);
 
-  // Show loading state while checking authentication
-  if (authLoading || (isSigningIn && !user)) {
-    return <Loading fullScreen text="Loading guardians page..." />;
-  }
-
-  // Safety check: if user is still not available after loading, don't render
-  if (!authLoading && !isSigningIn && !user) {
-    return null;
-  }
-
   return (
-    <div className="flex flex-col h-screen overflow-hidden md:pt-14">
-      <div className="flex flex-1 overflow-hidden h-full">
-        <TeacherSidebar
-          ref={sidebarRef}
-        />
-        <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900">
-          <div className="p-2 md:p-6 lg:p-8">
-            {/* Guardians Panel */}
-            <div className="space-y-6">
+    <TeacherPageLayout>
+      {/* Guardians Panel */}
+      <div className="space-y-6">
               <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-                <div className="mb-4 flex items-center justify-between">
+                <div className="mb-4">
                   <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">{t.guardians || 'Guardians'}</h2>
+                </div>
+                <div className="mb-3 flex items-center justify-between gap-3 ml-6 mr-6">
                   <button
                     onClick={openCreateGuardianModal}
                     className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
                   >
                     <Plus className="h-4 w-4" /> {lang === 'is' ? 'Bæta við forráðamanni' : 'Add Guardian'}
                   </button>
-                </div>
-                <div className="mb-4">
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                     placeholder={lang === 'is' ? 'Leita...' : 'Search guardians...'}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                    className="w-64 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                   />
                 </div>
                 {loadingGuardians ? (
@@ -342,9 +322,6 @@ export default function TeacherGuardiansPage() {
                 />
               </div>
             </div>
-          </div>
-        </main>
-      </div>
-    </div>
+    </TeacherPageLayout>
   );
 }

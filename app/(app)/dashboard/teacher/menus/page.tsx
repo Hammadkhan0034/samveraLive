@@ -5,13 +5,11 @@ import { useRouter } from 'next/navigation';
 import { Utensils, Plus, Edit, Trash2 } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
-import { useRequireAuth } from '@/lib/hooks/useAuth';
 import { useTeacherOrgId } from '@/lib/hooks/useTeacherOrgId';
-import TeacherSidebar from '@/app/components/shared/TeacherSidebar';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import { MenuFormModal, type MenuFormData } from '@/app/components/shared/MenuFormModal';
-import Loading from '@/app/components/shared/Loading';
+import TeacherPageLayout from '@/app/components/shared/TeacherPageLayout';
 import type { MenuWithClass, Menu } from '@/lib/types/menus';
 import type { TeacherClass } from '@/lib/types/attendance';
 
@@ -39,7 +37,6 @@ export default function TeacherMenusPage() {
   const { lang, t } = useLanguage();
   const { session } = useAuth();
   const router = useRouter();
-  const { user, loading: authLoading, isSigningIn } = useRequireAuth('teacher');
   const { orgId: finalOrgId } = useTeacherOrgId();
 
   const [menus, setMenus] = useState<MenuWithClass[]>([]);
@@ -331,21 +328,9 @@ export default function TeacherMenusPage() {
     }
   }
 
-  if (authLoading || (isSigningIn && !user)) {
-    return <Loading fullScreen text="Loading menus page..." />;
-  }
-
-  if (!authLoading && !isSigningIn && !user) {
-    return null;
-  }
-
   return (
-    <div className="flex flex-col h-screen overflow-hidden md:pt-14">
-      <div className="flex flex-1 overflow-hidden h-full">
-        <TeacherSidebar />
-        <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900">
-          <div className="p-2 md:p-6 lg:p-8">
-            <div className="space-y-6">
+    <TeacherPageLayout>
+      <div className="space-y-6">
               <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
                 <div className="mb-4 flex items-center justify-between">
                   <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">{t.tile_menus || 'Menus'}</h2>
@@ -477,10 +462,7 @@ export default function TeacherMenusPage() {
                 )}
               </div>
             </div>
-          </div>
-        </main>
-      </div>
-    </div>
+    </TeacherPageLayout>
   );
 }
 
