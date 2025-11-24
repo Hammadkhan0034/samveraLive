@@ -4,6 +4,7 @@ import { AuthProvider } from '@/lib/auth-context';
 import { LanguageProvider } from '@/lib/contexts/LanguageContext';
 import { ThemeProvider } from '@/lib/contexts/ThemeContext';
 import LayoutWrapper from '@/app/components/LayoutWrapper';
+import { DeviceTokenManager } from '@/app/components/DeviceTokenManager';
 
 export const metadata: Metadata = {
   title: 'Samvera',
@@ -54,6 +55,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <AuthProvider>
           <ThemeProvider>
             <LanguageProvider>
+              <DeviceTokenManager />
               <LayoutWrapper> 
                 {children}
               </LayoutWrapper>

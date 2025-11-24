@@ -1,5 +1,6 @@
 import { supabaseAdmin } from '@/lib/supabaseClient';
 import { createSupabaseServer } from '@/lib/supabaseServer';
+import { sendPushNotification, sendBulkPushNotifications } from '@/lib/services/pushNotifications';
 
 export interface Notification {
   id: string;
@@ -27,6 +28,7 @@ export type NotificationType =
 
 /**
  * Create a single notification
+ * @param sendPush - Whether to send push notification (default: true)
  */
 export async function createNotification(
   orgId: string,
@@ -36,7 +38,8 @@ export async function createNotification(
   body: string | null = null,
   data: Record<string, any> = {},
   priority: string = 'normal',
-  expiresAt: string | null = null
+  expiresAt: string | null = null,
+  sendPush: boolean = true
 ): Promise<Notification> {
   const supabase = supabaseAdmin ?? await createSupabaseServer();
   
@@ -59,11 +62,24 @@ export async function createNotification(
     throw new Error(`Failed to create notification: ${error.message}`);
   }
 
-  return notification as Notification;
+  const createdNotification = notification as Notification;
+
+  // Send push notification if enabled
+  if (sendPush) {
+    try {
+      await sendPushNotification(userId, createdNotification);
+    } catch (pushError) {
+      // Log error but don't fail the notification creation
+      console.error('Failed to send push notification:', pushError);
+    }
+  }
+
+  return createdNotification;
 }
 
 /**
  * Create notifications for multiple users in bulk
+ * @param sendPush - Whether to send push notifications (default: true)
  */
 export async function createBulkNotifications(
   orgId: string,
@@ -73,7 +89,8 @@ export async function createBulkNotifications(
   body: string | null = null,
   data: Record<string, any> = {},
   priority: string = 'normal',
-  expiresAt: string | null = null
+  expiresAt: string | null = null,
+  sendPush: boolean = true
 ): Promise<Notification[]> {
   if (userIds.length === 0) {
     return [];
@@ -101,7 +118,21 @@ export async function createBulkNotifications(
     throw new Error(`Failed to create bulk notifications: ${error.message}`);
   }
 
-  return createdNotifications as Notification[];
+  const notificationsList = createdNotifications as Notification[];
+
+  // Send push notifications if enabled
+  if (sendPush && notificationsList.length > 0) {
+    try {
+      // Use the first notification as template (they all have same content)
+      // Send bulk push to all user IDs
+      await sendBulkPushNotifications(userIds, notificationsList[0]);
+    } catch (pushError) {
+      // Log error but don't fail the notification creation
+      console.error('Failed to send bulk push notifications:', pushError);
+    }
+  }
+
+  return notificationsList;
 }
 
 /**

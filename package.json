@@ -13,7 +13,8 @@
     "create:test:all": "npx tsx scripts/createAllTestUsers.ts",
     "test:otp": "npx tsx -e \"import('./lib/testSupabaseConnection').then(async m=>{await m.sendOtpForTest(process.env.TEST_EMAIL||'parent@samvera.test');process.exit(0)})\"",
     "fix:principal-org": "npx tsx scripts/fixPrincipalOrgId.ts",
-    "test:invitation": "npx tsx scripts/test-invitation-acceptance.ts"
+    "test:invitation": "npx tsx scripts/test-invitation-acceptance.ts",
+    "test:firebase": "npx tsx lib/testFirebaseConnection.ts"
   },
   "devDependencies": {
     "eslint": "^9.39.1",
@@ -31,6 +32,8 @@
     "autoprefixer": "10.4.15",
     "chalk": "^5.6.2",
     "dotenv": "^17.2.3",
+    "firebase": "^12.6.0",
+    "firebase-admin": "^13.6.0",
     "framer-motion": "^11.0.0",
     "lucide-react": "^0.542.0",
     "next": "^16.0.0",

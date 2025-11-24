@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import type { Notification } from '@/lib/services/notifications';
+import { useFirebasePushNotifications } from '@/lib/hooks/useFirebasePushNotifications';
 
 interface UseNotificationsOptions {
   userId: string | null;
@@ -22,9 +22,6 @@ export function useNotifications({
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  const [realtimeError, setRealtimeError] = useState<string | null>(null);
-  const channelRef = useRef<any>(null);
-  const [isSubscribed, setIsSubscribed] = useState(false);
   const lastUserIdOrgIdRef = useRef<string>('');
 
   // Fetch notifications from the server
@@ -101,177 +98,39 @@ export function useNotifications({
     }
   }, [userId, orgId, enabled, fetchNotifications]);
 
-  // Set up real-time subscription
-  useEffect(() => {
-    if (!userId || !orgId || !enabled) {
-      return;
+  // Handle new notification from Firebase push
+  const handleNewNotification = useCallback((newNotification: Notification) => {
+    // Only handle notifications for this user and org
+    if (newNotification.user_id === userId && newNotification.org_id === orgId) {
+      console.log('🔔 New notification received via Firebase push:', newNotification.id);
+      setNotifications(prev => {
+        // Check if notification already exists (avoid duplicates)
+        if (prev.some(n => n.id === newNotification.id)) {
+          console.log('⚠️ Duplicate notification ignored:', newNotification.id);
+          return prev;
+        }
+        // Add new notification at the beginning (limit to keep list size manageable)
+        const updated = [newNotification, ...prev].slice(0, limit);
+        return updated;
+      });
+      // Update unread count if notification is unread
+      if (!newNotification.is_read) {
+        setUnreadCount(prev => {
+          const newCount = prev + 1;
+          console.log('📊 Unread count updated:', newCount);
+          return newCount;
+        });
+      }
+      // Refetch to ensure we have the latest data from database
+      fetchNotifications(false);
     }
+  }, [userId, orgId, limit, fetchNotifications]);
 
-    // Cleanup existing subscription
-    const cleanup = () => {
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-        setIsSubscribed(false);
-      }
-    };
-
-    // Create a unique channel name for this user and org
-    const channelName = `notifications:${userId}:${orgId}`;
-    const channel = supabase.channel(channelName);
-
-    // Subscribe to INSERT events (new notifications)
-    // Note: Supabase real-time filters may not support complex AND conditions,
-    // so we filter by user_id at the database level and check org_id in the handler
-    channel.on(
-      'postgres_changes',
-      {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'notifications',
-        filter: `user_id=eq.${userId}`,
-      },
-      (payload: RealtimePostgresChangesPayload<any>) => {
-        try {
-          const newNotification = payload.new as Notification;
-          // Only handle notifications for this user and org
-          if (newNotification.user_id === userId && newNotification.org_id === orgId) {
-            console.log('🔔 New notification received via real-time:', newNotification.id);
-            setNotifications(prev => {
-              // Check if notification already exists (avoid duplicates)
-              if (prev.some(n => n.id === newNotification.id)) {
-                console.log('⚠️ Duplicate notification ignored:', newNotification.id);
-                return prev;
-              }
-              // Add new notification at the beginning (limit to keep list size manageable)
-              const updated = [newNotification, ...prev].slice(0, limit);
-              return updated;
-            });
-            // Update unread count if notification is unread
-            if (!newNotification.is_read) {
-              setUnreadCount(prev => {
-                const newCount = prev + 1;
-                console.log('📊 Unread count updated:', newCount);
-                return newCount;
-              });
-            }
-          } else {
-            // Log when notification is filtered out (different org)
-            console.log('ℹ️ Notification filtered (different org):', {
-              notificationOrgId: newNotification.org_id,
-              currentOrgId: orgId,
-            });
-          }
-        } catch (err) {
-          console.error('❌ Error handling INSERT notification:', err);
-        }
-      }
-    );
-
-    // Subscribe to UPDATE events (mark as read, etc.)
-    channel.on(
-      'postgres_changes',
-      {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'notifications',
-        filter: `user_id=eq.${userId}`,
-      },
-      (payload: RealtimePostgresChangesPayload<any>) => {
-        try {
-          const updatedNotification = payload.new as Notification;
-          // Only handle notifications for this user and org
-          if (updatedNotification.user_id === userId && updatedNotification.org_id === orgId) {
-            setNotifications(currentNotifications => {
-              const wasRead = currentNotifications.find((n: Notification) => n.id === updatedNotification.id)?.is_read;
-              
-              // Update unread count
-              if (updatedNotification.is_read && !wasRead) {
-                setUnreadCount(prev => Math.max(0, prev - 1));
-              } else if (!updatedNotification.is_read && wasRead) {
-                // If somehow marked as unread again, increment count
-                setUnreadCount(prev => prev + 1);
-              }
-              
-              return currentNotifications.map((n: Notification) =>
-                n.id === updatedNotification.id ? updatedNotification : n
-              );
-            });
-          }
-        } catch (err) {
-          console.error('❌ Error handling UPDATE notification:', err);
-        }
-      }
-    );
-
-    // Subscribe to DELETE events (if notifications are deleted)
-    channel.on(
-      'postgres_changes',
-      {
-        event: 'DELETE',
-        schema: 'public',
-        table: 'notifications',
-        filter: `user_id=eq.${userId}`,
-      },
-      (payload: RealtimePostgresChangesPayload<any>) => {
-        try {
-          const deletedNotification = payload.old as Notification;
-          // Only handle deletions for this user and org
-          if (deletedNotification.user_id === userId && deletedNotification.org_id === orgId) {
-            setNotifications(prev => prev.filter(n => n.id !== deletedNotification.id));
-            // Update unread count if deleted notification was unread
-            if (!deletedNotification.is_read) {
-              setUnreadCount(prev => Math.max(0, prev - 1));
-            }
-          }
-        } catch (err) {
-          console.error('❌ Error handling DELETE notification:', err);
-        }
-      }
-    );
-
-    // Subscribe to the channel with better error handling
-    channel.subscribe((status) => {
-      if (status === 'SUBSCRIBED') {
-        setIsSubscribed(true);
-        setRealtimeError(null); // Clear error on successful subscription
-        console.log('✅ Realtime notifications subscription active for user:', userId, 'org:', orgId);
-      } else if (status === 'CHANNEL_ERROR') {
-        setIsSubscribed(false);
-        const errorMessage = 'Realtime notifications channel error - falling back to polling';
-        console.error('❌', errorMessage);
-        setRealtimeError(errorMessage);
-        // Fallback: refetch notifications periodically if real-time fails
-        const fallbackInterval = setInterval(() => {
-          console.log('🔄 Fallback: Refetching notifications due to real-time failure');
-          fetchNotifications(false);
-        }, 10000); // Poll every 10 seconds as fallback
-        
-        // Store interval for cleanup
-        (channelRef.current as any).fallbackInterval = fallbackInterval;
-      } else if (status === 'TIMED_OUT') {
-        setIsSubscribed(false);
-        console.warn('⚠️ Realtime notifications subscription timed out - will retry on next mount');
-        // Trigger a refetch to ensure we have current data
-        fetchNotifications(false);
-      } else if (status === 'CLOSED') {
-        setIsSubscribed(false);
-        console.warn('⚠️ Realtime notifications channel closed');
-      }
-    });
-
-    channelRef.current = channel;
-
-    // Cleanup on unmount
-    return () => {
-      // Clear any fallback intervals
-      if ((channelRef.current as any)?.fallbackInterval) {
-        clearInterval((channelRef.current as any).fallbackInterval);
-      }
-      cleanup();
-      setRealtimeError(null); // Clear error on cleanup
-    };
-  }, [userId, orgId, enabled, limit, fetchNotifications]);
+  // Set up Firebase push notification listener
+  useFirebasePushNotifications({
+    onNotification: handleNewNotification,
+    enabled: enabled && !!userId && !!orgId,
+  });
 
   // Mark notification as read
   const markAsRead = useCallback(async (notificationId: string) => {
@@ -348,8 +207,6 @@ export function useNotifications({
     unreadCount,
     loading,
     error,
-    realtimeError,
-    isSubscribed,
     markAsRead,
     markAllAsRead,
     refetch: fetchNotifications,

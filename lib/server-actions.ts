@@ -19,6 +19,11 @@ import {
   getOrgNotificationTargets,
   type NotificationType,
 } from './services/notifications';
+import {
+  registerDeviceToken,
+  removeDeviceToken,
+  type DeviceTokenProvider,
+} from './services/deviceTokens';
 import { createEventSchema, updateEventSchema } from './validation';
 
 // Example server actions with role gating
@@ -1140,4 +1145,48 @@ export async function getUserPreferences() {
     theme: (data?.theme as 'light' | 'dark' | 'system') || 'system',
     language: (data?.language as 'en' | 'is') || 'en',
   };
+}
+
+/**
+ * Register a device token for push notifications
+ */
+export async function registerDeviceTokenAction(
+  token: string,
+  provider: DeviceTokenProvider = 'fcm'
+) {
+  const { user } = await requireServerAuth();
+
+  if (!token || token.trim().length === 0) {
+    throw new Error('Device token is required');
+  }
+
+  try {
+    const deviceToken = await registerDeviceToken(user.id, token, provider);
+    return { success: true, deviceToken };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to register device token';
+    throw new Error(errorMessage);
+  }
+}
+
+/**
+ * Unregister a device token (remove it from push notifications)
+ */
+export async function unregisterDeviceTokenAction(
+  token: string,
+  provider?: DeviceTokenProvider
+) {
+  const { user } = await requireServerAuth();
+
+  if (!token || token.trim().length === 0) {
+    throw new Error('Device token is required');
+  }
+
+  try {
+    await removeDeviceToken(user.id, token, provider);
+    return { success: true };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Failed to unregister device token';
+    throw new Error(errorMessage);
+  }
 }

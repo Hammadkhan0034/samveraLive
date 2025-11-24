@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import FeatureGrid, { FeatureItem } from '@/app/components/FeatureGrid';
-import { Bell, CalendarDays, MessageSquare, Camera, Utensils, FileText, ClipboardCheck, AlertCircle, X } from 'lucide-react';
+import { Bell, CalendarDays, MessageSquare, Camera, Utensils, FileText, ClipboardCheck } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useNotifications } from '@/lib/hooks/useNotifications';
@@ -21,13 +21,11 @@ export default function ParentDashboard() {
   const orgId = session?.user?.user_metadata?.org_id || 
                 session?.user?.user_metadata?.organization_id || 
                 null;
-  const { realtimeError } = useNotifications({
+  useNotifications({
     userId,
     orgId,
     enabled: !!userId && !!orgId,
   });
-  
-  const [dismissedRealtimeError, setDismissedRealtimeError] = useState(false);
   
   // Prefetch routes for instant navigation
   useEffect(() => {
@@ -39,13 +37,6 @@ export default function ParentDashboard() {
   }, [router]);
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
-  
-  // Reset dismissed state when error changes
-  useEffect(() => {
-    if (realtimeError) {
-      setDismissedRealtimeError(false);
-    }
-  }, [realtimeError]);
 
   const [announcements, setAnnouncements] = useState<Array<{ id: string; title: string; body: string | null; created_at: string }>>([]);
   const [menu, setMenu] = useState<{ breakfast?: string | null; lunch?: string | null; snack?: string | null; notes?: string | null } | null>(null);
@@ -451,29 +442,6 @@ export default function ParentDashboard() {
         </p>
       </div>
 
-      {/* Realtime Error Banner */}
-      {realtimeError && !dismissedRealtimeError && (
-        <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-800 dark:bg-amber-900/20">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 flex-shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
-            <div className="flex-1">
-              <h3 className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                Connection Issue
-              </h3>
-              <p className="mt-1 text-sm text-amber-700 dark:text-amber-300">
-                {realtimeError}
-              </p>
-            </div>
-            <button
-              onClick={() => setDismissedRealtimeError(true)}
-              className="flex-shrink-0 rounded-md p-1 text-amber-600 hover:bg-amber-100 dark:text-amber-400 dark:hover:bg-amber-800/30"
-              aria-label="Dismiss error"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Stories Column */}
       <StoryColumn
