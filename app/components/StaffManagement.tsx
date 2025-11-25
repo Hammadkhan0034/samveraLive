@@ -1,12 +1,13 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { Edit, Trash2, Users, X, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
+import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 
 type Lang = 'is' | 'en';
 
@@ -43,6 +44,10 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
   const [staff, setStaff] = useState<Array<{ id: string; email: string; first_name: string; last_name: string | null; is_active: boolean; created_at: string }>>([]);
   const [loadingStaff, setLoadingStaff] = useState(false);
   const [staffError, setStaffError] = useState<string | null>(null);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
 
   // Load initial lists
   useEffect(() => {
@@ -201,6 +206,18 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
     }
   }
 
+  // Pagination logic
+  const totalPages = Math.max(1, Math.ceil(staff.length / itemsPerPage));
+  const paginatedStaff = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return staff.slice(start, start + itemsPerPage);
+  }, [staff, currentPage]);
+
+  // Reset to page 1 when staff data changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [staff.length]);
+
   
 
   return (
@@ -240,24 +257,24 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
       {/* Active Staff Table */}
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
         <h4 className="text-md font-medium mb-3 text-slate-900 dark:text-slate-100">{t.active_staff_members}</h4>
-        <div className="overflow-y-auto max-h-64 rounded-md border border-slate-200 dark:border-slate-700">
-          <table className="w-full text-sm">
-            <thead className="sticky top-0 bg-black text-white z-10">
-              <tr className="text-left">
-                <th className="py-2 pr-3 pl-3 text-white">{t.first_name || 'First Name'}</th>
-                <th className="py-2 pr-3 text-white">{t.last_name || 'Last Name'}</th>
-                <th className="py-2 pr-3 text-white">{t.email}</th>
-                <th className="py-2 pr-3 text-white">{t.staff_role || 'Role'}</th>
-                <th className="py-2 pr-3 text-white">{t.status}</th>
-                <th className="py-2 pr-3 text-white">{t.joined}</th>
-                <th className="py-2 pr-3 text-white">{t.actions}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-600">
-              {staff.length === 0 ? (
-                <tr><td colSpan={7} className="py-4 text-center text-slate-500 dark:text-slate-400">{t.no_staff_members}</td></tr>
-              ) : (
-                staff.map((s) => (
+        {loadingStaff || staff.length === 0 ? (
+          <LoadingSkeleton type="table" rows={5} />
+        ) : (
+          <div className="rounded-t-lg overflow-hidden border border-slate-200 dark:border-slate-700">
+            <table className="w-full text-sm">
+              <thead className="sticky top-0 bg-black text-white z-10">
+                <tr className="text-left">
+                  <th className="py-2 pr-3 pl-3 text-white rounded-tl-lg">{t.first_name || 'First Name'}</th>
+                  <th className="py-2 pr-3 text-white">{t.last_name || 'Last Name'}</th>
+                  <th className="py-2 pr-3 text-white">{t.email}</th>
+                  <th className="py-2 pr-3 text-white">{t.staff_role || 'Role'}</th>
+                  <th className="py-2 pr-3 text-white">{t.status}</th>
+                  <th className="py-2 pr-3 text-white">{t.joined}</th>
+                  <th className="py-2 pr-3 text-white rounded-tr-lg">{t.actions}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-600">
+                {paginatedStaff.map((s) => (
                   <tr 
                     key={s.id} 
                     className="h-12 hover:bg-slate-50/50 dark:hover:bg-slate-700/50"
@@ -304,14 +321,45 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
                       </div>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        {/* Pagination controls */}
+        {staff.length > 0 && (
+          <div className="mt-4 w-full flex justify-end gap-2">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="inline-flex items-center rounded-lg border border-slate-400 px-3 py-1.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+            >
+              {t.prev || 'Prev'}
+            </button>
+            {Array.from({ length: totalPages }).map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentPage(idx + 1)}
+                className={`inline-flex items-center rounded-lg px-3 py-1.5 text-sm ${
+                  currentPage === idx + 1
+                    ? 'bg-white text-black border border-slate-400 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600'
+                    : 'border border-slate-400 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700'
+                }`}
+              >
+                {idx + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="inline-flex items-center rounded-lg border border-slate-400 px-3 py-1.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+            >
+              {t.next || 'Next'}
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Pending invitations removed in direct create flow */}
 
       {/* Add Staff Modal */}
       {isStaffModalOpen && (
@@ -502,11 +550,8 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
         cancelButtonText={t.cancel}
       />
 
-      {/* Success modal removed in direct create flow */}
     </main>
   );
 }
-
-// Translations removed - using centralized translations from @/lib/translations
 
 
