@@ -109,8 +109,8 @@ function AddGuardianPageContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-        <main className="mx-auto max-w-6xl px-4 py-8 md:px-6 mt-10 ml-20">
-          <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <main className="mx-auto max-w-6xl px-4 py-8 md:px-6 ml-20">
+          <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between mt-14">
             <div className="flex items-center gap-4">
               <button onClick={() => router.back()} className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
                 <ArrowLeft className="h-4 w-4" /> {t.back}

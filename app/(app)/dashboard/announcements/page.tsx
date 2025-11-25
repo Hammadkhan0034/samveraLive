@@ -257,12 +257,12 @@ export default function AnnouncementsPage() {
 
         {/* Announcements Table - Show if we have announcements (from cache or fresh load) */}
         {!error && announcements.length > 0 && (
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-black text-white dark:bg-black sticky top-0 z-10">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <div className="rounded-md overflow-hidden border border-slate-200 dark:border-slate-700">
+              <table className="w-full text-sm border-collapse">
+                <thead className="sticky top-0 bg-black text-white dark:bg-black z-10">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">
+                    <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white rounded-tl-xl">
                       {t.col_title}
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">
@@ -271,18 +271,18 @@ export default function AnnouncementsPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">
                       {t.col_created}
                     </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-white">
+                    <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-white rounded-tr-xl">
                       {t.col_actions}
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
                   {announcements.map((announcement) => {
                     const canEdit = canEditOrDelete(announcement);
                     return (
                       <tr
                         key={announcement.id}
-                        className="h-12 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                        className="h-12 hover:bg-slate-50/50 dark:hover:bg-slate-700/30 dark:text-slate-100"
                       >
                         <td className="px-6 py-2">
                           <div className="font-medium text-slate-900 dark:text-slate-100">

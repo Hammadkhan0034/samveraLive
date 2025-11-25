@@ -45,7 +45,6 @@ export default function EditStoryPage() {
   const [classes, setClasses] = useState<Array<{ id: string; name: string }>>([]);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [loading, setLoading] = useState(true);
 
   const [form, setForm] = useState({
     org_id: '',
@@ -75,7 +74,6 @@ export default function EditStoryPage() {
   async function loadStory() {
     if (!storyId || !userId) return;
     
-    setLoading(true);
     setError(null);
     
     try {
@@ -115,8 +113,6 @@ export default function EditStoryPage() {
       setItems(loadedItems);
     } catch (e: any) {
       setError(e.message);
-    } finally {
-      setLoading(false);
     }
   }
 
@@ -354,16 +350,6 @@ export default function EditStoryPage() {
     } finally {
       setSubmitting(false);
     }
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-        <main className="mx-auto max-w-7xl px-4 py-8 md:px-6 mt-10">
-          <div className="text-slate-600 dark:text-slate-400">{t.loading || 'Loading...'}</div>
-        </main>
-      </div>
-    );
   }
 
   return (

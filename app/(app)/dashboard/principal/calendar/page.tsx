@@ -7,7 +7,7 @@ import { Calendar, type CalendarEvent } from '@/app/components/shared/Calendar';
 import { EventDetailsModal } from '@/app/components/shared/EventDetailsModal';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import { deleteEvent, getEvents } from '@/lib/server-actions';
-import { useAuth } from '@/lib/hooks/useAuth';
+import { useAuth, useRequireAuth } from '@/lib/hooks/useAuth';
 import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
@@ -15,10 +15,11 @@ import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton'
 export default function PrincipalCalendarPage() {
   const router = useRouter();
   const { t } = useLanguage();
+  const { user } = useRequireAuth('principal');
   const { session } = useAuth();
   
   // Use universal hook to get org_id (checks metadata first, then API, handles logout if missing)
-  const { orgId } = useCurrentUserOrgId();
+  const { orgId, isLoading: isLoadingOrgId } = useCurrentUserOrgId();
   const [classes, setClasses] = useState<Array<{ id: string; name: string }>>([]);
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
@@ -84,6 +85,24 @@ export default function PrincipalCalendarPage() {
       setDeletingEvent(false);
     }
   };
+
+  // Show loading if orgId is still loading or user is not authenticated
+  if (isLoadingOrgId || !user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+        <main className="mx-auto max-w-5xl px-4 py-8 md:px-6">
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="text-center">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-600 mx-auto mb-4"></div>
+              <p className="text-slate-600 dark:text-slate-400">
+                {t.loading || 'Loading calendar...'}
+              </p>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">

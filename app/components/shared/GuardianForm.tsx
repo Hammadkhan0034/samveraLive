@@ -126,7 +126,7 @@ export function GuardianForm({
 
   return (
     <div className={asPage ? "w-full" : "fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"}>
-      <div className={asPage ? "w-[70%] ml-20  bg-white dark:bg-slate-800 p-6 shadow-sm" : "w-full max-w-md rounded-2xl bg-white dark:bg-slate-800 p-6 shadow-xl"}>
+      <div className={asPage ? "w-[70%] ml-20 rounded-xl bg-white dark:bg-slate-800 p-6 shadow-sm" : "w-full max-w-md rounded-2xl bg-white dark:bg-slate-800 p-6 shadow-xl"}>
         {!asPage && (
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">

@@ -179,7 +179,7 @@ function AddMenuPageContent() {
           <div className="mb-6 flex flex-col gap-3 mt-14 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-4">
               <button
-                onClick={() => router.push('/dashboard/teacher?tab=menus')}
+                onClick={() => router.push('/dashboard/menus-list')}
                 className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
               >
                 <ArrowLeft className="h-4 w-4" /> {t.back}
