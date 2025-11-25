@@ -53,10 +53,6 @@ function TeacherDashboardContent({
         </div>
         <div className="flex items-center gap-3">
           <ProfileSwitcher />
-          <div className="hidden md:flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-            <CalendarDays className="h-4 w-4" />
-            <span>{t.today_hint}</span>
-          </div>
         </div>
       </div>
       {/* Error Message */}

@@ -137,7 +137,7 @@ export default function TeacherLayout({
         {/* Sidebar */}
         <aside
           className={clsx(
-            'flex-shrink-0 w-72 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 overflow-y-auto transition-transform duration-300 ease-in-out',
+            'flex-shrink-0 w-72 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-900 overflow-y-auto transition-transform duration-300 ease-in-out',
             'md:relative',
             sidebarOpen 
               ? 'fixed top-14 left-0 bottom-0 z-50 translate-x-0 md:translate-x-0' 
