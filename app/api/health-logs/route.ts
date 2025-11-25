@@ -142,18 +142,54 @@ export async function GET(request: Request) {
       .order('recorded_at', { ascending: false });
 
     // Role-based filtering:
-    // - Teachers/Parents: only their own logs
+    // - Teachers: only their own logs (recorded_by)
+    // - Parents: all logs for their linked students (not just ones they recorded)
     // - Admins/Principals: all logs in their org
     const userRoles = user.user_metadata?.roles || [];
     const isAdminOrPrincipal = userRoles.some((role: string) =>
       ['admin', 'principal'].includes(role)
     );
+    const isParent = userRoles.some((role: string) => role === 'parent');
+    const isTeacher = userRoles.some((role: string) => role === 'teacher');
 
-    if (!isAdminOrPrincipal) {
-      // Teachers and parents only see their own logs
+    if (isParent) {
+      // For parents, fetch linked students and filter by student_id
+      const { data: relationships, error: relError } = await supabaseAdmin
+        .from('guardian_students')
+        .select('student_id')
+        .eq('guardian_id', user.id);
+      
+      if (relError) {
+        console.error('❌ Error fetching guardian-student relationships:', relError);
+        return NextResponse.json(
+          { healthLogs: [], total_logs: 0 },
+          {
+            status: 200,
+            headers: getStableDataCacheHeaders(),
+          }
+        );
+      }
+      
+      const linkedStudentIds = (relationships || []).map((r: any) => r.student_id).filter(Boolean);
+      
+      // If no linked students, return empty results
+      if (linkedStudentIds.length === 0) {
+        return NextResponse.json(
+          { healthLogs: [], total_logs: 0 },
+          {
+            status: 200,
+            headers: getStableDataCacheHeaders(),
+          }
+        );
+      }
+      
+      // Filter by linked student IDs
+      query = query.in('student_id', linkedStudentIds);
+    } else if (isTeacher && !isAdminOrPrincipal) {
+      // Teachers only see their own logs
       query = query.eq('recorded_by', user.id);
     }
-    // Admins/Principals see all logs in the org (no recorded_by filter)
+    // Admins/Principals see all logs in the org (no additional filter)
 
     // Optional filters
     if (studentId) {

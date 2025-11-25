@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import FeatureGrid, { FeatureItem } from '@/app/components/FeatureGrid';
-import { Bell, CalendarDays, MessageSquare, Camera, Utensils, FileText, ClipboardCheck } from 'lucide-react';
+import { Bell, CalendarDays, MessageSquare, Camera, Utensils, FileText, ClipboardCheck, Baby } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useNotifications } from '@/lib/hooks/useNotifications';
@@ -34,6 +34,7 @@ export default function ParentDashboard() {
     router.prefetch('/dashboard/attendance');
     router.prefetch('/dashboard/parent/messages');
     router.prefetch('/dashboard/parent/calendar');
+    router.prefetch('/dashboard/parent/diapers');
   }, [router]);
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
@@ -48,6 +49,8 @@ export default function ParentDashboard() {
   const [menusForStudents, setMenusForStudents] = useState<Array<{ studentName: string; className?: string; menu: { breakfast?: string | null; lunch?: string | null; snack?: string | null; notes?: string | null } }>>([]);
   const [attendanceData, setAttendanceData] = useState<Array<{ studentId: string; studentName: string; className?: string; status: string; date: string }>>([]);
   const [loadingAttendance, setLoadingAttendance] = useState(false);
+  const [healthLogsCount, setHealthLogsCount] = useState(0);
+  const [loadingHealthLogs, setLoadingHealthLogs] = useState(false);
   
   useEffect(() => {
     let isMounted = true;
@@ -348,15 +351,20 @@ export default function ParentDashboard() {
             );
             if (response.ok) {
               const data = await response.json();
-              const record = data.attendance?.[0];
-              return {
-                studentId: student.id,
-                studentName: `${student.first_name} ${student.last_name || ''}`.trim(),
-                className: student.classes?.name,
-                status: record?.status || 'not_recorded',
-                date: todayStr,
-              };
+              // Check if attendance array exists and has records
+              if (data.attendance && Array.isArray(data.attendance) && data.attendance.length > 0) {
+                // Find the record for today's date
+                const record = data.attendance.find((r: any) => r.date === todayStr) || data.attendance[0];
+                return {
+                  studentId: student.id,
+                  studentName: `${student.first_name} ${student.last_name || ''}`.trim(),
+                  className: student.classes?.name,
+                  status: record?.status || 'not_recorded',
+                  date: todayStr,
+                };
+              }
             }
+            // If no attendance found, return not_recorded
             return {
               studentId: student.id,
               studentName: `${student.first_name} ${student.last_name || ''}`.trim(),
@@ -365,6 +373,7 @@ export default function ParentDashboard() {
               date: todayStr,
             };
           } catch (error) {
+            console.error(`Error fetching attendance for student ${student.id}:`, error);
             return {
               studentId: student.id,
               studentName: `${student.first_name} ${student.last_name || ''}`.trim(),
@@ -420,6 +429,56 @@ export default function ParentDashboard() {
     return () => clearInterval(interval);
   }, [session?.user?.id]);
 
+  // Load health logs count for linked students
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadHealthLogsCount() {
+      if (!session?.user?.id || linkedStudents.length === 0) {
+        if (isMounted) {
+          setHealthLogsCount(0);
+        }
+        return;
+      }
+
+      try {
+        setLoadingHealthLogs(true);
+        const response = await fetch(`/api/health-logs?t=${Date.now()}`, { cache: 'no-store' });
+        if (response.ok) {
+          const data = await response.json();
+          const healthLogs = data.healthLogs || [];
+          // Filter to only show logs for linked students
+          const linkedStudentIds = linkedStudents.map(s => s.id);
+          const filteredLogs = healthLogs.filter((log: any) => 
+            log.student_id && linkedStudentIds.includes(log.student_id)
+          );
+          if (isMounted) {
+            setHealthLogsCount(filteredLogs.length);
+          }
+        } else {
+          if (isMounted) {
+            setHealthLogsCount(0);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading health logs count:', error);
+        if (isMounted) {
+          setHealthLogsCount(0);
+        }
+      } finally {
+        if (isMounted) {
+          setLoadingHealthLogs(false);
+        }
+      }
+    }
+
+    loadHealthLogsCount();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [session?.user?.id, linkedStudents]);
+
   const items: FeatureItem[] = [
     { href: '/notices', title: t.notices, desc: t.notices_desc, Icon: Bell },
     { href: '/dashboard/parent/messages', title: t.messages, desc: t.messages_desc, Icon: MessageSquare, badge: messagesCount > 0 ? messagesCount : undefined },
@@ -427,6 +486,7 @@ export default function ParentDashboard() {
     { href: '#', title: t.stories, desc: t.stories_desc, Icon: FileText },
     { href: '#', title: t.menu, desc: t.menu_desc, Icon: Utensils },
     { href: '#', title: t.attendance, desc: t.attendance_desc, Icon: ClipboardCheck },
+    { href: '#', title: t.di_title || 'Diapers & Health', desc: t.di_hint || 'View health logs for your child', Icon: Baby },
   ];
 
 
@@ -478,12 +538,13 @@ export default function ParentDashboard() {
             ) : null}
           </button>
           {items.map((item, idx) => {
-            if (item.href === '#' && (item.title === t.menu || item.title === t.stories || item.title === t.attendance)) {
-              // Custom menu/stories/attendance tile with onClick
+            if (item.href === '#' && (item.title === t.menu || item.title === t.stories || item.title === t.attendance || item.title === (t.di_title || 'Diapers & Health'))) {
+              // Custom menu/stories/attendance/diapers tile with onClick
               const getRoute = () => {
                 if (item.title === t.menu) return '/dashboard/menus-view';
                 if (item.title === t.stories) return '/dashboard/stories';
                 if (item.title === t.attendance) return '/dashboard/attendance';
+                if (item.title === (t.di_title || 'Diapers & Health')) return '/dashboard/parent/diapers';
                 return '#';
               };
               return (
@@ -500,6 +561,9 @@ export default function ParentDashboard() {
                     } else if (item.title === t.attendance) {
                       router.prefetch('/dashboard/attendance');
                       router.push('/dashboard/attendance');
+                    } else if (item.title === (t.di_title || 'Diapers & Health')) {
+                      router.prefetch('/dashboard/parent/diapers');
+                      router.push('/dashboard/parent/diapers');
                     }
                   }}
                   className="block rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200 dark:border-slate-700 dark:bg-slate-800 text-left w-full cursor-pointer"

@@ -485,6 +485,9 @@ export const enText = {
   di_dirty: 'Dirty',
   di_mixed: 'Mixed',
   di_notes_ph: 'Optional notes…',
+  no_health_logs: 'No health logs available',
+  health_log: 'Health Log',
+  health_logs: 'Health Logs',
 
   // Messages
   msg_title: 'Messages',

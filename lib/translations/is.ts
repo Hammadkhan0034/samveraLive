@@ -486,6 +486,9 @@ export const isText = {
   di_dirty: 'Skítug',
   di_mixed: 'Blanda',
   di_notes_ph: 'Valfrjálsar athugasemdir…',
+  no_health_logs: 'Engar heilsuskráningar tiltækar',
+  health_log: 'Heilsuskráning',
+  health_logs: 'Heilsuskráningar',
 
   // Messages
   msg_title: 'Skilaboð',
