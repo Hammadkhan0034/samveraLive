@@ -423,7 +423,7 @@ export default function ParentDashboard() {
   const items: FeatureItem[] = [
     { href: '/notices', title: t.notices, desc: t.notices_desc, Icon: Bell },
     { href: '/dashboard/parent/messages', title: t.messages, desc: t.messages_desc, Icon: MessageSquare, badge: messagesCount > 0 ? messagesCount : undefined },
-    { href: '/media', title: t.media, desc: t.media_desc, Icon: Camera },
+    { href: '/dashboard/parent/media', title: t.media, desc: t.media_desc, Icon: Camera },
     { href: '#', title: t.stories, desc: t.stories_desc, Icon: FileText },
     { href: '#', title: t.menu, desc: t.menu_desc, Icon: Utensils },
     { href: '#', title: t.attendance, desc: t.attendance_desc, Icon: ClipboardCheck },

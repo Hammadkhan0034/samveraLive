@@ -80,17 +80,53 @@ export default function TeacherMediaPage() {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/photos?orgId=${orgId}&limit=100`, {
-        cache: 'no-store',
+      // Get teacher's assigned class IDs
+      const teacherClassIds = classes.map((cls) => cls.id).filter(Boolean);
+
+      const photoPromises: Promise<Photo[]>[] = [];
+
+      // Always fetch org-wide photos (where class_id is null) - these show to all teachers
+      photoPromises.push(
+        fetch(`/api/photos?orgId=${orgId}&limit=100`, { cache: 'no-store' })
+          .then(async (response) => {
+            if (!response.ok) {
+              const data = await response.json();
+              throw new Error(data.error || data.details || 'Failed to fetch photos');
+            }
+            const data = await response.json();
+            // Filter to only org-wide photos (class_id is null)
+            return ((data.photos || []) as Photo[]).filter((photo: Photo) => !photo.class_id);
+          })
+      );
+
+      // Fetch class-specific photos for teacher's assigned classes
+      teacherClassIds.forEach((classId) => {
+        photoPromises.push(
+          fetch(`/api/photos?orgId=${orgId}&classId=${classId}&limit=100`, { cache: 'no-store' })
+            .then(async (response) => {
+              if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.error || data.details || 'Failed to fetch photos');
+              }
+              const data = await response.json();
+              return (data.photos || []) as Photo[];
+            })
+        );
       });
 
-      const data = await response.json();
+      const photoArrays = await Promise.all(photoPromises);
+      // Flatten and deduplicate by photo ID
+      const allPhotos = photoArrays.flat();
+      const uniquePhotos = Array.from(
+        new Map(allPhotos.map((photo: Photo) => [photo.id, photo])).values()
+      ) as Photo[];
 
-      if (!response.ok) {
-        throw new Error(data.error || data.details || 'Failed to fetch photos');
-      }
+      // Sort by created_at descending
+      uniquePhotos.sort((a: Photo, b: Photo) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
 
-      setPhotos(data.photos || []);
+      setPhotos(uniquePhotos);
     } catch (err) {
       console.error('Error fetching photos:', err);
       setError(err instanceof Error ? err.message : 'Failed to load photos');
@@ -99,12 +135,12 @@ export default function TeacherMediaPage() {
     }
   };
 
-  // Fetch photos on mount and when orgId changes
+  // Fetch photos on mount and when orgId or classes change
   useEffect(() => {
     if (orgId) {
       fetchPhotos();
     }
-  }, [orgId]);
+  }, [orgId, classes]);
 
   // Handle successful upload
   const handleUploadSuccess = () => {
