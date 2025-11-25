@@ -175,27 +175,12 @@ function TeacherDashboardPageContent() {
 
   // Single consolidated function to fetch metrics
   const fetchMetrics = useCallback(async (signal?: AbortSignal) => {
-    if (!finalOrgId || !userId) {
-      return;
-    }
-
-    const classIds = teacherClasses.map(c => c.id).filter(Boolean);
-    if (classIds.length === 0) {
-      return;
-    }
-
     try {
       setIsLoading(true);
       setError(null);
 
-      const classIdsString = classIds.join(',');
-      const params = new URLSearchParams();
-      params.set('orgId', finalOrgId);
-      params.set('userId', userId);
-      params.set('classIds', classIdsString);
-      params.set('userRole', userRole);
-
-      const res = await fetch(`/api/teacher-dashboard-metrics?${params.toString()}&t=${Date.now()}`, {
+      // API gets all data from authenticated session, no query params needed
+      const res = await fetch(`/api/teacher-dashboard-metrics?t=${Date.now()}`, {
         cache: 'no-store',
         signal,
       });
@@ -249,9 +234,9 @@ function TeacherDashboardPageContent() {
         setIsLoading(false);
       }
     }
-  }, [finalOrgId, userId, userRole, teacherClasses]);
+  }, []);
 
-  // Main effect: Load metrics when dependencies change
+  // Main effect: Load metrics on mount
   useEffect(() => {
     // Cancel any in-flight request
     if (abortControllerRef.current) {
@@ -286,7 +271,7 @@ function TeacherDashboardPageContent() {
         inFlightRequestRef.current = null;
       }
     };
-  }, [finalOrgId, userId, userRole, teacherClasses.length, fetchMetrics]);
+  }, [fetchMetrics]);
 
   // Consolidated event listeners for refresh events
   useEffect(() => {
@@ -314,12 +299,7 @@ function TeacherDashboardPageContent() {
       }
 
       visibilityDebounceRef.current = setTimeout(() => {
-        if (
-          document.visibilityState === 'visible' &&
-          userId &&
-          finalOrgId &&
-          teacherClasses.length > 0
-        ) {
+        if (document.visibilityState === 'visible') {
           handleRefresh();
         }
       }, 300); // 300ms debounce
@@ -338,7 +318,7 @@ function TeacherDashboardPageContent() {
         clearTimeout(visibilityDebounceRef.current);
       }
     };
-  }, [userId, finalOrgId, teacherClasses.length, fetchMetrics]);
+  }, [fetchMetrics]);
 
   // Retry function
   const handleRetry = useCallback(() => {

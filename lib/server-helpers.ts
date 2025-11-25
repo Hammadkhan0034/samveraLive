@@ -14,16 +14,20 @@ export class MissingOrgIdError extends Error {
 }
 
 /**
- * Get organization ID from a user object.
+ * Get the current authenticated user's organization ID.
  * Checks user_metadata first, then falls back to database query.
+ * Throws MissingOrgIdError if org_id cannot be found after both checks.
  * 
- * @param user - The user object to get org_id from
+ * @param user - Optional user object. If not provided, will get from requireServerAuth()
  * @returns Promise<string> - The organization ID
  * @throws MissingOrgIdError - If org_id is not found in metadata or database
  */
-async function getOrgIdFromUser(user: User): Promise<string> {
+export async function getCurrentUserOrgId(user?: User): Promise<string> {
+  // Get user from parameter or auth
+  const targetUser = user ?? (await requireServerAuth()).user;
+  
   // Step 1: Check user_metadata first (fastest, no DB query)
-  const userMetadata = user.user_metadata as UserMetadata | undefined;
+  const userMetadata = targetUser.user_metadata as UserMetadata | undefined;
   const orgIdFromMetadata = userMetadata?.org_id;
   
   if (orgIdFromMetadata) {
@@ -38,7 +42,7 @@ async function getOrgIdFromUser(user: User): Promise<string> {
   const { data, error } = await supabaseAdmin
     .from('users')
     .select('org_id')
-    .eq('id', user.id)
+    .eq('id', targetUser.id)
     .maybeSingle();
   
   if (error || !data?.org_id) {
@@ -46,23 +50,5 @@ async function getOrgIdFromUser(user: User): Promise<string> {
   }
   
   return data.org_id;
-}
-
-/**
- * Get the current authenticated user's organization ID.
- * Checks user_metadata first, then falls back to database query.
- * Throws MissingOrgIdError if org_id cannot be found after both checks.
- * 
- * @param user - Optional user object. If not provided, will get from requireServerAuth()
- * @returns Promise<string> - The organization ID
- * @throws MissingOrgIdError - If org_id is not found in metadata or database
- */
-export async function getCurrentUserOrgId(user?: User): Promise<string> {
-  if (user) {
-    return getOrgIdFromUser(user);
-  }
-  
-  const { user: authUser } = await requireServerAuth();
-  return getOrgIdFromUser(authUser);
 }
 

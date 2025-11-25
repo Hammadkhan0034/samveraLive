@@ -4,16 +4,13 @@ import { createServerClient } from '@supabase/ssr';
 import { supabaseAdmin } from '@/lib/supabaseClient';
 import { getNoCacheHeaders } from '@/lib/cacheConfig';
 import { z } from 'zod';
-import { validateQuery, orgIdSchema, userIdSchema } from '@/lib/validation';
+import { validateQuery } from '@/lib/validation';
 import { type UserMetadata } from '@/lib/types/auth';
 
 import { getCurrentUserOrgId, MissingOrgIdError } from '@/lib/server-helpers';
 
 // GET query parameter schema
 const getMetricsQuerySchema = z.object({
-  orgId: orgIdSchema,
-  userId: userIdSchema,
-  classIds: z.string(), // Comma-separated class IDs
   userRole: z.enum(['parent', 'guardian', 'teacher', 'principal', 'admin']).optional(),
 });
 
@@ -83,18 +80,43 @@ export async function GET(request: Request) {
       }, { status: 403 });
     }
 
+    // Get userId from authenticated session
+    const userId = user.id;
+    
+    // Get orgId from authenticated user
+    let orgId: string;
+    try {
+      orgId = await getCurrentUserOrgId(user);
+    } catch (err) {
+      if (err instanceof MissingOrgIdError) {
+        return NextResponse.json({ 
+          error: 'Organization ID not found',
+          code: 'MISSING_ORG_ID'
+        }, { status: 401 });
+      }
+      throw err;
+    }
+    
+    // Get teacher's classes from class_memberships
+    const { data: teacherMemberships, error: membershipError } = await supabaseAdmin
+      .from('class_memberships')
+      .select('class_id')
+      .eq('user_id', userId)
+      .eq('org_id', orgId);
+    
+    if (membershipError) {
+      console.error('Error fetching teacher memberships:', membershipError);
+      return NextResponse.json({ error: 'Failed to fetch teacher classes' }, { status: 500 });
+    }
+    
+    // Get validated class IDs from memberships
+    const validatedClassIds = (teacherMemberships || []).map(m => m.class_id);
+
+    // Get userRole from query params or user metadata
     const { searchParams } = new URL(request.url);
     const queryValidation = validateQuery(getMetricsQuerySchema, searchParams);
-    if (!queryValidation.success) {
-      return queryValidation.error;
-    }
-    const { orgId, userId, classIds, userRole } = queryValidation.data;
-
-    // Parse class IDs from comma-separated string
-    const classIdsArray = classIds
-      .split(',')
-      .map(id => id.trim())
-      .filter(Boolean);
+    const userRole = queryValidation.success ? queryValidation.data.userRole : undefined;
+    const finalUserRole = userRole || (user.user_metadata as UserMetadata | undefined)?.activeRole || (user.user_metadata as UserMetadata | undefined)?.roles?.[0] || 'teacher';
 
     const today = new Date().toISOString().split('T')[0];
     const now = Date.now();
@@ -111,10 +133,10 @@ export async function GET(request: Request) {
     ] = await Promise.allSettled([
       // 1. Attendance count: Sum of attendance records for today across all classes
       (async () => {
-        if (classIdsArray.length === 0) return 0;
+        if (validatedClassIds.length === 0) return 0;
         
         try {
-          const fetchPromises = classIdsArray.map(async (classId) => {
+          const fetchPromises = validatedClassIds.map(async (classId) => {
             try {
               if (!supabaseAdmin) return 0;
               const { count, error } = await supabaseAdmin
@@ -148,14 +170,14 @@ export async function GET(request: Request) {
 
       // 2. Students count: Total students from all teacher's classes
       (async () => {
-        if (classIdsArray.length === 0) return 0;
+        if (validatedClassIds.length === 0) return 0;
         
         try {
           const { count, error } = await supabaseAdmin
             .from('students')
             .select('*', { count: 'exact', head: true })
             .eq('org_id', orgId)
-            .in('class_id', classIdsArray)
+            .in('class_id', validatedClassIds)
             .is('deleted_at', null);
           
           if (error) {
@@ -214,8 +236,6 @@ export async function GET(request: Request) {
       // 4. Stories count: Stories from last 24 hours
       (async () => {
         try {
-          const teacherClassIdsString = classIdsArray.join(',');
-          
           // Build query similar to stories endpoint
           let query = supabaseAdmin
             .from('stories')
@@ -225,8 +245,8 @@ export async function GET(request: Request) {
             .is('deleted_at', null);
           
           // Filter for teacher's classes or org-wide
-          if (classIdsArray.length > 0) {
-            query = query.or(`class_id.is.null,class_id.in.(${classIdsArray.join(',')})`);
+          if (validatedClassIds.length > 0) {
+            query = query.or(`class_id.is.null,class_id.in.(${validatedClassIds.join(',')})`);
           } else {
             query = query.is('class_id', null);
           }
@@ -254,19 +274,15 @@ export async function GET(request: Request) {
       // 5. Announcements count: Total announcements for the teacher
       (async () => {
         try {
-          const userMetadata = user.user_metadata as UserMetadata | undefined;
-          const finalUserRole = userRole || userMetadata?.activeRole || userMetadata?.roles?.[0] || 'teacher';
-          const teacherClassIdsString = classIdsArray.join(',');
-          
           let query = supabaseAdmin
             .from('announcements')
             .select('id')
             .eq('is_public', true);
           
           // Apply same filtering logic as announcements endpoint
-          if (finalUserRole === 'teacher' && classIdsArray.length > 0) {
-            query = query.or(`class_id.is.null,class_id.in.(${classIdsArray.join(',')})`);
-          } else if (finalUserRole === 'teacher' && classIdsArray.length === 0) {
+          if (finalUserRole === 'teacher' && validatedClassIds.length > 0) {
+            query = query.or(`class_id.is.null,class_id.in.(${validatedClassIds.join(',')})`);
+          } else if (finalUserRole === 'teacher' && validatedClassIds.length === 0) {
             query = query.is('class_id', null);
           } else {
             query = query.is('class_id', null);
