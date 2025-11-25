@@ -63,6 +63,7 @@ export const isText = {
   kpi_stories: 'Sögur',
   kpi_announcements: 'Tilkynningar',
   kpi_messages: 'Skilaboð',
+  kpi_photos: 'Myndir',
   classes_management: 'Hópastjórnun',
   add_class: 'Bæta við hóp',
   edit_class: 'Breyta hóp',

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Users, School, ChartBar as BarChart3, FileText, Plus, ListFilter as Filter, Search, CircleCheck as CheckCircle2, Circle as XCircle, Eye, EyeOff, Settings, Bell, Utensils, Megaphone, MessageSquare, CalendarDays } from 'lucide-react';
+import { Users, School, ChartBar as BarChart3, FileText, Plus, ListFilter as Filter, Search, CircleCheck as CheckCircle2, Circle as XCircle, Eye, EyeOff, Settings, Bell, Utensils, Megaphone, MessageSquare, CalendarDays, Camera } from 'lucide-react';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
@@ -56,6 +56,18 @@ export default function PrincipalDashboard() {
         
         const cachedStoriesCount = localStorage.getItem(`stories_count_cache_${userId}`);
         if (cachedStoriesCount) setStoriesCount(parseInt(cachedStoriesCount));
+
+        const cachedAnnouncementsCount = localStorage.getItem(`announcements_count_cache_${userId}`);
+        if (cachedAnnouncementsCount) setAnnouncementsCount(parseInt(cachedAnnouncementsCount));
+
+        const cachedMessagesCount = localStorage.getItem(`messages_count_cache_${userId}`);
+        if (cachedMessagesCount) setMessagesCount(parseInt(cachedMessagesCount));
+
+        const cachedPhotosCount = localStorage.getItem(`photos_count_cache_${userId}`);
+        if (cachedPhotosCount) setPhotosCount(parseInt(cachedPhotosCount));
+
+        const cachedCalendarEvents = localStorage.getItem(`calendar_events_cache_${userId}`);
+        if (cachedCalendarEvents) setCalendarEvents(JSON.parse(cachedCalendarEvents));
       } else {
         // If no session, clear old cached data to prevent showing old principal's data
         // This ensures fresh data loads when a new principal signs in
@@ -65,6 +77,11 @@ export default function PrincipalDashboard() {
           localStorage.removeItem('students_count_cache');
           localStorage.removeItem('staff_count_cache');
           localStorage.removeItem('classes_count_cache');
+          localStorage.removeItem('menus_count_cache');
+          localStorage.removeItem('stories_count_cache');
+          localStorage.removeItem('announcements_count_cache');
+          localStorage.removeItem('messages_count_cache');
+          localStorage.removeItem('photos_count_cache');
         }
       }
   }, [session?.user?.id]);
@@ -84,11 +101,12 @@ export default function PrincipalDashboard() {
         loadMenusForKPI(false),
         loadStoriesForKPI(),
         loadAnnouncementsForKPI(),
-        loadMessagesForKPI(false)
+        loadMessagesForKPI(false),
+        loadPhotosForKPI(false)
       ]).then((results) => {
         // Log results for debugging
         results.forEach((result, index) => {
-          const names = ['loadOrgs', 'loadClassesForKPI', 'loadStaff', 'loadStaffForKPI', 'loadGuardiansForKPI', 'loadStudentsForKPI', 'loadMenusForKPI', 'loadStoriesForKPI', 'loadAnnouncementsForKPI'];
+          const names = ['loadOrgs', 'loadClassesForKPI', 'loadStaff', 'loadStaffForKPI', 'loadGuardiansForKPI', 'loadStudentsForKPI', 'loadMenusForKPI', 'loadStoriesForKPI', 'loadAnnouncementsForKPI', 'loadPhotosForKPI'];
           if (result.status === 'rejected') {
             console.error(`❌ ${names[index]} failed:`, result.reason);
           } else {
@@ -242,6 +260,23 @@ export default function PrincipalDashboard() {
     }
   }
 
+  async function loadPhotosForKPI(showLoading = true) {
+    const orgId = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
+    if (!orgId) return;
+    try {
+      const res = await fetch(`/api/photos?orgId=${orgId}&limit=100&t=${Date.now()}`, { cache: 'no-store', credentials: 'include' });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
+      const photosList = json.photos || [];
+      setPhotosCount(photosList.length);
+      if (typeof window !== 'undefined' && session?.user?.id) {
+        localStorage.setItem(`photos_count_cache_${session.user.id}`, String(photosList.length));
+      }
+    } catch (e: any) {
+      console.error('❌ Error loading photos count:', e.message);
+    }
+  }
+
   // Calendar state (for KPI count only)
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
 
@@ -321,6 +356,20 @@ export default function PrincipalDashboard() {
     }
   }, [finalOrgId, session?.user?.id, userMetadata]);
 
+  // Listen for photos refresh event
+  useEffect(() => {
+    const handlePhotosRefresh = () => {
+      loadPhotosForKPI();
+    };
+    
+    if (typeof window !== 'undefined') {
+      window.addEventListener('photos-refresh', handlePhotosRefresh);
+      return () => {
+        window.removeEventListener('photos-refresh', handlePhotosRefresh);
+      };
+    }
+  }, [finalOrgId, session?.user?.id]);
+
   // Refresh all data function for real-time updates
   const refreshAllData = async () => {
     if (session?.user?.id) {
@@ -334,7 +383,8 @@ export default function PrincipalDashboard() {
         loadMenusForKPI(),
         loadStoriesForKPI(),
         loadAnnouncementsForKPI(),
-        loadMessagesForKPI()
+        loadMessagesForKPI(),
+        loadPhotosForKPI()
       ]);
     }
   };
@@ -398,6 +448,14 @@ export default function PrincipalDashboard() {
   const [messagesCount, setMessagesCount] = useState(() => {
     if (typeof window !== 'undefined' && session?.user?.id) {
       const cached = localStorage.getItem(`messages_count_cache_${session.user.id}`);
+      return cached ? parseInt(cached) : 0;
+    }
+    return 0;
+  });
+
+  const [photosCount, setPhotosCount] = useState(() => {
+    if (typeof window !== 'undefined' && session?.user?.id) {
+      const cached = localStorage.getItem(`photos_count_cache_${session.user.id}`);
       return cached ? parseInt(cached) : 0;
     }
     return 0;
@@ -474,7 +532,13 @@ export default function PrincipalDashboard() {
       icon: MessageSquare,
       onClick: () => router.push('/dashboard/principal/messages')
     },
-  ], [t, lang, studentsCount, staffCount, classesCount, guardiansCount, menusCount, storiesCount, announcementsCount, messagesCount, router]);
+    {
+      label: t.kpi_photos,
+      value: photosCount,
+      icon: Camera,
+      onClick: () => router.push('/dashboard/principal/photos')
+    },
+  ], [t, lang, studentsCount, staffCount, classesCount, guardiansCount, menusCount, storiesCount, announcementsCount, messagesCount, photosCount, router]);
 
 
   // Load classes count for KPI (simplified, just count)

@@ -63,6 +63,7 @@ export const enText = {
   kpi_stories: 'Stories',
   kpi_announcements: 'Announcements',
   kpi_messages: 'Messages',
+  kpi_photos: 'Photos',
   classes_management: 'Classes Management',
   add_class: 'Add class',
   edit_class: 'Edit Class',
