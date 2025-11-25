@@ -346,3 +346,76 @@ export async function POST(request: Request) {
   }
 }
 
+export async function DELETE(request: Request) {
+  try {
+    const { user } = await requireServerAuth();
+
+    if (!supabaseAdmin) {
+      return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const photoId = searchParams.get('photoId');
+
+    if (!photoId) {
+      return NextResponse.json({ error: 'Photo ID is required' }, { status: 400 });
+    }
+
+    // Get photo record to verify ownership and get upload info
+    const { data: photo, error: photoError } = await supabaseAdmin
+      .from('photos')
+      .select('id, org_id, upload_id')
+      .eq('id', photoId)
+      .is('deleted_at', null)
+      .single();
+
+    if (photoError || !photo) {
+      return NextResponse.json({ error: 'Photo not found' }, { status: 404 });
+    }
+
+    // Verify user has access to this org
+    const userOrgId = await getCurrentUserOrgId(user);
+    if (userOrgId !== photo.org_id) {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+    }
+
+    // Get upload record to get file path
+    const { data: upload } = photo.upload_id
+      ? await supabaseAdmin
+          .from('uploads')
+          .select('path')
+          .eq('id', photo.upload_id)
+          .single()
+      : { data: null };
+
+    // Soft delete the photo (set deleted_at)
+    const { error: deleteError } = await supabaseAdmin
+      .from('photos')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', photoId);
+
+    if (deleteError) {
+      console.error('Error deleting photo:', deleteError);
+      return NextResponse.json({ error: 'Failed to delete photo' }, { status: 500 });
+    }
+
+    // Optionally delete the file from storage (or keep it for recovery)
+    // For now, we'll keep the file in storage but mark the photo as deleted
+    // Uncomment below if you want to delete the file too:
+    // if (upload?.path) {
+    //   await supabaseAdmin.storage.from('photos').remove([upload.path]);
+    // }
+
+    return NextResponse.json({ success: true }, { status: 200 });
+  } catch (err: any) {
+    if (err.message === 'Authentication required') {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+    if (err instanceof MissingOrgIdError) {
+      return NextResponse.json({ error: err.message }, { status: 401 });
+    }
+    console.error('Error in DELETE /api/photos:', err);
+    return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 });
+  }
+}
+

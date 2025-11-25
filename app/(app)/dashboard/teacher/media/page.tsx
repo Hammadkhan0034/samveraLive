@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Camera, Plus, Image as ImageIcon } from 'lucide-react';
+import { Camera, Plus, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useTeacherOrgId } from '@/lib/hooks/useTeacherOrgId';
@@ -10,6 +10,7 @@ import { useTeacherClasses } from '@/lib/hooks/useTeacherClasses';
 import { useTeacherStudents } from '@/lib/hooks/useTeacherStudents';
 import TeacherPageLayout from '@/app/components/shared/TeacherPageLayout';
 import { PhotoUploadModal } from '@/app/components/shared/PhotoUploadModal';
+import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 
 type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
 
@@ -66,6 +67,10 @@ export default function TeacherMediaPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [photoToDelete, setPhotoToDelete] = useState<Photo | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Fetch photos
   const fetchPhotos = async () => {
@@ -106,6 +111,43 @@ export default function TeacherMediaPage() {
     fetchPhotos();
   };
 
+  // Handle delete photo
+  const handleDeleteClick = (photo: Photo) => {
+    setPhotoToDelete(photo);
+    setIsDeleteModalOpen(true);
+    setDeleteError(null);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!photoToDelete) return;
+
+    setIsDeleting(true);
+    setDeleteError(null);
+
+    try {
+      const response = await fetch(`/api/photos?photoId=${photoToDelete.id}`, {
+        method: 'DELETE',
+        cache: 'no-store',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete photo');
+      }
+
+      // Remove photo from state
+      setPhotos((prev) => prev.filter((p) => p.id !== photoToDelete.id));
+      setIsDeleteModalOpen(false);
+      setPhotoToDelete(null);
+    } catch (err) {
+      console.error('Error deleting photo:', err);
+      setDeleteError(err instanceof Error ? err.message : 'Failed to delete photo');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const userId = session?.user?.id || '';
 
   return (
@@ -122,7 +164,7 @@ export default function TeacherMediaPage() {
               className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
             >
               <Plus className="h-4 w-4" />
-              {t.upload || 'Upload Photo'}
+              {(t as any).upload_photo || t.upload || 'Upload Photo'}
             </button>
           )}
         </div>
@@ -150,8 +192,8 @@ export default function TeacherMediaPage() {
             {photos.length === 0 ? (
               <div className="col-span-full text-center py-12 text-slate-500 dark:text-slate-400">
                 <ImageIcon className="h-12 w-12 mx-auto mb-3 text-slate-300 dark:text-slate-600" />
-                <p>No photos uploaded yet</p>
-                <p className="text-sm mt-1">Click "Upload Photo" to get started</p>
+                <p>{t.no_photos_uploaded || 'No photos uploaded yet'}</p>
+                <p className="text-sm mt-1">{t.click_upload_photo || 'Click "Upload Photo" to get started'}</p>
               </div>
             ) : (
               photos.map((photo) => (
@@ -171,6 +213,18 @@ export default function TeacherMediaPage() {
                     </div>
                   )}
                   
+                  {/* Delete button - top right */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteClick(photo);
+                    }}
+                    className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                    title={t.delete_photo || 'Delete Photo'}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                  
                   {/* Overlay with info */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity">
                     <div className="absolute bottom-0 left-0 right-0 p-3 text-white text-sm">
@@ -182,7 +236,7 @@ export default function TeacherMediaPage() {
                           {new Date(photo.created_at).toLocaleDateString()}
                         </span>
                         {photo.is_public && (
-                          <span className="px-2 py-0.5 bg-white/20 rounded">Public</span>
+                          <span className="px-2 py-0.5 bg-white/20 rounded">{t.public || 'Public'}</span>
                         )}
                       </div>
                       {photo.classes && (
@@ -216,6 +270,21 @@ export default function TeacherMediaPage() {
           userId={userId}
         />
       )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setPhotoToDelete(null);
+          setDeleteError(null);
+        }}
+        onConfirm={handleDeleteConfirm}
+        title={t.delete_photo || 'Delete Photo'}
+        message={t.delete_photo_confirm || 'Are you sure you want to delete this photo? This action cannot be undone.'}
+        loading={isDeleting}
+        error={deleteError}
+      />
     </TeacherPageLayout>
   );
 }

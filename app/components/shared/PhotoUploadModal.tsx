@@ -159,17 +159,17 @@ export function PhotoUploadModal({
 
     // Validation
     if (previewFiles.length === 0) {
-      setError('Please select at least one image');
+      setError(t.no_items_error || 'Please select at least one image');
       return;
     }
 
     if (uploadMode === 'class' && !selectedClassId) {
-      setError('Please select a class');
+      setError(t.select_class || 'Please select a class');
       return;
     }
 
     if (uploadMode === 'student' && (!selectedClassId || !selectedStudentId)) {
-      setError('Please select a class and student');
+      setError((t.select_class || 'Please select a class') + ' and ' + (t.select_student || 'student'));
       return;
     }
 
@@ -232,7 +232,7 @@ export function PhotoUploadModal({
       <div className="w-full max-w-3xl rounded-2xl bg-white dark:bg-slate-800 p-6 shadow-xl max-h-[95vh] overflow-y-auto">
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-            Upload Photos
+            {t.upload_photos || 'Upload Photos'}
           </h3>
           <button
             onClick={onClose}
@@ -253,7 +253,7 @@ export function PhotoUploadModal({
           {/* Upload Mode Dropdown */}
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-              Upload Type <span className="text-red-500">*</span>
+              {t.upload_type || 'Upload Type'} <span className="text-red-500">*</span>
             </label>
             <select
               value={uploadMode}
@@ -271,9 +271,9 @@ export function PhotoUploadModal({
               required
               disabled={loading}
             >
-              <option value="org">Org Base</option>
-              <option value="class">Class Base</option>
-              <option value="student">Student Base</option>
+              <option value="org">{t.org_base || 'Org Base'}</option>
+              <option value="class">{t.class_base || 'Class Base'}</option>
+              <option value="student">{t.student_base || 'Student Base'}</option>
             </select>
           </div>
 
@@ -281,7 +281,7 @@ export function PhotoUploadModal({
           {(uploadMode === 'class' || uploadMode === 'student') && (
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                Class <span className="text-red-500">*</span>
+                {t.class_label || 'Class'} <span className="text-red-500">*</span>
               </label>
               <select
                 value={selectedClassId || ''}
@@ -289,7 +289,7 @@ export function PhotoUploadModal({
                 className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                 required={uploadMode === 'class' || uploadMode === 'student'}
               >
-                <option value="">Select a class</option>
+                <option value="">{t.select_class || 'Select a class'}</option>
                 {classes.map((cls) => (
                   <option key={cls.id} value={cls.id}>
                     {cls.name}
@@ -303,7 +303,7 @@ export function PhotoUploadModal({
           {uploadMode === 'student' && (
             <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                Student <span className="text-red-500">*</span>
+                {t.student_name || 'Student'} <span className="text-red-500">*</span>
               </label>
               <select
                 value={selectedStudentId || ''}
@@ -313,7 +313,7 @@ export function PhotoUploadModal({
                 disabled={!selectedClassId}
               >
                 <option value="">
-                  {selectedClassId ? 'Select a student' : 'Select a class first'}
+                  {selectedClassId ? (t.select_student || 'Select a student') : (t.select_class_first || 'Select a class first')}
                 </option>
                 {filteredStudents.map((student) => {
                   const firstName = student.users?.first_name || student.first_name || '';
@@ -332,7 +332,7 @@ export function PhotoUploadModal({
           {/* File Upload Area */}
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 mt-2">
-              Photos
+              {t.photos || 'Photos'}
             </label>
             <div
               onDrop={handleDrop}
@@ -396,14 +396,14 @@ export function PhotoUploadModal({
           {/* Caption */}
           <div>
             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 mt-2">
-              Caption (Optional)
+              {t.caption_optional || 'Caption (Optional)'}
             </label>
             <textarea
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
               rows={1}
               className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 mt-1"
-              placeholder="Add a caption for these photos..."
+              placeholder={t.caption_optional || 'Add a caption for these photos...'}
               disabled={loading}
             />
           </div>
@@ -419,7 +419,7 @@ export function PhotoUploadModal({
               disabled={loading}
             />
             <label htmlFor="is_public" className="text-sm text-slate-700 dark:text-slate-300">
-              Make photos public
+              {t.make_photos_public || 'Make photos public'}
             </label>
           </div>
 
@@ -441,12 +441,12 @@ export function PhotoUploadModal({
               {loading ? (
                 <>
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  Uploading...
+                  {t.uploading || 'Uploading...'}
                 </>
               ) : (
                 <>
                   <Upload className="h-4 w-4" />
-                  Upload {previewFiles.length > 0 && `(${previewFiles.length})`}
+                  {t.upload || 'Upload'} {previewFiles.length > 0 && `(${previewFiles.length})`}
                 </>
               )}
             </button>
