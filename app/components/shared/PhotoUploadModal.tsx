@@ -1,0 +1,459 @@
+'use client';
+
+import React, { useState, useEffect, useMemo } from 'react';
+import { X, Upload, Image as ImageIcon } from 'lucide-react';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
+import type { Student } from '@/lib/types/attendance';
+
+export type UploadMode = 'org' | 'class' | 'student';
+
+export interface PhotoUploadModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess?: () => void;
+  orgId: string;
+  classes: Array<{ id: string; name: string }>;
+  students: Student[];
+  userId: string;
+}
+
+interface PreviewFile {
+  file: File;
+  preview: string;
+  id: string;
+}
+
+export function PhotoUploadModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  orgId,
+  classes,
+  students,
+  userId,
+}: PhotoUploadModalProps) {
+  const { t } = useLanguage();
+  const [uploadMode, setUploadMode] = useState<UploadMode>('org');
+  const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+  const [previewFiles, setPreviewFiles] = useState<PreviewFile[]>([]);
+  const [caption, setCaption] = useState('');
+  const [isPublic, setIsPublic] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Filter students by selected class
+  const filteredStudents = useMemo(() => {
+    if (!selectedClassId) return [];
+    return students.filter((student) => student.class_id === selectedClassId);
+  }, [students, selectedClassId]);
+
+  // Reset form when modal opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      setUploadMode('org');
+      setSelectedClassId(null);
+      setSelectedStudentId(null);
+      setPreviewFiles([]);
+      setCaption('');
+      setIsPublic(false);
+      setError(null);
+    }
+  }, [isOpen]);
+
+  // Reset student selection when class changes
+  useEffect(() => {
+    setSelectedStudentId(null);
+  }, [selectedClassId]);
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen, onClose]);
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const newFiles: PreviewFile[] = [];
+    Array.from(files).forEach((file) => {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setError(`File ${file.name} is not an image`);
+        return;
+      }
+
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        setError(`File ${file.name} is too large (max 10MB)`);
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const preview = reader.result as string;
+        newFiles.push({
+          file,
+          preview,
+          id: `${Date.now()}_${Math.random()}`,
+        });
+
+        if (newFiles.length === files.length) {
+          setPreviewFiles((prev) => [...prev, ...newFiles]);
+          setError(null);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleRemovePreview = (id: string) => {
+    setPreviewFiles((prev) => prev.filter((f) => f.id !== id));
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const files = e.dataTransfer.files;
+    if (files.length === 0) return;
+
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.multiple = true;
+    input.accept = 'image/*';
+    input.files = files;
+    const event = new Event('change', { bubbles: true });
+    input.dispatchEvent(event);
+    handleFileSelect({ target: input } as any);
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    // Validation
+    if (previewFiles.length === 0) {
+      setError('Please select at least one image');
+      return;
+    }
+
+    if (uploadMode === 'class' && !selectedClassId) {
+      setError('Please select a class');
+      return;
+    }
+
+    if (uploadMode === 'student' && (!selectedClassId || !selectedStudentId)) {
+      setError('Please select a class and student');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const formData = new FormData();
+      
+      // Add files
+      previewFiles.forEach((previewFile) => {
+        formData.append('files', previewFile.file);
+      });
+
+      // Add metadata
+      formData.append('org_id', orgId);
+      formData.append('class_id', uploadMode === 'org' ? '' : (selectedClassId || ''));
+      formData.append('student_id', uploadMode === 'student' ? (selectedStudentId || '') : '');
+      formData.append('caption', caption);
+      formData.append('is_public', isPublic ? 'true' : 'false');
+      formData.append('author_id', userId);
+
+      const response = await fetch('/api/photos', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to upload photos');
+      }
+
+      // Success
+      if (onSuccess) {
+        onSuccess();
+      }
+      onClose();
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Failed to upload photos');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
+      <div className="w-full max-w-3xl rounded-2xl bg-white dark:bg-slate-800 p-6 shadow-xl max-h-[95vh] overflow-y-auto">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+            Upload Photos
+          </h3>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400"
+            disabled={loading}
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {error && (
+          <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="">
+          {/* Upload Mode Dropdown */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              Upload Type <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={uploadMode}
+              onChange={(e) => {
+                const mode = e.target.value as UploadMode;
+                setUploadMode(mode);
+                if (mode === 'org') {
+                  setSelectedClassId(null);
+                  setSelectedStudentId(null);
+                } else if (mode === 'class') {
+                  setSelectedStudentId(null);
+                }
+              }}
+              className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 mt-1"
+              required
+              disabled={loading}
+            >
+              <option value="org">Org Base</option>
+              <option value="class">Class Base</option>
+              <option value="student">Student Base</option>
+            </select>
+          </div>
+
+          {/* Class Selection (for class and student modes) */}
+          {(uploadMode === 'class' || uploadMode === 'student') && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                Class <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={selectedClassId || ''}
+                onChange={(e) => setSelectedClassId(e.target.value || null)}
+                className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                required={uploadMode === 'class' || uploadMode === 'student'}
+              >
+                <option value="">Select a class</option>
+                {classes.map((cls) => (
+                  <option key={cls.id} value={cls.id}>
+                    {cls.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Student Selection (for student mode only) */}
+          {uploadMode === 'student' && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                Student <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={selectedStudentId || ''}
+                onChange={(e) => setSelectedStudentId(e.target.value || null)}
+                className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                required
+                disabled={!selectedClassId}
+              >
+                <option value="">
+                  {selectedClassId ? 'Select a student' : 'Select a class first'}
+                </option>
+                {filteredStudents.map((student) => {
+                  const firstName = student.users?.first_name || student.first_name || '';
+                  const lastName = student.users?.last_name || student.last_name || '';
+                  const fullName = `${firstName} ${lastName}`.trim() || `Student ${student.id.slice(0, 8)}`;
+                  return (
+                    <option key={student.id} value={student.id}>
+                      {fullName}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+          )}
+
+          {/* File Upload Area */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 mt-2">
+              Photos
+            </label>
+            <div
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-8 text-center hover:border-slate-400 dark:hover:border-slate-500 transition-colors mt-1"
+            >
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleFileSelect}
+                className="hidden"
+                id="photo-upload-input"
+                disabled={loading}
+              />
+              <label
+                htmlFor="photo-upload-input"
+                className="cursor-pointer flex flex-col items-center gap-2"
+              >
+                <ImageIcon className="h-12 w-12 text-slate-400 dark:text-slate-500" />
+                <div className="text-sm text-slate-600 dark:text-slate-400">
+                  <span className="font-medium text-blue-600 dark:text-blue-400">Click to upload</span> or drag and drop
+                </div>
+                <div className="text-xs text-slate-500 dark:text-slate-500">
+                  PNG, JPG, GIF up to 10MB
+                </div>
+              </label>
+            </div>
+          </div>
+
+          {/* Preview Grid */}
+          {previewFiles.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Preview ({previewFiles.length} {previewFiles.length === 1 ? 'photo' : 'photos'})
+              </label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {previewFiles.map((previewFile) => (
+                  <div key={previewFile.id} className="relative group">
+                    <div className="aspect-square rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-700">
+                      <img
+                        src={previewFile.preview}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleRemovePreview(previewFile.id)}
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      disabled={loading}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Caption */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 mt-2">
+              Caption (Optional)
+            </label>
+            <textarea
+              value={caption}
+              onChange={(e) => setCaption(e.target.value)}
+              rows={1}
+              className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 mt-1"
+              placeholder="Add a caption for these photos..."
+              disabled={loading}
+            />
+          </div>
+
+          {/* Public/Private Toggle */}
+          <div className="flex items-center gap-2 mt-1">
+            <input
+              type="checkbox"
+              id="is_public"
+              checked={isPublic}
+              onChange={(e) => setIsPublic(e.target.checked)}
+              className="rounded border-slate-300 text-black focus:ring-black"
+              disabled={loading}
+            />
+            <label htmlFor="is_public" className="text-sm text-slate-700 dark:text-slate-300">
+              Make photos public
+            </label>
+          </div>
+
+          {/* Submit Button */}
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={loading}
+              className="px-4 py-2 text-sm font-medium border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading || previewFiles.length === 0}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 disabled:opacity-50 dark:bg-slate-700 dark:hover:bg-slate-600"
+            >
+              {loading ? (
+                <>
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <Upload className="h-4 w-4" />
+                  Upload {previewFiles.length > 0 && `(${previewFiles.length})`}
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
