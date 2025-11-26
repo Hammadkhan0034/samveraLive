@@ -1,35 +1,19 @@
 'use client';
-import React, { useState, useEffect, useMemo, useRef, useCallback, Suspense } from 'react';
-import { CalendarDays, Menu, ClipboardCheck, Users, MessageSquare, FileText, Megaphone, Utensils, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
+import { Menu, ClipboardCheck, Users, MessageSquare, FileText, Megaphone, Utensils, AlertCircle } from 'lucide-react';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
-import { useAuth } from '@/lib/hooks/useAuth';
 import { useRouter, useSearchParams } from 'next/navigation';
 import TeacherPageLayout, { useTeacherPageLayout } from '@/app/components/shared/TeacherPageLayout';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import KPICardSkeleton from '@/app/components/loading-skeletons/KPICardSkeleton';
-import type { enText, isText } from '@/lib/translations';
+import type { KPICard, TeacherDashboardContentProps, TeacherMetrics } from '@/lib/types/teacher-dashboard';
 
-interface KPICard {
-  label: string;
-  value: number;
-  icon: React.ComponentType<{ className?: string }>;
-  onClick: () => void;
-}
-
-interface TeacherDashboardContentProps {
-  t: typeof enText | typeof isText;
-  kpis: KPICard[];
-  isLoading?: boolean;
-  error?: string | null;
-  onRetry?: () => void;
-}
-
-function TeacherDashboardContent({ 
-  t, 
+function TeacherDashboardContent({
+  t,
   kpis,
   isLoading = false,
   error = null,
-  onRetry
+  onRetry,
 }: TeacherDashboardContentProps) {
   const { sidebarRef } = useTeacherPageLayout();
 
@@ -46,7 +30,9 @@ function TeacherDashboardContent({
           >
             <Menu className="h-5 w-5" />
           </button>
-          <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.teacher_dashboard}</h2>
+          <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+            {t.teacher_dashboard}
+          </h2>
         </div>
         <div className="flex items-center gap-3">
           <ProfileSwitcher />
@@ -58,9 +44,7 @@ function TeacherDashboardContent({
           <div className="flex items-center gap-3">
             <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
             <div className="flex-1">
-              <p className="text-sm font-medium text-red-800 dark:text-red-200">
-                {error}
-              </p>
+              <p className="text-sm font-medium text-red-800 dark:text-red-200">{error}</p>
             </div>
             {onRetry && (
               <button
@@ -83,7 +67,7 @@ function TeacherDashboardContent({
             {kpis.map(({ label, value, icon: Icon, onClick }, i) => (
               <div
                 key={i}
-                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 cursor-pointer hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200"
+                className="cursor-pointer rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:border-slate-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-600"
                 onClick={onClick}
               >
                 <div className="flex items-center justify-between">
@@ -92,9 +76,7 @@ function TeacherDashboardContent({
                     <Icon className="h-4 w-4 text-slate-700 dark:text-slate-300" />
                   </span>
                 </div>
-                <div className="mt-3 text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                  {value}
-                </div>
+                <div className="mt-3 text-2xl font-semibold text-slate-900 dark:text-slate-100">{value}</div>
               </div>
             ))}
           </div>
@@ -106,7 +88,6 @@ function TeacherDashboardContent({
 
 function TeacherDashboardPageContent() {
   const { t } = useLanguage();
-  const { session } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -131,15 +112,23 @@ function TeacherDashboardPageContent() {
   // Prefetch routes for instant navigation
   useEffect(() => {
     try {
+      router.prefetch('/dashboard/teacher/attendance');
+      router.prefetch('/dashboard/teacher/diapers');
+      router.prefetch('/dashboard/teacher/media');
+      router.prefetch('/dashboard/teacher/stories');
+      router.prefetch('/dashboard/teacher/announcements');
       router.prefetch('/dashboard/teacher/menus');
       router.prefetch('/dashboard/teacher/link-student');
       router.prefetch('/dashboard/teacher/guardians');
       router.prefetch('/dashboard/teacher/messages');
-    } catch {}
+      router.prefetch('/dashboard/teacher/calendar');
+    } catch {
+      // Prefetch errors are non-fatal
+    }
   }, [router]);
 
   // Metrics state - all KPIs in one object
-  const [metrics, setMetrics] = useState({
+  const [metrics, setMetrics] = useState<TeacherMetrics>({
     attendanceCount: 0,
     studentsCount: 0,
     messagesCount: 0,
@@ -152,17 +141,10 @@ function TeacherDashboardPageContent() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Extract stable values from session to avoid unnecessary re-renders
-
-  // Request deduplication: track in-flight requests
-  const inFlightRequestRef = useRef<Promise<void> | null>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
-
-  // Debounce helper for visibility changes
-  const visibilityDebounceRef = useRef<NodeJS.Timeout | null>(null);
+  const abortControllerRef = React.useRef<AbortController | null>(null);
 
   // Single consolidated function to fetch metrics
-  const fetchMetrics = useCallback(async (signal?: AbortSignal) => {
+  const fetchMetrics = useCallback(async (signal: AbortSignal) => {
     try {
       setIsLoading(true);
       setError(null);
@@ -173,7 +155,7 @@ function TeacherDashboardPageContent() {
         signal,
       });
 
-      if (signal?.aborted) {
+      if (signal.aborted) {
         return;
       }
 
@@ -196,8 +178,8 @@ function TeacherDashboardPageContent() {
       }
 
       const data = await res.json();
-      
-      if (signal?.aborted) {
+
+      if (signal.aborted) {
         return;
       }
 
@@ -209,17 +191,17 @@ function TeacherDashboardPageContent() {
         announcementsCount: data.announcementsCount || 0,
         menusCount: data.menusCount || 0,
       });
-    } catch (err: any) {
-      // Don't set error for aborted requests
-      if (err.name === 'AbortError' || signal?.aborted) {
+    } catch (err: unknown) {
+      if (signal.aborted) {
         return;
       }
-      
-      const errorMessage = err.message || 'Failed to load dashboard metrics. Please try again.';
-      setError(errorMessage);
+
+      const message =
+        err instanceof Error ? err.message : 'Failed to load dashboard metrics. Please try again.';
+      setError(message);
       console.error('Error loading metrics:', err);
     } finally {
-      if (!signal?.aborted) {
+      if (!signal.aborted) {
         setIsLoading(false);
       }
     }
@@ -227,97 +209,27 @@ function TeacherDashboardPageContent() {
 
   // Main effect: Load metrics on mount
   useEffect(() => {
-    // Cancel any in-flight request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-
-    // Create new abort controller
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
-    // Check if there's already a request in flight
-    if (inFlightRequestRef.current) {
-      // Wait for existing request or abort it
-      abortController.abort();
-      return;
-    }
-
-    // Create new request
-    const requestPromise = fetchMetrics(abortController.signal);
-    inFlightRequestRef.current = requestPromise;
-
-    // Clear ref when done
-    requestPromise.finally(() => {
-      if (inFlightRequestRef.current === requestPromise) {
-        inFlightRequestRef.current = null;
-      }
-    });
+    void fetchMetrics(abortController.signal);
 
     return () => {
       abortController.abort();
-      if (inFlightRequestRef.current === requestPromise) {
-        inFlightRequestRef.current = null;
-      }
-    };
-  }, [fetchMetrics]);
-
-  // Consolidated event listeners for refresh events
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const handleRefresh = () => {
-      // Cancel any existing request
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-
-      const abortController = new AbortController();
-      abortControllerRef.current = abortController;
-
-      // Clear any pending request
-      inFlightRequestRef.current = null;
-
-      void fetchMetrics(abortController.signal);
-    };
-
-    // Debounced visibility change handler
-    const handleVisibilityChange = () => {
-      if (visibilityDebounceRef.current) {
-        clearTimeout(visibilityDebounceRef.current);
-      }
-
-      visibilityDebounceRef.current = setTimeout(() => {
-        if (document.visibilityState === 'visible') {
-          handleRefresh();
-        }
-      }, 300); // 300ms debounce
-    };
-
-    window.addEventListener('stories-refresh', handleRefresh);
-    window.addEventListener('announcements-refresh', handleRefresh);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      window.removeEventListener('stories-refresh', handleRefresh);
-      window.removeEventListener('announcements-refresh', handleRefresh);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      
-      if (visibilityDebounceRef.current) {
-        clearTimeout(visibilityDebounceRef.current);
-      }
     };
   }, [fetchMetrics]);
 
   // Retry function
   const handleRetry = useCallback(() => {
     setError(null);
+
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
+
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
-    inFlightRequestRef.current = null;
+
     void fetchMetrics(abortController.signal);
   }, [fetchMetrics]);
 
