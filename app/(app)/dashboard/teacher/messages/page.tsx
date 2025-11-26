@@ -1,14 +1,23 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { X, Search, Send, Paperclip, MessageSquarePlus, Menu } from 'lucide-react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { X, Search, Send, MessageSquarePlus, Menu } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { MessageThreadWithParticipants, MessageItem } from '@/lib/types/messages';
 import { useMessagesRealtime } from '@/lib/hooks/useMessagesRealtime';
+import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import TeacherPageLayout, { useTeacherPageLayout } from '@/app/components/shared/TeacherPageLayout';
+
+type Recipient = {
+  id: string;
+  first_name: string;
+  last_name: string | null;
+  email: string;
+  role?: string;
+};
 
 // Messages Page Header Component
 function MessagesPageHeader({ title }: { title: string }) {
@@ -34,9 +43,40 @@ function MessagesPageHeader({ title }: { title: string }) {
   );
 }
 
+/**
+ * Filters threads to show only allowed participants for teachers
+ */
+function filterTeacherThreads(
+  thread: MessageThreadWithParticipants,
+  principals: Recipient[],
+  allowedGuardianIds: Set<string>
+): boolean {
+  const otherParticipant = thread.other_participant;
+  if (!otherParticipant) return false;
+
+  // Always show principals
+  if (otherParticipant.role === 'principal') return true;
+
+  // Backup check: if participant ID is in principals list
+  if (principals.length > 0 && principals.some((p) => p.id === otherParticipant.id)) {
+    return true;
+  }
+
+  // Show other teachers
+  if (otherParticipant.role === 'teacher') return true;
+
+  // For guardians, only show if they're linked to teacher's students
+  if (otherParticipant.role === 'guardian' || !otherParticipant.role) {
+    return allowedGuardianIds.has(otherParticipant.id);
+  }
+
+  return false;
+}
+
 export default function TeacherMessagesPage() {
-  const { t, lang } = useLanguage();
+  const { t } = useLanguage();
   const { session } = useAuth();
+  const { orgId } = useCurrentUserOrgId();
 
   // Messages state
   const [threads, setThreads] = useState<MessageThreadWithParticipants[]>([]);
@@ -44,52 +84,48 @@ export default function TeacherMessagesPage() {
   const [messages, setMessages] = useState<MessageItem[]>([]);
   const [loadingMessages, setLoadingMessages] = useState(true);
   const [sending, setSending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [recipientId, setRecipientId] = useState('');
   const [messageBody, setMessageBody] = useState('');
   const [sent, setSent] = useState(false);
-  const [principals, setPrincipals] = useState<Array<{ id: string; first_name: string; last_name: string | null; email: string; role: string }>>([]);
-  const [teachers, setTeachers] = useState<Array<{ id: string; first_name: string; last_name: string | null; email: string; role: string }>>([]);
-  const [guardians, setGuardians] = useState<Array<{ id: string; first_name: string; last_name: string | null; email: string }>>([]);
-  const [loadingRecipients, setLoadingRecipients] = useState(false);
+  const [principals, setPrincipals] = useState<Recipient[]>([]);
+  const [teachers, setTeachers] = useState<Recipient[]>([]);
+  const [guardians, setGuardians] = useState<Recipient[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [allowedGuardianIds, setAllowedGuardianIds] = useState<Set<string>>(new Set());
   const [showNewConversation, setShowNewConversation] = useState(false);
   const [chatMessageBody, setChatMessageBody] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [teacherClasses, setTeacherClasses] = useState<any[]>([]);
+  const [teacherClasses, setTeacherClasses] = useState<Array<{ id: string; name: string; code: string }>>([]);
   const [students, setStudents] = useState<Array<{ id: string; class_id: string | null }>>([]);
   const [messagesCount, setMessagesCount] = useState(0);
 
-  // Try to get org_id from multiple possible locations
-  const userMetadata = session?.user?.user_metadata;
-  const orgIdFromMetadata = userMetadata?.org_id || userMetadata?.organization_id || userMetadata?.orgId;
-  const orgId = orgIdFromMetadata || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID || '1db3c97c-de42-4ad2-bb72-cc0b6cda69f7';
-
-  // Load teacher classes - MUST be called before any conditional returns
+  // Load teacher classes and students
   useEffect(() => {
-    if (!session?.user?.id || !orgId) return;
 
     async function loadTeacherClasses() {
       try {
-        const response = await fetch(`/api/teacher-classes?userId=${session?.user.id}&t=${Date.now()}`, { cache: 'no-store' });
+        const response = await fetch('/api/teacher-classes', { cache: 'no-store' });
         const data = await response.json();
         if (response.ok && data.classes) {
           setTeacherClasses(data.classes);
           // Load students for these classes
           const allStudents: Array<{ id: string; class_id: string | null }> = [];
-          for (const cls of data.classes) {
-            try {
-              const studentsRes = await fetch(`/api/students?orgId=${orgId}&classId=${cls.id}&t=${Date.now()}`, { cache: 'no-store' });
-              const studentsData = await studentsRes.json();
-              if (studentsRes.ok && studentsData.students) {
-                studentsData.students.forEach((s: any) => {
-                  allStudents.push({ id: s.id, class_id: cls.id });
-                });
+          await Promise.all(
+            data.classes.map(async (cls: { id: string }) => {
+              try {
+                const studentsRes = await fetch(`/api/students?classId=${cls.id}`, { cache: 'no-store' });
+                const studentsData = await studentsRes.json();
+                if (studentsRes.ok && studentsData.students) {
+                  studentsData.students.forEach((s: { id: string }) => {
+                    allStudents.push({ id: s.id, class_id: cls.id });
+                  });
+                }
+              } catch (error) {
+                console.error(`Error loading students for class ${cls.id}:`, error);
               }
-            } catch (error) {
-              console.error(`Error loading students for class ${cls.id}:`, error);
-            }
-          }
+            })
+          );
           setStudents(allStudents);
         }
       } catch (error) {
@@ -98,11 +134,11 @@ export default function TeacherMessagesPage() {
     }
 
     loadTeacherClasses();
-  }, [session?.user?.id, orgId]);
+  }, []);
 
-  // Load guardians linked to teacher's students - MUST be called before any conditional returns
+  // Load guardians linked to teacher's students
   useEffect(() => {
-    if (!orgId || students.length === 0) {
+    if (students.length === 0) {
       setAllowedGuardianIds(new Set());
       return;
     }
@@ -116,21 +152,23 @@ export default function TeacherMessagesPage() {
         }
 
         const guardianIdsSet = new Set<string>();
-        for (const studentId of studentIds) {
-          try {
-            const res = await fetch(`/api/guardian-students?studentId=${studentId}&t=${Date.now()}`, { cache: 'no-store' });
-            const data = await res.json();
-            if (res.ok && data.relationships) {
-              data.relationships.forEach((rel: any) => {
-                if (rel.guardian_id) {
-                  guardianIdsSet.add(rel.guardian_id);
-                }
-              });
+        await Promise.all(
+          studentIds.map(async (studentId) => {
+            try {
+              const res = await fetch(`/api/guardian-students?studentId=${studentId}`, { cache: 'no-store' });
+              const data = await res.json();
+              if (res.ok && data.relationships) {
+                data.relationships.forEach((rel: { guardian_id?: string }) => {
+                  if (rel.guardian_id) {
+                    guardianIdsSet.add(rel.guardian_id);
+                  }
+                });
+              }
+            } catch (error) {
+              console.error(`Error loading guardians for student ${studentId}:`, error);
             }
-          } catch (error) {
-            console.error(`Error loading guardians for student ${studentId}:`, error);
-          }
-        }
+          })
+        );
 
         setAllowedGuardianIds(guardianIdsSet);
       } catch (error) {
@@ -140,20 +178,24 @@ export default function TeacherMessagesPage() {
     }
 
     loadAllowedGuardians();
-  }, [orgId, students]);
+  }, [students]);
 
   // Load recipients (principals, teachers, and guardians)
   useEffect(() => {
-    if (!orgId) return;
 
     async function loadRecipients() {
-      setLoadingRecipients(true);
       try {
-        // Load principals
-        const principalsRes = await fetch(`/api/principals?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
+        // Load all recipients in parallel
+        const [principalsRes, teachersRes, guardiansRes] = await Promise.all([
+          fetch('/api/principals', { cache: 'no-store' }),
+          fetch('/api/staff-management', { cache: 'no-store' }),
+          fetch('/api/guardians', { cache: 'no-store' }),
+        ]);
+
+        // Process principals
         const principalsData = await principalsRes.json();
         if (principalsRes.ok && principalsData.principals) {
-          const principalsList = principalsData.principals.map((p: any) => ({
+          const principalsList: Recipient[] = principalsData.principals.map((p: Recipient) => ({
             id: p.id,
             first_name: p.first_name || '',
             last_name: p.last_name || null,
@@ -165,13 +207,12 @@ export default function TeacherMessagesPage() {
           setPrincipals([]);
         }
 
-        // Load teachers
-        const teachersRes = await fetch(`/api/staff-management?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
+        // Process teachers
         const teachersData = await teachersRes.json();
         if (teachersRes.ok && teachersData.staff) {
-          const teacherRoleStaff = teachersData.staff
-            .filter((t: any) => (t.role || 'teacher') === 'teacher')
-            .map((t: any) => ({
+          const teacherRoleStaff: Recipient[] = teachersData.staff
+            .filter((t: Recipient) => (t.role || 'teacher') === 'teacher')
+            .map((t: Recipient) => ({
               id: t.id,
               first_name: t.first_name || '',
               last_name: t.last_name || null,
@@ -183,11 +224,10 @@ export default function TeacherMessagesPage() {
           setTeachers([]);
         }
 
-        // Load all guardians
-        const guardiansRes = await fetch(`/api/guardians?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
+        // Process guardians
         const guardiansData = await guardiansRes.json();
         if (guardiansRes.ok && guardiansData.guardians) {
-          const allGuardians = guardiansData.guardians.map((g: any) => ({
+          const allGuardians: Recipient[] = guardiansData.guardians.map((g: Recipient) => ({
             id: g.id,
             first_name: g.first_name || '',
             last_name: g.last_name || null,
@@ -199,60 +239,33 @@ export default function TeacherMessagesPage() {
         }
       } catch (error) {
         console.error('❌ Error loading recipients:', error);
-      } finally {
-        setLoadingRecipients(false);
+        setError('Failed to load recipients');
       }
     }
 
     loadRecipients();
-  }, [orgId, allowedGuardianIds, session?.user?.id]);
+  }, []);
 
   // Load message threads
   useEffect(() => {
-    if (!session?.user?.id) return;
 
     async function loadThreads() {
-      if (!session?.user?.id) return;
       setLoadingMessages(true);
       try {
-        const res = await fetch(`/api/messages?userId=${session.user.id}&t=${Date.now()}`, { cache: 'no-store' });
+        const res = await fetch('/api/messages', { cache: 'no-store' });
         const json = await res.json();
         if (res.ok && json.threads) {
           // Filter threads for teacher role - only show principals, allowed guardians, and other teachers
-          let filteredThreads = json.threads.filter((thread: MessageThreadWithParticipants) => {
-            const otherParticipant = thread.other_participant;
-            if (!otherParticipant) {
-              return false;
-            }
-
-            // ALWAYS show principals
-            if (otherParticipant.role === 'principal') {
-              return true;
-            }
-
-            // Backup check: if participant ID is in principals list
-            if (principals.length > 0 && principals.some((p: any) => p.id === otherParticipant.id)) {
-              return true;
-            }
-
-            // Show other teachers
-            if (otherParticipant.role === 'teacher') {
-              return true;
-            }
-
-            // For guardians, only show if they're linked to teacher's students
-            if (otherParticipant.role === 'guardian' || !otherParticipant.role) {
-              return allowedGuardianIds.has(otherParticipant.id);
-            }
-
-            return false;
-          });
+          const filteredThreads = json.threads.filter((thread: MessageThreadWithParticipants) =>
+            filterTeacherThreads(thread, principals, allowedGuardianIds)
+          );
 
           setThreads(filteredThreads);
           // Auto-select first thread if available
-          if (filteredThreads.length > 0 && !selectedThread) {
-            setSelectedThread(filteredThreads[0]);
-          }
+          setSelectedThread(prev => {
+            if (prev) return prev; // Keep current selection
+            return filteredThreads.length > 0 ? filteredThreads[0] : null;
+          });
 
           // Calculate unread count
           const unreadCount = filteredThreads.filter((t: MessageThreadWithParticipants) => t.unread).length;
@@ -260,14 +273,14 @@ export default function TeacherMessagesPage() {
         }
       } catch (error) {
         console.error('❌ Error loading threads:', error);
+        setError('Failed to load message threads');
       } finally {
         setLoadingMessages(false);
       }
     }
 
     loadThreads();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.user?.id, Array.from(allowedGuardianIds).sort().join(','), principals.length]);
+  }, [ allowedGuardianIds, principals]);
 
   // Load messages for selected thread
   useEffect(() => {
@@ -276,22 +289,24 @@ export default function TeacherMessagesPage() {
       return;
     }
 
+    const currentThread = selectedThread;
+    const currentUserId = session.user.id;
+
     async function loadMessages() {
-      if (!selectedThread) return;
       try {
-        const res = await fetch(`/api/message-items?messageId=${selectedThread.id}&t=${Date.now()}`, { cache: 'no-store' });
+        const res = await fetch(`/api/message-items?messageId=${currentThread.id}`, { cache: 'no-store' });
         const json = await res.json();
         if (res.ok && json.items) {
           setMessages(json.items);
         }
 
         // Mark thread as read
-        if (selectedThread.unread && session?.user?.id) {
+        if (currentThread.unread && currentUserId) {
           try {
-            const participantRes = await fetch(`/api/message-participants?messageId=${selectedThread.id}`, { cache: 'no-store' });
+            const participantRes = await fetch(`/api/message-participants?messageId=${currentThread.id}`, { cache: 'no-store' });
             const participantData = await participantRes.json();
             if (participantRes.ok && participantData.participants) {
-              const userParticipant = participantData.participants.find((p: any) => p.user_id === session.user.id);
+              const userParticipant = participantData.participants.find((p: { user_id: string }) => p.user_id === currentUserId);
               if (userParticipant?.id) {
                 const updateRes = await fetch('/api/message-participants', {
                   method: 'PUT',
@@ -303,7 +318,7 @@ export default function TeacherMessagesPage() {
                 });
                 if (updateRes.ok) {
                   setThreads(prev => prev.map(t => 
-                    t.id === selectedThread.id ? { ...t, unread: false } : t
+                    t.id === currentThread.id ? { ...t, unread: false } : t
                   ));
                   setSelectedThread(prev => prev ? { ...prev, unread: false } : null);
                   setMessagesCount(prev => Math.max(0, prev - 1));
@@ -316,6 +331,7 @@ export default function TeacherMessagesPage() {
         }
       } catch (error) {
         console.error('Error loading messages:', error);
+        setError('Failed to load messages');
       }
     }
 
@@ -325,121 +341,94 @@ export default function TeacherMessagesPage() {
   // Set up Realtime subscriptions for messages
   const threadIds = useMemo(() => threads.map(t => t.id), [threads]);
   
+  const handleNewMessage = useCallback((newMessage: MessageItem) => {
+    if (selectedThread?.id === newMessage.message_id) {
+      setMessages(prev => {
+        if (prev.some(m => m.id === newMessage.id)) {
+          return prev;
+        }
+        return [...prev, newMessage];
+      });
+    }
+    
+    setThreads(prev => {
+      const threadIndex = prev.findIndex(t => t.id === newMessage.message_id);
+      if (threadIndex >= 0) {
+        const updatedThreads = [...prev];
+        const thread = updatedThreads[threadIndex];
+        const updatedThread = {
+          ...thread,
+          latest_item: newMessage,
+          updated_at: newMessage.created_at,
+        };
+        updatedThreads.splice(threadIndex, 1);
+        updatedThreads.unshift(updatedThread);
+        return updatedThreads;
+      }
+      return prev;
+    });
+  }, [selectedThread]);
+
+  const handleUpdatedParticipant = useCallback((updatedParticipant: { message_id: string; unread: boolean }) => {
+    setThreads(prev => prev.map(t => 
+      t.id === updatedParticipant.message_id 
+        ? { ...t, unread: updatedParticipant.unread, unread_count: updatedParticipant.unread ? 1 : 0 }
+        : t
+    ));
+    
+    if (selectedThread?.id === updatedParticipant.message_id) {
+      setSelectedThread(prev => prev ? { ...prev, unread: updatedParticipant.unread } : null);
+    }
+
+    // Update messages count
+    if (updatedParticipant.unread) {
+      setMessagesCount(prev => prev + 1);
+    } else {
+      setMessagesCount(prev => Math.max(0, prev - 1));
+    }
+  }, [selectedThread]);
+
+  const handleNewThread = useCallback((newThread: MessageThreadWithParticipants) => {
+    const shouldAdd = filterTeacherThreads(newThread, principals, allowedGuardianIds);
+    
+    if (shouldAdd) {
+      setThreads(prev => {
+        if (prev.some(t => t.id === newThread.id)) {
+          return prev;
+        }
+        return [newThread, ...prev];
+      });
+      if (newThread.unread) {
+        setMessagesCount(prev => prev + 1);
+      }
+    }
+  }, [principals, allowedGuardianIds]);
+
+  const handleUpdatedThread = useCallback((updatedThread: MessageThreadWithParticipants) => {
+    setThreads(prev => prev.map(t => 
+      t.id === updatedThread.id ? updatedThread : t
+    ));
+    
+    if (selectedThread?.id === updatedThread.id) {
+      setSelectedThread(updatedThread);
+    }
+  }, [selectedThread]);
+  
   useMessagesRealtime({
     userId: session?.user?.id || '',
     orgId: orgId || '',
     threadIds,
-    onNewMessage: (newMessage) => {
-      if (selectedThread?.id === newMessage.message_id) {
-        setMessages(prev => {
-          if (prev.some(m => m.id === newMessage.id)) {
-            return prev;
-          }
-          return [...prev, newMessage];
-        });
-      }
-      
-      setThreads(prev => {
-        const threadIndex = prev.findIndex(t => t.id === newMessage.message_id);
-        if (threadIndex >= 0) {
-          const updatedThreads = [...prev];
-          const thread = updatedThreads[threadIndex];
-          const updatedThread = {
-            ...thread,
-            latest_item: newMessage,
-            updated_at: newMessage.created_at,
-          };
-          updatedThreads.splice(threadIndex, 1);
-          updatedThreads.unshift(updatedThread);
-          return updatedThreads;
-        }
-        return prev;
-      });
-    },
-    onUpdatedParticipant: (updatedParticipant) => {
-      setThreads(prev => prev.map(t => 
-        t.id === updatedParticipant.message_id 
-          ? { ...t, unread: updatedParticipant.unread, unread_count: updatedParticipant.unread ? 1 : 0 }
-          : t
-      ));
-      
-      if (selectedThread?.id === updatedParticipant.message_id) {
-        setSelectedThread(prev => prev ? { ...prev, unread: updatedParticipant.unread } : null);
-      }
-
-      // Update messages count
-      if (updatedParticipant.unread) {
-        setMessagesCount(prev => prev + 1);
-      } else {
-        setMessagesCount(prev => Math.max(0, prev - 1));
-      }
-    },
-    onNewThread: (newThread) => {
-      let shouldAdd = true;
-      const otherParticipant = newThread.other_participant;
-      if (!otherParticipant) {
-        shouldAdd = false;
-      } else if (otherParticipant.role === 'principal') {
-        shouldAdd = true;
-      } else if (principals.length > 0 && principals.some((p: any) => p.id === otherParticipant.id)) {
-        shouldAdd = true;
-      } else if (otherParticipant.role === 'teacher') {
-        shouldAdd = true;
-      } else if (otherParticipant.role === 'guardian' || !otherParticipant.role) {
-        shouldAdd = allowedGuardianIds.has(otherParticipant.id);
-      } else {
-        shouldAdd = false;
-      }
-      
-      if (shouldAdd) {
-        setThreads(prev => {
-          if (prev.some(t => t.id === newThread.id)) {
-            return prev;
-          }
-          return [newThread, ...prev];
-        });
-        if (newThread.unread) {
-          setMessagesCount(prev => prev + 1);
-        }
-      }
-    },
-    onUpdatedThread: (updatedThread) => {
-      setThreads(prev => prev.map(t => 
-        t.id === updatedThread.id ? updatedThread : t
-      ));
-      
-      if (selectedThread?.id === updatedThread.id) {
-        setSelectedThread(updatedThread);
-      }
-    },
+    onNewMessage: handleNewMessage,
+    onUpdatedParticipant: handleUpdatedParticipant,
+    onNewThread: handleNewThread,
+    onUpdatedThread: handleUpdatedThread,
   });
 
   // Filter threads by search query
   const filteredThreads = useMemo(() => {
-    let filtered = threads;
-
-    filtered = filtered.filter(thread => {
-      const otherParticipant = thread.other_participant;
-      if (!otherParticipant) return false;
-
-      if (otherParticipant.role === 'principal') {
-        return true;
-      }
-
-      if (principals.length > 0 && principals.some((p: any) => p.id === otherParticipant.id)) {
-        return true;
-      }
-
-      if (otherParticipant.role === 'teacher') {
-        return true;
-      }
-
-      if (otherParticipant.role === 'guardian' || !otherParticipant.role) {
-        return allowedGuardianIds.has(otherParticipant.id);
-      }
-
-      return false;
-    });
+    let filtered = threads.filter(thread => 
+      filterTeacherThreads(thread, principals, allowedGuardianIds)
+    );
 
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
@@ -455,13 +444,12 @@ export default function TeacherMessagesPage() {
     return filtered;
   }, [threads, searchQuery, allowedGuardianIds, principals]);
 
-  // Combined recipients list - Show principals, teachers, and guardians (including current user)
-
   // Send message from chat view
-  async function sendChatMessage() {
+  const sendChatMessage = useCallback(async () => {
     if (!chatMessageBody.trim() || !selectedThread || !session?.user?.id) return;
 
     setSending(true);
+    setError(null);
     try {
       const messageRes = await fetch('/api/message-items', {
         method: 'POST',
@@ -486,19 +474,21 @@ export default function TeacherMessagesPage() {
       if (messageData.item) {
         setMessages(prev => [...prev, messageData.item]);
       }
-    } catch (error: any) {
-      console.error('Error sending message:', error);
-      alert(error.message || 'Failed to send message');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to send message';
+      console.error('Error sending message:', err);
+      setError(errorMessage);
     } finally {
       setSending(false);
     }
-  }
+  }, [chatMessageBody, selectedThread, session?.user?.id]);
 
   // Create new conversation and send first message
-  async function sendMessage() {
+  const sendMessage = useCallback(async () => {
     if (!messageBody.trim() || !recipientId || !session?.user?.id) return;
 
     setSending(true);
+    setError(null);
     try {
       let threadId = selectedThread?.id;
       
@@ -549,45 +539,27 @@ export default function TeacherMessagesPage() {
       setShowNewConversation(false);
 
       // Reload threads
-      const threadsRes = await fetch(`/api/messages?userId=${session.user.id}&t=${Date.now()}`, { cache: 'no-store' });
+      const threadsRes = await fetch('/api/messages', { cache: 'no-store' });
       const threadsData = await threadsRes.json();
       if (threadsRes.ok && threadsData.threads) {
-        let filteredThreads = threadsData.threads.filter((t: MessageThreadWithParticipants) => {
-          const otherParticipant = t.other_participant;
-          if (!otherParticipant) return false;
-
-          if (otherParticipant.role === 'principal') {
-            return true;
-          }
-
-          if (principals.length > 0 && principals.some((p: any) => p.id === otherParticipant.id)) {
-            return true;
-          }
-
-          if (otherParticipant.role === 'teacher') {
-            return true;
-          }
-
-          if (otherParticipant.role === 'guardian' || !otherParticipant.role) {
-            return allowedGuardianIds.has(otherParticipant.id);
-          }
-
-          return false;
-        });
+        const filteredThreads = threadsData.threads.filter((t: MessageThreadWithParticipants) =>
+          filterTeacherThreads(t, principals, allowedGuardianIds)
+        );
 
         setThreads(filteredThreads);
-        const newThread = filteredThreads.find((t: any) => t.id === threadId);
+        const newThread = filteredThreads.find((t: MessageThreadWithParticipants) => t.id === threadId);
         if (newThread) {
           setSelectedThread(newThread);
         }
       }
-    } catch (error: any) {
-      console.error('Error sending message:', error);
-      alert(error.message || 'Failed to send message');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to send message';
+      console.error('Error sending message:', err);
+      setError(errorMessage);
     } finally {
       setSending(false);
     }
-  }
+  }, [messageBody, recipientId, session?.user?.id, selectedThread, threads, principals, allowedGuardianIds]);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -596,13 +568,25 @@ export default function TeacherMessagesPage() {
     }
   }, [messages]);
 
-  // Define tiles array (excluding messages, attendance, and diapers as they're handled separately)
-
   return (
     <TeacherPageLayout messagesBadge={messagesCount > 0 ? messagesCount : undefined}>
       <MessagesPageHeader title={t.msg_title} />
+      
+      {error && (
+        <div className="mb-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
-            {/* Messages Panel */}
+      {/* Messages Panel */}
             <div className="flex h-[calc(100vh-100px)] rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800 overflow-hidden">
               {/* Left Sidebar - Conversations List */}
               <div className="w-80 flex-shrink-0 border-r border-slate-200 dark:border-slate-700 flex flex-col overflow-hidden">
@@ -843,9 +827,6 @@ export default function TeacherMessagesPage() {
                     {/* Message Input */}
                     <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                       <div className="flex items-end gap-2">
-                        <button className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-colors flex-shrink-0 self-end">
-                          <Paperclip className="h-5 w-5" />
-                        </button>
                         <div className="flex-1 relative">
                           <textarea
                             value={chatMessageBody}

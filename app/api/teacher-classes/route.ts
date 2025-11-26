@@ -1,26 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin } from '@/lib/supabaseClient';
 import { getUserDataCacheHeaders } from '@/lib/cacheConfig';
-import { z } from 'zod';
-import { validateQuery, userIdSchema } from '@/lib/validation';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabaseAdmin = createClient(supabaseUrl, supabaseKey);
-
-// GET query parameter schema
-const getTeacherClassesQuerySchema = z.object({
-  userId: userIdSchema,
-});
+import { requireServerAuth } from '@/lib/supabaseServer';
+import { getCurrentUserOrgId, mapAuthErrorToResponse } from '@/lib/server-helpers';
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const queryValidation = validateQuery(getTeacherClassesQuerySchema, searchParams);
-    if (!queryValidation.success) {
-      return queryValidation.error;
+    // Authenticate and get user
+    const { user } = await requireServerAuth();
+    
+    // Get org_id from server side (user metadata or database)
+    const orgId = await getCurrentUserOrgId(user);
+    
+    // Get user_id from authenticated user
+    const userId = user.id;
+
+    if (!supabaseAdmin) {
+      return NextResponse.json({ 
+        error: 'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local' 
+      }, { status: 500 });
     }
-    const { userId } = queryValidation.data;
 
     const supabase = supabaseAdmin;
 
@@ -95,7 +94,13 @@ export async function GET(request: NextRequest) {
       });
     }
 
-  } catch (error) {
+  } catch (err: unknown) {
+    // Handle authentication/org ID errors
+    const authErrorResponse = mapAuthErrorToResponse(err);
+    if (authErrorResponse) {
+      return authErrorResponse;
+    }
+    
     // Return empty array instead of error to prevent UI issues
     return NextResponse.json({ classes: [] }, {
       headers: getUserDataCacheHeaders()

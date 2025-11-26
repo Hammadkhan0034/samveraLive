@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 import { getUserDataCacheHeaders } from '@/lib/cacheConfig'
 import { requireServerAuth } from '@/lib/supabaseServer'
+import { getCurrentUserOrgId, mapAuthErrorToResponse } from '@/lib/server-helpers'
 import { z } from 'zod'
 import { validateQuery, validateBody, orgIdSchema, userIdSchema, firstNameSchema, lastNameSchema, emailSchema, phoneSchema, addressSchema, ssnSchema } from '@/lib/validation'
 import { type UserMetadata } from '@/lib/types/auth'
@@ -9,15 +10,16 @@ import { type UserMetadata } from '@/lib/types/auth'
 // Guardian role ID
 const GUARDIAN_ROLE_ID = 10
 
-// GET query parameter schema
-const getGuardiansQuerySchema = z.object({
-  orgId: orgIdSchema,
-});
-
 export async function GET(request: Request) {
   try {
-    // Authenticate and check role
+    // Authenticate and get user
     const { user } = await requireServerAuth()
+    
+    // Get org_id from server side (user metadata or database)
+    const orgId = await getCurrentUserOrgId(user)
+    
+    // Get user_id from authenticated user
+    const userId = user.id
     
     // Check if user has principal, admin, or teacher role
     const userRoles = user.user_metadata?.roles || [];
@@ -34,13 +36,6 @@ export async function GET(request: Request) {
         error: 'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local' 
       }, { status: 500 })
     }
-    
-    const { searchParams } = new URL(request.url)
-    const queryValidation = validateQuery(getGuardiansQuerySchema, searchParams)
-    if (!queryValidation.success) {
-      return queryValidation.error
-    }
-    const { orgId } = queryValidation.data
 
     // Query guardians for this specific org only
     const { data: guardians, error } = await supabaseAdmin
@@ -62,8 +57,16 @@ export async function GET(request: Request) {
       headers: getUserDataCacheHeaders()
     })
 
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 })
+  } catch (err: unknown) {
+    // Handle authentication/org ID errors
+    const authErrorResponse = mapAuthErrorToResponse(err);
+    if (authErrorResponse) {
+      return authErrorResponse;
+    }
+    
+    // Handle other errors
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
