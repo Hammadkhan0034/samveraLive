@@ -1,297 +1,227 @@
 import { NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabaseClient'
-import { getNoCacheHeaders } from '@/lib/cacheConfig'
-import { z } from 'zod'
-import {
-  validateQuery,
-  validateBody,
-  classIdSchema,
-  studentIdSchema,
-  dateSchema,
-  attendanceStatusSchema,
-  notesSchema,
-  uuidSchema,
-} from '@/lib/validation'
-import { getAuthUserWithOrg, mapAuthErrorToResponse } from '@/lib/server-helpers'
 
-// GET query parameter schema
-const getAttendanceQuerySchema = z.object({
-  classId: classIdSchema.optional(),
-  studentId: studentIdSchema.optional(),
-  date: dateSchema.optional(),
-});
+import { getNoCacheHeaders } from '@/lib/cacheConfig'
+import { getAuthUserWithOrg, mapAuthErrorToResponse } from '@/lib/server-helpers'
+import { validateBody, validateQuery } from '@/lib/validation'
+import {
+  deleteAttendanceQuerySchema,
+  getAttendanceQuerySchema,
+  postAttendanceBodySchema,
+  putAttendanceBodySchema,
+  type DeleteAttendanceQueryParams,
+  type GetAttendanceQueryParams,
+  type PostAttendanceBody,
+  type PutAttendanceBody,
+} from '@/lib/validation/attendance'
+import {
+  AttendanceServiceError,
+  deleteAttendanceById,
+  fetchAttendanceByFilters,
+  upsertAttendance,
+  updateAttendance,
+} from '@/lib/services/attendance'
+
+/**
+ * Attendance API route
+ *
+ * This handler has been refactored to:
+ * - Delegate Supabase access and domain logic to `lib/services/attendance`
+ * - Centralize validation in `lib/validation/attendance`
+ * - Tighten error handling and avoid leaking low-level error details
+ * - Keep the public request/response surface and shapes compatible
+ */
 
 export async function GET(request: Request) {
+  // Authenticate user and derive orgId from server-side context
+  let orgId: string
   try {
-    if (!supabaseAdmin) {
-      return NextResponse.json({ 
-        error: 'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local' 
-      }, { status: 500 })
-    }
-    // Authenticate user and derive orgId from server-side context
-    let orgId: string
-    try {
-      const { orgId: resolvedOrgId } = await getAuthUserWithOrg()
-      orgId = resolvedOrgId
-    } catch (err) {
-      return mapAuthErrorToResponse(err)
-    }
+    const { orgId: resolvedOrgId } = await getAuthUserWithOrg()
+    orgId = resolvedOrgId
+  } catch (err: unknown) {
+    return mapAuthErrorToResponse(err)
+  }
 
-    const { searchParams } = new URL(request.url)
-    const queryValidation = validateQuery(getAttendanceQuerySchema, searchParams)
-    if (!queryValidation.success) {
-      return queryValidation.error
-    }
-    const { classId, studentId, date } = queryValidation.data
+  const { searchParams } = new URL(request.url)
+  const queryValidation = validateQuery<GetAttendanceQueryParams>(
+    getAttendanceQuerySchema,
+    searchParams,
+  )
+  if (!queryValidation.success) {
+    return queryValidation.error
+  }
+  const { classId, studentId, date } = queryValidation.data
 
-    // Build query based on filters
-    let query = supabaseAdmin
-      .from('attendance')
-      .select(`
-        id,
-        org_id,
-        class_id,
-        student_id,
-        date,
-        status,
-        notes,
-        recorded_by,
-        created_at,
-        updated_at,
-        students!attendance_student_id_fkey (
-          id,
-          user_id,
-          users!students_user_id_fkey (
-            id,
-            first_name,
-            last_name
-          ),
-          classes!students_class_id_fkey (
-            id,
-            name
-          )
-        )
-      `)
-      .eq('org_id', orgId)
-      .order('date', { ascending: false })
-
-    // Filter by class if provided
-    if (classId) {
-      query = query.eq('class_id', classId)
-    }
-
-    // Filter by student if provided
-    if (studentId) {
-      query = query.eq('student_id', studentId)
-    }
-
-    // Filter by date if provided
-    if (date) {
-      query = query.eq('date', date)
-    }
-
-    const { data: attendance, error } = await query
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    return NextResponse.json({ 
-      attendance: attendance || [],
-      total: attendance?.length || 0
-    }, {
-      status: 200,
-      headers: getNoCacheHeaders()
+  try {
+    const attendance = await fetchAttendanceByFilters({
+      orgId,
+      classId,
+      studentId,
+      date,
     })
 
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 })
+    return NextResponse.json(
+      {
+        attendance,
+        total: attendance.length,
+      },
+      {
+        status: 200,
+        headers: getNoCacheHeaders(),
+      },
+    )
+  } catch (err: unknown) {
+    console.error('Error fetching attendance records', err)
+    const isServiceError = err instanceof AttendanceServiceError
+    return NextResponse.json(
+      {
+        error: isServiceError
+          ? 'Failed to fetch attendance'
+          : 'Unexpected error while fetching attendance',
+      },
+      { status: 500 },
+    )
   }
 }
 
 export async function POST(request: Request) {
+  // Authenticate user and derive orgId from server-side context
+  let orgId: string
+  let userId: string
   try {
-    if (!supabaseAdmin) {
-      return NextResponse.json({ 
-        error: 'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local' 
-      }, { status: 500 })
-    }
+    const { user, orgId: resolvedOrgId } = await getAuthUserWithOrg()
+    userId = user.id
+    orgId = resolvedOrgId
+  } catch (err: unknown) {
+    return mapAuthErrorToResponse(err)
+  }
 
-    // Authenticate user and derive orgId from server-side context
-    let orgId: string
-    let userId: string
-    try {
-      const { user, orgId: resolvedOrgId } = await getAuthUserWithOrg()
-      userId = user.id
-      orgId = resolvedOrgId
-    } catch (err) {
-      return mapAuthErrorToResponse(err)
-    }
+  const rawBody = await request.json()
+  const bodyValidation = validateBody<PostAttendanceBody>(
+    postAttendanceBodySchema,
+    rawBody,
+  )
+  if (!bodyValidation.success) {
+    return bodyValidation.error
+  }
 
-    const body = await request.json()
-    // POST body schema
-    const postAttendanceBodySchema = z.object({
-      class_id: classIdSchema.optional(),
-      student_id: studentIdSchema,
-      date: dateSchema,
-      status: attendanceStatusSchema.default('present'),
-      notes: notesSchema,
-    });
-    
-    const bodyValidation = validateBody(postAttendanceBodySchema, body)
-    if (!bodyValidation.success) {
-      return bodyValidation.error
-    }
-    const { class_id, student_id, date, status, notes } = bodyValidation.data
+  try {
+    const attendance = await upsertAttendance({
+      orgId,
+      userId,
+      payload: bodyValidation.data,
+    })
 
-
-    // Use upsert to handle UNIQUE constraint (student_id, date)
-    // If record exists for this student and date, update it; otherwise create new
-    const { data: attendance, error: attendanceError } = await supabaseAdmin
-      .from('attendance')
-      .upsert(
-        {
-          org_id: orgId,
-          class_id: class_id || null,
-          student_id,
-          date,
-          status,
-          notes: notes || null,
-          recorded_by: userId,
-          updated_at: new Date().toISOString(),
-        },
-        {
-          onConflict: 'student_id,date',
-          ignoreDuplicates: false,
-        }
-      )
-      .select(
-        'id,org_id,class_id,student_id,date,status,notes,recorded_by,created_at,updated_at'
-      )
-      .single()
-
-    if (attendanceError) {
-      return NextResponse.json({ 
-        error: `Failed to save attendance: ${attendanceError.message}` 
-      }, { status: 500 })
-    }
-
-    return NextResponse.json({ 
-      attendance,
-      message: 'Attendance saved successfully!'
-    }, { status: 201 })
-
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 })
+    return NextResponse.json(
+      {
+        attendance,
+        message: 'Attendance saved successfully!',
+      },
+      { status: 201 },
+    )
+  } catch (err: unknown) {
+    console.error('Error saving attendance record', err)
+    const isServiceError = err instanceof AttendanceServiceError
+    return NextResponse.json(
+      {
+        error: isServiceError
+          ? 'Failed to save attendance'
+          : 'Unexpected error while saving attendance',
+      },
+      { status: 500 },
+    )
   }
 }
 
 export async function PUT(request: Request) {
+  // Authenticate user (used to ensure only authenticated users can update attendance)
+  let userId: string
   try {
-    if (!supabaseAdmin) {
-      return NextResponse.json({ 
-        error: 'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local' 
-      }, { status: 500 })
-    }
+    const { user } = await getAuthUserWithOrg()
+    userId = user.id
+  } catch (err: unknown) {
+    return mapAuthErrorToResponse(err)
+  }
 
-    // Authenticate user (used to ensure only authenticated users can update attendance)
-    let userId: string
-    try {
-      const { user } = await getAuthUserWithOrg()
-      userId = user.id
-    } catch (err) {
-      return mapAuthErrorToResponse(err)
-    }
+  const rawBody = await request.json()
 
-    const body = await request.json()
-    // PUT body schema
-    const putAttendanceBodySchema = z.object({
-      id: uuidSchema,
-      status: attendanceStatusSchema.optional(),
-      notes: notesSchema,
-    });
-    
-    const bodyValidation = validateBody(putAttendanceBodySchema, body)
-    if (!bodyValidation.success) {
-      return bodyValidation.error
-    }
-    const { id, status, notes } = bodyValidation.data
+  const bodyValidation = validateBody<PutAttendanceBody>(
+    putAttendanceBodySchema,
+    rawBody,
+  )
+  if (!bodyValidation.success) {
+    return bodyValidation.error
+  }
 
+  try {
+    const attendance = await updateAttendance({
+      userId,
+      payload: bodyValidation.data,
+    })
 
-    const updateData: any = {
-      updated_at: new Date().toISOString(),
-      recorded_by: userId,
-    }
-
-    if (status !== undefined) {
-      updateData.status = status
-    }
-    if (notes !== undefined) {
-      updateData.notes = notes
-    }
-
-    const { data: attendance, error: attendanceError } = await supabaseAdmin
-      .from('attendance')
-      .update(updateData)
-      .eq('id', id)
-      .select('id,org_id,class_id,student_id,date,status,notes,recorded_by,created_at,updated_at')
-      .single()
-
-    if (attendanceError) {
-      return NextResponse.json({ 
-        error: `Failed to update attendance: ${attendanceError.message}` 
-      }, { status: 500 })
-    }
-
-    return NextResponse.json({ 
-      attendance,
-      message: 'Attendance updated successfully!'
-    }, { status: 200 })
-
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 })
+    return NextResponse.json(
+      {
+        attendance,
+        message: 'Attendance updated successfully!',
+      },
+      { status: 200 },
+    )
+  } catch (err: unknown) {
+    console.error('Error updating attendance record', err)
+    const isServiceError = err instanceof AttendanceServiceError
+    return NextResponse.json(
+      {
+        error: isServiceError
+          ? 'Failed to update attendance'
+          : 'Unexpected error while updating attendance',
+      },
+      { status: 500 },
+    )
   }
 }
 
 export async function DELETE(request: Request) {
+  // Authenticate user and derive orgId to scope deletion
+  let orgId: string
   try {
-    if (!supabaseAdmin) {
-      return NextResponse.json({ 
-        error: 'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local' 
-      }, { status: 500 })
-    }
+    const { orgId: resolvedOrgId } = await getAuthUserWithOrg()
+    orgId = resolvedOrgId
+  } catch (err: unknown) {
+    return mapAuthErrorToResponse(err)
+  }
 
-    // Authenticate user and derive orgId to scope deletion
-    let orgId: string
-    try {
-      const { orgId: resolvedOrgId } = await getAuthUserWithOrg()
-      orgId = resolvedOrgId
-    } catch (err) {
-      return mapAuthErrorToResponse(err)
-    }
-    const { searchParams } = new URL(request.url)
-    const id = searchParams.get('id')
-    
-    if (!id) {
-      return NextResponse.json({ error: 'id is required' }, { status: 400 })
-    }
+  const { searchParams } = new URL(request.url)
+  const queryValidation = validateQuery<DeleteAttendanceQueryParams>(
+    deleteAttendanceQuerySchema,
+    searchParams,
+  )
+  if (!queryValidation.success) {
+    return queryValidation.error
+  }
 
-    const { error } = await supabaseAdmin
-      .from('attendance')
-      .delete()
-      .eq('id', id)
-      .eq('org_id', orgId)
+  const { id } = queryValidation.data
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
+  try {
+    await deleteAttendanceById({
+      orgId,
+      id,
+    })
 
-    return NextResponse.json({ 
-      message: 'Attendance deleted successfully!'
-    }, { status: 200 })
-
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 })
+    return NextResponse.json(
+      {
+        message: 'Attendance deleted successfully!',
+      },
+      { status: 200 },
+    )
+  } catch (err: unknown) {
+    console.error('Error deleting attendance record', err)
+    const isServiceError = err instanceof AttendanceServiceError
+    return NextResponse.json(
+      {
+        error: isServiceError
+          ? 'Failed to delete attendance'
+          : 'Unexpected error while deleting attendance',
+      },
+      { status: 500 },
+    )
   }
 }
-

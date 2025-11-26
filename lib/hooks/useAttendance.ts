@@ -15,6 +15,7 @@ export function useAttendance(
   const [savedAttendance, setSavedAttendance] = useState<Record<string, boolean>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [hasLoadedInitial, setHasLoadedInitial] = useState(false);
 
   // Load attendance for a specific date
   const loadAttendance = useCallback(
@@ -63,6 +64,7 @@ export function useAttendance(
         console.error('❌ Error loading attendance:', error);
       } finally {
         setIsLoading(false);
+        setHasLoadedInitial(true);
       }
     },
     [students.length, classes]
@@ -219,6 +221,7 @@ export function useAttendance(
     savedAttendance,
     isLoading,
     isSaving,
+    hasLoadedInitial,
     loadAttendance,
     saveAttendance,
     updateAttendance,

@@ -19,7 +19,6 @@ import type { Student, TeacherClass } from '@/lib/types/attendance';
 import { enText } from '@/lib/translations/en';
 import { isText } from '@/lib/translations/is';
 
-// Attendance Page Header Component
 function AttendancePageHeader({
   title,
   label,
@@ -76,7 +75,6 @@ function AttendancePageHeader({
 
 export default function TeacherAttendancePage() {
   const { t, lang } = useLanguage();
-  const { session } = useAuth();
   const { orgId } = useTeacherOrgId();
   const { classes: teacherClasses, isLoading: loadingClasses } = useTeacherClasses();
   const { students, isLoading: loadingStudents, error: studentError } = useTeacherStudents(
@@ -88,6 +86,7 @@ export default function TeacherAttendancePage() {
     savedAttendance,
     isLoading: loadingAttendance,
     isSaving: isSavingAttendance,
+    hasLoadedInitial,
     loadAttendance,
     saveAttendance,
     updateAttendance,
@@ -141,6 +140,9 @@ export default function TeacherAttendancePage() {
     [markAllPresent]
   );
 
+  const isPageLoading =
+    !hasLoadedInitial || loadingClasses || loadingStudents || loadingAttendance;
+
   return (
     <TeacherPageLayout attendanceBadge={kidsIn}>
       {/* Content Header */}
@@ -162,7 +164,7 @@ export default function TeacherAttendancePage() {
           attendance={attendance}
           hasUnsavedChanges={hasUnsavedChanges}
           isSaving={isSavingAttendance}
-          isLoading={loadingStudents || loadingAttendance}
+          isLoading={isPageLoading}
           onMarkAll={handleMarkAllPresent}
           onToggle={handleToggleAttendance}
           onSubmit={handleSaveAttendance}
