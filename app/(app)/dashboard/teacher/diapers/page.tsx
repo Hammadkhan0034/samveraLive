@@ -17,13 +17,8 @@ import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmat
 import { HealthLogFormModal } from '@/app/components/shared/HealthLogFormModal';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 
-type Lang = 'is' | 'en';
-type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
 
 // Small helpers
-function clsx(...xs: Array<string | false | undefined>) {
-  return xs.filter(Boolean).join(' ');
-}
 
 // Diapers Page Header Component
 function DiapersPageHeader({ title }: { title: string }) {
@@ -50,9 +45,7 @@ function DiapersPageHeader({ title }: { title: string }) {
 }
 
 export default function TeacherDiapersPage() {
-  const { t, lang } = useLanguage();
-  const { session } = useAuth();
-  const router = useRouter();
+  const { t } = useLanguage();
 
   return (
     <TeacherPageLayout>
@@ -67,177 +60,6 @@ export default function TeacherDiapersPage() {
   );
 }
 
-/* -------------------- Debounce Hook -------------------- */
-
-function useDebounced<T>(value: T, delayMs: number) {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const t = setTimeout(() => setDebounced(value), delayMs);
-    return () => clearTimeout(t);
-  }, [value, delayMs]);
-  return debounced;
-}
-
-/* -------------------- Student Search Dropdown -------------------- */
-
-function StudentSearchDropdown({
-  value,
-  onChange,
-  students,
-  isLoading,
-  placeholder,
-  required = false,
-}: {
-  value: string | null;
-  onChange: (studentId: string | null) => void;
-  students: Student[];
-  isLoading: boolean;
-  placeholder: string;
-  required?: boolean;
-}) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isOpen, setIsOpen] = useState(false);
-  const debouncedQuery = useDebounced(searchQuery, 250);
-
-  // Get selected student - use useMemo to ensure it updates when students or value changes
-  const selectedStudent = useMemo(() => {
-    if (!value || students.length === 0) return undefined;
-    return students.find(s => String(s.id) === String(value));
-  }, [students, value]);
-
-  // Filter students based on search query
-  const filteredStudents = useMemo(() => {
-    if (!debouncedQuery.trim()) return students;
-    
-    const query = debouncedQuery.toLowerCase();
-    return students.filter((student) => {
-      const firstName = (student.users?.first_name || student.first_name || '').toLowerCase();
-      const lastName = (student.users?.last_name || student.last_name || '').toLowerCase();
-      const fullName = `${firstName} ${lastName}`.trim();
-      const className = (student.classes?.name || '').toLowerCase();
-      
-      return fullName.includes(query) || 
-             firstName.includes(query) || 
-             lastName.includes(query) ||
-             className.includes(query);
-    });
-  }, [students, debouncedQuery]);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element;
-      if (isOpen && !target.closest('.student-search-dropdown')) {
-        setIsOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen]);
-
-  const handleSelect = (student: Student) => {
-    onChange(student.id);
-    setIsOpen(false);
-    setSearchQuery('');
-  };
-
-  const handleClear = (e?: React.MouseEvent) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    onChange(null);
-    setSearchQuery('');
-    setIsOpen(false);
-  };
-
-  return (
-    <div className="student-search-dropdown relative">
-      <div className="relative">
-        {selectedStudent ? (
-          <div className="mt-1 flex items-center gap-2 rounded-xl border border-slate-300 bg-white p-2 dark:border-slate-600 dark:bg-slate-700">
-            <span className="flex-1 text-sm text-slate-900 dark:text-slate-200">
-              {`${selectedStudent.users?.first_name || selectedStudent.first_name || ''} ${selectedStudent.users?.last_name || selectedStudent.last_name || ''}`.trim() || 'Unknown Student'}
-              {selectedStudent.classes?.name && (
-                <span className="ml-2 text-xs text-slate-500 dark:text-slate-400">
-                  ({selectedStudent.classes.name})
-                </span>
-              )}
-            </span>
-            <button
-              type="button"
-              onClick={handleClear}
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-              aria-label="Clear selection"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
-        ) : (
-          <div className="relative">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setIsOpen(true);
-              }}
-              onFocus={() => setIsOpen(true)}
-              className="mt-1 w-full rounded-xl border border-slate-300 p-2 pr-8 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
-              placeholder={isLoading ? 'Loading students...' : placeholder}
-              required={required}
-            />
-            <ChevronDown className="absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          </div>
-        )}
-      </div>
-
-      {isOpen && !selectedStudent && (
-        <div className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-xl border border-slate-200 bg-white shadow-lg dark:border-slate-700 dark:bg-slate-800">
-          {isLoading && (
-            <div className="p-3 text-sm text-slate-500 dark:text-slate-400">Loading students...</div>
-          )}
-          {!isLoading && filteredStudents.length === 0 && (
-            <div className="p-3 text-sm text-slate-500 dark:text-slate-400">
-              {searchQuery.trim() ? 'No students found' : 'No students available'}
-            </div>
-          )}
-          {!isLoading && filteredStudents.length > 0 && (
-            <div className="py-1">
-              {filteredStudents.map((student) => {
-                const firstName = student.users?.first_name || student.first_name || '';
-                const lastName = student.users?.last_name || student.last_name || '';
-                const fullName = `${firstName} ${lastName}`.trim();
-                return (
-                  <button
-                    key={student.id}
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleSelect(student);
-                    }}
-                    className="w-full px-3 py-2 text-left text-sm hover:bg-slate-100 dark:hover:bg-slate-700"
-                  >
-                    <div className="font-medium text-slate-900 dark:text-slate-100">{fullName || 'Unknown'}</div>
-                    {student.classes?.name && (
-                      <div className="text-xs text-slate-500 dark:text-slate-400">{student.classes.name}</div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* -------------------- Health Logs Panel -------------------- */
 
 const HEALTH_LOG_TYPE_LABELS: Record<string, { en: string; is: string }> = {
   diaper_wet: { en: 'Diaper - Wet', is: 'Bleyja - Vot' },
