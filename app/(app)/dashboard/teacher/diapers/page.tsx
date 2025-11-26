@@ -1,15 +1,10 @@
 'use client';
 
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { enText } from '@/lib/translations/en';
 import { isText } from '@/lib/translations/is';
-import { useRouter } from 'next/navigation';
 import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Users, Plus, Send, Paperclip, Bell, X, Search, ChevronLeft, ChevronRight, Edit, Trash2, Link as LinkIcon, Mail, Utensils, Menu, ChevronDown } from 'lucide-react';
-import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
-import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
-import { useTeacherStudents } from '@/lib/hooks/useTeacherStudents';
-import type { Student, TeacherClass } from '@/lib/types/attendance';
 import type { HealthLog, HealthLogWithRelations, HealthLogFormData } from '@/lib/types/health-logs';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import TeacherPageLayout, { useTeacherPageLayout } from '@/app/components/shared/TeacherPageLayout';
@@ -97,13 +92,7 @@ function getStudentName(log: HealthLogWithRelations): string {
 }
 
 function DiaperPanel({ t }: { t: typeof enText | typeof isText }) {
-  const { session } = useAuth();
-  const { orgId } = useCurrentUserOrgId();
   const { lang } = useLanguage();
-
-  // Teacher classes state
-  const [teacherClasses, setTeacherClasses] = useState<TeacherClass[]>([]);
-  const [loadingClasses, setLoadingClasses] = useState(false);
 
   // Health logs state
   const [healthLogs, setHealthLogs] = useState<HealthLogWithRelations[]>([]);
@@ -125,31 +114,8 @@ function DiaperPanel({ t }: { t: typeof enText | typeof isText }) {
   // Filter state
   const [selectedFilterType, setSelectedFilterType] = useState<string>('all');
 
-  // Load teacher classes
-  const loadTeacherClasses = useCallback(async () => {
-    if (!session?.user?.id) return;
-    try {
-      setLoadingClasses(true);
-      const response = await fetch(`/api/teacher-classes?userId=${session.user.id}&t=${Date.now()}`, {
-        cache: 'no-store',
-      });
-      const data = await response.json();
-      if (response.ok && data.classes) {
-        setTeacherClasses(data.classes as TeacherClass[]);
-      } else {
-        setTeacherClasses([]);
-      }
-    } catch (error) {
-      console.error('Error loading teacher classes:', error);
-      setTeacherClasses([]);
-    } finally {
-      setLoadingClasses(false);
-    }
-  }, [session?.user?.id]);
-
   // Load health logs with optional type filter
   const loadHealthLogs = useCallback(async (filterType?: string) => {
-    if (!session?.user?.id) return;
     try {
       setLoadingLogs(true);
       setError(null);
@@ -172,19 +138,12 @@ function DiaperPanel({ t }: { t: typeof enText | typeof isText }) {
     } finally {
       setLoadingLogs(false);
     }
-  }, [session?.user?.id]);
-
-  // Load data on mount
-  useEffect(() => {
-    loadTeacherClasses();
-  }, [loadTeacherClasses]);
+  }, []);
 
   // Load data on mount and when filter changes
   useEffect(() => {
-    if (session?.user?.id) {
-      loadHealthLogs(selectedFilterType);
-    }
-  }, [session?.user?.id, selectedFilterType, loadHealthLogs]);
+    loadHealthLogs(selectedFilterType);
+  }, [selectedFilterType, loadHealthLogs]);
 
   // Modal handlers
   function openModal(log?: HealthLog) {
@@ -206,11 +165,6 @@ function DiaperPanel({ t }: { t: typeof enText | typeof isText }) {
   async function handleLogSubmit(
     data: HealthLogFormData & { id?: string }
   ) {
-    if (!session?.user?.id) {
-      setLogError('Authentication required');
-      return;
-    }
-
     setSubmittingLog(true);
     setLogError(null);
 
@@ -448,19 +402,14 @@ function DiaperPanel({ t }: { t: typeof enText | typeof isText }) {
         cancelButtonText={t.cancel || 'Cancel'}
       />
 
-      {orgId && session?.user?.id && (
-        <HealthLogFormModal
-          isOpen={isModalOpen}
-          onClose={closeModal}
-          onSubmit={handleLogSubmit}
-          initialData={editingLog}
-          orgId={orgId}
-          classes={teacherClasses}
-          userId={session.user.id}
-          loading={submittingLog}
-          error={logError}
-        />
-      )}
+      <HealthLogFormModal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        onSubmit={handleLogSubmit}
+        initialData={editingLog}
+        loading={submittingLog}
+        error={logError}
+      />
     </div>
   );
 }

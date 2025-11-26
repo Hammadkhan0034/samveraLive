@@ -5,9 +5,10 @@ import { X, Save, ChevronDown } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
+import { useTeacherClasses } from '@/lib/hooks/useTeacherClasses';
 import { useTeacherStudents } from '@/lib/hooks/useTeacherStudents';
 import type { HealthLog, HealthLogFormData, HealthLogType } from '@/lib/types/health-logs';
-import type { Student, TeacherClass } from '@/lib/types/attendance';
+import type { Student } from '@/lib/types/attendance';
 import { enText } from '@/lib/translations/en';
 import { isText } from '@/lib/translations/is';
 
@@ -185,9 +186,6 @@ export interface HealthLogFormModalProps {
   onClose: () => void;
   onSubmit: (data: HealthLogFormData & { id?: string }) => Promise<void>;
   initialData?: HealthLog | null;
-  orgId: string;
-  classes: TeacherClass[];
-  userId: string;
   loading?: boolean;
   error?: string | null;
 }
@@ -210,13 +208,12 @@ export function HealthLogFormModal({
   onClose,
   onSubmit,
   initialData,
-  orgId,
-  classes,
-  userId,
   loading = false,
   error: externalError,
 }: HealthLogFormModalProps) {
   const { t, lang } = useLanguage();
+  const { orgId } = useCurrentUserOrgId();
+  const { classes, isLoading: isLoadingClasses } = useTeacherClasses();
   const { students, isLoading: isLoadingStudents } = useTeacherStudents(classes, orgId);
 
   const [formData, setFormData] = useState<HealthLogFormData>({
@@ -337,7 +334,7 @@ export function HealthLogFormModal({
               value={formData.student_id || null}
               onChange={(id) => setFormData({ ...formData, student_id: id || '' })}
               students={students}
-              isLoading={isLoadingStudents}
+              isLoading={isLoadingClasses || isLoadingStudents}
               placeholder={classes.length === 0 ? 'No classes assigned' : `${t.child} 1`}
               required
             />
