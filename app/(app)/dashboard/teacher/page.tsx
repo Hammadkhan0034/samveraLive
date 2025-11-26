@@ -6,9 +6,6 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { useRouter, useSearchParams } from 'next/navigation';
 import TeacherPageLayout, { useTeacherPageLayout } from '@/app/components/shared/TeacherPageLayout';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
-import { useTeacherOrgId } from '@/lib/hooks/useTeacherOrgId';
-import { useTeacherClasses } from '@/lib/hooks/useTeacherClasses';
-import { useTeacherStudents } from '@/lib/hooks/useTeacherStudents';
 import KPICardSkeleton from '@/app/components/loading-skeletons/KPICardSkeleton';
 import type { enText, isText } from '@/lib/translations';
 
@@ -108,7 +105,7 @@ function TeacherDashboardContent({
 }
 
 function TeacherDashboardPageContent() {
-  const { t, lang } = useLanguage();
+  const { t } = useLanguage();
   const { session } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -141,14 +138,10 @@ function TeacherDashboardPageContent() {
     } catch {}
   }, [router]);
 
-  // Get orgId and classes using hooks
-  const { orgId: finalOrgId } = useTeacherOrgId();
-  const { classes: teacherClasses } = useTeacherClasses();
-  const { students: teacherStudents } = useTeacherStudents(teacherClasses, finalOrgId);
-
   // Metrics state - all KPIs in one object
   const [metrics, setMetrics] = useState({
     attendanceCount: 0,
+    studentsCount: 0,
     messagesCount: 0,
     storiesCount: 0,
     announcementsCount: 0,
@@ -160,11 +153,6 @@ function TeacherDashboardPageContent() {
   const [error, setError] = useState<string | null>(null);
 
   // Extract stable values from session to avoid unnecessary re-renders
-  const userId = session?.user?.id ?? null;
-  const userMetadata = session?.user?.user_metadata;
-  const userRole = useMemo(() => {
-    return (userMetadata?.role || userMetadata?.activeRole || 'teacher') as string;
-  }, [userMetadata?.role, userMetadata?.activeRole]);
 
   // Request deduplication: track in-flight requests
   const inFlightRequestRef = useRef<Promise<void> | null>(null);
@@ -215,6 +203,7 @@ function TeacherDashboardPageContent() {
 
       setMetrics({
         attendanceCount: data.attendanceCount || 0,
+        studentsCount: data.studentsCount || 0,
         messagesCount: data.messagesCount || 0,
         storiesCount: data.storiesCount || 0,
         announcementsCount: data.announcementsCount || 0,
@@ -332,9 +321,6 @@ function TeacherDashboardPageContent() {
     void fetchMetrics(abortController.signal);
   }, [fetchMetrics]);
 
-  // Derive students count from hook
-  const studentsCount = useMemo(() => teacherStudents.length, [teacherStudents.length]);
-
   // Stable icon references
   const icons = useMemo(() => ({
     ClipboardCheck,
@@ -365,7 +351,7 @@ function TeacherDashboardPageContent() {
     },
     {
       label: t.kpi_students || 'Students',
-      value: studentsCount,
+      value: metrics.studentsCount,
       icon: icons.Users,
       onClick: navigationHandlers.students,
     },
@@ -393,7 +379,7 @@ function TeacherDashboardPageContent() {
       icon: icons.Utensils,
       onClick: navigationHandlers.menus,
     },
-  ], [t, metrics, studentsCount, icons, navigationHandlers]);
+  ], [t, metrics, icons, navigationHandlers]);
 
   return (
     <TeacherPageLayout messagesBadge={metrics.messagesCount > 0 ? metrics.messagesCount : undefined}>
