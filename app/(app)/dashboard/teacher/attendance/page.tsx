@@ -92,15 +92,15 @@ export default function TeacherAttendancePage() {
     saveAttendance,
     updateAttendance,
     markAllPresent,
-  } = useAttendance(students, teacherClasses, orgId, session?.user?.id);
+  } = useAttendance(students, teacherClasses);
 
   // Load attendance for today when students are available
   useEffect(() => {
-    if (students.length > 0 && orgId && session?.user?.id && teacherClasses.length > 0) {
+    if (students.length > 0 && teacherClasses.length > 0) {
       const today = new Date().toISOString().split('T')[0];
       loadAttendance(today);
     }
-  }, [students.length, orgId, session?.user?.id, teacherClasses.length, loadAttendance]);
+  }, [students.length, teacherClasses.length, loadAttendance]);
 
   // Calculate kids checked in from actual students (needed for tiles badge)
   const kidsIn = useMemo(() => {

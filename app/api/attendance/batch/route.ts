@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseClient';
 import { getNoCacheHeaders } from '@/lib/cacheConfig';
 import { z } from 'zod';
-import { validateBody, orgIdSchema, userIdSchema, studentIdSchema, dateSchema, attendanceStatusSchema, classIdSchema, notesSchema } from '@/lib/validation';
+import { validateBody, studentIdSchema, dateSchema, attendanceStatusSchema, classIdSchema, notesSchema } from '@/lib/validation';
+import { getAuthUserWithOrg, mapAuthErrorToResponse } from '@/lib/server-helpers';
 
 // POST body schema
 const postBatchAttendanceBodySchema = z.object({
-  org_id: orgIdSchema,
   records: z.array(
     z.object({
       student_id: studentIdSchema,
@@ -16,7 +16,6 @@ const postBatchAttendanceBodySchema = z.object({
       notes: notesSchema.optional().nullable(),
     })
   ).min(1),
-  recorded_by: userIdSchema.optional(),
 });
 
 /**
@@ -34,22 +33,33 @@ export async function POST(request: Request) {
       );
     }
 
+    // Derive org_id and user (recorded_by) from authenticated context
+    let orgId: string;
+    let userId: string;
+    try {
+      const { user, orgId: resolvedOrgId } = await getAuthUserWithOrg();
+      orgId = resolvedOrgId;
+      userId = user.id;
+    } catch (err) {
+      return mapAuthErrorToResponse(err);
+    }
+
     const body = await request.json();
     const bodyValidation = validateBody(postBatchAttendanceBodySchema, body);
     if (!bodyValidation.success) {
       return bodyValidation.error;
     }
-    const { org_id, records, recorded_by } = bodyValidation.data;
+    const { records } = bodyValidation.data;
 
     // Prepare records for upsert
     const attendanceRecords = records.map((record) => ({
-      org_id,
+      org_id: orgId,
       class_id: record.class_id || null,
       student_id: record.student_id,
       date: record.date,
       status: record.status,
       notes: record.notes || null,
-      recorded_by: recorded_by || null,
+      recorded_by: userId,
       updated_at: new Date().toISOString(),
     }));
 

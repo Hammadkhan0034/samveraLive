@@ -2,11 +2,20 @@ import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 import { getNoCacheHeaders } from '@/lib/cacheConfig'
 import { z } from 'zod'
-import { validateQuery, validateBody, orgIdSchema, classIdSchema, studentIdSchema, dateSchema, attendanceStatusSchema, notesSchema, userIdSchema, uuidSchema } from '@/lib/validation'
+import {
+  validateQuery,
+  validateBody,
+  classIdSchema,
+  studentIdSchema,
+  dateSchema,
+  attendanceStatusSchema,
+  notesSchema,
+  uuidSchema,
+} from '@/lib/validation'
+import { getAuthUserWithOrg, mapAuthErrorToResponse } from '@/lib/server-helpers'
 
 // GET query parameter schema
 const getAttendanceQuerySchema = z.object({
-  orgId: orgIdSchema,
   classId: classIdSchema.optional(),
   studentId: studentIdSchema.optional(),
   date: dateSchema.optional(),
@@ -19,13 +28,21 @@ export async function GET(request: Request) {
         error: 'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local' 
       }, { status: 500 })
     }
-    
+    // Authenticate user and derive orgId from server-side context
+    let orgId: string
+    try {
+      const { orgId: resolvedOrgId } = await getAuthUserWithOrg()
+      orgId = resolvedOrgId
+    } catch (err) {
+      return mapAuthErrorToResponse(err)
+    }
+
     const { searchParams } = new URL(request.url)
     const queryValidation = validateQuery(getAttendanceQuerySchema, searchParams)
     if (!queryValidation.success) {
       return queryValidation.error
     }
-    const { orgId, classId, studentId, date } = queryValidation.data
+    const { classId, studentId, date } = queryValidation.data
 
     // Build query based on filters
     let query = supabaseAdmin
@@ -99,44 +116,58 @@ export async function POST(request: Request) {
         error: 'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local' 
       }, { status: 500 })
     }
-    
+
+    // Authenticate user and derive orgId from server-side context
+    let orgId: string
+    let userId: string
+    try {
+      const { user, orgId: resolvedOrgId } = await getAuthUserWithOrg()
+      userId = user.id
+      orgId = resolvedOrgId
+    } catch (err) {
+      return mapAuthErrorToResponse(err)
+    }
+
     const body = await request.json()
     // POST body schema
     const postAttendanceBodySchema = z.object({
-      org_id: orgIdSchema,
       class_id: classIdSchema.optional(),
       student_id: studentIdSchema,
       date: dateSchema,
       status: attendanceStatusSchema.default('present'),
       notes: notesSchema,
-      recorded_by: userIdSchema.optional(),
     });
     
     const bodyValidation = validateBody(postAttendanceBodySchema, body)
     if (!bodyValidation.success) {
       return bodyValidation.error
     }
-    const { org_id, class_id, student_id, date, status, notes, recorded_by } = bodyValidation.data
+    const { class_id, student_id, date, status, notes } = bodyValidation.data
 
 
     // Use upsert to handle UNIQUE constraint (student_id, date)
     // If record exists for this student and date, update it; otherwise create new
     const { data: attendance, error: attendanceError } = await supabaseAdmin
       .from('attendance')
-      .upsert({
-        org_id,
-        class_id: class_id || null,
-        student_id,
-        date,
-        status,
-        notes: notes || null,
-        recorded_by: recorded_by || null,
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'student_id,date',
-        ignoreDuplicates: false
-      })
-      .select('id,org_id,class_id,student_id,date,status,notes,recorded_by,created_at,updated_at')
+      .upsert(
+        {
+          org_id: orgId,
+          class_id: class_id || null,
+          student_id,
+          date,
+          status,
+          notes: notes || null,
+          recorded_by: userId,
+          updated_at: new Date().toISOString(),
+        },
+        {
+          onConflict: 'student_id,date',
+          ignoreDuplicates: false,
+        }
+      )
+      .select(
+        'id,org_id,class_id,student_id,date,status,notes,recorded_by,created_at,updated_at'
+      )
       .single()
 
     if (attendanceError) {
@@ -162,25 +193,34 @@ export async function PUT(request: Request) {
         error: 'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local' 
       }, { status: 500 })
     }
-    
+
+    // Authenticate user (used to ensure only authenticated users can update attendance)
+    let userId: string
+    try {
+      const { user } = await getAuthUserWithOrg()
+      userId = user.id
+    } catch (err) {
+      return mapAuthErrorToResponse(err)
+    }
+
     const body = await request.json()
     // PUT body schema
     const putAttendanceBodySchema = z.object({
       id: uuidSchema,
       status: attendanceStatusSchema.optional(),
       notes: notesSchema,
-      recorded_by: userIdSchema.optional(),
     });
     
     const bodyValidation = validateBody(putAttendanceBodySchema, body)
     if (!bodyValidation.success) {
       return bodyValidation.error
     }
-    const { id, status, notes, recorded_by } = bodyValidation.data
+    const { id, status, notes } = bodyValidation.data
 
 
     const updateData: any = {
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
+      recorded_by: userId,
     }
 
     if (status !== undefined) {
@@ -188,9 +228,6 @@ export async function PUT(request: Request) {
     }
     if (notes !== undefined) {
       updateData.notes = notes
-    }
-    if (recorded_by !== undefined) {
-      updateData.recorded_by = recorded_by
     }
 
     const { data: attendance, error: attendanceError } = await supabaseAdmin
@@ -223,7 +260,15 @@ export async function DELETE(request: Request) {
         error: 'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local' 
       }, { status: 500 })
     }
-    
+
+    // Authenticate user and derive orgId to scope deletion
+    let orgId: string
+    try {
+      const { orgId: resolvedOrgId } = await getAuthUserWithOrg()
+      orgId = resolvedOrgId
+    } catch (err) {
+      return mapAuthErrorToResponse(err)
+    }
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
     
@@ -235,6 +280,7 @@ export async function DELETE(request: Request) {
       .from('attendance')
       .delete()
       .eq('id', id)
+      .eq('org_id', orgId)
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })

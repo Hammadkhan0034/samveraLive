@@ -7,7 +7,7 @@ import { z } from 'zod';
 import { validateQuery } from '@/lib/validation';
 import { type UserMetadata } from '@/lib/types/auth';
 
-import { getCurrentUserOrgId, MissingOrgIdError } from '@/lib/server-helpers';
+import { getCurrentUserOrgId, MissingOrgIdError, mapAuthErrorToResponse } from '@/lib/server-helpers';
 
 // GET query parameter schema
 const getMetricsQuerySchema = z.object({
@@ -89,10 +89,7 @@ export async function GET(request: Request) {
       orgId = await getCurrentUserOrgId(user);
     } catch (err) {
       if (err instanceof MissingOrgIdError) {
-        return NextResponse.json({ 
-          error: 'Organization ID not found',
-          code: 'MISSING_ORG_ID'
-        }, { status: 401 });
+        return mapAuthErrorToResponse(err);
       }
       throw err;
     }

@@ -9,9 +9,7 @@ import type { TeacherClass, Student, AttendanceRecord } from '@/lib/types/attend
  */
 export function useAttendance(
   students: Student[],
-  classes: TeacherClass[],
-  orgId: string | null,
-  userId: string | undefined
+  classes: TeacherClass[]
 ) {
   const [attendance, setAttendance] = useState<Record<string, boolean>>({});
   const [savedAttendance, setSavedAttendance] = useState<Record<string, boolean>>({});
@@ -19,54 +17,56 @@ export function useAttendance(
   const [isSaving, setIsSaving] = useState(false);
 
   // Load attendance for a specific date
-  const loadAttendance = useCallback(async (date: string) => {
-    if (!orgId || students.length === 0 || !userId) {
-      return;
-    }
+  const loadAttendance = useCallback(
+    async (date: string) => {
+      if (students.length === 0 || classes.length === 0) {
+        return;
+      }
 
-    try {
-      setIsLoading(true);
-      const classIds = classes.map(c => c.id).filter(Boolean);
-      
+      try {
+        setIsLoading(true);
+        const classIds = classes.map((c) => c.id).filter(Boolean);
 
-      const fetchPromises = classIds.map(async (classId) => {
-        try {
-          const response = await fetch(
-            `/api/attendance?orgId=${orgId}&classId=${classId}&date=${date}`,
-            { next: { revalidate: 120 } }
-          );
-          const data = await response.json();
+        const fetchPromises = classIds.map(async (classId) => {
+          try {
+            const response = await fetch(
+              `/api/attendance?classId=${classId}&date=${date}`,
+              { next: { revalidate: 120 } }
+            );
+            const data = await response.json();
 
-          if (response.ok && data.attendance) {
-            return data.attendance as AttendanceRecord[];
+            if (response.ok && data.attendance) {
+              return data.attendance as AttendanceRecord[];
+            }
+            return [];
+          } catch (error) {
+            console.error(`Error loading attendance for class ${classId}:`, error);
+            return [];
           }
-          return [];
-        } catch (error) {
-          console.error(`Error loading attendance for class ${classId}:`, error);
-          return [];
-        }
-      });
+        });
 
-      const results = await Promise.allSettled(fetchPromises);
-      const allAttendance: Record<string, boolean> = {};
+        const results = await Promise.allSettled(fetchPromises);
+        const allAttendance: Record<string, boolean> = {};
 
-      results.forEach((result) => {
-        if (result.status === 'fulfilled') {
-          result.value.forEach((record) => {
-            allAttendance[record.student_id] = record.status === 'present';
-          });
-        }
-      });
+        results.forEach((result) => {
+          if (result.status === 'fulfilled') {
+            result.value.forEach((record) => {
+              allAttendance[record.student_id] = record.status === 'present';
+            });
+          }
+        });
 
-      setAttendance(allAttendance);
-      setSavedAttendance(allAttendance);
-      console.log('✅ Attendance loaded for date:', date, allAttendance);
-    } catch (error) {
-      console.error('❌ Error loading attendance:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [orgId, students.length, classes, userId]);
+        setAttendance(allAttendance);
+        setSavedAttendance(allAttendance);
+        console.log('✅ Attendance loaded for date:', date, allAttendance);
+      } catch (error) {
+        console.error('❌ Error loading attendance:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [students.length, classes]
+  );
 
   // Save single attendance record
   const saveAttendanceRecord = useCallback(async (
@@ -74,8 +74,6 @@ export function useAttendance(
     isPresent: boolean,
     classId?: string | null
   ): Promise<boolean> => {
-    if (!orgId || !userId) return false;
-
     try {
       const today = new Date().toISOString().split('T')[0];
       const status = isPresent ? 'present' : 'absent';
@@ -84,12 +82,10 @@ export function useAttendance(
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          org_id: orgId,
           class_id: classId || null,
           student_id: studentId,
           date: today,
           status: status,
-          recorded_by: userId,
         }),
       });
 
@@ -106,11 +102,11 @@ export function useAttendance(
       console.error('❌ Error saving attendance:', error);
       return false;
     }
-  }, [orgId, userId]);
+  }, []);
 
   // Save all attendance changes (batch)
   const saveAttendance = useCallback(async (changes: Record<string, boolean>) => {
-    if (!orgId || !userId || isSaving) {
+    if (isSaving) {
       return;
     }
 
@@ -151,9 +147,7 @@ export function useAttendance(
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            org_id: orgId,
             records,
-            recorded_by: userId,
           }),
         });
 
@@ -194,7 +188,7 @@ export function useAttendance(
     } finally {
       setIsSaving(false);
     }
-  }, [orgId, userId, isSaving, students, attendance, savedAttendance, saveAttendanceRecord]);
+  }, [isSaving, students, attendance, savedAttendance, saveAttendanceRecord]);
 
   // Update attendance state (optimistic update)
   const updateAttendance = useCallback((studentId: string, isPresent: boolean) => {

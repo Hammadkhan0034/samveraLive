@@ -1,3 +1,4 @@
+import { NextResponse } from 'next/server';
 import { requireServerAuth } from './supabaseServer';
 import { supabaseAdmin } from './supabaseClient';
 import type { User } from '@supabase/supabase-js';
@@ -50,5 +51,57 @@ export async function getCurrentUserOrgId(user?: User): Promise<string> {
   }
   
   return data.org_id;
+}
+
+export type AuthContext = {
+  user: User;
+  orgId: string;
+};
+
+/**
+ * Convenience helper to get the authenticated user and their organization ID.
+ * Wraps requireServerAuth + getCurrentUserOrgId so route handlers can stay concise.
+ */
+export async function getAuthUserWithOrg(): Promise<AuthContext> {
+  const { user } = await requireServerAuth();
+  const orgId = await getCurrentUserOrgId(user);
+  return { user, orgId };
+}
+
+/**
+ * Map common authentication / org resolution errors to HTTP responses.
+ * Centralizes how we treat MissingOrgIdError and transient network issues.
+ */
+export function mapAuthErrorToResponse(err: unknown) {
+  if (err instanceof MissingOrgIdError) {
+    return NextResponse.json(
+      {
+        error: 'Organization ID not found',
+        code: 'MISSING_ORG_ID',
+      },
+      { status: 401 }
+    );
+  }
+
+  const message = err instanceof Error ? err.message : String(err);
+  const isNetworkError =
+    message.includes('Network error') ||
+    message.includes('fetch failed') ||
+    message.includes('timeout');
+
+  if (isNetworkError) {
+    return NextResponse.json(
+      {
+        error: 'Authentication service unavailable. Please try again.',
+        retryable: true,
+      },
+      { status: 503 }
+    );
+  }
+
+  return NextResponse.json(
+    { error: 'Authentication required' },
+    { status: 401 }
+  );
 }
 

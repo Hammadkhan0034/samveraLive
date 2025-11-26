@@ -1,14 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseClient';
 import { getUserDataCacheHeaders } from '@/lib/cacheConfig';
-import { z } from 'zod';
-import { validateQuery, userIdSchema, orgIdSchema } from '@/lib/validation';
-
-// GET query parameter schema
-const getTeacherAttendanceInitialQuerySchema = z.object({
-  userId: userIdSchema,
-  orgId: orgIdSchema.optional(),
-});
+import { getAuthUserWithOrg, mapAuthErrorToResponse } from '@/lib/server-helpers';
 
 /**
  * Unified endpoint that returns all data needed for teacher attendance page
@@ -23,12 +16,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const { searchParams } = new URL(request.url);
-    const queryValidation = validateQuery(getTeacherAttendanceInitialQuerySchema, searchParams);
-    if (!queryValidation.success) {
-      return queryValidation.error;
+    // Derive userId and orgId from authenticated session instead of query params
+    let userId: string;
+    let orgId: string | null = null;
+    try {
+      const { user, orgId: resolvedOrgId } = await getAuthUserWithOrg();
+      userId = user.id;
+      orgId = resolvedOrgId;
+    } catch (err) {
+      return mapAuthErrorToResponse(err);
     }
-    const { userId, orgId } = queryValidation.data;
 
     // Fetch all data in parallel
     const [classesResult, studentsResult, attendanceResult] = await Promise.allSettled([
@@ -61,7 +58,7 @@ export async function GET(request: NextRequest) {
         }));
       })(),
 
-      // 2. Fetch students for all classes (if orgId provided)
+      // 2. Fetch students for all classes (if orgId available)
       (async () => {
         if (!orgId) return [];
 
@@ -149,7 +146,7 @@ export async function GET(request: NextRequest) {
         return studentsWithGuardians;
       })(),
 
-      // 3. Fetch today's attendance (if orgId provided)
+      // 3. Fetch today's attendance (if orgId available)
       (async () => {
         if (!orgId) return [];
 
