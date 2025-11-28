@@ -441,14 +441,36 @@ export async function PUT(request: NextRequest) {
         const userId = createdUser?.id;
 
         // Validate and normalize barngildi (child_value)
+        const isEmptyString = (value: unknown): boolean =>
+          typeof value === 'string' && value.trim() === '';
+
         // Get from PUT request body first, otherwise from request metadata, otherwise default to 0.5
-        const barngildiFromRequest = (barngildi !== undefined && barngildi !== null && barngildi !== '' && barngildi !== 0) 
-          ? barngildi 
+        const hasBarngildiInBody =
+          barngildi !== undefined &&
+          barngildi !== null &&
+          !(
+            isEmptyString(barngildi) ||
+            (typeof barngildi === 'number' && barngildi === 0)
+          );
+
+        const barngildiFromRequest = hasBarngildiInBody
+          ? barngildi
           : (requestMetadata.barngildi !== undefined ? requestMetadata.barngildi : 0.5);
         
         let validatedBarngildi = 0.5; // Default value
-        if (barngildiFromRequest !== undefined && barngildiFromRequest !== null && barngildiFromRequest !== '' && barngildiFromRequest !== 0) {
-          const barngildiValue = typeof barngildiFromRequest === 'string' ? parseFloat(barngildiFromRequest) : barngildiFromRequest;
+        const hasBarngildiValue =
+          barngildiFromRequest !== undefined &&
+          barngildiFromRequest !== null &&
+          !(
+            isEmptyString(barngildiFromRequest) ||
+            (typeof barngildiFromRequest === 'number' && barngildiFromRequest === 0)
+          );
+
+        if (hasBarngildiValue) {
+          const barngildiValue =
+            typeof barngildiFromRequest === 'string'
+              ? parseFloat(barngildiFromRequest)
+              : barngildiFromRequest;
           if (!isNaN(barngildiValue) && barngildiValue >= 0.5 && barngildiValue <= 1.9) {
             validatedBarngildi = Math.round(barngildiValue * 10) / 10; // Round to 1 decimal place
           }

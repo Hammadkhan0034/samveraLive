@@ -377,8 +377,11 @@ export function formatZodError(error: z.ZodError): string {
 
 /**
  * Validate and parse request body with Zod schema
+ *
+ * Note: we use ZodType rather than ZodSchema so schemas with defaults/transformations
+ * (where _input and _output differ) are accepted without type errors.
  */
-export function validateBody<T>(schema: z.ZodSchema<T>, body: unknown): { success: true; data: T } | { success: false; error: NextResponse } {
+export function validateBody<T>(schema: z.ZodType<T, z.ZodTypeDef, unknown>, body: unknown): { success: true; data: T } | { success: false; error: NextResponse } {
   try {
     const data = schema.parse(body);
     return { success: true, data };
@@ -400,7 +403,7 @@ export function validateBody<T>(schema: z.ZodSchema<T>, body: unknown): { succes
 /**
  * Validate and parse query parameters with Zod schema
  */
-export function validateQuery<T>(schema: z.ZodSchema<T>, searchParams: URLSearchParams): { success: true; data: T } | { success: false; error: NextResponse } {
+export function validateQuery<T>(schema: z.ZodType<T, z.ZodTypeDef, unknown>, searchParams: URLSearchParams): { success: true; data: T } | { success: false; error: NextResponse } {
   try {
     // Convert URLSearchParams to object
     const params: Record<string, string | null> = {};
@@ -428,7 +431,7 @@ export function validateQuery<T>(schema: z.ZodSchema<T>, searchParams: URLSearch
 /**
  * Validate and parse path parameters with Zod schema
  */
-export function validateParams<T>(schema: z.ZodSchema<T>, params: Record<string, string>): { success: true; data: T } | { success: false; error: NextResponse } {
+export function validateParams<T>(schema: z.ZodType<T, z.ZodTypeDef, unknown>, params: Record<string, string>): { success: true; data: T } | { success: false; error: NextResponse } {
   try {
     const data = schema.parse(params);
     return { success: true, data };
@@ -450,7 +453,7 @@ export function validateParams<T>(schema: z.ZodSchema<T>, params: Record<string,
 /**
  * Safe parse (doesn't throw, returns result object)
  */
-export function safeParse<T>(schema: z.ZodSchema<T>, data: unknown): z.SafeParseReturnType<unknown, T> {
+export function safeParse<T>(schema: z.ZodType<T, z.ZodTypeDef, unknown>, data: unknown): z.SafeParseReturnType<unknown, T> {
   return schema.safeParse(data);
 }
 

@@ -67,7 +67,7 @@ export interface AttendanceRecord {
   class_id: string | null;
   student_id: string;
   date: string;
-  status: 'present' | 'absent';
+  status: 'present' | 'absent' | 'late' | 'excused';
   notes?: string | null;
   recorded_by?: string | null;
   created_at: string;
@@ -96,7 +96,7 @@ export interface AttendanceState {
 
 export interface BatchAttendanceRecord {
   student_id: string;
-  status: 'present' | 'absent';
+  status: 'present' | 'absent' | 'late' | 'excused';
   date: string;
   class_id?: string | null;
   notes?: string | null;
