@@ -171,6 +171,27 @@ CREATE TABLE public.guardian_students (
   CONSTRAINT guardian_students_student_id_fkey FOREIGN KEY (student_id) REFERENCES public.students(id),
   CONSTRAINT guardian_students_org_id_fkey FOREIGN KEY (org_id) REFERENCES public.orgs(id)
 );
+CREATE TABLE public.health_logs (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  org_id uuid NOT NULL,
+  class_id uuid,
+  student_id uuid NOT NULL,
+  type USER-DEFINED NOT NULL,
+  recorded_at timestamp with time zone NOT NULL DEFAULT now(),
+  temperature_celsius numeric CHECK (temperature_celsius IS NULL OR temperature_celsius >= 30::numeric AND temperature_celsius <= 45::numeric),
+  data jsonb NOT NULL DEFAULT '{}'::jsonb,
+  notes text,
+  severity smallint CHECK (severity IS NULL OR severity >= 1 AND severity <= 5),
+  recorded_by uuid NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  updated_at timestamp with time zone NOT NULL DEFAULT now(),
+  deleted_at timestamp with time zone,
+  CONSTRAINT health_logs_pkey PRIMARY KEY (id),
+  CONSTRAINT health_logs_org_id_fkey FOREIGN KEY (org_id) REFERENCES public.orgs(id),
+  CONSTRAINT health_logs_class_id_fkey FOREIGN KEY (class_id) REFERENCES public.classes(id),
+  CONSTRAINT health_logs_student_id_fkey FOREIGN KEY (student_id) REFERENCES public.students(id),
+  CONSTRAINT health_logs_recorded_by_fkey FOREIGN KEY (recorded_by) REFERENCES public.users(id)
+);
 CREATE TABLE public.invitations (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   org_id uuid NOT NULL,
@@ -464,64 +485,8 @@ CREATE TABLE public.users (
   CONSTRAINT users_org_id_fkey FOREIGN KEY (org_id) REFERENCES public.orgs(id)
 );
 
--- Enum for all log types
-CREATE TYPE health_log_type AS ENUM (
-  'diaper_wet',
-  'diaper_dirty',
-  'diaper_mixed',
-  'temperature',
-  'medication',
-  'nap',
-  'symptom',
-  'injury',
-  'meal',
-  'other'
-);
 
-CREATE TABLE public.health_logs (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  org_id uuid NOT NULL,
-  class_id uuid,
-  student_id uuid NOT NULL,
-  type health_log_type NOT NULL,
-  recorded_at timestamp with time zone NOT NULL DEFAULT now(),
-  
-  -- Structured fields for common types (better queryability and type safety)
-  temperature_celsius numeric(4, 2) CHECK (temperature_celsius IS NULL OR (temperature_celsius >= 30 AND temperature_celsius <= 45)),
-  
-  -- Flexible JSONB for type-specific data
-  -- Examples:
-  -- For medication: {"name": "Tylenol", "dosage": "5ml", "scheduled": true}
-  -- For nap: {"start_time": "2024-01-01T12:00:00Z", "end_time": "2024-01-01T14:00:00Z", "duration_minutes": 120}
-  -- For symptom: {"description": "Cough", "severity": 3}
-  -- For diaper: {} (empty, type is enough)
-  data jsonb NOT NULL DEFAULT '{}'::jsonb,
-  
-  notes text,
-  severity smallint CHECK (severity IS NULL OR (severity >= 1 AND severity <= 5)),
-  
-  recorded_by uuid NOT NULL,
-  created_at timestamp with time zone NOT NULL DEFAULT now(),
-  updated_at timestamp with time zone NOT NULL DEFAULT now(),
-  deleted_at timestamp with time zone,
-  
-  CONSTRAINT health_logs_pkey PRIMARY KEY (id),
-  CONSTRAINT health_logs_org_id_fkey FOREIGN KEY (org_id) REFERENCES public.orgs(id),
-  CONSTRAINT health_logs_class_id_fkey FOREIGN KEY (class_id) REFERENCES public.classes(id),
-  CONSTRAINT health_logs_student_id_fkey FOREIGN KEY (student_id) REFERENCES public.students(id),
-  CONSTRAINT health_logs_recorded_by_fkey FOREIGN KEY (recorded_by) REFERENCES public.users(id)
-);
 
--- Indexes for optimal query performance
-CREATE INDEX idx_health_logs_student_id ON public.health_logs(student_id);
-CREATE INDEX idx_health_logs_type ON public.health_logs(type);
-CREATE INDEX idx_health_logs_recorded_at ON public.health_logs(recorded_at DESC);
-CREATE INDEX idx_health_logs_class_id ON public.health_logs(class_id);
-CREATE INDEX idx_health_logs_org_id ON public.health_logs(org_id);
-CREATE INDEX idx_health_logs_deleted_at ON public.health_logs(deleted_at) WHERE deleted_at IS NULL;
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
 
--- GIN index for JSONB queries (e.g., filtering by medication name)
-CREATE INDEX idx_health_logs_data ON public.health_logs USING GIN (data);
-
--- Composite index for common query: get all logs for a student, sorted by time
-CREATE INDEX idx_health_logs_student_recorded ON public.health_logs(student_id, recorded_at DESC) WHERE deleted_at IS NULL;
