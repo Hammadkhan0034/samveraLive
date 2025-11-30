@@ -77,10 +77,7 @@ export function EditEventPage({ userRole, calendarRoute, eventId }: EditEventPag
     
     try {
       setLoadingEvent(true);
-      const events = await getEvents(orgId, {
-        userRole: userRole,
-        userId: session?.user?.id,
-      });
+      const events = await getEvents();
       
       const foundEvent = events.find((e: CalendarEvent) => e.id === eventId);
       

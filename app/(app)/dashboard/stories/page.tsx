@@ -5,9 +5,12 @@ import Image from 'next/image';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Plus, Edit, Trash2, Eye } from 'lucide-react';
+import { ArrowLeft, Plus, Edit, Trash2, Eye, Menu } from 'lucide-react';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
+import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
+import ProfileSwitcher from '@/app/components/ProfileSwitcher';
+import Loading from '@/app/components/shared/Loading';
 
 function toLocalInput(iso: string) {
   try {
@@ -676,33 +679,34 @@ function StoriesPageContent() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedStories = stories.slice(startIndex, startIndex + itemsPerPage);
 
-  return (
+  // Content for teacher/parent layout (with gradient background and back button)
+  const teacherContent = (
     <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       <main className="mx-auto max-w-6xl px-4 py-8 md:px-6">
-          <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between mt-14">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.back()}
-                className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-              >
-                <ArrowLeft className="h-4 w-4" /> {t.back}
-              </button>
-              <div>
-                <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.stories_title}</h1>
-                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.subtitle}</p>
-              </div>
+        <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between mt-14">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => router.back()}
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            >
+              <ArrowLeft className="h-4 w-4" /> {t.back}
+            </button>
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.stories_title}</h1>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.subtitle}</p>
             </div>
-            {canCreateStory && (
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => router.push('/dashboard/add-story')}
-                  className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
-                >
-                  <Plus className="h-4 w-4" /> {t.create_story}
-                </button>
-              </div>
-            )}
           </div>
+          {canCreateStory && (
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => router.push('/dashboard/add-story')}
+                className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
+              >
+                <Plus className="h-4 w-4" /> {t.create_story}
+              </button>
+            </div>
+          )}
+        </div>
 
           {error && (
             <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
@@ -877,7 +881,7 @@ function StoriesPageContent() {
             </div>
           )}
 
-          {/* Creation moved to /dashboard/add-story */}
+        {/* Creation moved to /dashboard/add-story */}
       </main>
 
       {/* Delete Confirmation Modal */}
@@ -894,6 +898,268 @@ function StoriesPageContent() {
       />
     </div>
   );
+
+  // Content for principal layout (matching students/guardians page structure)
+  function PrincipalStoriesContent() {
+    const { sidebarRef } = usePrincipalPageLayout();
+
+    return (
+      <>
+        {/* Content Header */}
+        <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-3">
+            {/* Mobile menu button */}
+            <button
+              onClick={() => sidebarRef.current?.open()}
+              className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+              aria-label="Toggle sidebar"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <div>
+              <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.stories_title}</h2>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.subtitle || 'View and manage stories'}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <ProfileSwitcher />
+            {canCreateStory && (
+              <button
+                onClick={() => router.push('/dashboard/add-story')}
+                className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
+              >
+                <Plus className="h-4 w-4" /> {t.create_story}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {error && (
+          <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+            {error}
+          </div>
+        )}
+
+        {/* Stories Table */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          {loading && stories.length === 0 ? (
+            <LoadingSkeleton type="table" rows={10} />
+          ) : stories.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-slate-600 dark:text-slate-400">{t.empty || 'No stories yet.'}</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto overflow-hidden border border-slate-200 dark:border-slate-700 rounded-xl">
+              <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-black">
+                    <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300 rounded-tl-xl">
+                      {t.col_title}
+                    </th>
+                    <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                      {t.col_scope}
+                    </th>
+                    <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                      {t.col_caption}
+                    </th>
+                    <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300 rounded-tr-xl">
+                      {t.actions}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedStories.map((s) => (
+                    <tr key={s.id} className="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                      <td className="text-left py-2 px-4 text-sm text-slate-900 dark:text-slate-100">
+                        {s.title || '—'}
+                      </td>
+                      <td className="text-left py-2 px-4 text-sm text-slate-600 dark:text-slate-400">
+                        {s.class_id ? t.class_label : t.org_wide}
+                      </td>
+                      <td className="text-left py-2 px-4 text-sm text-slate-600 dark:text-slate-400">
+                        {s.caption || t.no_caption}
+                      </td>
+                      <td className="text-left py-2 px-4">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => openStoryViewer(s)}
+                            className="inline-flex items-center gap-1 rounded-md border border-slate-300 px-2 py-1 text-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                            title={t.view}
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                            <span>{t.view}</span>
+                          </button>
+                          <button
+                            onClick={() => router.push(`/dashboard/edit-story/${s.id}`)}
+                            className="inline-flex items-center gap-1 rounded-md border border-slate-300 px-2 py-1 text-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                            title={t.edit}
+                          >
+                            <Edit className="h-3.5 w-3.5" />
+                            <span>{t.edit}</span>
+                          </button>
+                          <button
+                            onClick={() => openDeleteModal(s)}
+                            className="inline-flex items-center gap-1 rounded-md border border-red-300 px-2 py-1 text-sm text-red-600 hover:bg-red-50 dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20"
+                            title={t.delete}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            <span>{t.delete}</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {/* Pagination controls */}
+          {stories.length > itemsPerPage && (
+            <div className="mt-4 w-full flex justify-end gap-2">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="inline-flex items-center rounded-lg border border-slate-400 px-3 py-1.5 text-sm disabled:opacity-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+              >
+                {t.prev || 'Prev'}
+              </button>
+              {Array.from({ length: totalPages }).map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentPage(idx + 1)}
+                  className={`inline-flex items-center rounded-lg px-3 py-1.5 text-sm ${currentPage === idx + 1 ? 'bg-white text-black border border-slate-400 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600' : 'border border-slate-400 dark:border-slate-600 dark:text-slate-200'}`}
+                >
+                  {idx + 1}
+                </button>
+              ))}
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="inline-flex items-center rounded-lg border border-slate-400 px-3 py-1.5 text-sm disabled:opacity-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+              >
+                {t.next || 'Next'}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Story Viewer */}
+        {viewerOpen && activeStory && (
+          <div 
+            className="fixed inset-0 z-50 bg-black flex items-center justify-center" 
+            style={{ width: '100vw', height: '100vh', top: 0, left: 0, right: 0, bottom: 0 }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                closeViewer(e);
+              }
+            }}
+          >
+            <div className="relative w-full h-full bg-black overflow-hidden max-w-md md:max-w-lg lg:max-w-xl xl:max-w-2xl mx-auto rounded-lg shadow-lg" style={{ width: '90%', height: '90vh', maxHeight: '800px', position: 'relative' }}>
+              {/* Progress bars at top */}
+              <div className="absolute top-2 left-2 right-2 z-10 flex gap-1">
+                {activeItems.map((_, idx) => {
+                  const isCompleted = idx < activeIndex;
+                  const isActive = idx === activeIndex;
+                  const fillPercent = isCompleted ? 100 : isActive ? progress : 0;
+                  
+                  return (
+                    <div key={idx} className="h-1 flex-1 rounded-full bg-white/20 overflow-hidden">
+                      <div 
+                        className="h-full rounded-full bg-white"
+                        style={{ width: `${fillPercent}%`, transition: 'width 0.1s linear' }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+              <div 
+                className="absolute inset-0 w-full h-full" 
+                style={{ 
+                  top: 0, 
+                  left: 0, 
+                  right: 0, 
+                  bottom: 0, 
+                  width: '100%', 
+                  height: '100%',
+                  overflow: 'hidden'
+                }}
+                onClick={(e) => {
+                  const target = e.currentTarget as HTMLElement;
+                  const containerRect = target.getBoundingClientRect();
+                  const containerWidth = containerRect.width;
+                  const clickX = e.clientX - containerRect.left;
+                  const leftZone = containerWidth / 3;
+                  const rightZone = (containerWidth * 2) / 3;
+                  
+                  if (clickX < leftZone) {
+                    if (activeIndex > 0) {
+                      setActiveIndex(activeIndex - 1);
+                      setProgress(0);
+                      scheduleNext(activeItems, activeIndex - 1);
+                    }
+                  } else if (clickX > rightZone) {
+                    if (activeIndex < activeItems.length - 1) {
+                      setActiveIndex(activeIndex + 1);
+                      setProgress(0);
+                      scheduleNext(activeItems, activeIndex + 1);
+                    }
+                  } else {
+                    togglePause();
+                  }
+                }}
+              >
+                {renderActiveItem()}
+              </div>
+              <button 
+                className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-colors" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  closeViewer(e);
+                }}
+                type="button"
+                style={{ zIndex: 1000 }}
+              >
+                ✕
+              </button>
+              <button
+                className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 w-12 h-12 flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-colors bg-black/30"
+                onClick={togglePause}
+              >
+                {isPaused ? '▶' : '⏸'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        <DeleteConfirmationModal
+          isOpen={isDeleteModalOpen}
+          onClose={closeDeleteModal}
+          onConfirm={confirmDelete}
+          title={t.delete_story || 'Delete Story'}
+          message={t.delete_story_confirm || 'Are you sure you want to delete this story? This action cannot be undone.'}
+          loading={deleting}
+          error={deleteError}
+          confirmButtonText={t.delete_confirm || 'Delete'}
+          cancelButtonText={t.cancel || 'Cancel'}
+        />
+      </>
+    );
+  }
+
+  // Wrap with appropriate layout based on user role
+  if (isPrincipal) {
+    return (
+      <PrincipalPageLayout>
+        <PrincipalStoriesContent />
+      </PrincipalPageLayout>
+    );
+  }
+
+  // Fallback for other roles (return teacher content)
+  return teacherContent;
 }
 
 export default function StoriesPage() {

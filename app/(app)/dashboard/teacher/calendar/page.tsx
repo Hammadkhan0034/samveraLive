@@ -39,10 +39,7 @@ export default function TeacherCalendarPage() {
     
     try {
       setLoadingEvents(true);
-      const events = await getEvents(orgId, {
-        userRole: 'teacher',
-        userId: session?.user?.id,
-      });
+      const events = await getEvents();
       setCalendarEvents(events as CalendarEvent[]);
     } catch (e: any) {
       console.error('❌ Error loading calendar events:', e.message);

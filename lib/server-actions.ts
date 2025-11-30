@@ -25,6 +25,7 @@ import {
   type DeviceTokenProvider,
 } from './services/deviceTokens';
 import { createEventSchema, updateEventSchema } from './validation';
+import { getAuthUserWithOrg } from './server-helpers';
 
 // Example server actions with role gating
 
@@ -1011,14 +1012,13 @@ export async function deleteEvent(eventId: string) {
   return { success: true };
 }
 
-export async function getEvents(orgId: string, options?: {
+export async function getEvents(options?: {
   classId?: string | null;
   startDate?: string;
   endDate?: string;
-  userRole?: 'principal' | 'teacher' | 'parent';
-  userId?: string;
 }) {
-  const { user } = await requireServerAuth();
+  // Get authenticated user and orgId from server-side auth
+  const { user, orgId } = await getAuthUserWithOrg();
   
   const supabase = supabaseAdmin ?? await createSupabaseServer();
   
@@ -1034,7 +1034,7 @@ export async function getEvents(orgId: string, options?: {
   
   // Apply role-based filtering
   const userMetadata = user.user_metadata as UserMetadata | undefined;
-  const role = options?.userRole || userMetadata?.activeRole || userMetadata?.roles?.[0];
+  const role = userMetadata?.activeRole || userMetadata?.roles?.[0];
   
   if (role === 'parent') {
     // Parents: only events for their child's class or org-wide
@@ -1046,13 +1046,11 @@ export async function getEvents(orgId: string, options?: {
     }
   } else if (role === 'teacher') {
     // Teachers: events for their assigned classes or org-wide
-    const userId = options?.userId || user.id;
-    
     // Get teacher's assigned classes
     const { data: memberships } = await supabase
       .from('class_memberships')
       .select('class_id')
-      .eq('user_id', userId)
+      .eq('user_id', user.id)
       .eq('membership_role', 'teacher');
     
     const classIds = memberships?.map(m => m.class_id) || [];

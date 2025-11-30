@@ -299,9 +299,7 @@ export async function GET(request: Request) {
       // 10. Calendar events count: Use getEvents() to fetch events, then filter for current month
       (async () => {
         try {
-          const events = await getEvents(orgId, {
-            userRole: 'principal',
-            userId: userId,
+          const events = await getEvents({
             startDate: startOfMonth,
             endDate: endOfMonth,
           });

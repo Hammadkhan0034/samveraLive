@@ -287,10 +287,7 @@ export default function PrincipalDashboard() {
       if (!orgId) return;
       
       try {
-        const events = await getEvents(orgId, {
-          userRole: 'principal',
-          userId: session?.user?.id,
-        });
+        const events = await getEvents();
         
         // Validate that events is an array
         if (Array.isArray(events)) {

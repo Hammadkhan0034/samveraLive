@@ -115,10 +115,8 @@ export default function ParentCalendarPage() {
     
     try {
       setLoadingEvents(true);
-      const events = await getEvents(orgId, {
+      const events = await getEvents({
         classId: derivedClassId,
-        userRole: 'parent',
-        userId: session?.user?.id,
       });
       setCalendarEvents(events as CalendarEvent[]);
     } catch (e: any) {
