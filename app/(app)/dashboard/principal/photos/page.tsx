@@ -2,12 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Plus, Image as ImageIcon, Trash2 } from 'lucide-react';
+import { Menu, Plus, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 import { PhotoUploadModal } from '@/app/components/shared/PhotoUploadModal';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
+import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
+import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import type { Student } from '@/lib/types/attendance';
 
 interface Photo {
@@ -48,11 +50,12 @@ interface Photo {
   } | null;
 }
 
-export default function PrincipalPhotosPage() {
+function PrincipalPhotosPageContent() {
   const { t, lang } = useLanguage();
   const { session } = useAuth();
   const router = useRouter();
   const { orgId } = useCurrentUserOrgId();
+  const { sidebarRef } = usePrincipalPageLayout();
 
   // State
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -230,36 +233,36 @@ export default function PrincipalPhotosPage() {
   const userId = session?.user?.id || '';
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      <main className="mx-auto max-w-6xl px-4 py-8 md:px-6">
-        {/* Header */}
-        <div className="mb-6 flex flex-col gap-3 mt-14 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => router.back()}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-            >
-              <ArrowLeft className="h-4 w-4" /> {t.back || 'Back'}
-            </button>
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-                {t.photos || 'Photos'}
-              </h1>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            {orgId && (
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
-              >
-                <Plus className="h-4 w-4" />
-                {t.upload_photo || 'Upload Photo'}
-              </button>
-            )}
-          </div>
+    <>
+      {/* Content Header */}
+      <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-3">
+          {/* Mobile menu button */}
+          <button
+            onClick={() => sidebarRef.current?.open()}
+            className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+            aria-label="Toggle sidebar"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+          <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+            {t.photos || 'Photos'}
+          </h2>
         </div>
+
+        <div className="flex items-center gap-3">
+          <ProfileSwitcher />
+          {orgId && (
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
+            >
+              <Plus className="h-4 w-4" />
+              {t.upload_photo || 'Upload Photo'}
+            </button>
+          )}
+        </div>
+      </div>
 
         {/* Photos Panel */}
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
@@ -379,8 +382,15 @@ export default function PrincipalPhotosPage() {
           loading={isDeleting}
           error={deleteError}
         />
-      </main>
-    </div>
+    </>
+  );
+}
+
+export default function PrincipalPhotosPage() {
+  return (
+    <PrincipalPageLayout>
+      <PrincipalPhotosPageContent />
+    </PrincipalPageLayout>
   );
 }
 

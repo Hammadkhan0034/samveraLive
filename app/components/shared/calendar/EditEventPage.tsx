@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
 import { updateEvent, getEvents } from '@/lib/server-actions';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useTeacherOrgId } from '@/lib/hooks/useTeacherOrgId';
@@ -13,6 +12,8 @@ import Loading from '@/app/components/shared/Loading';
 import type { EventFormData } from '@/app/components/shared/EventFormModal';
 import type { CalendarEvent } from '@/app/components/shared/Calendar';
 import TeacherPageLayout from '@/app/components/shared/TeacherPageLayout';
+import PrincipalPageLayout from '@/app/components/shared/PrincipalPageLayout';
+import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 
 export interface EditEventPageProps {
   userRole: 'principal' | 'teacher';
@@ -159,49 +160,37 @@ export function EditEventPage({ userRole, calendarRoute, eventId }: EditEventPag
     if (userRole === 'teacher') {
       return <TeacherPageLayout>{loadingContent}</TeacherPageLayout>;
     }
-    return loadingContent;
+    return <PrincipalPageLayout>{loadingContent}</PrincipalPageLayout>;
   }
 
   if (!event) {
     const errorContent = (
-      <div className={userRole === 'teacher' ? 'flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900' : 'min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900'}>
-        <div className={userRole === 'teacher' ? 'mx-auto max-w-7xl px-4 py-8 md:px-6' : 'mx-auto max-w-6xl px-4 py-8 md:px-6'}>
-          <div className={`mb-6 flex items-center gap-4 ${userRole === 'principal' ? 'mt-14' : ''}`}>
-            <button
-              onClick={() => router.push(calendarRoute)}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-            >
-              <ArrowLeft className="h-4 w-4" /> {t.back}
-            </button>
-          </div>
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-            <p className="text-slate-600 dark:text-slate-400">{error || 'Event not found'}</p>
-          </div>
+      <>
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <p className="text-slate-600 dark:text-slate-400">{error || 'Event not found'}</p>
         </div>
-      </div>
+      </>
     );
     
     if (userRole === 'teacher') {
       return <TeacherPageLayout>{errorContent}</TeacherPageLayout>;
     }
-    return errorContent;
+    return <PrincipalPageLayout>{errorContent}</PrincipalPageLayout>;
   }
 
   const content = (
-    <div className={userRole === 'teacher' ? 'flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900' : 'min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900'}>
-      <div className={userRole === 'teacher' ? 'mx-auto max-w-7xl px-4 py-8 md:px-6' : 'mx-auto max-w-5xl px-4 py-8 md:px-6'}>
-        {/* Header */}
-        <div className={`mb-6 flex items-center gap-4 ${userRole === 'principal' ? 'mt-14' : ''}`}>
-          <button
-            onClick={() => router.push(calendarRoute)}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-          >
-            <ArrowLeft className="h-4 w-4" /> {t.back}
-          </button>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+    <>
+      {/* Content Header */}
+      <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-3">
+          <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
             {t.edit_event}
-          </h1>
+          </h2>
         </div>
+        <div className="flex items-center gap-3">
+          <ProfileSwitcher />
+        </div>
+      </div>
 
         {error && (
           <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
@@ -341,16 +330,15 @@ export function EditEventPage({ userRole, calendarRoute, eventId }: EditEventPag
             </div>
           </form>
         </div>
-      </div>
-    </div>
+    </>
   );
 
-  // Wrap in TeacherPageLayout for teacher role
+  // Wrap in appropriate layout based on role
   if (userRole === 'teacher') {
     return <TeacherPageLayout>{content}</TeacherPageLayout>;
   }
 
-  // Principal uses its own layout
-  return content;
+  // Principal uses PrincipalPageLayout
+  return <PrincipalPageLayout>{content}</PrincipalPageLayout>;
 }
 

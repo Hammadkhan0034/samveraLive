@@ -2,21 +2,23 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { Calendar, type CalendarEvent } from '@/app/components/shared/Calendar';
 import { EventDetailsModal } from '@/app/components/shared/EventDetailsModal';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import { deleteEvent, getEvents } from '@/lib/server-actions';
-import { useAuth, useRequireAuth } from '@/lib/hooks/useAuth';
+import { useAuth } from '@/lib/hooks/useAuth';
 import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
+import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
+import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 
-export default function PrincipalCalendarPage() {
+function PrincipalCalendarPageContent() {
   const router = useRouter();
   const { t } = useLanguage();
-  const { user } = useRequireAuth('principal');
   const { session } = useAuth();
+  const { sidebarRef } = usePrincipalPageLayout();
   
   // Use universal hook to get org_id (checks metadata first, then API, handles logout if missing)
   const { orgId, isLoading: isLoadingOrgId } = useCurrentUserOrgId();
@@ -86,39 +88,27 @@ export default function PrincipalCalendarPage() {
     }
   };
 
-  // Show loading if orgId is still loading or user is not authenticated
-  if (isLoadingOrgId || !user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-        <main className="mx-auto max-w-5xl px-4 py-8 md:px-6">
-          <div className="flex items-center justify-center min-h-screen">
-            <div className="text-center">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-600 mx-auto mb-4"></div>
-              <p className="text-slate-600 dark:text-slate-400">
-                {t.loading || 'Loading calendar...'}
-              </p>
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      <main className="mx-auto max-w-5xl px-4 py-8 md:px-6">
-        {/* Header */}
-        <div className="mb-6 flex items-center gap-4 mt-14">
+    <>
+      {/* Content Header */}
+      <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-3">
+          {/* Mobile menu button */}
           <button
-            onClick={() => router.push('/dashboard/principal')}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            onClick={() => sidebarRef.current?.open()}
+            className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+            aria-label="Toggle sidebar"
           >
-            <ArrowLeft className="h-4 w-4" /> {t.back}
+            <Menu className="h-5 w-5" />
           </button>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+          <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
             {t.tile_calendar || 'Calendar'}
-          </h1>
+          </h2>
         </div>
+        <div className="flex items-center gap-3">
+          <ProfileSwitcher />
+        </div>
+      </div>
 
         {/* Calendar Container */}
         {loadingEvents && calendarEvents.length === 0 ? (
@@ -212,8 +202,15 @@ export default function PrincipalCalendarPage() {
         message={t.delete_event_message}
         loading={deletingEvent}
       />
-      </main>
-    </div>
+    </>
+  );
+}
+
+export default function PrincipalCalendarPage() {
+  return (
+    <PrincipalPageLayout>
+      <PrincipalCalendarPageContent />
+    </PrincipalPageLayout>
   );
 }
 

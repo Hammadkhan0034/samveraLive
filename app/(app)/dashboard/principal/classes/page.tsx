@@ -3,10 +3,12 @@
 import React, { useState, useEffect, useRef, Suspense, useMemo } from 'react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth, useRequireAuth } from '@/lib/hooks/useAuth';
+import { useAuth } from '@/lib/hooks/useAuth';
 import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
-import { ArrowLeft, Plus, X, Eye, CircleCheck as CheckCircle2, Edit, UserPlus, Users, Search, AlertTriangle, Check, Trash2 } from 'lucide-react';
+import { Menu, Plus, X, Eye, CircleCheck as CheckCircle2, Edit, UserPlus, Users, Search, AlertTriangle, Check, Trash2 } from 'lucide-react';
 import TeacherSelection from '@/app/components/TeacherSelection';
+import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
+import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import Loading from '@/app/components/shared/Loading';
 
 type Lang = 'is' | 'en';
@@ -17,10 +19,10 @@ function clsx(...xs: Array<string | false | undefined>) {
 
 function ClassesPageContent() {
   const { t, lang } = useLanguage();
-  const { user, loading, isSigningIn } = useRequireAuth('principal');
   const { session } = useAuth?.() || {} as any;
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { sidebarRef } = usePrincipalPageLayout();
 
   // Use universal hook to get org_id (checks metadata first, then API, handles logout if missing)
   const { orgId: finalOrgId } = useCurrentUserOrgId();
@@ -685,51 +687,35 @@ function ClassesPageContent() {
     }
   }
 
-  // Show loading ONLY if we have no user yet
-  if (loading && !user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-600 mx-auto mb-4"></div>
-            <p className="text-slate-600 dark:text-slate-400">
-              Loading classes...
-            </p>
+  return (
+    <>
+      {/* Content Header */}
+      <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-3">
+          {/* Mobile menu button */}
+          <button
+            onClick={() => sidebarRef.current?.open()}
+            className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+            aria-label="Toggle sidebar"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.departments}</h2>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.overview_hint}</p>
           </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <ProfileSwitcher />
+          <button
+            onClick={() => router.push('/dashboard/principal/classes/create')}
+            className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
+          >
+            <Plus className="h-4 w-4" /> {t.add_class}
+          </button>
         </div>
       </div>
-    );
-  }
-
-  if (!user) return null;
-
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      <main className="mx-auto max-w-6xl px-4 py-8 md:px-6">
-        {/* Header */}
-        <div className="mb-6 flex flex-col gap-3 mt-14 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => router.back()}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-            >
-              <ArrowLeft className="h-4 w-4" /> {t.back}
-            </button>
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.departments}</h1>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.overview_hint}</p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => router.push('/dashboard/principal/classes/create')}
-              className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
-            >
-              <Plus className="h-4 w-4" /> {t.add_class}
-            </button>
-          </div>
-        </div>
 
         {/* Departments table */}
         <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
@@ -1266,8 +1252,7 @@ function ClassesPageContent() {
             </div>
           </div>
         )}
-      </main>
-    </div>
+    </>
   );
 }
 
@@ -1275,8 +1260,10 @@ function ClassesPageContent() {
 
 export default function ClassesPage() {
   return (
-    <Suspense fallback={<Loading fullScreen variant="sand" />}>
-      <ClassesPageContent />
-    </Suspense>
+    <PrincipalPageLayout>
+      <Suspense fallback={<Loading fullScreen variant="sand" />}>
+        <ClassesPageContent />
+      </Suspense>
+    </PrincipalPageLayout>
   );
 }

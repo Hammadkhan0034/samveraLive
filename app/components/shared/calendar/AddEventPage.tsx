@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
 import { createEvent } from '@/lib/server-actions';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useTeacherOrgId } from '@/lib/hooks/useTeacherOrgId';
@@ -11,6 +10,8 @@ import { useTeacherClasses } from '@/lib/hooks/useTeacherClasses';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import type { EventFormData } from '@/app/components/shared/EventFormModal';
 import TeacherPageLayout from '@/app/components/shared/TeacherPageLayout';
+import PrincipalPageLayout from '@/app/components/shared/PrincipalPageLayout';
+import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 
 export interface AddEventPageProps {
   userRole: 'principal' | 'teacher';
@@ -124,21 +125,18 @@ export function AddEventPage({ userRole, calendarRoute }: AddEventPageProps) {
   };
 
   const content = (
-    <div className={userRole === 'teacher' ? '' : 'min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900'}>
-      <div className={userRole === 'teacher' ? 'flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900' : ''}>
-        <div className={userRole === 'teacher' ? 'mx-auto max-w-7xl px-4 py-8 md:px-6' : 'mx-auto max-w-6xl py-8 md:px-6'}>
-          {/* Header */}
-          <div className={`mb-6 flex items-center gap-4 ${userRole === 'principal' ? 'mt-14' : ''}`}>
-            <button
-              onClick={() => router.push(calendarRoute)}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-            >
-              <ArrowLeft className="h-4 w-4" /> {t.back}
-            </button>
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-              {t.create_event}
-            </h1>
-          </div>
+    <>
+      {/* Content Header */}
+      <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-3">
+          <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+            {t.create_event}
+          </h2>
+        </div>
+        <div className="flex items-center gap-3">
+          <ProfileSwitcher />
+        </div>
+      </div>
 
           {error && (
             <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
@@ -278,17 +276,15 @@ export function AddEventPage({ userRole, calendarRoute }: AddEventPageProps) {
               </div>
             </form>
           </div>
-        </div>
-      </div>
-    </div>
+    </>
   );
 
-  // Wrap in TeacherPageLayout for teacher role
+  // Wrap in appropriate layout based on role
   if (userRole === 'teacher') {
     return <TeacherPageLayout>{content}</TeacherPageLayout>;
   }
 
-  // Principal uses its own layout
-  return content;
+  // Principal uses PrincipalPageLayout
+  return <PrincipalPageLayout>{content}</PrincipalPageLayout>;
 }
 

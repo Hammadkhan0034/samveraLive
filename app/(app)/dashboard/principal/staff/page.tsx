@@ -1,33 +1,47 @@
 "use client";
 
 import React from 'react';
+import { Menu } from 'lucide-react';
 import StaffManagement from '@/app/components/StaffManagement';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
-import { useRequireAuth } from '@/lib/hooks/useAuth';
+import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
+import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 
-export default function PrincipalStaffPage() {
-  const { lang } = useLanguage();
-  const { user, loading, isSigningIn } = useRequireAuth(['principal']);
-
-  if (loading && !user && isSigningIn) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-600 mx-auto mb-4"></div>
-            <p className="text-slate-600 dark:text-slate-400">Loading staff page...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) return null;
+function PrincipalStaffPageContent() {
+  const { lang, t } = useLanguage();
+  const { sidebarRef } = usePrincipalPageLayout();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <>
+      {/* Content Header */}
+      <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-3">
+          {/* Mobile menu button */}
+          <button
+            onClick={() => sidebarRef.current?.open()}
+            className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+            aria-label="Toggle sidebar"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+          <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+            {t.kpi_staff || 'Staff'}
+          </h2>
+        </div>
+        <div className="flex items-center gap-3">
+          <ProfileSwitcher />
+        </div>
+      </div>
       <StaffManagement lang={lang} />
-    </div>
+    </>
+  );
+}
+
+export default function PrincipalStaffPage() {
+  return (
+    <PrincipalPageLayout>
+      <PrincipalStaffPageContent />
+    </PrincipalPageLayout>
   );
 }
 

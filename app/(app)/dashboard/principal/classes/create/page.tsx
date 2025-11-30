@@ -3,22 +3,24 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth, useRequireAuth } from '@/lib/hooks/useAuth';
+import { useAuth } from '@/lib/hooks/useAuth';
 import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
-import { ArrowLeft, Users } from 'lucide-react';
+import { Menu, Users } from 'lucide-react';
 import TeacherSelection from '@/app/components/TeacherSelection';
+import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
+import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import Loading from '@/app/components/shared/Loading';
 
 type Lang = 'is' | 'en';
 
 function CreateClassPageContent() {
   const { t, lang } = useLanguage();
-  const { user, loading } = useRequireAuth('principal');
   const { session } = useAuth?.() || {} as any;
   const router = useRouter();
   const searchParams = useSearchParams();
   const classId = searchParams.get('id');
   const isEditMode = !!classId;
+  const { sidebarRef } = usePrincipalPageLayout();
 
   // Use universal hook to get org_id (checks metadata first, then API, handles logout if missing)
   const { orgId: finalOrgId } = useCurrentUserOrgId();
@@ -254,27 +256,31 @@ function CreateClassPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-    <main className="mx-auto max-w-6xl px-4 py-8 md:px-6">
-        {/* Header */}
-        <div className="mb-6 flex flex-col gap-3 mt-14 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => router.back()}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-            >
-              <ArrowLeft className="h-4 w-4" /> {t.back}
-            </button>
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-                {isEditMode ? t.edit_class : t.add_class}
-              </h1>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                {isEditMode ? t.edit_class_subtitle : t.create_class_subtitle}
-              </p>
-            </div>
+    <>
+      {/* Content Header */}
+      <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-3">
+          {/* Mobile menu button */}
+          <button
+            onClick={() => sidebarRef.current?.open()}
+            className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+            aria-label="Toggle sidebar"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+          <div>
+            <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+              {isEditMode ? t.edit_class : t.add_class}
+            </h2>
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+              {isEditMode ? t.edit_class_subtitle : t.create_class_subtitle}
+            </p>
           </div>
         </div>
+        <div className="flex items-center gap-3">
+          <ProfileSwitcher />
+        </div>
+      </div>
 
         {/* Error Message */}
         {error && (
@@ -368,8 +374,7 @@ function CreateClassPageContent() {
             </div>
           </form>
         </div>
-      </main>
-    </div>
+    </>
   );
 }
 
@@ -377,8 +382,10 @@ function CreateClassPageContent() {
 
 export default function CreateClassPage() {
   return (
-    <Suspense fallback={<Loading fullScreen variant="sand" />}>
-      <CreateClassPageContent />
-    </Suspense>
+    <PrincipalPageLayout>
+      <Suspense fallback={<Loading fullScreen variant="sand" />}>
+        <CreateClassPageContent />
+      </Suspense>
+    </PrincipalPageLayout>
   );
 }

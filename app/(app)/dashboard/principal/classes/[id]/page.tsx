@@ -3,19 +3,21 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRouter, useParams } from 'next/navigation';
-import { useAuth, useRequireAuth } from '@/lib/hooks/useAuth';
-import { ArrowLeft, Trash2, AlertTriangle, X, UserPlus, Users, Search, CheckCircle2, Check } from 'lucide-react';
+import { useAuth } from '@/lib/hooks/useAuth';
+import { Menu, Trash2, AlertTriangle, X, UserPlus, Users, Search, CheckCircle2, Check } from 'lucide-react';
+import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
+import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import Loading from '@/app/components/shared/Loading';
 
 type Lang = 'is' | 'en';
 
-export default function ClassDetailsPage() {
+function ClassDetailsPageContent() {
   const { t } = useLanguage();
-  const { user, loading } = useRequireAuth('principal');
   const { session } = useAuth?.() || {} as any;
   const router = useRouter();
   const params = useParams();
   const classId = params?.id as string;
+  const { sidebarRef } = usePrincipalPageLayout();
 
   const [classData, setClassData] = useState<any>(() => {
     if (typeof window !== 'undefined' && classId) {
@@ -454,50 +456,35 @@ export default function ClassDetailsPage() {
     }
   }
 
-  if (loading && !user) {
-    return <Loading fullScreen />;
-  }
-
-  if (!user) return null;
-
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-        <main className="mx-auto max-w-7xl px-4 py-8 md:px-6 mt-10">
-          <div className="rounded-2xl border border-red-200 bg-red-50 p-6 dark:border-red-800 dark:bg-red-900/20">
-            <p className="text-red-700 dark:text-red-400">{error || 'Class not found'}</p>
-            <button
-              onClick={() => router.back()}
-              className="mt-4 inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-            >
-              <ArrowLeft className="h-4 w-4" /> {t.back}
-            </button>
-          </div>
-        </main>
+      <div className="rounded-2xl border border-red-200 bg-red-50 p-6 dark:border-red-800 dark:bg-red-900/20">
+        <p className="text-red-700 dark:text-red-400">{error || 'Class not found'}</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      
-      <main className="mx-auto max-w-6xl px-4 py-8 md:px-6">
-        {/* Header */}
-        <div className="mb-6 flex flex-col gap-3 mt-14 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => router.back()}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-            >
-              <ArrowLeft className="h-4 w-4" /> {t.back}
-            </button>
-            <div>
-              <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-                {t.class_details || 'Class Details'} {classData ? `- ${classData.name}` : ''}
-              </h1>
-            </div>
-          </div>
+    <>
+      {/* Content Header */}
+      <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-3">
+          {/* Mobile menu button */}
+          <button
+            onClick={() => sidebarRef.current?.open()}
+            className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+            aria-label="Toggle sidebar"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+          <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+            {t.class_details || 'Class Details'} {classData ? `- ${classData.name}` : ''}
+          </h2>
         </div>
+        <div className="flex items-center gap-3">
+          <ProfileSwitcher />
+        </div>
+      </div>
 
         {/* Class Details Table */}
         <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
@@ -767,12 +754,15 @@ export default function ClassDetailsPage() {
             </div>
           </div>
         )}
+    </>
+  );
+}
 
-       
-
-      
-      </main>
-    </div>
+export default function ClassDetailsPage() {
+  return (
+    <PrincipalPageLayout>
+      <ClassDetailsPageContent />
+    </PrincipalPageLayout>
   );
 }
 
