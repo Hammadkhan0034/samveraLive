@@ -114,8 +114,8 @@ export default function ClassDetailsPage() {
 
       // Load class data and students in parallel for faster loading
       const [classResponse, studentsResponse] = await Promise.all([
-        fetch(`/api/classes?orgId=${finalOrgId}&t=${Date.now()}`, { cache: 'no-store' }),
-        fetch(`/api/students?orgId=${finalOrgId}&t=${Date.now()}`, { cache: 'no-store' })
+        fetch(`/api/classes?t=${Date.now()}`, { cache: 'no-store' }),
+        fetch(`/api/students?t=${Date.now()}`, { cache: 'no-store' })
       ]);
 
       const classData = await classResponse.json();
@@ -277,7 +277,7 @@ export default function ClassDetailsPage() {
     if (!classId || !finalOrgId) return;
     try {
       setLoadingStudents(true);
-      const response = await fetch(`/api/students?orgId=${finalOrgId}&t=${Date.now()}`, { cache: 'no-store' });
+      const response = await fetch(`/api/students?t=${Date.now()}`, { cache: 'no-store' });
       const data = await response.json();
       const students = (data.students || []).map((s: any) => ({
         id: s.id,
@@ -301,7 +301,7 @@ export default function ClassDetailsPage() {
     if (!classId || !finalOrgId) return;
     try {
       setLoadingTeachers(true);
-      const response = await fetch(`/api/staff-management?orgId=${finalOrgId}&role=teacher&t=${Date.now()}`, { cache: 'no-store' });
+      const response = await fetch(`/api/staff-management?role=teacher&t=${Date.now()}`, { cache: 'no-store' });
       const data = await response.json();
       const teachers = (data.staff || []).map((t: any) => ({
         id: t.id || t.user_id,

@@ -1,28 +1,26 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 import { getStableDataCacheHeaders } from '@/lib/cacheConfig'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { requireServerAuth } from '@/lib/supabaseServer'
+import { getAuthUserWithOrg, MissingOrgIdError, mapAuthErrorToResponse } from '@/lib/server-helpers'
 import { z } from 'zod'
-import { validateQuery, validateBody, orgIdSchema, userIdSchema, nameSchema, codeSchema, classIdSchema } from '@/lib/validation'
+import { validateQuery, validateBody, userIdSchema, nameSchema, codeSchema, classIdSchema } from '@/lib/validation'
 import { type UserMetadata } from '@/lib/types/auth'
 
 // Teacher role ID
 const TEACHER_ROLE_ID = 20
 
-// GET query parameter schema
+// GET query parameter schema - orgId removed, now fetched server-side
 const getClassesQuerySchema = z.object({
-  orgId: orgIdSchema.optional(),
   createdBy: userIdSchema.optional(),
 });
 
-// POST body schema
+// POST body schema - org_id removed, now fetched server-side
 const postClassBodySchema = z.object({
   name: nameSchema,
   code: codeSchema.optional(),
   created_by: userIdSchema,
   teacher_id: userIdSchema.optional(),
-  org_id: orgIdSchema.optional(),
 });
 
 // DELETE query parameter schema
@@ -39,32 +37,18 @@ export async function GET(request: Request) {
       }, { status: 500 })
     }
 
-    // Authenticate and check role
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) => {
-                cookieStore.set(name, value, options);
-              });
-            } catch {
-              // Ignore cookie setting errors in route handlers
-            }
-          },
-        },
+    // Get authenticated user and orgId from server-side auth (no query params needed)
+    let user, orgId: string;
+    try {
+      const authContext = await getAuthUserWithOrg();
+      user = authContext.user;
+      orgId = authContext.orgId;
+    } catch (err) {
+      if (err instanceof MissingOrgIdError) {
+        return mapAuthErrorToResponse(err);
       }
-    );
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      const message = err instanceof Error ? err.message : 'Authentication required';
+      return NextResponse.json({ error: message }, { status: 401 });
     }
 
     // Check if user has principal, admin, or teacher role
@@ -83,7 +67,7 @@ export async function GET(request: Request) {
       console.error('❌ Query validation failed:', queryValidation.error);
       return queryValidation.error
     }
-    const { orgId, createdBy } = queryValidation.data
+    const { createdBy } = queryValidation.data
 
     let query = supabaseAdmin
       .from('classes')
@@ -105,10 +89,8 @@ export async function GET(request: Request) {
       query = query.eq('created_by', createdBy)
     }
 
-    // Filter by organization if provided
-    if (orgId) {
-      query = query.eq('org_id', orgId)
-    }
+    // Always filter by organization (from server-side auth)
+    query = query.eq('org_id', orgId)
 
     const { data: classes, error } = await query
 
@@ -132,17 +114,6 @@ export async function GET(request: Request) {
     const classesWithTeachers = supabaseAdmin ? await Promise.all(
       (classes || []).map(async (cls) => {
         try {
-          // Use cls.org_id if orgId is not provided
-          const filterOrgId = orgId || cls.org_id;
-          
-          if (!filterOrgId) {
-            console.warn('⚠️ No org_id available for class:', cls.id);
-            return {
-              ...cls,
-              assigned_teachers: []
-            };
-          }
-
           const { data: memberships, error: membershipError } = await supabaseAdmin!
             .from('class_memberships')
             .select(`
@@ -152,7 +123,7 @@ export async function GET(request: Request) {
             `)
             .eq('class_id', cls.id)
             .eq('membership_role', 'teacher')
-            .eq('org_id', filterOrgId)
+            .eq('org_id', orgId)
 
           if (membershipError) {
             console.error('❌ Error fetching memberships for class:', cls.id, membershipError);
@@ -223,59 +194,44 @@ export async function POST(request: Request) {
       }, { status: 500 })
     }
 
+    // Get authenticated user and orgId from server-side auth
+    let user, orgId: string;
+    try {
+      const authContext = await getAuthUserWithOrg();
+      user = authContext.user;
+      orgId = authContext.orgId;
+    } catch (err) {
+      if (err instanceof MissingOrgIdError) {
+        return mapAuthErrorToResponse(err);
+      }
+      const message = err instanceof Error ? err.message : 'Authentication required';
+      return NextResponse.json({ error: message }, { status: 401 });
+    }
+
     const body = await request.json()
     const bodyValidation = validateBody(postClassBodySchema, body)
     if (!bodyValidation.success) {
       return bodyValidation.error
     }
-    const { name, code, created_by, teacher_id, org_id } = bodyValidation.data
+    const { name, code, created_by, teacher_id } = bodyValidation.data
 
-    // Get organization ID from user if not provided
-    let organizationId = org_id;
-    let actualCreatedBy = created_by;
-
-    if (!organizationId) {
-      const { data: userData } = await supabaseAdmin
+    // Use authenticated user's ID as created_by if not provided, or verify provided user is in same org
+    let actualCreatedBy = created_by || user.id;
+    
+    // Verify the provided created_by user is in the same org (if different from authenticated user)
+    if (created_by && created_by !== user.id) {
+      const { data: existingUser } = await supabaseAdmin
         .from('users')
-        .select('org_id')
+        .select('id, org_id')
         .eq('id', created_by)
         .single();
 
-      organizationId = userData?.org_id;
-    }
-
-    // Try to find the user in the users table
-    const { data: existingUser } = await supabaseAdmin
-      .from('users')
-      .select('id, org_id')
-      .eq('id', created_by)
-      .single();
-
-    if (existingUser) {
+      if (!existingUser || existingUser.org_id !== orgId) {
+        return NextResponse.json({
+          error: 'Invalid created_by user or user not in same organization'
+        }, { status: 403 })
+      }
       actualCreatedBy = existingUser.id;
-      if (!organizationId) {
-        organizationId = existingUser.org_id;
-      }
-    } else {
-      // If user doesn't exist in users table, find any user from the organization
-      if (organizationId) {
-        const { data: orgUser } = await supabaseAdmin
-          .from('users')
-          .select('id')
-          .eq('org_id', organizationId)
-          .limit(1)
-          .single();
-
-        if (orgUser) {
-          actualCreatedBy = orgUser.id;
-        }
-      }
-    }
-
-    if (!organizationId) {
-      return NextResponse.json({
-        error: 'Organization ID is required'
-      }, { status: 400 })
     }
 
     // If we still don't have a valid created_by user, use null
@@ -288,7 +244,7 @@ export async function POST(request: Request) {
         name: name,
         code: code || null,
         created_by: actualCreatedBy || null,
-        org_id: organizationId
+        org_id: orgId
       })
       .select()
       .single()
@@ -303,7 +259,7 @@ export async function POST(request: Request) {
       const { error: cmError } = await supabaseAdmin
         .from('class_memberships')
         .insert({
-          org_id: organizationId,
+          org_id: orgId,
           class_id: newClass.id,
           user_id: teacher_id,
           membership_role: 'teacher'

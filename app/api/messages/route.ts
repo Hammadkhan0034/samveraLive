@@ -85,16 +85,8 @@ export async function GET(request: Request) {
       throw err;
     }
 
-    const { searchParams } = new URL(request.url);
-    // GET query parameter schema
-    const getMessagesQuerySchema = z.object({
-      userId: userIdSchema.optional(),
-    });
-    const queryValidation = validateQuery(getMessagesQuerySchema, searchParams);
-    if (!queryValidation.success) {
-      return queryValidation.error;
-    }
-    const userId = queryValidation.data.userId || user.id;
+    // Always use authenticated user's ID (no query params needed)
+    const userId = user.id;
 
     // Fetch message threads where user is a participant
     // First, get all participants for this user

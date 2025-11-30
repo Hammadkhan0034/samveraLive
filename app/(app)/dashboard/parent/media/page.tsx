@@ -115,7 +115,7 @@ export default function ParentMediaPage() {
         const studentIds = relationships.map((r: any) => r.student_id).filter(Boolean);
 
         if (studentIds.length > 0) {
-          const studentsDetailsRes = await fetch(`/api/students?orgId=${orgId}`);
+          const studentsDetailsRes = await fetch(`/api/students`);
           
           if (!studentsDetailsRes.ok) {
             throw new Error('Failed to fetch students');
@@ -199,7 +199,7 @@ export default function ParentMediaPage() {
 
         // Always fetch org-wide photos (where class_id is null) - these show to all teachers and parents
         photoPromises.push(
-          fetch(`/api/photos?orgId=${orgId}&limit=100`, { cache: 'no-store' })
+          fetch(`/api/photos?limit=100`, { cache: 'no-store' })
             .then(async (response) => {
               if (!response.ok) {
                 const data = await response.json();
@@ -214,7 +214,7 @@ export default function ParentMediaPage() {
         // Fetch class-specific photos for linked students' classes
         classIds.forEach((classId) => {
           photoPromises.push(
-            fetch(`/api/photos?orgId=${orgId}&classId=${classId}&limit=100`, { cache: 'no-store' })
+            fetch(`/api/photos?classId=${classId}&limit=100`, { cache: 'no-store' })
               .then(async (response) => {
                 if (!response.ok) {
                   const data = await response.json();

@@ -74,7 +74,7 @@ export default function GuardiansPage() {
       }
       setGuardianError(null);
 
-      const res = await fetch(`/api/guardians?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
+      const res = await fetch(`/api/guardians?t=${Date.now()}`, { cache: 'no-store' });
       const json = await res.json();
 
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);

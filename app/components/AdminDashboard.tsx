@@ -467,7 +467,7 @@ export function AdminDashboard() {
       for (const org of orgs) {
         try {
           console.log(`🔄 Loading teachers for org: ${org.name} (${org.id})`);
-          const res = await fetch(`/api/staff-management?orgId=${org.id}&t=${Date.now()}`, { cache: 'no-store' });
+          const res = await fetch(`/api/staff-management?t=${Date.now()}`, { cache: 'no-store' });
           const json = await res.json();
 
           if (res.ok && json.staff) {
@@ -523,7 +523,7 @@ export function AdminDashboard() {
 
       if (orgs.length === 0) {
         console.log('⚠️ No organizations available, using default org');
-        const res = await fetch(`/api/guardians?orgId=1&t=${Date.now()}`, { cache: 'no-store' });
+        const res = await fetch(`/api/guardians?t=${Date.now()}`, { cache: 'no-store' });
         const json = await res.json();
 
         if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
@@ -540,7 +540,7 @@ export function AdminDashboard() {
       for (const org of orgs) {
         try {
           console.log(`🔄 Loading guardians for org: ${org.name} (${org.id})`);
-          const res = await fetch(`/api/guardians?orgId=${org.id}&t=${Date.now()}`, { cache: 'no-store' });
+          const res = await fetch(`/api/guardians?t=${Date.now()}`, { cache: 'no-store' });
           const json = await res.json();
 
           if (res.ok && json.guardians) {
@@ -700,7 +700,7 @@ export function AdminDashboard() {
       for (const org of orgs) {
         try {
           console.log(`🔄 Loading students for org: ${org.name} (${org.id})`);
-          const res = await fetch(`/api/students?orgId=${org.id}&t=${Date.now()}`, { cache: 'no-store' });
+          const res = await fetch(`/api/students?t=${Date.now()}`, { cache: 'no-store' });
           const json = await res.json();
 
           if (res.ok && json.students) {
@@ -768,7 +768,7 @@ export function AdminDashboard() {
     try {
       const orgId = orgs.length > 0 ? orgs[0].id : '1';
 
-      const res = await fetch(`/api/guardians?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
+      const res = await fetch(`/api/guardians?t=${Date.now()}`, { cache: 'no-store' });
       const json = await res.json();
 
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);

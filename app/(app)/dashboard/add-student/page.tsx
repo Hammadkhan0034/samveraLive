@@ -41,7 +41,7 @@ function AddStudentPageContent() {
     }
     const loadStudent = async () => {
       try {
-        const res = await fetch(`/api/students?id=${encodeURIComponent(id)}&orgId=${encodeURIComponent(finalOrgId ?? '')}`, { cache: 'no-store' });
+        const res = await fetch(`/api/students?id=${encodeURIComponent(id)}`, { cache: 'no-store' });
         const json = await res.json();
         if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
         const s = json.student || json.students?.find((x: any) => x.id === id);
@@ -80,7 +80,7 @@ function AddStudentPageContent() {
     const oid = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
     if (!oid) return;
     try {
-      const res = await fetch(`/api/guardians?orgId=${oid}&t=${Date.now()}`, { cache: 'no-store' });
+      const res = await fetch(`/api/guardians?t=${Date.now()}`, { cache: 'no-store' });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
       setGuardians(json.guardians || []);
@@ -93,7 +93,7 @@ function AddStudentPageContent() {
     const oid = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
     if (!oid) return;
     try {
-      const response = await fetch(`/api/classes?orgId=${oid}`, { cache: 'no-store' });
+      const response = await fetch(`/api/classes`, { cache: 'no-store' });
       const data = await response.json();
       if (response.ok) {
         setClasses(data.classes || []);

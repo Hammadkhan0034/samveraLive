@@ -442,7 +442,7 @@ export default function TeacherStudentsPage() {
       const allStudents: Student[] = [];
       for (const classId of classIds) {
         try {
-          const url = `/api/students?orgId=${finalOrgId}&classId=${classId}&t=${Date.now()}`;
+          const url = `/api/students?classId=${classId}&t=${Date.now()}`;
           
           const response = await fetch(url, { 
             cache: 'no-store',

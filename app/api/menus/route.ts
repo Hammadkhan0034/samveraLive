@@ -2,12 +2,25 @@ import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 import { getStableDataCacheHeaders } from '@/lib/cacheConfig'
 import { requireServerAuth } from '@/lib/supabaseServer'
+import { getAuthUserWithOrg, MissingOrgIdError, mapAuthErrorToResponse } from '@/lib/server-helpers'
 import { z } from 'zod'
-import { validateQuery, validateBody, orgIdSchema, classIdSchema, userIdSchema, dateSchema, notesSchema, uuidSchema } from '@/lib/validation'
+import { validateQuery, validateBody, classIdSchema, userIdSchema, dateSchema, notesSchema, uuidSchema } from '@/lib/validation'
 
 export async function GET(request: Request) {
   try {
-    const { user } = await requireServerAuth()
+    // Get authenticated user and orgId from server-side auth (no query params needed)
+    let user, orgId: string;
+    try {
+      const authContext = await getAuthUserWithOrg();
+      user = authContext.user;
+      orgId = authContext.orgId;
+    } catch (err) {
+      if (err instanceof MissingOrgIdError) {
+        return mapAuthErrorToResponse(err);
+      }
+      const message = err instanceof Error ? err.message : 'Authentication required';
+      return NextResponse.json({ error: message }, { status: 401 });
+    }
     
     // Check if user has a valid role (principal, admin, teacher, or parent)
     const userRoles = user.user_metadata?.roles || [];
@@ -41,9 +54,8 @@ export async function GET(request: Request) {
     }
     
     const { searchParams } = new URL(request.url)
-    // GET query parameter schema
+    // GET query parameter schema - orgId removed, now fetched server-side
     const getMenusQuerySchema = z.object({
-      orgId: orgIdSchema,
       classId: classIdSchema.optional(),
       day: dateSchema.optional(),
       createdBy: userIdSchema.optional(),
@@ -53,7 +65,7 @@ export async function GET(request: Request) {
     if (!queryValidation.success) {
       return queryValidation.error
     }
-    const { orgId, classId, day, createdBy } = queryValidation.data
+    const { classId, day, createdBy } = queryValidation.data
 
     let query = supabaseAdmin
       .from('menus')
@@ -97,21 +109,18 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  // Try to authenticate, but allow network errors to proceed
-  let authError = null;
+  // Get authenticated user and orgId from server-side auth
+  let user, orgId: string;
   try {
-    await requireServerAuth()
-  } catch (error: any) {
-    if (error.message === 'Authentication required') {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    const authContext = await getAuthUserWithOrg();
+    user = authContext.user;
+    orgId = authContext.orgId;
+  } catch (err) {
+    if (err instanceof MissingOrgIdError) {
+      return mapAuthErrorToResponse(err);
     }
-    if (error.message === 'Network error - please retry') {
-      // For network errors during auth check, allow request to continue
-      // The user might still be authenticated (session in cookies), just verification failed
-      authError = error;
-    } else {
-      throw error;
-    }
+    const message = err instanceof Error ? err.message : 'Authentication required';
+    return NextResponse.json({ error: message }, { status: 401 });
   }
 
   try {
@@ -122,9 +131,8 @@ export async function POST(request: Request) {
     }
     
     const body = await request.json()
-    // POST body schema
+    // POST body schema - org_id removed, now fetched server-side
     const postMenuBodySchema = z.object({
-      org_id: orgIdSchema,
       class_id: classIdSchema.optional(),
       day: dateSchema,
       breakfast: z.string().max(1000).nullable().optional(),
@@ -139,7 +147,7 @@ export async function POST(request: Request) {
     if (!bodyValidation.success) {
       return bodyValidation.error
     }
-    const { org_id, class_id, day, breakfast, lunch, snack, notes, is_public, created_by } = bodyValidation.data
+    const { class_id, day, breakfast, lunch, snack, notes, is_public, created_by } = bodyValidation.data
     
     // Ensure class_id is null if not provided or empty string
     const finalClassId = class_id && class_id.trim() !== '' ? class_id : null
@@ -148,7 +156,7 @@ export async function POST(request: Request) {
     let query = supabaseAdmin
       .from('menus')
       .select('id')
-      .eq('org_id', org_id)
+      .eq('org_id', orgId)
       .eq('day', day)
       .is('deleted_at', null)
     
@@ -215,7 +223,7 @@ export async function POST(request: Request) {
       const { data: inserted, error: insertError } = await supabaseAdmin
         .from('menus')
         .insert({
-          org_id,
+          org_id: orgId,
           class_id: finalClassId,
           day,
           breakfast: breakfast || null,
@@ -223,7 +231,7 @@ export async function POST(request: Request) {
           snack: snack || null,
           notes: notes || null,
           is_public: is_public !== undefined ? is_public : true,
-          created_by: created_by || null,
+          created_by: created_by || user.id,
           deleted_at: null,
         })
         .select('id,org_id,class_id,day,breakfast,lunch,snack,notes,is_public,created_by,created_at,updated_at')

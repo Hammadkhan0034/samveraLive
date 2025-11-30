@@ -39,22 +39,16 @@ export default function MenusViewPage() {
   // Initialize from cache immediately if available to avoid loading state
   const [menus, setMenus] = useState<Menu[]>(() => {
     // Load from cache synchronously during initialization
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && user?.id && orgId) {
       try {
-        // Try to get user from session storage or a global variable if available
-        // We'll update this in useEffect when user is available
-        const cachedUserId = sessionStorage.getItem('current_user_id');
-        const cachedOrgId = sessionStorage.getItem('current_org_id');
-        if (cachedUserId && cachedOrgId) {
-          const cacheKey = `parent_menus_${cachedUserId}_${cachedOrgId}`;
-          const cached = localStorage.getItem(cacheKey);
-          const cacheTime = localStorage.getItem(`${cacheKey}_time`);
-          if (cached && cacheTime) {
-            const cachedMenus = JSON.parse(cached);
-            const age = Date.now() - parseInt(cacheTime);
-            if (cachedMenus && Array.isArray(cachedMenus) && age < 10 * 60 * 1000 && cachedMenus.length > 0) {
-              return cachedMenus;
-            }
+        const cacheKey = `parent_menus_${user.id}_${orgId}`;
+        const cached = localStorage.getItem(cacheKey);
+        const cacheTime = localStorage.getItem(`${cacheKey}_time`);
+        if (cached && cacheTime) {
+          const cachedMenus = JSON.parse(cached);
+          const age = Date.now() - parseInt(cacheTime);
+          if (cachedMenus && Array.isArray(cachedMenus) && age < 10 * 60 * 1000 && cachedMenus.length > 0) {
+            return cachedMenus;
           }
         }
       } catch (e) {
@@ -65,20 +59,16 @@ export default function MenusViewPage() {
   });
   const [hydratedFromCache, setHydratedFromCache] = useState(() => {
     // Check if we loaded from cache during initialization
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && user?.id && orgId) {
       try {
-        const cachedUserId = sessionStorage.getItem('current_user_id');
-        const cachedOrgId = sessionStorage.getItem('current_org_id');
-        if (cachedUserId && cachedOrgId) {
-          const cacheKey = `parent_menus_${cachedUserId}_${cachedOrgId}`;
-          const cached = localStorage.getItem(cacheKey);
-          const cacheTime = localStorage.getItem(`${cacheKey}_time`);
-          if (cached && cacheTime) {
-            const cachedMenus = JSON.parse(cached);
-            const age = Date.now() - parseInt(cacheTime);
-            if (cachedMenus && Array.isArray(cachedMenus) && age < 10 * 60 * 1000 && cachedMenus.length > 0) {
-              return true;
-            }
+        const cacheKey = `parent_menus_${user.id}_${orgId}`;
+        const cached = localStorage.getItem(cacheKey);
+        const cacheTime = localStorage.getItem(`${cacheKey}_time`);
+        if (cached && cacheTime) {
+          const cachedMenus = JSON.parse(cached);
+          const age = Date.now() - parseInt(cacheTime);
+          if (cachedMenus && Array.isArray(cachedMenus) && age < 10 * 60 * 1000 && cachedMenus.length > 0) {
+            return true;
           }
         }
       } catch (e) {
@@ -107,7 +97,7 @@ export default function MenusViewPage() {
         const relationships = relJson.relationships || [];
         const studentIds = relationships.map((r: any) => r.student_id).filter(Boolean);
         if (studentIds.length === 0) return;
-        const studentsRes = await fetch(`/api/students?orgId=${orgId}`);
+        const studentsRes = await fetch(`/api/students`);
         const studentsJson = await studentsRes.json();
         const allStudents = studentsJson.students || [];
         const classPairs: Array<{ classId: string; className?: string }> = [];
@@ -129,17 +119,14 @@ export default function MenusViewPage() {
   }, [user?.id, orgId, classId]);
   const [linkedStudents, setLinkedStudents] = useState<Array<{ id: string; class_id: string | null }>>(() => {
     // Load from cache synchronously during initialization
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && user?.id) {
       try {
-        const cachedUserId = sessionStorage.getItem('current_user_id');
-        if (cachedUserId) {
-          const cached = localStorage.getItem(`parent_linked_students_${cachedUserId}`);
-          if (cached) {
-            const cachedData = JSON.parse(cached);
-            const cacheTime = localStorage.getItem(`parent_linked_students_time_${cachedUserId}`);
-            if (cacheTime && Date.now() - parseInt(cacheTime) < 10 * 60 * 1000 && Array.isArray(cachedData)) {
-              return cachedData;
-            }
+        const cached = localStorage.getItem(`parent_linked_students_${user.id}`);
+        if (cached) {
+          const cachedData = JSON.parse(cached);
+          const cacheTime = localStorage.getItem(`parent_linked_students_time_${user.id}`);
+          if (cacheTime && Date.now() - parseInt(cacheTime) < 10 * 60 * 1000 && Array.isArray(cachedData)) {
+            return cachedData;
           }
         }
       } catch (e) {
@@ -148,14 +135,6 @@ export default function MenusViewPage() {
     }
     return [];
   });
-
-  // Store user and org IDs in sessionStorage for cache lookup
-  useEffect(() => {
-    if (user?.id && orgId && typeof window !== 'undefined') {
-      sessionStorage.setItem('current_user_id', user.id);
-      sessionStorage.setItem('current_org_id', orgId);
-    }
-  }, [user?.id, orgId]);
 
   // Get all linked students and their classes - load from cache immediately, then refresh in background
   useEffect(() => {
@@ -186,7 +165,7 @@ export default function MenusViewPage() {
             }
             return;
           }
-          const studentsRes = await fetch(`/api/students?orgId=${orgId}`);
+          const studentsRes = await fetch(`/api/students`);
           const studentsJson = await studentsRes.json();
           const allStudents = studentsJson.students || [];
           const linked = allStudents
@@ -279,14 +258,14 @@ export default function MenusViewPage() {
         if (classIds.length > 0) {
           // Fetch menus for each class in parallel
           const menuPromises = classIds.map((cid) => 
-            fetch(`/api/menus?orgId=${orgId}&classId=${cid}`, { cache: 'no-store' })
+            fetch(`/api/menus?classId=${cid}`, { cache: 'no-store' })
               .then(res => res.json())
               .then(json => json.menus || [])
               .catch(() => [])
           );
           // Also get org-wide menus (class_id null)
           menuPromises.push(
-            fetch(`/api/menus?orgId=${orgId}`, { cache: 'no-store' })
+            fetch(`/api/menus`, { cache: 'no-store' })
               .then(res => res.json())
               .then(json => (json.menus || []).filter((m: Menu) => !m.class_id))
               .catch(() => [])
@@ -300,12 +279,12 @@ export default function MenusViewPage() {
           allMenus = Array.from(uniqueMenus.values());
         } else if (classId) {
           // Fallback to metadata classId if no linked students
-          const res = await fetch(`/api/menus?orgId=${orgId}&classId=${classId}`, { cache: 'no-store' });
+          const res = await fetch(`/api/menus?classId=${classId}`, { cache: 'no-store' });
           const json = await res.json();
           allMenus = json.menus || [];
         } else {
           // Get org-wide menus only
-          const res = await fetch(`/api/menus?orgId=${orgId}`, { cache: 'no-store' });
+          const res = await fetch(`/api/menus`, { cache: 'no-store' });
           const json = await res.json();
           allMenus = (json.menus || []).filter((m: Menu) => !m.class_id);
         }
@@ -473,7 +452,7 @@ export default function MenusViewPage() {
     async function loadClassNames() {
       if (!orgId || menusForDate.length === 0) return;
       try {
-        const classesRes = await fetch(`/api/classes?orgId=${orgId}`, { cache: 'no-store' });
+        const classesRes = await fetch(`/api/classes`, { cache: 'no-store' });
         const classesData = await classesRes.json();
         const classes = classesData.classes || classesData || [];
         const neededIds = Array.from(new Set((menus || []).map((m: any) => m.class_id).filter((id: any): id is string => Boolean(id))));

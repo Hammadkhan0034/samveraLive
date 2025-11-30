@@ -4,11 +4,10 @@ import { supabaseAdmin } from '@/lib/supabaseClient';
 import { getNoCacheHeaders } from '@/lib/cacheConfig';
 import { z } from 'zod';
 import { validateQuery } from '@/lib/validation';
-import { getCurrentUserOrgId, MissingOrgIdError } from '@/lib/server-helpers';
+import { getAuthUserWithOrg, MissingOrgIdError, mapAuthErrorToResponse } from '@/lib/server-helpers';
 
-// GET query parameter schema
+// GET query parameter schema - orgId removed, now fetched server-side
 const getPhotosQuerySchema = z.object({
-  orgId: z.string().uuid(),
   classId: z.string().uuid().optional(),
   studentId: z.string().uuid().optional(),
   limit: z.coerce.number().int().positive().max(100).optional().default(50),
@@ -17,7 +16,19 @@ const getPhotosQuerySchema = z.object({
 
 export async function GET(request: Request) {
   try {
-    const { user } = await requireServerAuth();
+    // Get authenticated user and orgId from server-side auth (no query params needed)
+    let user, orgId: string;
+    try {
+      const authContext = await getAuthUserWithOrg();
+      user = authContext.user;
+      orgId = authContext.orgId;
+    } catch (err) {
+      if (err instanceof MissingOrgIdError) {
+        return mapAuthErrorToResponse(err);
+      }
+      const message = err instanceof Error ? err.message : 'Authentication required';
+      return NextResponse.json({ error: message }, { status: 401 });
+    }
 
     if (!supabaseAdmin) {
       return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 });
@@ -28,13 +39,7 @@ export async function GET(request: Request) {
     if (!queryValidation.success) {
       return queryValidation.error;
     }
-    const { orgId, classId, studentId, limit, offset } = queryValidation.data;
-
-    // Verify user has access to this org
-    const userOrgId = await getCurrentUserOrgId(user);
-    if (userOrgId !== orgId) {
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
-    }
+    const { classId, studentId, limit, offset } = queryValidation.data;
 
     // Build query - start with basic photo data
     let query = supabaseAdmin
@@ -191,7 +196,19 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const { user } = await requireServerAuth();
+    // Get authenticated user and orgId from server-side auth
+    let user, orgId: string;
+    try {
+      const authContext = await getAuthUserWithOrg();
+      user = authContext.user;
+      orgId = authContext.orgId;
+    } catch (err) {
+      if (err instanceof MissingOrgIdError) {
+        return mapAuthErrorToResponse(err);
+      }
+      const message = err instanceof Error ? err.message : 'Authentication required';
+      return NextResponse.json({ error: message }, { status: 401 });
+    }
 
     if (!supabaseAdmin) {
       return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 });
@@ -200,26 +217,16 @@ export async function POST(request: Request) {
     // Parse FormData
     const formData = await request.formData();
     const files = formData.getAll('files') as File[];
-    const orgId = formData.get('org_id') as string;
     const classId = formData.get('class_id') as string | null;
     const studentId = formData.get('student_id') as string | null;
     const caption = formData.get('caption') as string | null;
     const isPublic = formData.get('is_public') === 'true';
-    const authorId = formData.get('author_id') as string;
-
-    // Validation
-    if (!orgId || !authorId) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
+    
+    // Use authenticated user's ID as authorId
+    const authorId = user.id;
 
     if (!files || files.length === 0) {
       return NextResponse.json({ error: 'No files provided' }, { status: 400 });
-    }
-
-    // Verify user has access to this org
-    const userOrgId = await getCurrentUserOrgId(user);
-    if (userOrgId !== orgId) {
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
     // Validate file types and sizes

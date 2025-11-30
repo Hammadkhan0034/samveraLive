@@ -32,7 +32,7 @@ export default function PrincipalCalendarPage() {
   // Load classes
   useEffect(() => {
     if (orgId) {
-      fetch(`/api/classes?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store', credentials: 'include' })
+      fetch(`/api/classes?t=${Date.now()}`, { cache: 'no-store', credentials: 'include' })
         .then(res => res.json())
         .then(data => {
           if (data.classes) {

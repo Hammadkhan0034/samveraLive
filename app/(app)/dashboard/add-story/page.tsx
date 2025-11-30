@@ -71,7 +71,7 @@ export default function AddStoryPage() {
         }
       } else {
         // For principals/admins: load all classes
-        const res = await fetch(`/api/classes?orgId=${orgId}`, { cache: 'no-store' });
+        const res = await fetch(`/api/classes`, { cache: 'no-store' });
         const json = await res.json();
         if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
         list = Array.isArray(json.classes) ? json.classes.map((c: any) => ({ id: c.id, name: c.name })) : [];

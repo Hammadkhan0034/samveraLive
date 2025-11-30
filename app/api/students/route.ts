@@ -1,14 +1,13 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 import { getUserDataCacheHeaders } from '@/lib/cacheConfig'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
+import { requireServerAuth } from '@/lib/supabaseServer'
+import { getAuthUserWithOrg, MissingOrgIdError, mapAuthErrorToResponse } from '@/lib/server-helpers'
 import { z } from 'zod'
-import { validateQuery, validateBody, orgIdSchema, classIdSchema, studentIdSchema, firstNameSchema, lastNameSchema, studentDobSchema, genderSchema, studentLanguageSchema, barngildiSchema, phoneSchema, addressSchema, ssnSchema, medicalNotesSchema, allergiesSchema, emergencyContactSchema, guardianIdsSchema, dateSchema } from '@/lib/validation'
+import { validateQuery, validateBody, classIdSchema, studentIdSchema, firstNameSchema, lastNameSchema, studentDobSchema, genderSchema, studentLanguageSchema, barngildiSchema, phoneSchema, addressSchema, ssnSchema, medicalNotesSchema, allergiesSchema, emergencyContactSchema, guardianIdsSchema, dateSchema } from '@/lib/validation'
 
-// GET query parameter schema
+// GET query parameter schema - orgId removed, now fetched server-side
 const getStudentsQuerySchema = z.object({
-  orgId: orgIdSchema,
   classId: classIdSchema.optional(),
 });
 
@@ -21,32 +20,18 @@ export async function GET(request: Request) {
       }, { status: 500 })
     }
 
-    // Authenticate and check role
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) => {
-                cookieStore.set(name, value, options);
-              });
-            } catch {
-              // Ignore cookie setting errors in route handlers
-            }
-          },
-        },
+    // Get authenticated user and orgId from server-side auth (no query params needed)
+    let user, orgId: string;
+    try {
+      const authContext = await getAuthUserWithOrg();
+      user = authContext.user;
+      orgId = authContext.orgId;
+    } catch (err) {
+      if (err instanceof MissingOrgIdError) {
+        return mapAuthErrorToResponse(err);
       }
-    );
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+      const message = err instanceof Error ? err.message : 'Authentication required';
+      return NextResponse.json({ error: message }, { status: 401 });
     }
 
     // Check if user has principal, admin, teacher, or parent/guardian role
@@ -66,7 +51,7 @@ export async function GET(request: Request) {
     if (!queryValidation.success) {
       return queryValidation.error
     }
-    const { orgId, classId } = queryValidation.data
+    const { classId } = queryValidation.data
 
     // For parents/guardians, only allow access to their linked students
     let allowedStudentIds: string[] | null = null;
@@ -206,7 +191,7 @@ export async function GET(request: Request) {
   }
 }
 
-// POST body schema
+// POST body schema - org_id removed, now fetched server-side
 const postStudentBodySchema = z.object({
   first_name: firstNameSchema,
   last_name: lastNameSchema,
@@ -220,7 +205,6 @@ const postStudentBodySchema = z.object({
   medical_notes: medicalNotesSchema,
   allergies: allergiesSchema,
   emergency_contact: emergencyContactSchema,
-  org_id: orgIdSchema.optional(),
   phone: phoneSchema,
   address: addressSchema,
   social_security_number: ssnSchema,
@@ -253,6 +237,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ 
         error: 'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local' 
       }, { status: 500 })
+    }
+
+    // Get authenticated user and orgId from server-side auth
+    let user, orgId: string;
+    try {
+      const authContext = await getAuthUserWithOrg();
+      user = authContext.user;
+      orgId = authContext.orgId;
+    } catch (err) {
+      if (err instanceof MissingOrgIdError) {
+        return mapAuthErrorToResponse(err);
+      }
+      const message = err instanceof Error ? err.message : 'Authentication required';
+      return NextResponse.json({ error: message }, { status: 401 });
     }
 
     // Validate Supabase URL is configured
@@ -292,7 +290,6 @@ export async function POST(request: Request) {
       medical_notes, 
       allergies, 
       emergency_contact,
-      org_id,
       phone,
       address,
       social_security_number,
@@ -349,7 +346,7 @@ export async function POST(request: Request) {
           address: address || null,
           ssn: social_security_number || null,
           role: 'student' as any,
-          org_id: org_id || null,
+          org_id: orgId,
           is_active: true,
         })
         .select('id')
@@ -394,7 +391,7 @@ export async function POST(request: Request) {
       .insert({
         user_id: userId,
         class_id: class_id || null,
-        org_id: org_id || null,
+        org_id: orgId,
         registration_time: registration_time || null,
         start_date: validatedStartDate,
         barngildi: normalizedBarngildi || 0.5,
@@ -447,7 +444,7 @@ export async function POST(request: Request) {
   }
 }
 
-// PUT body schema
+// PUT body schema - org_id removed, now fetched server-side
 const putStudentBodySchema = z.object({
   id: studentIdSchema,
   first_name: firstNameSchema,
@@ -462,7 +459,6 @@ const putStudentBodySchema = z.object({
   medical_notes: medicalNotesSchema,
   allergies: allergiesSchema,
   emergency_contact: emergencyContactSchema,
-  org_id: orgIdSchema.optional(),
   phone: phoneSchema,
   address: addressSchema,
   social_security_number: ssnSchema,
@@ -496,6 +492,19 @@ export async function PUT(request: Request) {
         error: 'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local' 
       }, { status: 500 })
     }
+
+    // Get authenticated user and orgId from server-side auth
+    let orgId: string;
+    try {
+      const authContext = await getAuthUserWithOrg();
+      orgId = authContext.orgId;
+    } catch (err) {
+      if (err instanceof MissingOrgIdError) {
+        return mapAuthErrorToResponse(err);
+      }
+      const message = err instanceof Error ? err.message : 'Authentication required';
+      return NextResponse.json({ error: message }, { status: 401 });
+    }
     
     const body = await request.json()
     const bodyValidation = validateBody(putStudentBodySchema, body)
@@ -516,7 +525,6 @@ export async function PUT(request: Request) {
       medical_notes, 
       allergies, 
       emergency_contact,
-      org_id,
       phone,
       address,
       social_security_number,
@@ -564,7 +572,7 @@ export async function PUT(request: Request) {
       .from('students')
       .update({
         class_id: class_id || null,
-        org_id: org_id || null,
+        org_id: orgId,
         registration_time: registration_time || null,
         start_date: validatedStartDate,
         barngildi: normalizedBarngildi || 0.5,

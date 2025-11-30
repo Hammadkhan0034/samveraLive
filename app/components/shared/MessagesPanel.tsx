@@ -146,7 +146,7 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
           
           if (studentIds.length > 0) {
             console.log(`🔍 [Guardian Chat] Step 2: Loading student details to get class assignments...`);
-            const studentsDetailsRes = await fetch(`/api/students?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
+            const studentsDetailsRes = await fetch(`/api/students?t=${Date.now()}`, { cache: 'no-store' });
             const studentsDetails = await studentsDetailsRes.json();
             if (studentsDetailsRes.ok && studentsDetails.students) {
               const classIdsSet = new Set<string>();
@@ -242,7 +242,7 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
           if (role === 'teacher') {
             // For teachers, load ALL other teachers from the same organization (excluding current user)
             try {
-              const teachersRes = await fetch(`/api/staff-management?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
+              const teachersRes = await fetch(`/api/staff-management?t=${Date.now()}`, { cache: 'no-store' });
               const teachersData = await teachersRes.json();
               if (teachersRes.ok && teachersData.staff) {
                 // Filter to only teachers (not principals) and exclude current user
@@ -288,7 +288,7 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
                 
                 try {
                   // Try to get teachers from classes API first
-                  const classesRes = await fetch(`/api/classes?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
+                  const classesRes = await fetch(`/api/classes?t=${Date.now()}`, { cache: 'no-store' });
                   classesData = await classesRes.json();
                   if (classesRes.ok && classesData.classes) {
                     const relevantClasses = classesData.classes.filter((c: any) => classIdsArray.includes(c.id));
@@ -359,7 +359,7 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
 
               // Step 4: Load teachers from staff-management API and filter to only those assigned to guardian's students' classes
               console.log(`🔍 [Guardian Chat] Step 4: Loading teachers from staff-management API (orgId: ${orgId})...`);
-              const teachersRes = await fetch(`/api/staff-management?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
+              const teachersRes = await fetch(`/api/staff-management?t=${Date.now()}`, { cache: 'no-store' });
               
               if (!teachersRes.ok) {
                 console.error(`❌ [Guardian Chat] Step 4: Staff-management API returned error: ${teachersRes.status} ${teachersRes.statusText}`);
@@ -539,7 +539,7 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
         if (role === 'principal' || role === 'teacher') {
           try {
             // Always try to load guardians - for teachers, we'll filter based on allowedGuardianIds
-            const guardiansRes = await fetch(`/api/guardians?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
+            const guardiansRes = await fetch(`/api/guardians?t=${Date.now()}`, { cache: 'no-store' });
             const guardiansData = await guardiansRes.json();
             if (guardiansRes.ok && guardiansData.guardians) {
               if (role === 'teacher') {
@@ -624,7 +624,7 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
       if (!currentSession?.user?.id) return;
       setLoading(true);
       try {
-        const res = await fetch(`/api/messages?userId=${currentSession.user.id}&t=${Date.now()}`, { cache: 'no-store' });
+        const res = await fetch(`/api/messages?t=${Date.now()}`, { cache: 'no-store' });
         const json = await res.json();
         if (res.ok && json.threads) {
           // Load all threads without filtering - filtering will happen in useMemo

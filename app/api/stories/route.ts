@@ -2,12 +2,12 @@ import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 import { getStableDataCacheHeaders } from '@/lib/cacheConfig'
 import { requireServerAuth } from '@/lib/supabaseServer'
+import { getAuthUserWithOrg, MissingOrgIdError, mapAuthErrorToResponse } from '@/lib/server-helpers'
 import { z } from 'zod'
-import { validateQuery, validateBody, orgIdSchema, classIdSchema, userIdSchema, titleSchema, captionSchema, futureDateSchema, uuidSchema, storyIdSchema, isoDateTimeSchema, positiveNumberSchema } from '@/lib/validation'
+import { validateQuery, validateBody, classIdSchema, userIdSchema, titleSchema, captionSchema, futureDateSchema, uuidSchema, storyIdSchema, isoDateTimeSchema, positiveNumberSchema } from '@/lib/validation'
 
-// GET query parameter schema
+// GET query parameter schema - orgId removed, now fetched server-side
 const getStoriesQuerySchema = z.object({
-  orgId: orgIdSchema,
   classId: classIdSchema.optional(),
   includeDeleted: z.coerce.boolean().optional(),
   onlyPublic: z.coerce.boolean().optional(),
@@ -16,7 +16,6 @@ const getStoriesQuerySchema = z.object({
   teacherClassIds: z.string().optional(), // comma-separated class ids
   teacherAuthorId: userIdSchema.optional(),
   parentClassIds: z.string().optional(), // comma-separated class ids
-  parentUserId: userIdSchema.optional(),
   principalAuthorId: userIdSchema.optional(),
 }).refine((data) => {
   // If audience is teacher, either teacherClassIds or teacherAuthorId should be provided
@@ -28,7 +27,19 @@ const getStoriesQuerySchema = z.object({
 
 export async function GET(request: Request) {
   try {
-    const { user } = await requireServerAuth()
+    // Get authenticated user and orgId from server-side auth (no query params needed)
+    let user, orgId: string;
+    try {
+      const authContext = await getAuthUserWithOrg();
+      user = authContext.user;
+      orgId = authContext.orgId;
+    } catch (err) {
+      if (err instanceof MissingOrgIdError) {
+        return mapAuthErrorToResponse(err);
+      }
+      const message = err instanceof Error ? err.message : 'Authentication required';
+      return NextResponse.json({ error: message }, { status: 401 });
+    }
     
     // Check if user has a valid role (principal, admin, teacher, or parent)
     const userRoles = user.user_metadata?.roles || [];
@@ -56,7 +67,11 @@ export async function GET(request: Request) {
     if (!queryValidation.success) {
       return queryValidation.error
     }
-    const { orgId, classId, includeDeleted, onlyPublic, audience, teacherClassIds, teacherAuthorId, parentClassIds, parentUserId, principalAuthorId } = queryValidation.data
+    const { classId, includeDeleted, onlyPublic, audience, teacherClassIds, teacherAuthorId, parentClassIds, principalAuthorId } = queryValidation.data
+    
+    // Use authenticated user's ID for parentUserId and principalAuthorId if not provided
+    const parentUserId = user.id; // Always use authenticated user
+    const finalPrincipalAuthorId = principalAuthorId || user.id; // Use provided or authenticated user
 
     const nowIso = new Date().toISOString()
 
@@ -119,14 +134,14 @@ export async function GET(request: Request) {
           .filter(Boolean)
       }
       
-      // If no class IDs from params but we have parentUserId, fetch from database
-      if (parentClassIdsArray.length === 0 && parentUserId) {
+      // If no class IDs from params, fetch from database using authenticated user
+      if (parentClassIdsArray.length === 0) {
         try {
           // Get all students linked to this guardian
           const { data: relationships, error: relError } = await supabaseAdmin
             .from('guardian_students')
             .select('student_id')
-            .eq('guardian_id', parentUserId)
+            .eq('guardian_id', user.id)
           
           if (!relError && relationships && relationships.length > 0) {
             const studentIds = relationships.map(r => r.student_id).filter(Boolean)
@@ -164,14 +179,8 @@ export async function GET(request: Request) {
       // Principals should see:
       // 1. All org-wide stories they created (class_id is null)
       // 2. All class-specific stories they created (for any class)
-      // Get principal's user ID from request if available
-      if (principalAuthorId) {
-        // Show all stories created by this principal (both org-wide and class-specific)
-        query = query.eq('author_id', principalAuthorId)
-      } else {
-        // If no author ID, show all org-wide stories (fallback)
-        query = query.is('class_id', null)
-      }
+      // Use authenticated user's ID or provided principalAuthorId
+      query = query.eq('author_id', finalPrincipalAuthorId)
     }
     
     // Note: Organization-wide stories (class_id is null) are visible to:
@@ -289,11 +298,9 @@ export async function GET(request: Request) {
   }
 }
 
-// POST body schema
+// POST body schema - org_id and author_id removed, now fetched server-side
 const postStoryBodySchema = z.object({
-  org_id: orgIdSchema,
   class_id: classIdSchema.optional(),
-  author_id: userIdSchema.nullable().optional(),
   title: titleSchema,
   caption: captionSchema,
   is_public: z.boolean().default(false),
@@ -308,13 +315,18 @@ const postStoryBodySchema = z.object({
 });
 
 export async function POST(request: Request) {
+  // Get authenticated user and orgId from server-side auth
+  let user, orgId: string;
   try {
-    await requireServerAuth()
-  } catch (authError: any) {
-    if (authError.message === 'Authentication required') {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    const authContext = await getAuthUserWithOrg();
+    user = authContext.user;
+    orgId = authContext.orgId;
+  } catch (err) {
+    if (err instanceof MissingOrgIdError) {
+      return mapAuthErrorToResponse(err);
     }
-    throw authError
+    const message = err instanceof Error ? err.message : 'Authentication required';
+    return NextResponse.json({ error: message }, { status: 401 });
   }
 
   try {
@@ -327,16 +339,16 @@ export async function POST(request: Request) {
     if (!bodyValidation.success) {
       return bodyValidation.error
     }
-    const { org_id, class_id, author_id, title, caption, is_public, expires_at, items } = bodyValidation.data
+    const { class_id, title, caption, is_public, expires_at, items } = bodyValidation.data
 
     const finalClassId = class_id && String(class_id).trim() !== '' ? class_id : null
 
     const { data, error } = await supabaseAdmin
       .from('stories')
       .insert({
-        org_id,
+        org_id: orgId,
         class_id: finalClassId,
-        author_id: author_id || null,
+        author_id: user.id,
         title: title || null,
         caption: caption || null,
         is_public: Boolean(is_public),
@@ -367,7 +379,7 @@ export async function POST(request: Request) {
           const url = it.url || null
           
           return {
-            org_id,
+            org_id: orgId,
             story_id: data.id,
             url: url,
             order_index: typeof it.order_index === 'number' ? it.order_index : idx,
@@ -492,25 +504,28 @@ const putStoryQuerySchema = z.object({
   id: storyIdSchema,
 });
 
-// PUT body schema
+// PUT body schema - org_id and author_id removed, now fetched server-side
 const putStoryBodySchema = z.object({
-  org_id: orgIdSchema.optional(),
   class_id: classIdSchema.optional(),
   title: titleSchema,
   caption: captionSchema,
   is_public: z.boolean().optional(),
   expires_at: isoDateTimeSchema.optional(),
-  author_id: userIdSchema,
 });
 
 export async function PUT(request: Request) {
+  // Get authenticated user and orgId from server-side auth
+  let user, orgId: string;
   try {
-    await requireServerAuth()
-  } catch (authError: any) {
-    if (authError.message === 'Authentication required') {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    const authContext = await getAuthUserWithOrg();
+    user = authContext.user;
+    orgId = authContext.orgId;
+  } catch (err) {
+    if (err instanceof MissingOrgIdError) {
+      return mapAuthErrorToResponse(err);
     }
-    throw authError
+    const message = err instanceof Error ? err.message : 'Authentication required';
+    return NextResponse.json({ error: message }, { status: 401 });
   }
 
   try {
@@ -530,7 +545,7 @@ export async function PUT(request: Request) {
     if (!bodyValidation.success) {
       return bodyValidation.error
     }
-    const { org_id, class_id, title, caption, is_public, expires_at, author_id } = bodyValidation.data
+    const { class_id, title, caption, is_public, expires_at } = bodyValidation.data
 
     // First, verify the story exists and belongs to the author
     const { data: existingStory, error: fetchError } = await supabaseAdmin
@@ -543,13 +558,13 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: 'Story not found' }, { status: 404 })
     }
 
-    // Verify author_id matches
-    if (existingStory.author_id !== author_id) {
+    // Verify author_id matches authenticated user
+    if (existingStory.author_id !== user.id) {
       return NextResponse.json({ error: 'Unauthorized: You can only edit your own stories' }, { status: 403 })
     }
 
-    // Verify org_id matches if provided
-    if (org_id && existingStory.org_id !== org_id) {
+    // Verify org_id matches authenticated user's org
+    if (existingStory.org_id !== orgId) {
       return NextResponse.json({ error: 'Unauthorized: Organization mismatch' }, { status: 403 })
     }
 

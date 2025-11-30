@@ -116,7 +116,7 @@ export default function ParentDashboard() {
         if (studentIds.length > 0) {
           let studentsDetailsRes: Response;
           try {
-            studentsDetailsRes = await fetch(`/api/students?orgId=${orgId}`);
+            studentsDetailsRes = await fetch(`/api/students`);
           } catch (fetchError: any) {
             // Handle network errors
             console.error('❌ Network error fetching students:', fetchError);
@@ -412,7 +412,7 @@ export default function ParentDashboard() {
     async function loadMessagesCount() {
       try {
         if (!session?.user?.id) return;
-        const res = await fetch(`/api/messages?userId=${session.user.id}&t=${Date.now()}`, { cache: 'no-store' });
+        const res = await fetch(`/api/messages?t=${Date.now()}`, { cache: 'no-store' });
         const json = await res.json();
         if (res.ok && json.threads) {
           const unreadCount = json.threads.filter((t: any) => t.unread).length;

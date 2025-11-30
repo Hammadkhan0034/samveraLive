@@ -121,13 +121,6 @@ function PrincipalDashboardPageContent() {
   const { session } = useAuth?.() || {} as any;
   const { orgId: finalOrgId } = useCurrentUserOrgId();
 
-  // Store user and org IDs in sessionStorage for cache lookup in menus-list
-  useEffect(() => {
-    if (session?.user?.id && finalOrgId && typeof window !== 'undefined') {
-      sessionStorage.setItem('current_user_id', session.user.id);
-      sessionStorage.setItem('current_org_id', finalOrgId);
-    }
-  }, [session?.user?.id, finalOrgId]);
 
   // KPI data states - simplified initialization
   const [studentsCount, setStudentsCount] = useState(0);

@@ -53,7 +53,7 @@ function CreateClassPageContent() {
       setError(null);
       
       // Fetch all classes and find the one with matching ID
-      const response = await fetch(`/api/classes?orgId=${finalOrgId}&t=${Date.now()}`, { cache: 'no-store' });
+      const response = await fetch(`/api/classes?t=${Date.now()}`, { cache: 'no-store' });
       const data = await response.json();
       
       if (!response.ok) {

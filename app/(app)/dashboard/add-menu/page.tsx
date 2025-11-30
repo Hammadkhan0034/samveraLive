@@ -57,7 +57,7 @@ function AddMenuPageContent() {
     const loadClasses = async () => {
       setLoadingClasses(true);
       try {
-        const res = await fetch(`/api/classes?orgId=${orgId}`, { cache: 'no-store' });
+        const res = await fetch(`/api/classes`, { cache: 'no-store' });
         const json = await res.json();
         if (res.ok && json.classes) {
           setClasses(json.classes.map((c: any) => ({ id: c.id, name: c.name })));

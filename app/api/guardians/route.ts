@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 import { getUserDataCacheHeaders } from '@/lib/cacheConfig'
 import { requireServerAuth } from '@/lib/supabaseServer'
-import { getCurrentUserOrgId, mapAuthErrorToResponse } from '@/lib/server-helpers'
+import { getAuthUserWithOrg, MissingOrgIdError, mapAuthErrorToResponse } from '@/lib/server-helpers'
 import { z } from 'zod'
-import { validateQuery, validateBody, orgIdSchema, userIdSchema, firstNameSchema, lastNameSchema, emailSchema, phoneSchema, addressSchema, ssnSchema } from '@/lib/validation'
+import { validateQuery, validateBody, userIdSchema, firstNameSchema, lastNameSchema, emailSchema, phoneSchema, addressSchema, ssnSchema } from '@/lib/validation'
 import { type UserMetadata } from '@/lib/types/auth'
 
 // Guardian role ID
@@ -70,7 +70,7 @@ export async function GET(request: Request) {
   }
 }
 
-// POST body schema
+// POST body schema - org_id removed, now fetched server-side
 const postGuardianBodySchema = z.object({
   first_name: firstNameSchema,
   last_name: lastNameSchema,
@@ -78,12 +78,25 @@ const postGuardianBodySchema = z.object({
   phone: phoneSchema,
   ssn: ssnSchema,
   address: addressSchema,
-  org_id: orgIdSchema.refine((id) => id !== "1", { message: 'Organization ID is required for guardian creation' }),
   student_id: userIdSchema.optional(),
 });
 
 export async function POST(request: Request) {
   try {
+    // Get authenticated user and orgId from server-side auth
+    let user, orgId: string;
+    try {
+      const authContext = await getAuthUserWithOrg();
+      user = authContext.user;
+      orgId = authContext.orgId;
+    } catch (err) {
+      if (err instanceof MissingOrgIdError) {
+        return mapAuthErrorToResponse(err);
+      }
+      const message = err instanceof Error ? err.message : 'Authentication required';
+      return NextResponse.json({ error: message }, { status: 401 });
+    }
+
     if (!supabaseAdmin) {
       return NextResponse.json({ 
         error: 'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local' 
@@ -95,7 +108,7 @@ export async function POST(request: Request) {
     if (!bodyValidation.success) {
       return bodyValidation.error
     }
-    const { first_name, last_name, email, phone, ssn, address, org_id: actualOrgId, student_id } = bodyValidation.data
+    const { first_name, last_name, email, phone, ssn, address, student_id } = bodyValidation.data
 
     // Check if user already exists in public.users table
     const { data: existingPublicUser } = await supabaseAdmin
@@ -122,7 +135,7 @@ export async function POST(request: Request) {
       const userMetadata: UserMetadata = {
         roles: ['parent'],
         activeRole: 'parent',
-        org_id: actualOrgId,
+        org_id: orgId,
       };
       
       const { data: newAuthUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
@@ -158,7 +171,7 @@ export async function POST(request: Request) {
       first_name: first_name,
       last_name: last_name || null,
       role: 'guardian' as any,
-      org_id: actualOrgId,
+      org_id: orgId,
       is_active: true,
       ssn: ssn || null,
       address: address || null,
@@ -179,7 +192,7 @@ export async function POST(request: Request) {
     if (student_id) {
       const { data: relationship, error: linkError } = await supabaseAdmin
         .from('guardian_students')
-        .insert({ guardian_id: guardianId, student_id, relation: 'parent', org_id: actualOrgId })
+        .insert({ guardian_id: guardianId, student_id, relation: 'parent', org_id: orgId })
         .select('id')
         .single()
       if (!linkError) createdRelationship = relationship
@@ -197,7 +210,7 @@ export async function POST(request: Request) {
       const userMetadata: UserMetadata = {
         roles: ['parent'],
         activeRole: 'parent',
-        org_id: actualOrgId,
+        org_id: orgId,
       };
       
       await supabaseAdmin.auth.admin.updateUserById(guardianId, {
@@ -222,7 +235,7 @@ export async function POST(request: Request) {
         email: email,
         first_name: first_name,
         last_name: last_name || null,
-        org_id: actualOrgId,
+        org_id: orgId,
         role: 'guardian',
         ssn: ssn || null,
         address: address || null,
@@ -237,7 +250,7 @@ export async function POST(request: Request) {
   }
 }
 
-// PUT body schema
+// PUT body schema - org_id removed, now fetched server-side
 const putGuardianBodySchema = z.object({
   id: userIdSchema,
   first_name: firstNameSchema,
@@ -246,12 +259,24 @@ const putGuardianBodySchema = z.object({
   phone: phoneSchema,
   ssn: ssnSchema,
   address: addressSchema,
-  org_id: orgIdSchema,
   is_active: z.boolean().optional(),
 });
 
 export async function PUT(request: Request) {
   try {
+    // Get authenticated user and orgId from server-side auth
+    let orgId: string;
+    try {
+      const authContext = await getAuthUserWithOrg();
+      orgId = authContext.orgId;
+    } catch (err) {
+      if (err instanceof MissingOrgIdError) {
+        return mapAuthErrorToResponse(err);
+      }
+      const message = err instanceof Error ? err.message : 'Authentication required';
+      return NextResponse.json({ error: message }, { status: 401 });
+    }
+
     if (!supabaseAdmin) {
       return NextResponse.json({ 
         error: 'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local' 
@@ -263,7 +288,7 @@ export async function PUT(request: Request) {
     if (!bodyValidation.success) {
       return bodyValidation.error
     }
-    const { id, first_name, last_name, email, phone, ssn, address, org_id: actualOrgId, is_active } = bodyValidation.data
+    const { id, first_name, last_name, email, phone, ssn, address, is_active } = bodyValidation.data
     
     // Update guardian record in users table
     const { data: updatedGuardian, error: updateError } = await supabaseAdmin
@@ -273,7 +298,7 @@ export async function PUT(request: Request) {
         phone: phone || null,
         first_name: first_name,
         last_name: last_name || null,
-        org_id: actualOrgId,
+        org_id: orgId,
         is_active: is_active !== undefined ? is_active : true,
         role: 'guardian' as any,
         ssn: ssn || null,

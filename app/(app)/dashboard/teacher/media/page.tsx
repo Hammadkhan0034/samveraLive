@@ -87,7 +87,7 @@ export default function TeacherMediaPage() {
 
       // Always fetch org-wide photos (where class_id is null) - these show to all teachers
       photoPromises.push(
-        fetch(`/api/photos?orgId=${orgId}&limit=100`, { cache: 'no-store' })
+        fetch(`/api/photos?limit=100`, { cache: 'no-store' })
           .then(async (response) => {
             if (!response.ok) {
               const data = await response.json();
@@ -102,7 +102,7 @@ export default function TeacherMediaPage() {
       // Fetch class-specific photos for teacher's assigned classes
       teacherClassIds.forEach((classId) => {
         photoPromises.push(
-          fetch(`/api/photos?orgId=${orgId}&classId=${classId}&limit=100`, { cache: 'no-store' })
+          fetch(`/api/photos?classId=${classId}&limit=100`, { cache: 'no-store' })
             .then(async (response) => {
               if (!response.ok) {
                 const data = await response.json();

@@ -53,7 +53,7 @@ export function EditEventPage({ userRole, calendarRoute, eventId }: EditEventPag
   // Principal: Load classes
   useEffect(() => {
     if (userRole === 'principal' && principalOrgId) {
-      fetch(`/api/classes?orgId=${principalOrgId}&t=${Date.now()}`, { cache: 'no-store', credentials: 'include' })
+      fetch(`/api/classes?t=${Date.now()}`, { cache: 'no-store', credentials: 'include' })
         .then(res => res.json())
         .then(data => {
           if (data.classes) {

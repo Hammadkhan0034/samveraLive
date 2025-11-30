@@ -67,7 +67,7 @@ export default function AnnouncementForm({
           let response;
           if (isPrincipal && effectiveOrgId) {
             // For principals/admins: load all organization classes
-            response = await fetch(`/api/classes?orgId=${effectiveOrgId}&t=${Date.now()}`, { cache: 'no-store' });
+            response = await fetch(`/api/classes?t=${Date.now()}`, { cache: 'no-store' });
             const data = await response.json();
             
             if (response.ok && data.classes) {

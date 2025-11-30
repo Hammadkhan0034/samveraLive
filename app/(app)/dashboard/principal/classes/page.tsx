@@ -166,7 +166,7 @@ function ClassesPageContent() {
 
     try {
       if (showLoading) setLoadingClass(true);
-      const response = await fetch(`/api/classes?orgId=${finalOrgId}`, { cache: 'no-store' });
+      const response = await fetch(`/api/classes`, { cache: 'no-store' });
       const data = await response.json();
 
       if (response.ok) {
@@ -200,7 +200,7 @@ function ClassesPageContent() {
     if (!orgId) return;
 
     try {
-      const res = await fetch(`/api/students?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
+      const res = await fetch(`/api/students?t=${Date.now()}`, { cache: 'no-store' });
       const json = await res.json();
 
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
@@ -271,7 +271,7 @@ function ClassesPageContent() {
     if (!finalOrgId) return;
     try {
       setLoadingStudents(true);
-      const response = await fetch(`/api/students?orgId=${finalOrgId}&t=${Date.now()}`, { cache: 'no-store' });
+      const response = await fetch(`/api/students?t=${Date.now()}`, { cache: 'no-store' });
       const data = await response.json();
       if (response.ok && data.students) {
         // Show all students, but mark which class they're currently in
@@ -384,7 +384,7 @@ function ClassesPageContent() {
       setAssignmentError(null);
       
       // Get all student data
-      const studentResponse = await fetch(`/api/students?orgId=${finalOrgId}&t=${Date.now()}`, { cache: 'no-store' });
+      const studentResponse = await fetch(`/api/students?t=${Date.now()}`, { cache: 'no-store' });
       const studentData = await studentResponse.json();
       
       if (!studentData.students) {
@@ -469,7 +469,7 @@ function ClassesPageContent() {
       setAssignmentError(null);
       
       // Get student data first
-      const studentResponse = await fetch(`/api/students?orgId=${finalOrgId}&t=${Date.now()}`, { cache: 'no-store' });
+      const studentResponse = await fetch(`/api/students?t=${Date.now()}`, { cache: 'no-store' });
       const studentData = await studentResponse.json();
       const student = studentData.students?.find((s: any) => s.id === studentId);
       

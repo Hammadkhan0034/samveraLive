@@ -51,7 +51,7 @@ export default function ParentCalendarPage() {
         const studentIds = relationships.map((r: any) => r.student_id).filter(Boolean);
 
         if (studentIds.length > 0) {
-          const studentsDetailsRes = await fetch(`/api/students?orgId=${orgId}`);
+          const studentsDetailsRes = await fetch(`/api/students`);
           
           if (!studentsDetailsRes.ok) {
             if (isMounted) {

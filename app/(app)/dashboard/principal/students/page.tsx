@@ -114,7 +114,7 @@ export default function StudentsPage() {
       }
       setStudentError(null);
 
-      const res = await fetch(`/api/students?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
+      const res = await fetch(`/api/students?t=${Date.now()}`, { cache: 'no-store' });
       const json = await res.json();
 
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
@@ -146,7 +146,7 @@ export default function StudentsPage() {
         setLoadingGuardians(true);
       }
 
-      const res = await fetch(`/api/guardians?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store' });
+      const res = await fetch(`/api/guardians?t=${Date.now()}`, { cache: 'no-store' });
       const json = await res.json();
 
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
@@ -168,7 +168,7 @@ export default function StudentsPage() {
     if (!orgId) return;
 
     try {
-      const response = await fetch(`/api/classes?orgId=${orgId}`, { cache: 'no-store' });
+      const response = await fetch(`/api/classes`, { cache: 'no-store' });
       const data = await response.json();
 
       if (response.ok) {

@@ -333,7 +333,7 @@ function StoriesPageContent() {
   async function loadClasses() {
     if (!orgId) return;
     try {
-      const res = await fetch(`/api/classes?orgId=${orgId}`, { cache: 'no-store' });
+      const res = await fetch(`/api/classes`, { cache: 'no-store' });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
       const list = Array.isArray(json.classes) ? json.classes.map((c: any) => ({ id: c.id, name: c.name })) : [];

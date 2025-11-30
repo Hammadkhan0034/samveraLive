@@ -37,20 +37,16 @@ export default function MenusListPage() {
 
   // Initialize from cache immediately if available to avoid loading state
   const [menus, setMenus] = useState<Menu[]>(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && user?.id && orgId) {
       try {
-        const cachedUserId = sessionStorage.getItem('current_user_id');
-        const cachedOrgId = sessionStorage.getItem('current_org_id');
-        if (cachedUserId && cachedOrgId) {
-          const cacheKey = `menus_list_${cachedUserId}_${cachedOrgId}`;
-          const cached = localStorage.getItem(cacheKey);
-          const cacheTime = localStorage.getItem(`${cacheKey}_time`);
-          if (cached && cacheTime) {
-            const cachedMenus = JSON.parse(cached);
-            const age = Date.now() - parseInt(cacheTime);
-            if (cachedMenus && Array.isArray(cachedMenus) && age < 5 * 60 * 1000 && cachedMenus.length > 0) {
-              return cachedMenus;
-            }
+        const cacheKey = `menus_list_${user.id}_${orgId}`;
+        const cached = localStorage.getItem(cacheKey);
+        const cacheTime = localStorage.getItem(`${cacheKey}_time`);
+        if (cached && cacheTime) {
+          const cachedMenus = JSON.parse(cached);
+          const age = Date.now() - parseInt(cacheTime);
+          if (cachedMenus && Array.isArray(cachedMenus) && age < 5 * 60 * 1000 && cachedMenus.length > 0) {
+            return cachedMenus;
           }
         }
       } catch (e) {
@@ -75,13 +71,6 @@ export default function MenusListPage() {
   // Language handled by context
 
 
-  // Store user and org IDs in sessionStorage for cache lookup
-  useEffect(() => {
-    if (user?.id && orgId && typeof window !== 'undefined') {
-      sessionStorage.setItem('current_user_id', user.id);
-      sessionStorage.setItem('current_org_id', orgId);
-    }
-  }, [user?.id, orgId]);
 
   const loadMenus = useCallback(async () => {
     if (!orgId || !user?.id) {
@@ -140,7 +129,7 @@ export default function MenusListPage() {
             
             // Fetch menus for each class - Filter by createdBy to show only menus created by this teacher
             const menuPromises = classIds.map((cid: string) => 
-              fetch(`/api/menus?orgId=${orgId}&classId=${cid}&createdBy=${user.id}`, { cache: 'no-store' })
+              fetch(`/api/menus?classId=${cid}&createdBy=${user.id}`, { cache: 'no-store' })
                 .then(res => res.json())
                 .then(json => {
                   const menus = json.menus || [];
@@ -154,7 +143,7 @@ export default function MenusListPage() {
             );
             // Also get org-wide menus (class_id null) created by this teacher
             menuPromises.push(
-              fetch(`/api/menus?orgId=${orgId}&createdBy=${user.id}`, { cache: 'no-store' })
+              fetch(`/api/menus?createdBy=${user.id}`, { cache: 'no-store' })
                 .then(res => res.json())
                 .then(json => {
                   const orgMenus = (json.menus || []).filter((m: Menu) => !m.class_id);
@@ -179,20 +168,20 @@ export default function MenusListPage() {
             console.log(`📊 Total unique menus after deduplication: ${allMenus.length}`);
           } else {
             // No classes assigned, show org-wide menus created by this teacher only
-            const res = await fetch(`/api/menus?orgId=${orgId}&createdBy=${user.id}`, { cache: 'no-store' });
+            const res = await fetch(`/api/menus?createdBy=${user.id}`, { cache: 'no-store' });
             const json = await res.json();
             allMenus = (json.menus || []).filter((m: Menu) => !m.class_id);
           }
         } catch (e) {
           console.error('❌ Error loading teacher classes for menus:', e);
           // Fallback to org-wide menus created by this teacher
-          const res = await fetch(`/api/menus?orgId=${orgId}&createdBy=${user.id}`, { cache: 'no-store' });
+          const res = await fetch(`/api/menus?createdBy=${user.id}`, { cache: 'no-store' });
           const json = await res.json();
           allMenus = json.menus || [];
         }
       } else {
         // For principals or others: show all menus
-        const url = `/api/menus?orgId=${orgId}${classId ? `&classId=${classId}` : ''}`;
+        const url = `/api/menus${classId ? `?classId=${classId}` : ''}`;
         const res = await fetch(url, { 
           cache: 'no-store',
           headers: {

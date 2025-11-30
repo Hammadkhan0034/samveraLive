@@ -61,7 +61,7 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
   async function loadClassesForDropdown() {
     try {
       if (!finalOrgId) return;
-      const res = await fetch(`/api/classes?orgId=${finalOrgId}&t=${Date.now()}`, { cache: 'no-store' });
+      const res = await fetch(`/api/classes?t=${Date.now()}`, { cache: 'no-store' });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
       const classesList = json.classes || [];

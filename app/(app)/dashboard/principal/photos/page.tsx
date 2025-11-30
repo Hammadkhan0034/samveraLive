@@ -76,7 +76,7 @@ export default function PrincipalPhotosPage() {
 
     try {
       setLoadingClasses(true);
-      const response = await fetch(`/api/classes?orgId=${orgId}&t=${Date.now()}`, {
+      const response = await fetch(`/api/classes?t=${Date.now()}`, {
         cache: 'no-store',
       });
 
@@ -98,7 +98,7 @@ export default function PrincipalPhotosPage() {
 
     try {
       setLoadingStudents(true);
-      const response = await fetch(`/api/students?orgId=${orgId}&t=${Date.now()}`, {
+      const response = await fetch(`/api/students?t=${Date.now()}`, {
         cache: 'no-store',
       });
 
@@ -148,7 +148,7 @@ export default function PrincipalPhotosPage() {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/photos?orgId=${orgId}&limit=100`, {
+      const response = await fetch(`/api/photos?limit=100`, {
         cache: 'no-store',
       });
 
