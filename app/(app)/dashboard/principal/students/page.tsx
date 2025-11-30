@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { Menu, Plus, Filter, ChevronDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -43,8 +43,7 @@ function StudentsPageContent() {
     medical_notes: '', 
     allergies: '', 
     emergency_contact: '', 
-    guardian_ids: [], 
-    org_id: '' 
+    guardian_ids: []
   });
   const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
   const [isDeleteStudentModalOpen, setIsDeleteStudentModalOpen] = useState(false);
@@ -79,15 +78,8 @@ function StudentsPageContent() {
     };
   }, [isFilterDropdownOpen]);
 
-  // Load data on mount
-  useEffect(() => {
-    loadStudents();
-    loadGuardians();
-    loadClasses();
-  }, []);
-
   // Load students
-  async function loadStudents(showLoading = true) {
+  const loadStudents = useCallback(async (showLoading = true) => {
     try {
       if (showLoading) {
         setLoadingStudents(true);
@@ -114,10 +106,10 @@ function StudentsPageContent() {
         setLoadingStudents(false);
       }
     }
-  }
+  }, []);
 
   // Load guardians
-  async function loadGuardians(showLoading = true) {
+  const loadGuardians = useCallback(async (showLoading = true) => {
     try {
       if (showLoading) {
         setLoadingGuardians(true);
@@ -137,10 +129,10 @@ function StudentsPageContent() {
         setLoadingGuardians(false);
       }
     }
-  }
+  }, []);
 
   // Load classes
-  async function loadClasses(showLoading = false) {
+  const loadClasses = useCallback(async (showLoading = false) => {
     try {
       const response = await fetch(`/api/classes`, { cache: 'no-store' });
       const data = await response.json();
@@ -154,23 +146,26 @@ function StudentsPageContent() {
     } catch (error) {
       console.error('Error loading classes:', error);
     }
-  }
+  }, []);
+
+  // Load data on mount
+  useEffect(() => {
+    loadStudents();
+    loadGuardians();
+    loadClasses();
+  }, [loadStudents, loadGuardians, loadClasses]);
 
   // Student form submission
-  async function submitStudent(data: StudentFormData) {
+  const submitStudent = useCallback(async (data: StudentFormData) => {
     try {
       setStudentError(null);
       setSubmittingStudent(true);
 
-      // Remove org_id from submission - API handles it server-side
-      const { org_id, ...submissionData } = data;
-
       const res = await fetch('/api/students', {
         method: data.id ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submissionData),
+        body: JSON.stringify(data),
       });
-
 
       let json: any = {};
       try {
@@ -180,8 +175,6 @@ function StudentsPageContent() {
         }
       } catch (parseError) {
         console.error('❌ JSON parsing error:', parseError);
-        console.error('❌ Response status:', res.status);
-        console.error('❌ Response headers:', res.headers);
         throw new Error(`Server error: ${res.status} - ${res.statusText}`);
       }
       
@@ -190,7 +183,6 @@ function StudentsPageContent() {
         console.error('❌ API Error:', errorMsg);
         throw new Error(errorMsg);
       }
-
 
       // Close modal and reset form
       setIsStudentModalOpen(false);
@@ -210,8 +202,7 @@ function StudentsPageContent() {
         medical_notes: '', 
         allergies: '', 
         emergency_contact: '', 
-        guardian_ids: [], 
-        org_id: '' 
+        guardian_ids: []
       });
 
       // Refresh students list
@@ -222,28 +213,27 @@ function StudentsPageContent() {
     } finally {
       setSubmittingStudent(false);
     }
-  }
+  }, [loadStudents]);
 
   // Student create now navigates to dedicated page
-  function openCreateStudentModal() {
+  const openCreateStudentModal = useCallback(() => {
     router.push('/dashboard/add-student');
-  }
+  }, [router]);
 
-  function openEditStudentModal(student: any) {
+  const openEditStudentModal = useCallback((student: any) => {
     router.push(`/dashboard/add-student?id=${encodeURIComponent(student.id)}`);
-  }
+  }, [router]);
 
-  function openDeleteStudentModal(id: string) {
+  const openDeleteStudentModal = useCallback((id: string) => {
     setStudentToDelete(id);
     setIsDeleteStudentModalOpen(true);
-  }
+  }, []);
 
-  async function confirmDeleteStudent() {
+  const confirmDeleteStudent = useCallback(async () => {
     if (!studentToDelete) return;
     try {
       setStudentError(null);
       setDeletingStudent(true);
-     
 
       const res = await fetch(`/api/students?id=${encodeURIComponent(studentToDelete)}`, { method: 'DELETE' });
       
@@ -270,7 +260,7 @@ function StudentsPageContent() {
     } finally {
       setDeletingStudent(false);
     }
-  }
+  }, [studentToDelete, loadStudents]);
 
 
   // Filter students based on selected class and search

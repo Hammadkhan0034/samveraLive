@@ -12,7 +12,6 @@ interface StudentFormProps {
   error: string | null;
   guardians: Array<{ id: string; full_name?: string; first_name?: string; last_name?: string; email?: string | null }>;
   classes: Array<{ id: string; name: string }>;
-  orgId?: string;
   asPage?: boolean;
   translations: {
     create_student: string;
@@ -72,7 +71,6 @@ export interface StudentFormData {
   medical_notes: string;
   allergies: string;
   emergency_contact: string;
-  org_id: string;
   guardian_ids: string[];
 
   // add these so setStudentForm accepts them
@@ -94,7 +92,6 @@ export function StudentForm({
   error,
   guardians,
   classes,
-  orgId,
   asPage,
   translations: t
 }: StudentFormProps) {
@@ -118,7 +115,6 @@ export function StudentForm({
       social_security_number: '',
       medical_notes: '',
       allergies: '',
-      org_id: orgId || '',
       emergency_contact: '',
       guardian_ids: []
     };
@@ -172,18 +168,6 @@ export function StudentForm({
     }
   }, [initialData?.id]); // Only depend on the ID, not the whole object
 
-  // Update org_id when orgId changes, but preserve other form data
-  useEffect(() => {
-    if (orgId) {
-      setFormData(prev => {
-        if (prev.org_id !== orgId) {
-          return { ...prev, org_id: orgId };
-        }
-        return prev;
-      });
-    }
-  }, [orgId]);
-
   // Validate student age
   const validateStudentAge = (dob: string): boolean => {
     if (!dob) return true; // No DOB is valid
@@ -228,7 +212,6 @@ export function StudentForm({
       social_security_number: '',
       medical_notes: '',
       allergies: '',
-      org_id: orgId || '',
       emergency_contact: '',
       guardian_ids: []
     });

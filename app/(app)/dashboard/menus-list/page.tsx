@@ -2,11 +2,14 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
-import { Plus, Calendar, Utensils, Edit, Trash2, ArrowLeft } from 'lucide-react';
+import { Plus, Calendar, Utensils, Edit, Trash2, ArrowLeft, Menu } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth, useRequireAuth } from '@/lib/hooks/useAuth';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import TeacherLayout from '@/app/components/shared/TeacherLayout';
+import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
+import ProfileSwitcher from '@/app/components/ProfileSwitcher';
+import Loading from '@/app/components/shared/Loading';
 
 type Lang = 'is' | 'en';
 
@@ -26,14 +29,14 @@ interface Menu {
 
 export default function MenusListPage() {
   const { lang, t } = useLanguage();
-  const { user, loading, isSigningIn } = useRequireAuth();
+  const { user, loading, isSigningIn, session } = useRequireAuth();
   const router = useRouter();
   const pathname = usePathname();
 
   // Get org_id from user metadata
-  const userMetadata = user?.user_metadata;
-  const orgId = userMetadata?.org_id || userMetadata?.organization_id || userMetadata?.orgId;
-  const classId = userMetadata?.class_id;
+  const userMetadataForOrg = user?.user_metadata || session?.user?.user_metadata;
+  const orgId = userMetadataForOrg?.org_id || userMetadataForOrg?.organization_id || userMetadataForOrg?.orgId;
+  const classId = userMetadataForOrg?.class_id;
 
   // Initialize from cache immediately if available to avoid loading state
   const [menus, setMenus] = useState<Menu[]>(() => {
@@ -108,8 +111,9 @@ export default function MenusListPage() {
       setError(null);
       try {
       // Determine user role
-      const role = (userMetadata?.role || userMetadata?.user_role || userMetadata?.app_role || '').toString().toLowerCase();
-      const isTeacher = role === 'teacher' || (userMetadata?.roles && Array.isArray(userMetadata.roles) && userMetadata.roles.includes('teacher'));
+      const metadataForRole = user?.user_metadata || session?.user?.user_metadata;
+      const role = (metadataForRole?.role || metadataForRole?.user_role || metadataForRole?.app_role || '').toString().toLowerCase();
+      const isTeacher = role === 'teacher' || (metadataForRole?.roles && Array.isArray(metadataForRole.roles) && metadataForRole.roles.includes('teacher'));
       
       let allMenus: Menu[] = [];
       
@@ -236,7 +240,7 @@ export default function MenusListPage() {
         setLoadingMenus(false);
       }
     }
-  }, [orgId, classId, user?.id, userMetadata]);
+  }, [orgId, classId, user?.id, user?.user_metadata, session?.user?.user_metadata]);
 
   // Listen for menu updates and refresh instantly
   useEffect(() => {
@@ -390,27 +394,19 @@ export default function MenusListPage() {
 
   // Only show loading if we're actually loading and don't have a user yet
   if (loading && !user && isSigningIn) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-600 mx-auto mb-4"></div>
-            <p className="text-slate-600 dark:text-slate-400">
-              Loading menus page...
-            </p>
-          </div>
-        </div>
-      </div>
-    );
+    return <Loading fullScreen text="Loading menus page..." />;
   }
 
   if (!user) return null;
 
-  // Check if user is a teacher
+  // Check if user is a teacher or principal
+  const userMetadata = user?.user_metadata || session?.user?.user_metadata;
   const role = (userMetadata?.role || userMetadata?.user_role || userMetadata?.app_role || userMetadata?.activeRole || '').toString().toLowerCase();
   const isTeacher = role === 'teacher' || (userMetadata?.roles && Array.isArray(userMetadata.roles) && userMetadata.roles.includes('teacher'));
+  const isPrincipal = role === 'principal' || (userMetadata?.roles && Array.isArray(userMetadata.roles) && userMetadata.roles.includes('principal'));
 
-  const content = (
+  // Content for teacher layout (with gradient background and back button)
+  const teacherContent = (
       <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
         <div className="mx-auto max-w-6xl px-4 pt-6 pb-0 md:px-6">
           {/* Header with Back button */}
@@ -583,11 +579,206 @@ export default function MenusListPage() {
       </div>
   );
 
-  if (isTeacher) {
-    return <TeacherLayout hideHeader={true}>{content}</TeacherLayout>;
+  // Content for principal layout (matching students/guardians page structure)
+  function PrincipalMenusContent() {
+    const { sidebarRef } = usePrincipalPageLayout();
+
+    return (
+      <>
+        {/* Content Header */}
+        <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-3">
+            {/* Mobile menu button */}
+            <button
+              onClick={() => sidebarRef.current?.open()}
+              className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+              aria-label="Toggle sidebar"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <div>
+              <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.tile_menus || 'Menus'}</h2>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Manage daily menus</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <ProfileSwitcher />
+            <button
+              onClick={() => router.push('/dashboard/add-menu')}
+              className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
+            >
+              <Plus className="h-4 w-4" /> {t.add_menu}
+            </button>
+          </div>
+        </div>
+
+        {/* Date Filter */}
+        <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-slate-500 dark:text-slate-400" />
+              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t.filter_by_date}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => {
+                  setSelectedDate(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="flex-1 rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+              />
+              {selectedDate && (
+                <button
+                  onClick={() => {
+                    setSelectedDate('');
+                    setCurrentPage(1);
+                  }}
+                  className="rounded-lg border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 whitespace-nowrap"
+                >
+                  {t.clear_filter}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+            {error}
+          </div>
+        )}
+
+        {/* Menus Table */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          {paginatedMenus.length === 0 ? (
+            <div className="text-center py-12">
+              <Utensils className="h-12 w-12 mx-auto text-slate-400 dark:text-slate-500 mb-4" />
+              <p className="text-slate-600 dark:text-slate-400">{t.no_menus}</p>
+            </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto rounded-lg">
+                <table className="w-full text-sm border-collapse rounded-lg">
+                  <thead className="bg-black text-white dark:bg-slate-800">
+                    <tr>
+                      <th className="py-2 px-4 text-left">{t.created_date || 'Created'}</th>
+                      <th className="py-2 px-4 text-left">{t.breakfast}</th>
+                      <th className="py-2 px-4 text-left">{t.lunch}</th>
+                      <th className="py-2 px-4 text-left">{t.snack}</th>
+                      <th className="py-2 px-4 text-left">{t.notes}</th>
+                      <th className="py-2 px-4 text-center">{t.actions}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                  
+                    {paginatedMenus.map((menu) => (
+                      <tr key={menu.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                        <td className="py-3 px-4 text-black dark:text-slate-300">
+                          {menu.created_at ? new Date(menu.created_at).toLocaleString(lang === 'is' ? 'is-IS' : 'en-US', { 
+                            year: 'numeric', 
+                            month: 'short', 
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          }) : '—'}
+                        </td>
+                        <td className="py-3 px-4 text-black dark:text-slate-300">{menu.breakfast || '—'}</td>
+                        <td className="py-3 px-4 text-black dark:text-slate-300">{menu.lunch || '—'}</td>
+                        <td className="py-3 px-4 text-black dark:text-slate-300">{menu.snack || '—'}</td>
+                        <td className="py-3 px-4 text-black dark:text-slate-300">{menu.notes || '—'}</td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center justify-center gap-2">
+                            <button
+                              onClick={() => router.push(`/dashboard/add-menu?id=${menu.id}`)}
+                              className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2 py-1 text-xs hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                            >
+                              <Edit className="h-3 w-3" /> {t.edit}
+                            </button>
+                            <button
+                              onClick={() => openDeleteMenuModal(menu.id)}
+                              className="inline-flex items-center gap-1 rounded-lg border border-red-300 px-2 py-1 text-xs text-red-600 hover:bg-red-50 dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20"
+                            >
+                              <Trash2 className="h-3 w-3" /> {t.delete}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="mt-4 w-full flex justify-end gap-2">
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="inline-flex items-center rounded-lg border border-slate-400 px-3 py-1.5 text-sm disabled:opacity-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                  >
+                    {t.prev}
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`inline-flex items-center rounded-lg px-3 py-1.5 text-sm ${currentPage === page ? 'bg-white text-black border border-slate-400 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600' : 'border border-slate-400 dark:border-slate-600 dark:text-slate-200'}`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="inline-flex items-center rounded-lg border border-slate-400 px-3 py-1.5 text-sm disabled:opacity-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                  >
+                    {t.next}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Delete Menu Confirmation Modal */}
+        <DeleteConfirmationModal
+          isOpen={isDeleteMenuModalOpen}
+          onClose={() => {
+            setIsDeleteMenuModalOpen(false);
+            setMenuToDelete(null);
+            setDeleteMenuError(null);
+          }}
+          onConfirm={confirmDeleteMenu}
+          title={t.delete_menu || 'Delete Menu'}
+          message={t.delete_confirm || 'Are you sure you want to delete this menu? This action cannot be undone.'}
+          loading={deletingMenu}
+          error={deleteMenuError}
+          confirmButtonText={t.delete}
+          cancelButtonText={t.cancel}
+        />
+      </>
+    );
   }
 
-  return content;
+  // Wrap with appropriate layout based on user role
+  if (isTeacher) {
+    return <TeacherLayout hideHeader={true}>{teacherContent}</TeacherLayout>;
+  }
+
+  if (isPrincipal) {
+    return (
+      <PrincipalPageLayout>
+        <PrincipalMenusContent />
+      </PrincipalPageLayout>
+    );
+  }
+
+  // Fallback for other roles (return teacher content without layout)
+  return teacherContent;
 }
 
 // Translations removed - using centralized translations from @/lib/translations
