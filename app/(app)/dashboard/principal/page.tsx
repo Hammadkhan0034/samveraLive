@@ -10,8 +10,6 @@ import KPICardSkeleton from '@/app/components/loading-skeletons/KPICardSkeleton'
 import type { KPICard } from '@/lib/types/teacher-dashboard';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
-import { type CalendarEvent } from '@/app/components/shared/Calendar';
-import { getEvents } from '@/lib/server-actions';
 
 interface PrincipalDashboardContentProps {
   t: any;
@@ -118,11 +116,10 @@ function PrincipalDashboardContent({
 }
 
 function PrincipalDashboardPageContent() {
-  const { t, lang } = useLanguage();
+  const { t } = useLanguage();
   const router = useRouter();
   const { session } = useAuth?.() || {} as any;
   const { orgId: finalOrgId } = useCurrentUserOrgId();
-  const userMetadata = session?.user?.user_metadata;
 
   // Store user and org IDs in sessionStorage for cache lookup in menus-list
   useEffect(() => {
@@ -132,71 +129,17 @@ function PrincipalDashboardPageContent() {
     }
   }, [session?.user?.id, finalOrgId]);
 
-  // KPI data states - initialize from cache
-  const [guardiansCount, setGuardiansCount] = useState(() => {
-    if (typeof window !== 'undefined' && session?.user?.id) {
-      const cached = localStorage.getItem(`guardians_count_cache_${session.user.id}`);
-      return cached ? parseInt(cached) : 0;
-    }
-    return 0;
-  });
-  const [studentsCount, setStudentsCount] = useState(() => {
-    if (typeof window !== 'undefined' && session?.user?.id) {
-      const cached = localStorage.getItem(`students_count_cache_${session.user.id}`);
-      return cached ? parseInt(cached) : 0;
-    }
-    return 0;
-  });
-  const [staffCount, setStaffCount] = useState(() => {
-    if (typeof window !== 'undefined' && session?.user?.id) {
-      const cached = localStorage.getItem(`staff_count_cache_${session.user.id}`);
-      return cached ? parseInt(cached) : 0;
-    }
-    return 0;
-  });
-  const [classesCount, setClassesCount] = useState(() => {
-    if (typeof window !== 'undefined' && session?.user?.id) {
-      const cached = localStorage.getItem(`classes_count_cache_${session.user.id}`);
-      return cached ? parseInt(cached) : 0;
-    }
-    return 0;
-  });
-  const [menusCount, setMenusCount] = useState(() => {
-    if (typeof window !== 'undefined' && session?.user?.id) {
-      const cached = localStorage.getItem(`menus_count_cache_${session.user.id}`);
-      return cached ? parseInt(cached) : 0;
-    }
-    return 0;
-  });
-  const [storiesCount, setStoriesCount] = useState(() => {
-    if (typeof window !== 'undefined' && session?.user?.id) {
-      const cached = localStorage.getItem(`stories_count_cache_${session.user.id}`);
-      return cached ? parseInt(cached) : 0;
-    }
-    return 0;
-  });
-  const [announcementsCount, setAnnouncementsCount] = useState(() => {
-    if (typeof window !== 'undefined' && session?.user?.id) {
-      const cached = localStorage.getItem(`announcements_count_cache_${session.user.id}`);
-      return cached ? parseInt(cached) : 0;
-    }
-    return 0;
-  });
-  const [messagesCount, setMessagesCount] = useState(() => {
-    if (typeof window !== 'undefined' && session?.user?.id) {
-      const cached = localStorage.getItem(`messages_count_cache_${session.user.id}`);
-      return cached ? parseInt(cached) : 0;
-    }
-    return 0;
-  });
-  const [photosCount, setPhotosCount] = useState(() => {
-    if (typeof window !== 'undefined' && session?.user?.id) {
-      const cached = localStorage.getItem(`photos_count_cache_${session.user.id}`);
-      return cached ? parseInt(cached) : 0;
-    }
-    return 0;
-  });
-  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
+  // KPI data states - simplified initialization
+  const [studentsCount, setStudentsCount] = useState(0);
+  const [staffCount, setStaffCount] = useState(0);
+  const [classesCount, setClassesCount] = useState(0);
+  const [guardiansCount, setGuardiansCount] = useState(0);
+  const [menusCount, setMenusCount] = useState(0);
+  const [storiesCount, setStoriesCount] = useState(0);
+  const [announcementsCount, setAnnouncementsCount] = useState(0);
+  const [messagesCount, setMessagesCount] = useState(0);
+  const [photosCount, setPhotosCount] = useState(0);
+  const [calendarEventsCount, setCalendarEventsCount] = useState(0);
 
   // Loading and error states
   const [isLoading, setIsLoading] = useState(true);
@@ -204,220 +147,73 @@ function PrincipalDashboardPageContent() {
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // Load cached data immediately on mount
-  useEffect(() => {
-    if (typeof window !== 'undefined' && session?.user?.id) {
-      const userId = session.user.id;
-      const cachedGuardiansCount = localStorage.getItem(`guardians_count_cache_${userId}`);
-      const cachedStudentsCount = localStorage.getItem(`students_count_cache_${userId}`);
-      const cachedStaffCount = localStorage.getItem(`staff_count_cache_${userId}`);
-      const cachedClassesCount = localStorage.getItem(`classes_count_cache_${userId}`);
-      const cachedMenusCount = localStorage.getItem(`menus_count_cache_${userId}`);
-      const cachedStoriesCount = localStorage.getItem(`stories_count_cache_${userId}`);
-      const cachedAnnouncementsCount = localStorage.getItem(`announcements_count_cache_${userId}`);
-      const cachedMessagesCount = localStorage.getItem(`messages_count_cache_${userId}`);
-      const cachedPhotosCount = localStorage.getItem(`photos_count_cache_${userId}`);
-      const cachedCalendarEvents = localStorage.getItem(`calendar_events_cache_${userId}`);
-
-      if (cachedGuardiansCount) setGuardiansCount(parseInt(cachedGuardiansCount));
-      if (cachedStudentsCount) setStudentsCount(parseInt(cachedStudentsCount));
-      if (cachedStaffCount) setStaffCount(parseInt(cachedStaffCount));
-      if (cachedClassesCount) setClassesCount(parseInt(cachedClassesCount));
-      if (cachedMenusCount) setMenusCount(parseInt(cachedMenusCount));
-      if (cachedStoriesCount) setStoriesCount(parseInt(cachedStoriesCount));
-      if (cachedAnnouncementsCount) setAnnouncementsCount(parseInt(cachedAnnouncementsCount));
-      if (cachedMessagesCount) setMessagesCount(parseInt(cachedMessagesCount));
-      if (cachedPhotosCount) setPhotosCount(parseInt(cachedPhotosCount));
-      if (cachedCalendarEvents) setCalendarEvents(JSON.parse(cachedCalendarEvents));
-    }
-  }, [session?.user?.id]);
-
-  // Load functions
-  const loadMenusForKPI = useCallback(async () => {
-    const orgId = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
-    if (!orgId) return;
+  // Single consolidated function to fetch all metrics
+  const fetchMetrics = useCallback(async (signal: AbortSignal) => {
     try {
-      const res = await fetch(`/api/menus?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store', credentials: 'include' });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
-      const menusList = json.menus || [];
-      setMenusCount(menusList.length);
-      if (typeof window !== 'undefined' && session?.user?.id) {
-        localStorage.setItem(`menus_count_cache_${session.user.id}`, menusList.length.toString());
-      }
-    } catch (e: any) {
-      console.error('❌ Error loading menus count:', e.message);
-    }
-  }, [finalOrgId, session?.user?.id]);
+      setIsLoading(true);
+      setError(null);
 
-  const loadStoriesForKPI = useCallback(async () => {
-    const orgId = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
-    if (!orgId) return;
-    try {
-      const res = await fetch(`/api/stories?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store', credentials: 'include' });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
-      const list = json.stories || [];
-      setStoriesCount(list.length);
-      if (typeof window !== 'undefined' && session?.user?.id) {
-        localStorage.setItem(`stories_count_cache_${session.user.id}`, String(list.length));
-      }
-    } catch (e: any) {
-      console.error('❌ Error loading stories count:', e.message);
-    }
-  }, [finalOrgId, session?.user?.id]);
+      // API gets all data from authenticated session, no query params needed
+      const res = await fetch(`/api/principal-dashboard-metrics?t=${Date.now()}`, {
+        cache: 'no-store',
+        signal,
+        credentials: 'include',
+      });
 
-  const loadAnnouncementsForKPI = useCallback(async () => {
-    const orgId = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
-    if (!orgId || !session?.user?.id) return;
-    try {
-      const params = new URLSearchParams();
-      params.set('userId', session.user.id);
-      params.set('userRole', (userMetadata?.role || userMetadata?.activeRole || 'principal') as string);
-      params.set('limit', '100');
-      const res = await fetch(`/api/announcements?${params.toString()}&t=${Date.now()}`, { cache: 'no-store', credentials: 'include' });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
-      const list = json.announcements || [];
-      setAnnouncementsCount(list.length);
-      if (typeof window !== 'undefined' && session?.user?.id) {
-        localStorage.setItem(`announcements_count_cache_${session.user.id}`, String(list.length));
+      if (signal.aborted) {
+        return;
       }
-    } catch (e: any) {
-      console.error('❌ Error loading announcements count:', e.message);
-    }
-  }, [finalOrgId, session?.user?.id, userMetadata]);
 
-  const loadMessagesForKPI = useCallback(async () => {
-    const orgId = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
-    if (!orgId || !session?.user?.id) return;
-    try {
-      const res = await fetch(`/api/messages?userId=${session.user.id}&t=${Date.now()}`, { cache: 'no-store', credentials: 'include' });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
-      const threads = json.threads || [];
-      const unreadCount = threads.filter((t: any) => t.unread).length;
-      setMessagesCount(unreadCount);
-      if (typeof window !== 'undefined' && session?.user?.id) {
-        localStorage.setItem(`messages_count_cache_${session.user.id}`, String(unreadCount));
-      }
-    } catch (e: any) {
-      console.error('❌ Error loading messages count:', e.message);
-    }
-  }, [finalOrgId, session?.user?.id]);
-
-  const loadPhotosForKPI = useCallback(async () => {
-    const orgId = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
-    if (!orgId) return;
-    try {
-      const res = await fetch(`/api/photos?orgId=${orgId}&limit=100&t=${Date.now()}`, { cache: 'no-store', credentials: 'include' });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
-      const photosList = json.photos || [];
-      setPhotosCount(photosList.length);
-      if (typeof window !== 'undefined' && session?.user?.id) {
-        localStorage.setItem(`photos_count_cache_${session.user.id}`, String(photosList.length));
-      }
-    } catch (e: any) {
-      console.error('❌ Error loading photos count:', e.message);
-    }
-  }, [finalOrgId, session?.user?.id]);
-
-  const loadClassesForKPI = useCallback(async () => {
-    const orgId = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
-    if (!orgId) return;
-    try {
-      const res = await fetch(`/api/classes?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store', credentials: 'include' });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
-      const classesList = json.classes || [];
-      setClassesCount(classesList.length);
-      if (typeof window !== 'undefined' && session?.user?.id) {
-        localStorage.setItem(`classes_count_cache_${session.user.id}`, classesList.length.toString());
-      }
-    } catch (e: any) {
-      console.error('❌ Error loading classes count:', e.message);
-    }
-  }, [finalOrgId, session?.user?.id]);
-
-  const loadStaffForKPI = useCallback(async () => {
-    const orgId = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
-    if (!orgId) return;
-    try {
-      const res = await fetch(`/api/staff-management?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store', credentials: 'include' });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
-      const staffList = json.staff || [];
-      setStaffCount(staffList.length);
-      if (typeof window !== 'undefined' && session?.user?.id) {
-        localStorage.setItem(`staff_count_cache_${session.user.id}`, staffList.length.toString());
-      }
-    } catch (e: any) {
-      console.error('❌ Error loading staff count:', e.message);
-    }
-  }, [finalOrgId, session?.user?.id]);
-
-  const loadGuardiansForKPI = useCallback(async () => {
-    const orgId = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
-    if (!orgId) return;
-    try {
-      const res = await fetch(`/api/guardians?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store', credentials: 'include' });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
-      const guardiansList = json.guardians || [];
-      setGuardiansCount(guardiansList.length);
-      if (typeof window !== 'undefined' && session?.user?.id) {
-        localStorage.setItem(`guardians_count_cache_${session.user.id}`, guardiansList.length.toString());
-      }
-    } catch (e: any) {
-      console.error('❌ Error loading guardians count:', e.message);
-    }
-  }, [finalOrgId, session?.user?.id]);
-
-  const loadStudentsForKPI = useCallback(async () => {
-    const orgId = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
-    if (!orgId) return;
-    try {
-      const res = await fetch(`/api/students?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store', credentials: 'include' });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
-      const studentsList = json.students || [];
-      setStudentsCount(studentsList.length);
-      if (typeof window !== 'undefined' && session?.user?.id) {
-        localStorage.setItem(`students_count_cache_${session.user.id}`, studentsList.length.toString());
-      }
-    } catch (e: any) {
-      console.error('❌ Error loading students count:', e.message);
-    }
-  }, [finalOrgId, session?.user?.id]);
-
-  // Load calendar events for KPI count
-  useEffect(() => {
-    const loadCalendarEventsForKPI = async () => {
-      const orgId = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
-      if (!orgId) return;
-      try {
-        const events = await getEvents(orgId, {
-          userRole: 'principal',
-          userId: session?.user?.id,
-        });
-        if (Array.isArray(events)) {
-          setCalendarEvents(events as CalendarEvent[]);
-          if (typeof window !== 'undefined' && session?.user?.id) {
-            localStorage.setItem(`calendar_events_cache_${session.user.id}`, JSON.stringify(events));
+      if (!res.ok) {
+        // Try to parse as JSON first, fallback to text
+        let errorMessage = `HTTP ${res.status}`;
+        try {
+          const errorData = await res.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          // If JSON parsing fails, try text
+          try {
+            const errorText = await res.text();
+            errorMessage = errorText || errorMessage;
+          } catch {
+            // Use default error message
           }
-        } else {
-          setCalendarEvents([]);
         }
-      } catch (e: any) {
-        console.error('❌ Error loading calendar events:', e?.message || e?.toString() || 'Unknown error');
-        setCalendarEvents([]);
+        throw new Error(errorMessage);
       }
-    };
-    if (finalOrgId && session?.user?.id) {
-      loadCalendarEventsForKPI();
+
+      const data = await res.json();
+
+      if (signal.aborted) {
+        return;
+      }
+
+      // Update all state variables from the response
+      setStudentsCount(data.studentsCount || 0);
+      setStaffCount(data.staffCount || 0);
+      setClassesCount(data.classesCount || 0);
+      setGuardiansCount(data.guardiansCount || 0);
+      setMenusCount(data.menusCount || 0);
+      setStoriesCount(data.storiesCount || 0);
+      setAnnouncementsCount(data.announcementsCount || 0);
+      setMessagesCount(data.messagesCount || 0);
+      setPhotosCount(data.photosCount || 0);
+      setCalendarEventsCount(data.calendarEventsCount || 0);
+    } catch (err: unknown) {
+      if (signal.aborted) {
+        return;
+      }
+
+      const message =
+        err instanceof Error ? err.message : 'Failed to load dashboard metrics. Please try again.';
+      setError(message);
+      console.error('Error loading metrics:', err);
+    } finally {
+      if (!signal.aborted) {
+        setIsLoading(false);
+      }
     }
-  }, [finalOrgId, session?.user?.id]);
+  }, []);
 
   // Main effect: Load metrics on mount
   useEffect(() => {
@@ -426,38 +222,12 @@ function PrincipalDashboardPageContent() {
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
-    const fetchAllMetrics = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        await Promise.all([
-          loadClassesForKPI(),
-          loadStaffForKPI(),
-          loadGuardiansForKPI(),
-          loadStudentsForKPI(),
-          loadMenusForKPI(),
-          loadStoriesForKPI(),
-          loadAnnouncementsForKPI(),
-          loadMessagesForKPI(),
-          loadPhotosForKPI(),
-        ]);
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : 'Failed to load dashboard metrics. Please try again.';
-        setError(message);
-        console.error('Error loading metrics:', err);
-      } finally {
-        if (!abortController.signal.aborted) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    void fetchAllMetrics();
+    void fetchMetrics(abortController.signal);
 
     return () => {
       abortController.abort();
     };
-  }, [session?.user?.id, finalOrgId, loadClassesForKPI, loadStaffForKPI, loadGuardiansForKPI, loadStudentsForKPI, loadMenusForKPI, loadStoriesForKPI, loadAnnouncementsForKPI, loadMessagesForKPI, loadPhotosForKPI]);
+  }, [session?.user?.id, finalOrgId, fetchMetrics]);
 
   // Retry function
   const handleRetry = useCallback(() => {
@@ -467,24 +237,8 @@ function PrincipalDashboardPageContent() {
     }
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
-    // Trigger reload by updating a dependency
-    setIsLoading(true);
-    setTimeout(() => {
-      if (session?.user?.id && finalOrgId) {
-        Promise.all([
-          loadClassesForKPI(),
-          loadStaffForKPI(),
-          loadGuardiansForKPI(),
-          loadStudentsForKPI(),
-          loadMenusForKPI(),
-          loadStoriesForKPI(),
-          loadAnnouncementsForKPI(),
-          loadMessagesForKPI(),
-          loadPhotosForKPI(),
-        ]).finally(() => setIsLoading(false));
-      }
-    }, 100);
-  }, [session?.user?.id, finalOrgId, loadClassesForKPI, loadStaffForKPI, loadGuardiansForKPI, loadStudentsForKPI, loadMenusForKPI, loadStoriesForKPI, loadAnnouncementsForKPI, loadMessagesForKPI, loadPhotosForKPI]);
+    void fetchMetrics(abortController.signal);
+  }, [fetchMetrics]);
 
   // Stable icon references
   const icons = useMemo(() => ({
@@ -497,17 +251,6 @@ function PrincipalDashboardPageContent() {
     MessageSquare,
     Camera,
   }), []);
-
-  // Calculate current month calendar events count
-  const currentMonthEventsCount = useMemo(() => {
-    const today = new Date();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
-    return calendarEvents.filter(event => {
-      const eventDate = new Date(event.start_at);
-      return eventDate.getMonth() === currentMonth && eventDate.getFullYear() === currentYear;
-    }).length;
-  }, [calendarEvents]);
 
   // Memoize KPIs array with stable references
   const kpis = useMemo<KPICard[]>(() => [
@@ -567,7 +310,7 @@ function PrincipalDashboardPageContent() {
     },
     {
       label: t.kpi_link_student || 'Link Student',
-      value: '',
+      value: 0,
       icon: icons.Users,
       onClick: () => router.push('/dashboard/link-student'),
     },
@@ -578,7 +321,7 @@ function PrincipalDashboardPageContent() {
       <PrincipalDashboardContent 
         t={t} 
         kpis={kpis} 
-        calendarEventsCount={currentMonthEventsCount}
+        calendarEventsCount={calendarEventsCount}
         isLoading={isLoading}
         error={error}
         onRetry={handleRetry}
