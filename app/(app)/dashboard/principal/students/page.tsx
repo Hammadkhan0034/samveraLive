@@ -4,23 +4,16 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { Menu, Plus, Filter, ChevronDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/hooks/useAuth';
-import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 import { StudentForm, type StudentFormData } from '@/app/components/shared/StudentForm';
 import { StudentTable } from '@/app/components/shared/StudentTable';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 
-type Lang = 'is' | 'en';
-
 function StudentsPageContent() {
   const { t } = useLanguage();
   const router = useRouter();
   const { sidebarRef } = usePrincipalPageLayout();
-
-  // Use universal hook to get org_id (checks metadata first, then API, handles logout if missing)
-  const { orgId: finalOrgId } = useCurrentUserOrgId();
 
   // Student states - initialize with cached data
   const [students, setStudents] = useState<Array<{ id: string; first_name: string; last_name: string | null; dob: string | null; gender: string; class_id: string | null; phone: string | null; address: string | null; registration_number: string | null; start_date: string | null; child_value: string | null; language: string | null; social_security_number: string | null; created_at: string; classes?: any; guardians?: Array<{ id: string; relation: string; users?: { id: string; full_name: string; email: string } }> }>>(() => {
@@ -71,8 +64,6 @@ function StudentsPageContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
-  // Language handled by global context
-
   // Close filter dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -88,27 +79,15 @@ function StudentsPageContent() {
     };
   }, [isFilterDropdownOpen]);
 
-  // Load data on mount - start immediately
+  // Load data on mount
   useEffect(() => {
     loadStudents();
     loadGuardians();
     loadClasses();
   }, []);
 
-  // Also load when user and orgId are available
-  useEffect(() => {
-    if (user?.id && finalOrgId) {
-      loadStudents(false);
-      loadGuardians(false);
-      loadClasses(false);
-    }
-  }, [user?.id, finalOrgId]);
-
   // Load students
   async function loadStudents(showLoading = true) {
-    const orgId = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
-    if (!orgId) return;
-
     try {
       if (showLoading) {
         setLoadingStudents(true);
@@ -139,9 +118,6 @@ function StudentsPageContent() {
 
   // Load guardians
   async function loadGuardians(showLoading = true) {
-    const orgId = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
-    if (!orgId) return;
-
     try {
       if (showLoading) {
         setLoadingGuardians(true);
@@ -165,9 +141,6 @@ function StudentsPageContent() {
 
   // Load classes
   async function loadClasses(showLoading = false) {
-    const orgId = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
-    if (!orgId) return;
-
     try {
       const response = await fetch(`/api/classes`, { cache: 'no-store' });
       const data = await response.json();
@@ -189,10 +162,13 @@ function StudentsPageContent() {
       setStudentError(null);
       setSubmittingStudent(true);
 
+      // Remove org_id from submission - API handles it server-side
+      const { org_id, ...submissionData } = data;
+
       const res = await fetch('/api/students', {
         method: data.id ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(submissionData),
       });
 
 
@@ -235,7 +211,7 @@ function StudentsPageContent() {
         allergies: '', 
         emergency_contact: '', 
         guardian_ids: [], 
-        org_id: finalOrgId || '' 
+        org_id: '' 
       });
 
       // Refresh students list
@@ -476,7 +452,6 @@ function StudentsPageContent() {
         error={studentError}
         guardians={guardians}
         classes={classes}
-        orgId={finalOrgId || ''}
         translations={{
           create_student: t.create_student,
           edit_student: t.edit_student,
@@ -550,7 +525,3 @@ export default function StudentsPage() {
     </PrincipalPageLayout>
   );
 }
-
-// Translations removed - using centralized translations from @/lib/translations
-
-

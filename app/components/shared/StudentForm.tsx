@@ -12,7 +12,7 @@ interface StudentFormProps {
   error: string | null;
   guardians: Array<{ id: string; full_name?: string; first_name?: string; last_name?: string; email?: string | null }>;
   classes: Array<{ id: string; name: string }>;
-  orgId: string;
+  orgId?: string;
   asPage?: boolean;
   translations: {
     create_student: string;
@@ -118,7 +118,7 @@ export function StudentForm({
       social_security_number: '',
       medical_notes: '',
       allergies: '',
-      org_id: orgId,
+      org_id: orgId || '',
       emergency_contact: '',
       guardian_ids: []
     };
@@ -174,12 +174,14 @@ export function StudentForm({
 
   // Update org_id when orgId changes, but preserve other form data
   useEffect(() => {
-    setFormData(prev => {
-      if (prev.org_id !== orgId) {
-        return { ...prev, org_id: orgId };
-      }
-      return prev;
-    });
+    if (orgId) {
+      setFormData(prev => {
+        if (prev.org_id !== orgId) {
+          return { ...prev, org_id: orgId };
+        }
+        return prev;
+      });
+    }
   }, [orgId]);
 
   // Validate student age
@@ -226,7 +228,7 @@ export function StudentForm({
       social_security_number: '',
       medical_notes: '',
       allergies: '',
-      org_id: orgId,
+      org_id: orgId || '',
       emergency_contact: '',
       guardian_ids: []
     });
