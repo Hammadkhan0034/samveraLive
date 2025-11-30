@@ -1,31 +1,24 @@
 'use client';
 
-import React, { useState, useEffect, useRef, Suspense, useMemo } from 'react';
+import React, { useState, useEffect, useRef, Suspense, useMemo, useCallback } from 'react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 import { Menu, Plus, X, Eye, CircleCheck as CheckCircle2, Edit, UserPlus, Users, Search, AlertTriangle, Check, Trash2 } from 'lucide-react';
-import TeacherSelection from '@/app/components/TeacherSelection';
 import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import Loading from '@/app/components/shared/Loading';
-
-type Lang = 'is' | 'en';
 
 function clsx(...xs: Array<string | false | undefined>) {
   return xs.filter(Boolean).join(' ');
 }
 
 function ClassesPageContent() {
-  const { t, lang } = useLanguage();
+  const { t } = useLanguage();
   const { session } = useAuth?.() || {} as any;
   const router = useRouter();
   const searchParams = useSearchParams();
   const { sidebarRef } = usePrincipalPageLayout();
-
-  // Use universal hook to get org_id (checks metadata first, then API, handles logout if missing)
-  const { orgId: finalOrgId } = useCurrentUserOrgId();
 
   // Class management states
   const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
@@ -74,15 +67,16 @@ function ClassesPageContent() {
     }
   }, [session?.user?.id]);
 
-  // Load classes and student counts when orgId is available
+  // Load classes and student counts when session is available
   useEffect(() => {
-    if (session?.user?.id && finalOrgId) {
+    if (session?.user?.id) {
       Promise.allSettled([
         loadClasses(false),
         loadStudentsForCounts(false)
       ]);
     }
-  }, [session?.user?.id, finalOrgId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.id]);
 
   // Listen for student data changes triggered from other pages
   useEffect(() => {
@@ -109,6 +103,7 @@ function ClassesPageContent() {
       window.removeEventListener('storage', onStorage);
       document.removeEventListener('visibilitychange', onVisibility);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user?.id]);
 
   // Listen for classes data refresh from create page
@@ -142,6 +137,7 @@ function ClassesPageContent() {
       window.removeEventListener('storage', onStorage);
       document.removeEventListener('visibilitychange', onVisibility);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session?.user?.id]);
 
   // Check for success query param and show success message
@@ -164,8 +160,6 @@ function ClassesPageContent() {
 
   // Load classes data
   async function loadClasses(showLoading = true) {
-    if (!finalOrgId) return;
-
     try {
       if (showLoading) setLoadingClass(true);
       const response = await fetch(`/api/classes`, { cache: 'no-store' });
@@ -198,9 +192,6 @@ function ClassesPageContent() {
 
   // Load student counts per class
   async function loadStudentsForCounts(showLoading = true) {
-    const orgId = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
-    if (!orgId) return;
-
     try {
       const res = await fetch(`/api/students?t=${Date.now()}`, { cache: 'no-store' });
       const json = await res.json();
@@ -227,28 +218,29 @@ function ClassesPageContent() {
     }
   }
 
-  function openClassDetailsModal(cls: any) {
+  const openClassDetailsModal = useCallback((cls: any) => {
     router.push(`/dashboard/principal/classes/${cls.id}`);
-  }
+  }, [router]);
 
-  function openDeleteClassModal(cls: any) {
+  const openDeleteClassModal = useCallback((cls: any) => {
     setClassToDelete(cls);
     setShowDeleteClassModal(true);
-  }
+  }, []);
 
-  function openEditClass(cls: any) {
+  const openEditClass = useCallback((cls: any) => {
     router.push(`/dashboard/principal/classes/create?id=${encodeURIComponent(cls.id)}`);
-  }
+  }, [router]);
 
-  function openAddStudentModal(cls: any) {
+  const openAddStudentModal = useCallback((cls: any) => {
     setClassForAssignment(cls);
     setStudentSearchQuery('');
     setSelectedStudentIds(new Set());
     setIsAddStudentModalOpen(true);
     loadAvailableStudents(cls.id);
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  function openAssignTeacherModal(cls: any) {
+  const openAssignTeacherModal = useCallback((cls: any) => {
     setClassForAssignment(cls);
     setTeacherSearchQuery('');
     setIsAssignTeacherModalOpen(true);
@@ -267,10 +259,10 @@ function ClassesPageContent() {
     
     // Then load all available teachers
     loadAvailableTeachers(cls.id);
-  }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function loadAvailableStudents(classId: string) {
-    if (!finalOrgId) return;
     try {
       setLoadingStudents(true);
       const response = await fetch(`/api/students?t=${Date.now()}`, { cache: 'no-store' });
@@ -305,7 +297,6 @@ function ClassesPageContent() {
   }
 
   async function loadAvailableTeachers(classId: string) {
-    if (!finalOrgId) return;
     try {
       setLoadingTeachers(true);
       const response = await fetch(`/api/staff-management`, { cache: 'no-store' });
@@ -340,7 +331,7 @@ function ClassesPageContent() {
     }
   }
 
-  function toggleStudentSelection(studentId: string) {
+  const toggleStudentSelection = useCallback((studentId: string) => {
     setSelectedStudentIds(prev => {
       const next = new Set(prev);
       if (next.has(studentId)) {
@@ -350,10 +341,10 @@ function ClassesPageContent() {
       }
       return next;
     });
-  }
+  }, []);
 
   async function assignSelectedStudents() {
-    if (!classForAssignment || !finalOrgId || selectedStudentIds.size === 0) return;
+    if (!classForAssignment || selectedStudentIds.size === 0) return;
     
     // Check if any students are already assigned to another class
     const studentsToReassign = Array.from(selectedStudentIds)
@@ -379,7 +370,7 @@ function ClassesPageContent() {
   }
 
   async function performMultipleStudentAssignment(studentIds: string[]) {
-    if (!classForAssignment || !finalOrgId || studentIds.length === 0) return;
+    if (!classForAssignment || studentIds.length === 0) return;
     
     try {
       setAssigningStudent(true);
@@ -417,7 +408,6 @@ function ClassesPageContent() {
             dob: student.users?.dob || student.dob || '',
             gender: student.users?.gender || student.gender || 'unknown',
             class_id: classForAssignment.id,
-            org_id: finalOrgId,
             phone: student.phone || '',
             address: student.address || '',
             registration_time: student.registration_time || '',
@@ -465,7 +455,7 @@ function ClassesPageContent() {
   }
 
   async function performStudentAssignment(studentId: string) {
-    if (!classForAssignment || !finalOrgId) return;
+    if (!classForAssignment) return;
     try {
       setAssigningStudent(true);
       setAssignmentError(null);
@@ -490,7 +480,6 @@ function ClassesPageContent() {
             dob: student.users?.dob || student.dob || '',
             gender: student.users?.gender || student.gender || 'unknown',
             class_id: classForAssignment.id,
-            org_id: finalOrgId,
           phone: student.phone || '',
           address: student.address || '',
           registration_time: student.registration_time || '',
@@ -534,7 +523,7 @@ function ClassesPageContent() {
     }
   }
 
-  function toggleTeacherSelection(teacherId: string) {
+  const toggleTeacherSelection = useCallback((teacherId: string) => {
     setSelectedTeacherIds(prev => {
       const next = new Set(prev);
       if (next.has(teacherId)) {
@@ -545,10 +534,10 @@ function ClassesPageContent() {
       selectedTeacherIdsRef.current = Array.from(next);
       return next;
     });
-  }
+  }, []);
 
   async function saveTeacherAssignments() {
-    if (!classForAssignment || !finalOrgId) return;
+    if (!classForAssignment) return;
     
     const teacherIds = Array.from(selectedTeacherIds);
     
@@ -651,7 +640,7 @@ function ClassesPageContent() {
 
 
   async function handleDeleteClass() {
-    if (!classToDelete || !finalOrgId) return;
+    if (!classToDelete) return;
     
     try {
       setDeletingClass(true);
@@ -686,6 +675,19 @@ function ClassesPageContent() {
       setDeletingClass(false);
     }
   }
+
+  // Memoize filtered students and teachers for performance
+  const filteredStudents = useMemo(() => 
+    availableStudents.filter(s => 
+      s.full_name.toLowerCase().includes(studentSearchQuery.toLowerCase()) ||
+      (s.email && s.email.toLowerCase().includes(studentSearchQuery.toLowerCase()))
+    ), [availableStudents, studentSearchQuery]);
+
+  const filteredTeachers = useMemo(() => 
+    availableTeachers.filter(t => 
+      t.full_name.toLowerCase().includes(teacherSearchQuery.toLowerCase()) ||
+      (t.email && t.email.toLowerCase().includes(teacherSearchQuery.toLowerCase()))
+    ), [availableTeachers, teacherSearchQuery]);
 
   return (
     <>
@@ -810,7 +812,7 @@ function ClassesPageContent() {
 
                 {classes.length === 0 && (
                   <tr>
-                    <td className="text-left py-2 px-4 text-sm text-slate-600 dark:text-slate-400 text-center py-4" colSpan={5}>
+                    <td className="text-center py-4 px-4 text-sm text-slate-600 dark:text-slate-400" colSpan={5}>
                       {t.empty}
                     </td>
                   </tr>
@@ -896,12 +898,7 @@ function ClassesPageContent() {
                   <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-600 mx-auto mb-4"></div>
                   <p className="text-slate-600 dark:text-slate-400">{t.loading_students}</p>
                 </div>
-              ) : (() => {
-                const filteredStudents = availableStudents.filter(s => 
-                  s.full_name.toLowerCase().includes(studentSearchQuery.toLowerCase()) ||
-                  (s.email && s.email.toLowerCase().includes(studentSearchQuery.toLowerCase()))
-                );
-                return filteredStudents.length === 0 ? (
+              ) : filteredStudents.length === 0 ? (
                   <div className="py-8 text-center text-slate-500 dark:text-slate-400">
                     {t.no_students_available}
                   </div>
@@ -979,8 +976,7 @@ function ClassesPageContent() {
                       </div>
                     )}
                   </>
-                );
-              })()}
+                )}
 
               </div>
 
@@ -1004,7 +1000,7 @@ function ClassesPageContent() {
         )}
 
         {/* Assign Teacher Modal */}
-        {isAssignTeacherModalOpen && classForAssignment && finalOrgId && (
+        {isAssignTeacherModalOpen && classForAssignment && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="w-full max-w-2xl rounded-2xl bg-white shadow-xl dark:bg-slate-800 max-h-[90vh] flex flex-col">
               <div className="p-6 border-b border-slate-200 dark:border-slate-700">
@@ -1055,12 +1051,7 @@ function ClassesPageContent() {
                     <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-600 mx-auto mb-4"></div>
                     <p className="text-slate-600 dark:text-slate-400">{t.loading_teachers}</p>
                   </div>
-                ) : (() => {
-                  const filteredTeachers = availableTeachers.filter(t => 
-                    t.full_name.toLowerCase().includes(teacherSearchQuery.toLowerCase()) ||
-                    (t.email && t.email.toLowerCase().includes(teacherSearchQuery.toLowerCase()))
-                  );
-                  return filteredTeachers.length === 0 ? (
+                ) : filteredTeachers.length === 0 ? (
                     <div className="py-8 text-center text-slate-500 dark:text-slate-400">
                       {t.no_teachers_available}
                     </div>
@@ -1113,8 +1104,7 @@ function ClassesPageContent() {
                         </div>
                       )}
                     </>
-                  );
-                })()}
+                  )}
               </div>
 
               <div className="p-6 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-3">
