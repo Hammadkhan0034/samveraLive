@@ -110,7 +110,6 @@ function PrincipalDashboardContent({
 
 function PrincipalDashboardPageContent() {
   const { t } = useLanguage();
-  const router = useRouter();
   const { session } = useAuth?.() || {} as any;
   const { orgId: finalOrgId } = useCurrentUserOrgId();
 
