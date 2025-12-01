@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRouter, useParams } from 'next/navigation';
-import { useAuth } from '@/lib/hooks/useAuth';
 import { Menu, Trash2, AlertTriangle, UserPlus, Users } from 'lucide-react';
 import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
@@ -13,55 +12,51 @@ import type { TranslationStrings } from '@/app/components/principal/classes/type
 
 type Lang = 'is' | 'en';
 
+type ClassDetails = {
+  id: string;
+  name: string;
+  code?: string | null;
+  assigned_teachers?: any[];
+};
+
+function readCachedJson<T>(key: string): T | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const cached = sessionStorage.getItem(key);
+    return cached ? (JSON.parse(cached) as T) : null;
+  } catch (e) {
+    console.error(`Error parsing cached data for key ${key}:`, e);
+    return null;
+  }
+}
+
+function writeCachedJson(key: string, value: unknown) {
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.setItem(key, JSON.stringify(value));
+  } catch (e) {
+    console.error(`Error writing cached data for key ${key}:`, e);
+  }
+}
+
 function ClassDetailsPageContent() {
   const { t } = useLanguage();
-  const { session } = useAuth?.() || {} as any;
   const router = useRouter();
   const params = useParams();
-  const classId = params?.id as string;
+  const classId = params?.id as string | undefined;
   const { sidebarRef } = usePrincipalPageLayout();
 
-  const [classData, setClassData] = useState<any>(() => {
-    if (typeof window !== 'undefined' && classId) {
-      try {
-        const cached = sessionStorage.getItem(`class_details_${classId}`);
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          return parsed;
-        }
-      } catch (e) {
-        console.error('Error parsing cached class data:', e);
-      }
-    }
-    return null;
-  });
+  const [classData, setClassData] = useState<ClassDetails | null>(() =>
+    classId ? readCachedJson<ClassDetails>(`class_details_${classId}`) : null,
+  );
   const [assignedTeachers, setAssignedTeachers] = useState<any[]>(() => {
-    if (typeof window !== 'undefined' && classId) {
-      try {
-        const cached = sessionStorage.getItem(`class_details_${classId}`);
-        if (cached) {
-          const parsed = JSON.parse(cached);
-          return parsed.assigned_teachers || [];
-        }
-      } catch (e) {
-        console.error('Error parsing cached teachers:', e);
-      }
-    }
-    return [];
+    if (!classId) return [];
+    const cached = readCachedJson<{ assigned_teachers?: any[] }>(`class_details_${classId}`);
+    return cached?.assigned_teachers || [];
   });
-  const [assignedStudents, setAssignedStudents] = useState<any[]>(() => {
-    if (typeof window !== 'undefined' && classId) {
-      try {
-        const cached = sessionStorage.getItem(`class_students_${classId}`);
-        if (cached) {
-          return JSON.parse(cached);
-        }
-      } catch (e) {
-        console.error('Error parsing cached students:', e);
-      }
-    }
-    return [];
-  });
+  const [assignedStudents, setAssignedStudents] = useState<any[]>(() =>
+    classId ? readCachedJson<any[]>(`class_students_${classId}`) || [] : [],
+  );
   const [error, setError] = useState<string | null>(null);
   const [showDeleteTeacherModal, setShowDeleteTeacherModal] = useState(false);
   const [showDeleteStudentModal, setShowDeleteStudentModal] = useState(false);
@@ -71,69 +66,48 @@ function ClassDetailsPageContent() {
   const [deletingStudent, setDeletingStudent] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  // Get org_id
-  const userMetadata = session?.user?.user_metadata || user?.user_metadata;
-  const orgId = userMetadata?.org_id || userMetadata?.organization_id || userMetadata?.orgId;
-  const [dbOrgId, setDbOrgId] = useState<string | null>(null);
-  const finalOrgId = dbOrgId || orgId;
+  const loadClassDetails = useCallback(async () => {
+    if (!classId) return;
 
-  useEffect(() => {
-    if (session?.user?.id && !orgId) {
-      fetch(`/api/users/${session.user.id}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.user?.org_id) {
-            setDbOrgId(data.user.org_id);
-          }
-        })
-        .catch(console.error);
-    }
-  }, [session?.user?.id, orgId]);
-
-  useEffect(() => {
-    if (classId && finalOrgId) {
-      loadClassDetails();
-    }
-  }, [classId, finalOrgId]);
-
-  async function loadClassDetails() {
-    if (!classId || !finalOrgId) return;
-    
     try {
       setError(null);
 
       // Load class data and students in parallel for faster loading
       const [classResponse, studentsResponse] = await Promise.all([
         fetch(`/api/classes?t=${Date.now()}`, { cache: 'no-store' }),
-        fetch(`/api/students?t=${Date.now()}`, { cache: 'no-store' })
+        fetch(`/api/students?t=${Date.now()}`, { cache: 'no-store' }),
       ]);
 
-      const classData = await classResponse.json();
-      const classItem = classData.classes?.find((c: any) => c.id === classId);
-      
+      const classJson = await classResponse.json();
+      const classItem = classJson.classes?.find((c: any) => c.id === classId);
+
       if (!classItem) {
         setError('Class not found');
         return;
       }
 
-      const studentsData = await studentsResponse.json();
-      const classStudents = studentsData.students?.filter((s: any) => s.class_id === classId) || [];
+      const studentsJson = await studentsResponse.json();
+      const classStudents = studentsJson.students?.filter((s: any) => s.class_id === classId) || [];
 
       // Update all state at once for immediate rendering
       setClassData(classItem);
       setAssignedTeachers(classItem.assigned_teachers || []);
       setAssignedStudents(classStudents);
-      
+
       // Cache data for instant display on refresh
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem(`class_details_${classId}`, JSON.stringify(classItem));
-        sessionStorage.setItem(`class_students_${classId}`, JSON.stringify(classStudents));
-      }
+      writeCachedJson(`class_details_${classId}`, classItem);
+      writeCachedJson(`class_students_${classId}`, classStudents);
     } catch (err: any) {
       console.error('Error loading class details:', err);
       setError(err.message || 'Failed to load class details');
     }
-  }
+  }, [classId]);
+
+  useEffect(() => {
+    if (classId) {
+      void loadClassDetails();
+    }
+  }, [classId, loadClassDetails]);
 
   function openDeleteTeacherModal(teacher: any) {
     setTeacherToDelete(teacher);
@@ -148,7 +122,7 @@ function ClassDetailsPageContent() {
   }
 
   async function handleDeleteTeacher() {
-    if (!teacherToDelete || !classId || !finalOrgId) return;
+    if (!teacherToDelete || !classId) return;
     
     try {
       setDeletingTeacher(true);
@@ -190,7 +164,7 @@ function ClassDetailsPageContent() {
   }
 
   async function handleDeleteStudent() {
-    if (!studentToDelete || !classId || !finalOrgId) return;
+    if (!studentToDelete || !classId) return;
     
     try {
       setDeletingStudent(true);
@@ -210,10 +184,9 @@ function ClassDetailsPageContent() {
           id: studentToDelete.id,
           first_name: firstName,
           last_name: lastName,
-          dob: dob,
-          gender: gender,
+          dob,
+          gender,
           class_id: null,
-          org_id: finalOrgId,
         }),
       });
 
@@ -320,7 +293,7 @@ function ClassDetailsPageContent() {
           </h2>
           <div className="mb-3">
             <TeacherAssignmentModal
-              classId={classId}
+              classId={classId ?? ''}
               className={classData?.name ?? ''}
               t={t as unknown as TranslationStrings}
               onCompleted={() => {
@@ -383,7 +356,7 @@ function ClassDetailsPageContent() {
           </h2>
           <div className="mb-3">
             <StudentAssignmentModal
-              classId={classId}
+              classId={classId ?? ''}
               className={classData?.name ?? ''}
               t={t as unknown as TranslationStrings}
               onCompleted={() => {
