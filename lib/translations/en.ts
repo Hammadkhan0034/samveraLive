@@ -779,6 +779,14 @@ export const enText = {
   auth_hint: "Real authentication with Supabase. You can switch roles inside the dashboards.",
   signin_role: "You'll be signed in as {role}. You can also use ?role=teacher, ?role=principal, or ?role=admin in the URL.",
   signup_role: "You'll be creating an account as {role}. You can also use ?role=teacher, ?role=principal, or ?role=admin in the URL.",
+  signin_login_title: "Samvera login",
+  forgot_password: "Forgot?",
+  remember_me: "Remember me on this device.",
+  invitation_accepted_message: "Invitation accepted! Please sign in with your credentials.",
+  no_account_yet: "No account yet? Edit this text to link to your onboarding flow.",
+  rights_reserved: "© {year} Samvera. All rights reserved.",
+  show_password: "Show password",
+  hide_password: "Hide password",
   errors: {
     email_required: "Please enter an email address.",
     email_invalid: "Please enter a valid email address.",
@@ -787,6 +795,7 @@ export const enText = {
     otp_required: "Please enter a verification code.",
     rate_limit: "Too many sign-in attempts. Please wait a few minutes before trying again.",
     unexpected: "An unexpected error occurred. Please try again.",
+    signin_failed: "Sign in failed. Please check your credentials.",
   },
   success: {
     check_email: "Please check your email to confirm your account.",

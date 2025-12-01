@@ -780,6 +780,14 @@ export const isText = {
   auth_hint: "Raunveruleg auðkenning með Supabase. Hægt er að skipta um hlutverk inni á yfirlitum.",
   signin_role: "Þú skráir þig inn sem {role}. Þú getur líka notað ?role=teacher, ?role=principal, eða ?role=admin í slóðinni.",
   signup_role: "Þú býrð til aðgang sem {role}. Þú getur líka notað ?role=teacher, ?role=principal, eða ?role=admin í slóðinni.",
+  signin_login_title: "Samvera innskráning",
+  forgot_password: "Gleymdirðu?",
+  remember_me: "Muna mig á þessu tæki.",
+  invitation_accepted_message: "Boði hefur verið samþykkt! Vinsamlegast skráðu þig inn með skilríkjum þínum.",
+  no_account_yet: "Ertu ekki með aðgang enn? Breyttu þessum texta til að tengja við uppsetningu.",
+  rights_reserved: "© {year} Samvera. Öll réttindi áskilin.",
+  show_password: "Sýna lykilorð",
+  hide_password: "Fela lykilorð",
   errors: {
     email_required: "Vinsamlegast sláðu inn netfang.",
     email_invalid: "Vinsamlegast sláðu inn gilt netfang.",
@@ -788,6 +796,7 @@ export const isText = {
     otp_required: "Vinsamlegast sláðu inn staðfestingarkóða.",
     rate_limit: "Of margar innskráningartilraunir. Vinsamlegast bíddu í nokkrar mínútur áður en þú reynir aftur.",
     unexpected: "Óvænt villa kom upp. Vinsamlegast reyndu aftur.",
+    signin_failed: "Innskráning mistókst. Vinsamlegast athugaðu skilríki þín.",
   },
   success: {
     check_email: "Vinsamlegast athugaðu netfangið þitt til að staðfesta aðganginn þinn.",

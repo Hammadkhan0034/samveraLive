@@ -26,9 +26,9 @@ function SignInPageContent() {
   useEffect(() => {
     const message = qp?.get('message');
     if (message === 'invitation_accepted') {
-      setInvitationMessage('Invitation accepted! Please sign in with your credentials.');
+      setInvitationMessage(t.invitation_accepted_message);
     }
-  }, [qp]);
+  }, [qp, t]);
 
   // Pre-fill email and password from query params
   useEffect(() => {
@@ -90,7 +90,7 @@ function SignInPageContent() {
         if (error.status === 429 || error.message?.toLowerCase().includes('rate limit') || error.message?.toLowerCase().includes('too many')) {
           setErr(t.errors.rate_limit || 'Too many sign-in attempts. Please wait a few minutes before trying again.');
         } else {
-          setErr(error.message || 'Signin failed. Please check your credentials.');
+          setErr(error.message || t.errors.signin_failed);
         }
       }
       // Success is handled by the auth context redirect
@@ -180,7 +180,7 @@ function SignInPageContent() {
             <div className="rounded-ds-xl bg-white dark:bg-slate-800 shadow-ds-card p-ds-lg">
               <div className="mb-ds-md">
                 <h1 className="text-ds-h2 font-bold text-ds-text-primary dark:text-slate-100 mb-ds-xs">
-                  Samvera login
+                  {t.signin_login_title}
                 </h1>
               </div>
 
@@ -220,13 +220,13 @@ function SignInPageContent() {
                           type="button"
                           className="text-ds-small text-ds-text-muted dark:text-slate-400 hover:text-ds-text-primary dark:hover:text-slate-200 transition-colors"
                         >
-                          Forgot?
+                          {t.forgot_password}
                         </button>
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
                           className="text-ds-text-muted dark:text-slate-400 hover:text-ds-text-primary dark:hover:text-slate-200 transition-colors"
-                          aria-label={showPassword ? 'Hide password' : 'Show password'}
+                          aria-label={showPassword ? t.hide_password : t.show_password}
                         >
                           {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                         </button>
@@ -248,7 +248,7 @@ function SignInPageContent() {
                     htmlFor="remember-me"
                     className="text-ds-small text-ds-text-secondary dark:text-slate-300 cursor-pointer"
                   >
-                    Remember me on this device.
+                    {t.remember_me}
                   </label>
                 </div>
 
@@ -296,7 +296,7 @@ function SignInPageContent() {
 
                 <div className="text-center">
                   <p className="text-ds-small text-ds-text-muted dark:text-slate-400">
-                    No account yet? Edit this text to link to your onboarding flow.
+                    {t.no_account_yet}
                   </p>
                 </div>
               </form>
@@ -310,7 +310,7 @@ function SignInPageContent() {
               className="mt-ds-lg text-center"
             >
               <p className="text-ds-small text-ds-text-muted dark:text-slate-400">
-                © {new Date().getFullYear()} Samvera. All rights reserved.
+                {t.rights_reserved.replace('{year}', new Date().getFullYear().toString())}
               </p>
             </motion.div>
           </motion.div>
