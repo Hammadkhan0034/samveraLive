@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import KPICardSkeleton from '@/app/components/loading-skeletons/KPICardSkeleton';
-import type { KPICard } from '@/lib/types/teacher-dashboard';
+import type { KPICard } from '@/lib/types/dashboard';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 

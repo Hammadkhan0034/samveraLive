@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import TeacherPageLayout, { useTeacherPageLayout } from '@/app/components/shared/TeacherPageLayout';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import KPICardSkeleton from '@/app/components/loading-skeletons/KPICardSkeleton';
-import type { KPICard, TeacherDashboardContentProps, TeacherMetrics } from '@/lib/types/teacher-dashboard';
+import type { KPICard, TeacherDashboardContentProps, TeacherMetrics } from '@/lib/types/dashboard';
 
 function TeacherDashboardContent({
   t,
