@@ -15,9 +15,9 @@ export default function TeacherLinkStudentPage() {
       {/* Link Student Panel */}
       <div className="space-y-6">
         <div className="mb-1">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t.tile_link_student_desc}</h3>
+          <h3 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">{t.tile_link_student_desc}</h3>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
           <LinkStudentGuardian lang={lang} />
         </div>
       </div>

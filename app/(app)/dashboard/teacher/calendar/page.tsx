@@ -71,41 +71,41 @@ export default function TeacherCalendarPage() {
     <TeacherPageLayout>
       <div>
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+        <div className="mb-ds-md">
+          <h1 className="text-ds-h1 font-semibold tracking-tight text-slate-900 dark:text-slate-100">
             {t.tile_calendar || 'Calendar'}
           </h1>
         </div>
 
         {/* Calendar Container */}
         {loadingEvents && calendarEvents.length === 0 ? (
-          <div className="rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm p-6">
+          <div className="rounded-ds-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-ds-card p-ds-md">
             {/* Calendar Header Skeleton */}
             <div className="mb-6 flex items-center justify-between">
-              <div className="h-8 w-32 animate-pulse bg-slate-200 dark:bg-slate-700 rounded"></div>
+              <div className="h-8 w-32 animate-pulse bg-mint-100 dark:bg-slate-700 rounded-ds-md"></div>
               <div className="flex gap-2">
-                <div className="h-8 w-8 animate-pulse bg-slate-200 dark:bg-slate-700 rounded"></div>
-                <div className="h-8 w-8 animate-pulse bg-slate-200 dark:bg-slate-700 rounded"></div>
+                <div className="h-8 w-8 animate-pulse bg-mint-100 dark:bg-slate-700 rounded-ds-md"></div>
+                <div className="h-8 w-8 animate-pulse bg-mint-100 dark:bg-slate-700 rounded-ds-md"></div>
               </div>
             </div>
-            
+
             {/* Calendar Grid Skeleton */}
             <div className="space-y-2">
               {/* Day names skeleton */}
               <div className="grid grid-cols-7 gap-1 mb-2">
                 {Array.from({ length: 7 }).map((_, i) => (
-                  <div key={i} className="h-4 w-full animate-pulse bg-slate-200 dark:bg-slate-700 rounded"></div>
+                  <div key={i} className="h-4 w-full animate-pulse bg-mint-100 dark:bg-slate-700 rounded-ds-sm"></div>
                 ))}
               </div>
-              
+
               {/* Calendar days skeleton */}
               <div className="grid grid-cols-7 gap-1">
                 {Array.from({ length: 35 }).map((_, i) => (
-                  <div key={i} className="min-h-[80px] p-2 rounded-lg border border-slate-200 dark:border-slate-700">
-                    <div className="h-4 w-6 mb-2 animate-pulse bg-slate-200 dark:bg-slate-700 rounded"></div>
+                  <div key={i} className="min-h-[80px] p-2 rounded-ds-md border border-slate-200 dark:border-slate-700">
+                    <div className="h-4 w-6 mb-2 animate-pulse bg-mint-100 dark:bg-slate-700 rounded-ds-sm"></div>
                     <div className="space-y-1">
-                      <div className="h-3 w-full animate-pulse bg-slate-200 dark:bg-slate-700 rounded"></div>
-                      <div className="h-3 w-3/4 animate-pulse bg-slate-200 dark:bg-slate-700 rounded"></div>
+                      <div className="h-3 w-full animate-pulse bg-mint-100 dark:bg-slate-700 rounded-ds-sm"></div>
+                      <div className="h-3 w-3/4 animate-pulse bg-mint-100 dark:bg-slate-700 rounded-ds-sm"></div>
                     </div>
                   </div>
                 ))}
@@ -113,7 +113,7 @@ export default function TeacherCalendarPage() {
             </div>
           </div>
         ) : (
-          <div className="rounded-2xl bg-white dark:bg-slate-800">
+          <div className="rounded-ds-lg bg-white shadow-ds-card dark:bg-slate-800">
           <Calendar
             orgId={orgId || ''}
             userRole="teacher"

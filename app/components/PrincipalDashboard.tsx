@@ -682,12 +682,12 @@ export default function PrincipalDashboard() {
   // Do not block UI with a loading overlay; render immediately
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8 md:px-6">
+    <main className="mx-auto max-w-7xl px-4 py-ds-lg md:px-6">
       {/* Header */}
-      <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between mt-10">
+      <div className="mb-ds-md flex flex-col gap-3 md:flex-row md:items-center md:justify-between mt-10">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.title}</h1>
-          <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.subtitle}</p>
+          <h1 className="text-ds-h1 font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.title}</h1>
+          <p className="mt-1 text-ds-small text-slate-600 dark:text-slate-400">{t.subtitle}</p>
         </div>
 
         {/* Profile switcher + actions */}
@@ -707,26 +707,36 @@ export default function PrincipalDashboard() {
       />
 
       {/* KPIs */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {kpis.map(({ label, value, icon: Icon, onClick }, i) => (
-          <div
-            key={i}
-            className={`rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 ${
-              onClick !== undefined ? 'cursor-pointer hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200' : ''
-            }`}
-            onClick={onClick}
-          >
-            <div className="flex items-center justify-between">
-              <div className="text-sm text-slate-600 dark:text-slate-400">{label}</div>
-              <span className="rounded-xl border border-slate-200 p-2 dark:border-slate-600">
-                <Icon className="h-4 w-4 text-slate-700 dark:text-slate-300" />
-              </span>
+      <div className="grid grid-cols-1 gap-ds-md sm:grid-cols-2 lg:grid-cols-4">
+        {kpis.map(({ label, value, icon: Icon, onClick }, i) => {
+          // Cycle through tinted backgrounds: pale-blue, pale-yellow, pale-peach
+          const bgColors = [
+            'bg-pale-blue dark:bg-slate-800',
+            'bg-pale-yellow dark:bg-slate-800',
+            'bg-pale-peach dark:bg-slate-800',
+          ];
+          const bgColor = bgColors[i % 3];
+
+          return (
+            <div
+              key={i}
+              className={`rounded-ds-lg p-ds-md shadow-ds-card ${bgColor} ${
+                onClick !== undefined ? 'cursor-pointer hover:shadow-ds-lg transition-all duration-200' : ''
+              }`}
+              onClick={onClick}
+            >
+              <div className="flex items-center justify-between">
+                <div className="text-ds-small text-slate-600 dark:text-slate-400">{label}</div>
+                <span className="rounded-ds-md bg-white/50 dark:bg-slate-700 p-2">
+                  <Icon className="h-4 w-4 text-slate-700 dark:text-slate-300" />
+                </span>
+              </div>
+              <div className="mt-3 text-ds-h2 font-semibold text-slate-900 dark:text-slate-100">
+                {value}
+              </div>
             </div>
-            <div className="mt-3 text-2xl font-semibold text-slate-900 dark:text-slate-100">
-              {value}
-            </div>
-          </div>
-        ))}
+          );
+        })}
         {/* Calendar KPI Card - Inline */}
         {(() => {
           const today = new Date();
@@ -736,19 +746,19 @@ export default function PrincipalDashboard() {
             const eventDate = new Date(event.start_at);
             return eventDate.getMonth() === currentMonth && eventDate.getFullYear() === currentYear;
           });
-          
+
           return (
             <div
               onClick={() => router.push('/dashboard/principal/calendar')}
-              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800 cursor-pointer hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200"
+              className="rounded-ds-lg p-ds-md shadow-ds-card bg-pale-blue dark:bg-slate-800 cursor-pointer hover:shadow-ds-lg transition-all duration-200"
             >
               <div className="flex items-center justify-between">
-                <div className="text-sm text-slate-600 dark:text-slate-400">{t.tile_calendar || 'Calendar'}</div>
-                <span className="rounded-xl border border-slate-200 p-2 dark:border-slate-600">
+                <div className="text-ds-small text-slate-600 dark:text-slate-400">{t.tile_calendar || 'Calendar'}</div>
+                <span className="rounded-ds-md bg-white/50 dark:bg-slate-700 p-2">
                   <CalendarDays className="h-4 w-4 text-slate-700 dark:text-slate-300" />
                 </span>
               </div>
-              <div className="mt-3 text-2xl font-semibold text-slate-900 dark:text-slate-100">
+              <div className="mt-3 text-ds-h2 font-semibold text-slate-900 dark:text-slate-100">
                 {currentMonthEvents.length}
               </div>
             </div>
@@ -757,10 +767,10 @@ export default function PrincipalDashboard() {
       </div>
 
       {/* School Announcements Section */}
-      <div className="mt-4">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+      <div className="mt-ds-md">
+        <div className="rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">
           <div className="mb-4">
-            <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">{t.announcements_list}</h3>
+            <h3 className="text-ds-h3 font-medium text-slate-900 dark:text-slate-100">{t.announcements_list}</h3>
           </div>
           <AnnouncementList
             orgId={finalOrgId as string}
@@ -774,20 +784,20 @@ export default function PrincipalDashboard() {
       </div>
 
       {/* Activity feed */}
-      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-          <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">{t.recent_activity}</h3>
-          <ul className="mt-3 space-y-3 text-sm">
+      <div className="mt-ds-md grid grid-cols-1 gap-ds-md lg:grid-cols-2">
+        <div className="rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">
+          <h3 className="text-ds-h3 font-medium text-slate-900 dark:text-slate-100">{t.recent_activity}</h3>
+          <ul className="mt-3 space-y-3 text-ds-small">
             {activityItems.map((txt, i) => (
-              <li key={i} className="rounded-xl border border-slate-200 p-3 text-slate-700 dark:border-slate-600 dark:text-slate-300">
+              <li key={i} className="rounded-ds-md bg-mint-100 dark:bg-slate-700 p-3 text-slate-700 dark:text-slate-300">
                 {txt}
               </li>
             ))}
           </ul>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-          <h3 className="text-lg font-medium text-slate-900 dark:text-slate-100">{t.quick_tips}</h3>
-          <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-slate-700 dark:text-slate-300">
+        <div className="rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">
+          <h3 className="text-ds-h3 font-medium text-slate-900 dark:text-slate-100">{t.quick_tips}</h3>
+          <ul className="mt-3 list-disc space-y-2 pl-5 text-ds-small text-slate-700 dark:text-slate-300">
             <li>{t.tip_roles}</li>
             <li>{t.tip_visibility}</li>
             <li>{t.tip_exports}</li>

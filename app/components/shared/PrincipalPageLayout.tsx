@@ -44,8 +44,9 @@ export default function PrincipalPageLayout({
 
   return (
     <PrincipalPageLayoutContext.Provider value={{ sidebarRef }}>
+      {/* Design System: Sidebar + Main Content Structure */}
       <div className="flex h-screen overflow-hidden">
-        {/* Sidebar - full height on left */}
+        {/* Sidebar - 280px wide, white background, fixed left position */}
         <PrincipalSidebar
           ref={sidebarRef}
           messagesBadge={messagesBadge}
@@ -55,10 +56,15 @@ export default function PrincipalPageLayout({
         <div className="flex flex-col flex-1 overflow-hidden">
           {/* Navbar - positioned beside sidebar */}
           <Navbar variant="static" />
-          
-          {/* Main content area - below navbar */}
-          <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900">
-            <div className="p-2 md:p-6 lg:p-8">
+
+          {/* Main content area - mint green background with 32px padding */}
+          <main
+            className="flex-1 overflow-y-auto"
+            style={{
+              backgroundColor: 'var(--ds-mint)',
+            }}
+          >
+            <div className="p-4 md:p-6 lg:p-8">
               {children}
             </div>
           </main>

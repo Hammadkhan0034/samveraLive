@@ -95,29 +95,29 @@ export function NotificationDropdown() {
     <div className="relative notification-dropdown" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative inline-flex items-center gap-2 rounded-md border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+        className="relative inline-flex items-center gap-2 rounded-ds-md border border-slate-300 dark:border-slate-700 px-3 py-2 text-ds-small text-slate-700 hover:bg-mint-50 dark:text-slate-200 dark:hover:bg-slate-800 transition-colors"
         aria-label="Notifications"
       >
         <Bell className="h-4 w-4" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-semibold text-white">
+          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-ds-tiny font-semibold text-white">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-1 w-80 sm:w-96 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg z-50 max-h-[500px] flex flex-col">
+        <div className="absolute right-0 top-full mt-1 w-80 sm:w-96 rounded-ds-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-ds-lg z-50 max-h-[500px] flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 dark:border-slate-700">
-            <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+            <h3 className="text-ds-small font-semibold text-slate-900 dark:text-slate-100">
               {t.notifications || 'Notifications'}
             </h3>
             <div className="flex items-center gap-3">
               {unreadCount > 0 && (
                 <button
                   onClick={handleMarkAllAsRead}
-                  className="text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                  className="text-ds-tiny text-mint-600 dark:text-mint-400 hover:text-mint-700 dark:hover:text-mint-300"
                 >
                   {t.mark_all_as_read || 'Mark all as read'}
                 </button>
@@ -127,7 +127,7 @@ export function NotificationDropdown() {
                   setIsOpen(false);
                   router.push('/dashboard/notifications');
                 }}
-                className="text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 font-medium"
+                className="text-ds-tiny text-mint-600 dark:text-mint-400 hover:text-mint-700 dark:hover:text-mint-300 font-medium"
               >
                 {t.viewAll || 'View All'}
               </button>
@@ -137,11 +137,11 @@ export function NotificationDropdown() {
           {/* Notifications List */}
           <div className="overflow-y-auto flex-1">
             {loading && notifications.length === 0 ? (
-              <div className="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+              <div className="px-4 py-8 text-center text-ds-small text-slate-500 dark:text-slate-400">
                 {t.loading_notifications || 'Loading notifications...'}
               </div>
             ) : notifications.length === 0 ? (
-              <div className="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+              <div className="px-4 py-8 text-center text-ds-small text-slate-500 dark:text-slate-400">
                 {t.no_notifications || 'No notifications'}
               </div>
             ) : (
@@ -150,19 +150,19 @@ export function NotificationDropdown() {
                   <button
                     key={notification.id}
                     onClick={() => handleNotificationClick(notification.id)}
-                    className={`w-full px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors ${
+                    className={`w-full px-4 py-3 text-left hover:bg-mint-50 dark:hover:bg-slate-700 transition-colors ${
                       !notification.is_read
-                        ? 'bg-slate-50 dark:bg-slate-900/50'
+                        ? 'bg-mint-50/50 dark:bg-slate-900/50'
                         : ''
                     }`}
                   >
                     <div className="flex items-start gap-3">
                       {!notification.is_read && (
-                        <div className="mt-1.5 h-2 w-2 rounded-full bg-blue-500 flex-shrink-0" />
+                        <div className="mt-1.5 h-2 w-2 rounded-full bg-mint-500 flex-shrink-0" />
                       )}
                       <div className="flex-1 min-w-0">
                         <p
-                          className={`text-sm ${
+                          className={`text-ds-small ${
                             !notification.is_read
                               ? 'font-semibold text-slate-900 dark:text-slate-100'
                               : 'text-slate-700 dark:text-slate-300'
@@ -171,11 +171,11 @@ export function NotificationDropdown() {
                           {notification.title}
                         </p>
                         {notification.body && (
-                          <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 line-clamp-2">
+                          <p className="mt-1 text-ds-tiny text-slate-600 dark:text-slate-400 line-clamp-2">
                             {truncateText(notification.body, 120)}
                           </p>
                         )}
-                        <p className="mt-1 text-xs text-slate-500 dark:text-slate-500">
+                        <p className="mt-1 text-ds-tiny text-slate-500 dark:text-slate-500">
                           {formatTime(notification.created_at)}
                         </p>
                       </div>

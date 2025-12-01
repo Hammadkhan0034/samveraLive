@@ -407,21 +407,21 @@ export default function MenusListPage() {
 
   // Content for teacher layout (with gradient background and back button)
   const teacherContent = (
-      <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      <div className="min-h-screen bg-mint-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
         <div className="mx-auto max-w-6xl px-4 pt-6 pb-0 md:px-6">
           {/* Header with Back button */}
-          <div className="mb-6 flex items-center gap-3 flex-wrap mt-16">
+          <div className="mb-ds-md flex items-center gap-3 flex-wrap mt-16">
             <button
               onClick={() => router.push('/dashboard/principal')}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              className="inline-flex items-center gap-2 rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
             >
               <ArrowLeft className="h-4 w-4" /> {lang === 'is' ? 'Til baka' : 'Back'}
             </button>
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.tile_menus || 'Menus'}</h1>
+            <h1 className="text-ds-h1 font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.tile_menus || 'Menus'}</h1>
             <div className="flex items-center gap-2 ml-auto">
               <button
                 onClick={() => router.push('/dashboard/add-menu')}
-                className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
+                className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 hover:bg-mint-600 px-4 py-2 text-ds-small text-white transition-colors"
               >
                 <Plus className="h-4 w-4" /> {t.add_menu}
               </button>
@@ -429,13 +429,13 @@ export default function MenusListPage() {
           </div>
 
           {/* Date Filter */}
-          <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-            <div className="flex flex-col gap-3">
+          <div className="mb-ds-md rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+            <div className="flex flex-col gap-ds-sm">
               <div className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-slate-500 dark:text-slate-400" />
-                <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t.filter_by_date}</span>
+                <Calendar className="h-5 w-5 text-mint-600 dark:text-slate-400" />
+                <span className="text-ds-small font-medium text-slate-700 dark:text-slate-300">{t.filter_by_date}</span>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-ds-sm">
                 <input
                   type="date"
                   value={selectedDate}
@@ -443,7 +443,7 @@ export default function MenusListPage() {
                     setSelectedDate(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="flex-1 rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                  className="flex-1 rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                 />
                 {selectedDate && (
                   <button
@@ -451,7 +451,7 @@ export default function MenusListPage() {
                       setSelectedDate('');
                       setCurrentPage(1);
                     }}
-                    className="rounded-lg border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 whitespace-nowrap"
+                    className="rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 whitespace-nowrap"
                   >
                     {t.clear_filter}
                   </button>
@@ -462,40 +462,40 @@ export default function MenusListPage() {
 
           {/* Error Message */}
           {error && (
-            <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+            <div className="mb-4 rounded-ds-md bg-red-50 border border-red-200 px-4 py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
               {error}
             </div>
           )}
 
           {/* Menus Table */}
-          <div className="rounded-2xl border border-slate-200 bg-white pt-6 px-6 pb-0 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <div className="rounded-ds-lg border border-slate-200 bg-white pt-6 px-6 pb-0 shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
             {paginatedMenus.length === 0 ? (
               <div className="text-center py-12">
-                <Utensils className="h-12 w-12 mx-auto text-slate-400 dark:text-slate-500 mb-4" />
+                <Utensils className="h-12 w-12 mx-auto text-mint-400 dark:text-slate-500 mb-4" />
                 <p className="text-slate-600 dark:text-slate-400">{t.no_menus}</p>
               </div>
             ) : (
               <>
-                <div className="overflow-x-auto rounded-lg">
-                  <table className="w-full text-sm border-collapse rounded-lg">
-                    <thead className="bg-black text-white dark:bg-slate-800">
+                <div className="overflow-x-auto rounded-ds-md">
+                  <table className="w-full text-ds-small border-collapse rounded-ds-md">
+                    <thead className="bg-mint-500 text-white dark:bg-slate-800">
                       <tr>
-                        <th className="py-2 px-4 text-left">{t.created_date || 'Created'}</th>
+                        <th className="py-2 px-4 text-left rounded-tl-ds-md">{t.created_date || 'Created'}</th>
                         <th className="py-2 px-4 text-left">{t.breakfast}</th>
                         <th className="py-2 px-4 text-left">{t.lunch}</th>
                         <th className="py-2 px-4 text-left">{t.snack}</th>
                         <th className="py-2 px-4 text-left">{t.notes}</th>
-                        <th className="py-2 px-4 text-center">{t.actions}</th>
+                        <th className="py-2 px-4 text-center rounded-tr-ds-md">{t.actions}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                    
+
                       {paginatedMenus.map((menu) => (
-                        <tr key={menu.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                        <tr key={menu.id} className="hover:bg-mint-50 dark:hover:bg-slate-700/50 transition-colors">
                           <td className="py-3 px-4 text-black dark:text-slate-300">
-                            {menu.created_at ? new Date(menu.created_at).toLocaleString(lang === 'is' ? 'is-IS' : 'en-US', { 
-                              year: 'numeric', 
-                              month: 'short', 
+                            {menu.created_at ? new Date(menu.created_at).toLocaleString(lang === 'is' ? 'is-IS' : 'en-US', {
+                              year: 'numeric',
+                              month: 'short',
                               day: 'numeric',
                               hour: '2-digit',
                               minute: '2-digit'
@@ -509,13 +509,13 @@ export default function MenusListPage() {
                             <div className="flex items-center justify-center gap-2">
                               <button
                                 onClick={() => router.push(`/dashboard/add-menu?id=${menu.id}`)}
-                                className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2 py-1 text-xs hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                                className="inline-flex items-center gap-1 rounded-ds-sm border border-slate-300 px-2 py-1 text-ds-tiny hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
                               >
                                 <Edit className="h-3 w-3" /> {t.edit}
                               </button>
                               <button
                                 onClick={() => openDeleteMenuModal(menu.id)}
-                                className="inline-flex items-center gap-1 rounded-lg border border-red-300 px-2 py-1 text-xs text-red-600 hover:bg-red-50 dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20"
+                                className="inline-flex items-center gap-1 rounded-ds-sm border border-red-300 px-2 py-1 text-ds-tiny text-red-600 hover:bg-red-50 transition-colors dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20"
                               >
                                 <Trash2 className="h-3 w-3" /> {t.delete}
                               </button>
@@ -533,7 +533,7 @@ export default function MenusListPage() {
                     <button
                       onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                       disabled={currentPage === 1}
-                      className="inline-flex items-center rounded-lg border border-slate-400 px-3 py-1.5 text-sm disabled:opacity-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                      className="inline-flex items-center rounded-ds-md border border-slate-400 px-3 py-1.5 text-ds-small disabled:opacity-50 hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                     >
                       {t.prev}
                     </button>
@@ -541,7 +541,7 @@ export default function MenusListPage() {
                       <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
-                        className={`inline-flex items-center rounded-lg px-3 py-1.5 text-sm ${currentPage === page ? 'bg-white text-black border border-slate-400 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600' : 'border border-slate-400 dark:border-slate-600 dark:text-slate-200'}`}
+                        className={`inline-flex items-center rounded-ds-md px-3 py-1.5 text-ds-small transition-colors ${currentPage === page ? 'bg-mint-500 text-white border border-mint-500' : 'border border-slate-400 hover:bg-mint-50 dark:border-slate-600 dark:text-slate-200'}`}
                       >
                         {page}
                       </button>
@@ -549,7 +549,7 @@ export default function MenusListPage() {
                     <button
                       onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                       disabled={currentPage === totalPages}
-                      className="inline-flex items-center rounded-lg border border-slate-400 px-3 py-1.5 text-sm disabled:opacity-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                      className="inline-flex items-center rounded-ds-md border border-slate-400 px-3 py-1.5 text-ds-small disabled:opacity-50 hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                     >
                       {t.next}
                     </button>
@@ -586,27 +586,27 @@ export default function MenusListPage() {
     return (
       <>
         {/* Content Header */}
-        <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-3">
+        <div className="mb-ds-sm flex flex-col gap-ds-sm md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-ds-sm">
             {/* Mobile menu button */}
             <button
               onClick={() => sidebarRef.current?.open()}
-              className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+              className="md:hidden p-2 rounded-ds-md hover:bg-mint-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
               aria-label="Toggle sidebar"
             >
               <Menu className="h-5 w-5" />
             </button>
             <div>
-              <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.tile_menus || 'Menus'}</h2>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">Manage daily menus</p>
+              <h2 className="text-ds-h1 font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.tile_menus || 'Menus'}</h2>
+              <p className="mt-1 text-ds-small text-slate-600 dark:text-slate-400">Manage daily menus</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-ds-sm">
             <ProfileSwitcher />
             <button
               onClick={() => router.push('/dashboard/add-menu')}
-              className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
+              className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 hover:bg-mint-600 px-4 py-2 text-ds-small text-white transition-colors"
             >
               <Plus className="h-4 w-4" /> {t.add_menu}
             </button>
@@ -614,13 +614,13 @@ export default function MenusListPage() {
         </div>
 
         {/* Date Filter */}
-        <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-          <div className="flex flex-col gap-3">
+        <div className="mb-ds-md rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+          <div className="flex flex-col gap-ds-sm">
             <div className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-slate-500 dark:text-slate-400" />
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t.filter_by_date}</span>
+              <Calendar className="h-5 w-5 text-mint-600 dark:text-slate-400" />
+              <span className="text-ds-small font-medium text-slate-700 dark:text-slate-300">{t.filter_by_date}</span>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-ds-sm">
               <input
                 type="date"
                 value={selectedDate}
@@ -628,7 +628,7 @@ export default function MenusListPage() {
                   setSelectedDate(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="flex-1 rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                className="flex-1 rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
               />
               {selectedDate && (
                 <button
@@ -636,7 +636,7 @@ export default function MenusListPage() {
                     setSelectedDate('');
                     setCurrentPage(1);
                   }}
-                  className="rounded-lg border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 whitespace-nowrap"
+                  className="rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 whitespace-nowrap"
                 >
                   {t.clear_filter}
                 </button>
@@ -647,40 +647,40 @@ export default function MenusListPage() {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+          <div className="mb-4 rounded-ds-md bg-red-50 border border-red-200 px-4 py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
             {error}
           </div>
         )}
 
         {/* Menus Table */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
           {paginatedMenus.length === 0 ? (
             <div className="text-center py-12">
-              <Utensils className="h-12 w-12 mx-auto text-slate-400 dark:text-slate-500 mb-4" />
+              <Utensils className="h-12 w-12 mx-auto text-mint-400 dark:text-slate-500 mb-4" />
               <p className="text-slate-600 dark:text-slate-400">{t.no_menus}</p>
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto rounded-lg">
-                <table className="w-full text-sm border-collapse rounded-lg">
-                  <thead className="bg-black text-white dark:bg-slate-800">
+              <div className="overflow-x-auto rounded-ds-md">
+                <table className="w-full text-ds-small border-collapse rounded-ds-md">
+                  <thead className="bg-mint-500 text-white dark:bg-slate-800">
                     <tr>
-                      <th className="py-2 px-4 text-left">{t.created_date || 'Created'}</th>
+                      <th className="py-2 px-4 text-left rounded-tl-ds-md">{t.created_date || 'Created'}</th>
                       <th className="py-2 px-4 text-left">{t.breakfast}</th>
                       <th className="py-2 px-4 text-left">{t.lunch}</th>
                       <th className="py-2 px-4 text-left">{t.snack}</th>
                       <th className="py-2 px-4 text-left">{t.notes}</th>
-                      <th className="py-2 px-4 text-center">{t.actions}</th>
+                      <th className="py-2 px-4 text-center rounded-tr-ds-md">{t.actions}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-                  
+
                     {paginatedMenus.map((menu) => (
-                      <tr key={menu.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                      <tr key={menu.id} className="hover:bg-mint-50 dark:hover:bg-slate-700/50 transition-colors">
                         <td className="py-3 px-4 text-black dark:text-slate-300">
-                          {menu.created_at ? new Date(menu.created_at).toLocaleString(lang === 'is' ? 'is-IS' : 'en-US', { 
-                            year: 'numeric', 
-                            month: 'short', 
+                          {menu.created_at ? new Date(menu.created_at).toLocaleString(lang === 'is' ? 'is-IS' : 'en-US', {
+                            year: 'numeric',
+                            month: 'short',
                             day: 'numeric',
                             hour: '2-digit',
                             minute: '2-digit'
@@ -694,13 +694,13 @@ export default function MenusListPage() {
                           <div className="flex items-center justify-center gap-2">
                             <button
                               onClick={() => router.push(`/dashboard/add-menu?id=${menu.id}`)}
-                              className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2 py-1 text-xs hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                              className="inline-flex items-center gap-1 rounded-ds-sm border border-slate-300 px-2 py-1 text-ds-tiny hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
                             >
                               <Edit className="h-3 w-3" /> {t.edit}
                             </button>
                             <button
                               onClick={() => openDeleteMenuModal(menu.id)}
-                              className="inline-flex items-center gap-1 rounded-lg border border-red-300 px-2 py-1 text-xs text-red-600 hover:bg-red-50 dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20"
+                              className="inline-flex items-center gap-1 rounded-ds-sm border border-red-300 px-2 py-1 text-ds-tiny text-red-600 hover:bg-red-50 transition-colors dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20"
                             >
                               <Trash2 className="h-3 w-3" /> {t.delete}
                             </button>
@@ -718,7 +718,7 @@ export default function MenusListPage() {
                   <button
                     onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
-                    className="inline-flex items-center rounded-lg border border-slate-400 px-3 py-1.5 text-sm disabled:opacity-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                    className="inline-flex items-center rounded-ds-md border border-slate-400 px-3 py-1.5 text-ds-small disabled:opacity-50 hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                   >
                     {t.prev}
                   </button>
@@ -726,7 +726,7 @@ export default function MenusListPage() {
                     <button
                       key={page}
                       onClick={() => setCurrentPage(page)}
-                      className={`inline-flex items-center rounded-lg px-3 py-1.5 text-sm ${currentPage === page ? 'bg-white text-black border border-slate-400 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600' : 'border border-slate-400 dark:border-slate-600 dark:text-slate-200'}`}
+                      className={`inline-flex items-center rounded-ds-md px-3 py-1.5 text-ds-small transition-colors ${currentPage === page ? 'bg-mint-500 text-white border border-mint-500' : 'border border-slate-400 hover:bg-mint-50 dark:border-slate-600 dark:text-slate-200'}`}
                     >
                       {page}
                     </button>
@@ -734,7 +734,7 @@ export default function MenusListPage() {
                   <button
                     onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
-                    className="inline-flex items-center rounded-lg border border-slate-400 px-3 py-1.5 text-sm disabled:opacity-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                    className="inline-flex items-center rounded-ds-md border border-slate-400 px-3 py-1.5 text-ds-small disabled:opacity-50 hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                   >
                     {t.next}
                   </button>

@@ -263,27 +263,27 @@ function ClassesPageContent() {
   return (
     <>
       {/* Content Header */}
-      <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-3">
+      <div className="mb-ds-sm flex flex-col gap-ds-sm md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-ds-sm">
           {/* Mobile menu button */}
           <button
             onClick={() => sidebarRef.current?.open()}
-            className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+            className="md:hidden p-2 rounded-ds-md hover:bg-mint-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
             aria-label="Toggle sidebar"
           >
             <Menu className="h-5 w-5" />
           </button>
           <div>
-            <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.departments}</h2>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.overview_hint}</p>
+            <h2 className="text-ds-h1 font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.departments}</h2>
+            <p className="mt-1 text-ds-small text-slate-600 dark:text-slate-400">{t.overview_hint}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-ds-sm">
           <ProfileSwitcher />
           <button
             onClick={() => router.push('/dashboard/principal/classes/create')}
-            className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
+            className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600"
           >
             <Plus className="h-4 w-4" /> {t.add_class}
           </button>
@@ -291,73 +291,73 @@ function ClassesPageContent() {
       </div>
 
         {/* Departments table */}
-        <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">{t.departments}</h2>
-            <div className="text-sm text-slate-500 dark:text-slate-400">
+        <div className="mt-4 rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+          <div className="mb-ds-sm flex items-center justify-between">
+            <h2 className="text-ds-h3 font-medium text-slate-900 dark:text-slate-100">{t.departments}</h2>
+            <div className="text-ds-small text-slate-500 dark:text-slate-400">
               {t.overview_hint}
             </div>
           </div>
-          <div className="overflow-x-auto overflow-hidden border border-slate-200 dark:border-slate-700 rounded-xl">
+          <div className="overflow-x-auto overflow-hidden border border-slate-200 dark:border-slate-700 rounded-ds-md">
             <table className="min-w-full border-collapse">
               <thead>
-                <tr className="bg-black">
-                  <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300 rounded-tl-xl">
+                <tr className="bg-mint-500">
+                  <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300 rounded-tl-ds-md">
                     {t.col_name}
                   </th>
-                  <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                  <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
                     {t.col_students}
                   </th>
-                  <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                  <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
                     {t.col_staff}
                   </th>
-                  <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                  <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
                     {t.col_visible}
                   </th>
-                  <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300 rounded-tr-xl">
+                  <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300 rounded-tr-ds-md">
                     {t.col_actions}
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {classes.map((cls) => (
-                  <tr key={cls.id} className="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                    <td className="text-left py-2 px-4 text-sm font-medium text-slate-900 dark:text-slate-100">{cls.name}</td>
-                    <td className="text-left py-2 px-4 text-sm text-slate-600 dark:text-slate-400">
+                  <tr key={cls.id} className="border-b border-slate-100 dark:border-slate-700 hover:bg-mint-50 dark:hover:bg-slate-700/50 transition-colors">
+                    <td className="text-left py-2 px-4 text-ds-small font-medium text-slate-900 dark:text-slate-100">{cls.name}</td>
+                    <td className="text-left py-2 px-4 text-ds-small text-slate-600 dark:text-slate-400">
                       {classStudentCounts[cls.id] || 0}
                     </td>
-                    <td className="text-left py-2 px-4 text-sm text-slate-600 dark:text-slate-400">
+                    <td className="text-left py-2 px-4 text-ds-small text-slate-600 dark:text-slate-400">
                       {cls.assigned_teachers?.length || 0}
                     </td>
-                    <td className="text-left py-2 px-4 text-sm">
+                    <td className="text-left py-2 px-4 text-ds-small">
                       <span
                         className={clsx(
-                          'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs',
-                          'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300'
+                          'inline-flex items-center gap-1 rounded-ds-full border px-2 py-0.5 text-ds-tiny',
+                          'border-mint-200 bg-mint-50 text-mint-700 dark:border-mint-600 dark:bg-mint-900/20 dark:text-mint-300'
                         )}
                       >
                         <CheckCircle2 className="h-3.5 w-3.5" /> {t.visible_yes}
                       </span>
                     </td>
-                    <td className="text-left py-2 px-4 text-sm">
+                    <td className="text-left py-2 px-4 text-ds-small">
                       <div className="flex items-center gap-2 flex-wrap">
                         <button
                           onClick={() => openClassDetailsModal(cls)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2.5 py-1 text-xs hover:bg-white dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                          className="inline-flex items-center gap-1 rounded-ds-sm border border-slate-300 px-2.5 py-1 text-ds-tiny hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
                         >
                           <Eye className="h-3.5 w-3.5" />
                           {t.show}
                         </button>
                         <button
                           onClick={() => openEditClass(cls)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2.5 py-1 text-xs hover:bg-white dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                          className="inline-flex items-center gap-1 rounded-ds-sm border border-slate-300 px-2.5 py-1 text-ds-tiny hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
                         >
                           <Edit className="h-3.5 w-3.5" />
                           {t.edit}
                         </button>
                         <button
                           onClick={() => openDeleteClassModal(cls)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-red-300 px-2.5 py-1 text-xs text-red-600 hover:bg-red-50 dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20"
+                          className="inline-flex items-center gap-1 rounded-ds-sm border border-red-300 px-2.5 py-1 text-ds-tiny text-red-600 hover:bg-red-50 transition-colors dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                           {t.delete}
@@ -373,7 +373,7 @@ function ClassesPageContent() {
                           trigger={(open) => (
                             <button
                               onClick={open}
-                              className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2.5 py-1 text-xs hover:bg-white dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                              className="inline-flex items-center gap-1 rounded-ds-sm border border-slate-300 px-2.5 py-1 text-ds-tiny hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
                             >
                               <UserPlus className="h-3.5 w-3.5" />
                               {t.add_student}
@@ -390,7 +390,7 @@ function ClassesPageContent() {
                           trigger={(open) => (
                             <button
                               onClick={open}
-                              className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2.5 py-1 text-xs hover:bg-white dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                              className="inline-flex items-center gap-1 rounded-ds-sm border border-slate-300 px-2.5 py-1 text-ds-tiny hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
                             >
                               <Users className="h-3.5 w-3.5" />
                               {t.assign_teacher}
@@ -404,7 +404,7 @@ function ClassesPageContent() {
 
                 {classes.length === 0 && (
                   <tr>
-                    <td className="text-center py-4 px-4 text-sm text-slate-600 dark:text-slate-400" colSpan={5}>
+                    <td className="text-center py-4 px-4 text-ds-small text-slate-600 dark:text-slate-400" colSpan={5}>
                       {t.empty}
                     </td>
                   </tr>
@@ -416,7 +416,7 @@ function ClassesPageContent() {
 
         {/* Success Message */}
         {showSuccessMessage && successClassName && (
-          <div className="mt-4 rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400">
+          <div className="mt-4 rounded-ds-md bg-mint-50 border border-mint-200 px-4 py-3 text-ds-small text-mint-700 dark:bg-mint-900/20 dark:border-mint-800 dark:text-mint-400">
             <div className="flex items-center justify-between">
               <span>
                 <strong>{successClassName}</strong> {t.class_created_message}
@@ -426,7 +426,7 @@ function ClassesPageContent() {
                   setShowSuccessMessage(false);
                   setSuccessClassName('');
                 }}
-                className="ml-4 text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 dark:hover:text-emerald-200"
+                className="ml-4 text-mint-600 hover:text-mint-800 transition-colors dark:text-mint-400 dark:hover:text-mint-200"
               >
                 <X className="h-4 w-4" />
               </button>

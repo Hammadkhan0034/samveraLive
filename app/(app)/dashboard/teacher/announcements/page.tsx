@@ -57,14 +57,14 @@ export default function TeacherAnnouncementsPage() {
     <TeacherPageLayout>
       {/* Announcements Panel */}
       <div className="space-y-6">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">
+            <h2 className="text-ds-h3 font-medium text-slate-900 dark:text-slate-100">
               {t.announcements_title}
             </h2>
             <button
               onClick={() => setShowForm(true)}
-              className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
+              className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600"
             >
               <Plus className="h-4 w-4" />
               {t.create_announcement}
@@ -80,24 +80,24 @@ export default function TeacherAnnouncementsPage() {
 
       {/* Announcement Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" onClick={() => setShowForm(false)}>
-          <div 
-            className="w-full max-w-xl rounded-2xl bg-white dark:bg-slate-800 shadow-xl max-h-[90vh] overflow-y-auto"
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowForm(false)}>
+          <div
+            className="w-full max-w-xl rounded-ds-lg bg-white dark:bg-slate-800 shadow-ds-lg max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="sticky top-0 z-10 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 px-6 py-4 flex items-center justify-between rounded-t-2xl">
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+            <div className="sticky top-0 z-10 bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 px-6 py-4 flex items-center justify-between rounded-t-ds-lg">
+              <h3 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">
                 {t.create_announcement}
               </h3>
               <button
                 onClick={() => setShowForm(false)}
-                className="rounded-lg p-1 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-colors"
+                className="rounded-ds-md p-1 hover:bg-mint-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-colors"
                 aria-label="Close form"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="p-6">
+            <div className="p-ds-md">
               <AnnouncementForm
                 classId={classId}
                 orgId={finalOrgId as string}

@@ -22,21 +22,21 @@ type Recipient = {
 // Messages Page Header Component
 function MessagesPageHeader({ title }: { title: string }) {
   const { sidebarRef } = useTeacherPageLayout();
-  
+
   return (
-    <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-      <div className="flex items-center gap-3">
+    <div className="mb-ds-sm flex flex-col gap-ds-sm md:flex-row md:items-center md:justify-between">
+      <div className="flex items-center gap-ds-sm">
         {/* Mobile menu button */}
         <button
           onClick={() => sidebarRef.current?.open()}
-          className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+          className="md:hidden p-2 rounded-ds-md hover:bg-mint-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
           aria-label="Toggle sidebar"
         >
           <Menu className="h-5 w-5" />
         </button>
-        <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{title}</h2>
+        <h2 className="text-ds-h2 font-semibold tracking-tight text-slate-900 dark:text-slate-100">{title}</h2>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-ds-sm">
         <ProfileSwitcher />
       </div>
     </div>
@@ -587,30 +587,30 @@ export default function TeacherMessagesPage() {
       )}
 
       {/* Messages Panel */}
-            <div className="flex h-[calc(100vh-100px)] rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800 overflow-hidden">
+            <div className="flex h-[calc(100vh-100px)] rounded-ds-lg border border-slate-200 bg-white shadow-ds-card dark:border-slate-700 dark:bg-slate-800 overflow-hidden">
               {/* Left Sidebar - Conversations List */}
               <div className="w-80 flex-shrink-0 border-r border-slate-200 dark:border-slate-700 flex flex-col overflow-hidden">
                 {/* Header with New Conversation Button */}
-                <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 flex-shrink-0 overflow-hidden">
+                <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-mint-50 dark:bg-slate-900 flex-shrink-0 overflow-hidden">
                   <div className="flex items-center justify-between mb-3">
-                    <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t.msg_title}</h2>
+                    <h2 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">{t.msg_title}</h2>
                     <button
                       onClick={() => {
                         setShowNewConversation(!showNewConversation);
                         setSelectedThread(null);
                       }}
-                      className="p-2 rounded-lg bg-black hover:bg-gray-800 text-white transition-colors"
+                      className="p-2 rounded-ds-md bg-mint-500 hover:bg-mint-600 text-white transition-colors"
                       title={t.new_message}
                     >
                       <MessageSquarePlus className="h-5 w-5" />
                     </button>
                   </div>
-                  
+
                   {/* New Conversation Form */}
                   {showNewConversation && (
-                    <div className="p-3 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 mb-3 overflow-hidden">
+                    <div className="p-3 bg-white dark:bg-slate-800 rounded-ds-md border border-slate-200 dark:border-slate-700 mb-3 overflow-hidden">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-slate-900 dark:text-slate-100">{t.new_message}</span>
+                        <span className="text-ds-small font-medium text-slate-900 dark:text-slate-100">{t.new_message}</span>
                         <button
                           onClick={() => {
                             setShowNewConversation(false);
@@ -622,12 +622,12 @@ export default function TeacherMessagesPage() {
                           <X className="h-4 w-4" />
                         </button>
                       </div>
-                      <label className="block text-xs text-slate-700 dark:text-slate-300 mb-1">
+                      <label className="block text-ds-tiny text-slate-700 dark:text-slate-300 mb-1">
                         {t.to}
                         <select
                           value={recipientId}
                           onChange={(e) => setRecipientId(e.target.value)}
-                          className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1.5 text-sm dark:text-slate-200 max-w-full"
+                          className="mt-1 w-full rounded-ds-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1.5 text-ds-small dark:text-slate-200 max-w-full focus:border-mint-500 focus:ring-mint-500"
                         >
                           <option value="">{t.select_recipient}</option>
                           {principals.length > 0 && (
@@ -666,36 +666,36 @@ export default function TeacherMessagesPage() {
                           )}
                         </select>
                       </label>
-                      <label className="block text-xs text-slate-700 dark:text-slate-300 mt-2 mb-2 min-w-0">
+                      <label className="block text-ds-tiny text-slate-700 dark:text-slate-300 mt-2 mb-2 min-w-0">
                         {t.message}
                         <textarea
                           rows={2}
                           value={messageBody}
                           onChange={(e) => setMessageBody(e.target.value)}
-                          className="mt-1 w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1.5 text-sm dark:text-slate-200 dark:placeholder-slate-400 resize-none"
+                          className="mt-1 w-full rounded-ds-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1.5 text-ds-small dark:text-slate-200 dark:placeholder-slate-400 resize-none focus:border-mint-500 focus:ring-mint-500"
                           placeholder={t.msg_ph}
                         />
                       </label>
                       <button
                         onClick={sendMessage}
                         disabled={sending || !messageBody.trim() || !recipientId}
-                        className="w-full rounded-lg bg-black px-3 py-1.5 text-sm text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                        className="w-full rounded-ds-md bg-mint-500 px-3 py-1.5 text-ds-small text-white hover:bg-mint-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
                       >
                         <Send className="h-4 w-4" /> {t.send}
                       </button>
-                      {sent && <span className="text-xs text-emerald-600 dark:text-emerald-400 mt-1 block text-center">✓ {t.message_sent}</span>}
+                      {sent && <span className="text-ds-tiny text-emerald-600 dark:text-emerald-400 mt-1 block text-center">✓ {t.message_sent}</span>}
                     </div>
                   )}
 
                   {/* Search Bar */}
-                  <div className="flex items-center gap-2 bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-2">
+                  <div className="flex items-center gap-2 bg-white dark:bg-slate-800 rounded-ds-md border border-slate-200 dark:border-slate-700 px-3 py-2">
                     <Search className="h-4 w-4 text-slate-400" />
                     <input
                       type="text"
                       placeholder={t.search_placeholder}
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="flex-1 bg-transparent text-sm outline-none placeholder:text-slate-400 dark:text-slate-200"
+                      className="flex-1 bg-transparent text-ds-small outline-none placeholder:text-slate-400 dark:text-slate-200"
                     />
                   </div>
                 </div>
@@ -707,7 +707,7 @@ export default function TeacherMessagesPage() {
                       <LoadingSkeleton type="list" rows={5} />
                     </div>
                   ) : filteredThreads.length === 0 ? (
-                    <div className="p-4 text-center text-sm text-slate-500">{t.no_threads}</div>
+                    <div className="p-4 text-center text-ds-small text-slate-500">{t.no_threads}</div>
                   ) : (
                     <ul className="divide-y divide-slate-200 dark:divide-slate-700">
                       {filteredThreads.map((thread) => (
@@ -718,8 +718,8 @@ export default function TeacherMessagesPage() {
                             setShowNewConversation(false);
                             setChatMessageBody('');
                           }}
-                          className={`cursor-pointer p-4 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors ${
-                            selectedThread?.id === thread.id ? 'bg-slate-100 dark:bg-slate-800/50 border-l-4 border-black' : ''
+                          className={`cursor-pointer p-4 hover:bg-mint-50 dark:hover:bg-slate-700/50 transition-colors ${
+                            selectedThread?.id === thread.id ? 'bg-mint-100 dark:bg-slate-800/50 border-l-4 border-mint-500' : ''
                           }`}
                         >
                           <div className="flex items-start justify-between gap-2">
@@ -732,23 +732,23 @@ export default function TeacherMessagesPage() {
                                       : 'Unknown'}
                                   </div>
                                   {thread.unread && (
-                                    <span className="flex-shrink-0 w-2 h-2 rounded-full bg-black"></span>
+                                    <span className="flex-shrink-0 w-2 h-2 rounded-ds-full bg-mint-500"></span>
                                   )}
                                 </div>
                                 {thread.latest_item && (
-                                  <span className="text-xs text-slate-400 dark:text-slate-500 flex-shrink-0">
+                                  <span className="text-ds-tiny text-slate-400 dark:text-slate-500 flex-shrink-0">
                                     {new Date(thread.latest_item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                   </span>
                                 )}
                               </div>
-                              <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 mb-0.5">
+                              <div className="flex items-center gap-2 text-ds-tiny text-slate-500 dark:text-slate-400 mb-0.5">
                                 <span>
-                                  {thread.other_participant?.role === 'principal' ? t.principal : 
+                                  {thread.other_participant?.role === 'principal' ? t.principal :
                                    thread.other_participant?.role === 'teacher' ? (t.role_teacher_title || 'Teacher') : t.guardian}
                                 </span>
                               </div>
                               {thread.latest_item && (
-                                <p className="text-sm text-slate-600 dark:text-slate-400 truncate line-clamp-1">
+                                <p className="text-ds-small text-slate-600 dark:text-slate-400 truncate line-clamp-1">
                                   {thread.latest_item.body}
                                 </p>
                               )}
@@ -762,13 +762,13 @@ export default function TeacherMessagesPage() {
               </div>
 
               {/* Right Side - Chat View */}
-              <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900">
+              <div className="flex-1 flex flex-col bg-mint-50 dark:bg-slate-900">
                 {selectedThread ? (
                   <>
                     {/* Chat Header */}
                     <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center text-white font-semibold">
+                        <div className="w-10 h-10 rounded-ds-full bg-mint-500 flex items-center justify-center text-white font-semibold">
                           {selectedThread.other_participant
                             ? (selectedThread.other_participant.first_name?.[0] || selectedThread.other_participant.email?.[0] || '?').toUpperCase()
                             : '?'}
@@ -779,8 +779,8 @@ export default function TeacherMessagesPage() {
                               ? `${selectedThread.other_participant.first_name} ${selectedThread.other_participant.last_name || ''}`.trim() || selectedThread.other_participant.email
                               : 'Unknown'}
                           </div>
-                          <div className="text-xs text-slate-500 dark:text-slate-400">
-                            {selectedThread.other_participant?.role === 'principal' ? t.principal : 
+                          <div className="text-ds-tiny text-slate-500 dark:text-slate-400">
+                            {selectedThread.other_participant?.role === 'principal' ? t.principal :
                              selectedThread.other_participant?.role === 'teacher' ? (t.role_teacher_title || 'Teacher') : t.guardian}
                           </div>
                         </div>
@@ -805,14 +805,14 @@ export default function TeacherMessagesPage() {
                                 className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
                               >
                                 <div
-                                  className={`max-w-[70%] rounded-2xl px-4 py-2 ${
+                                  className={`max-w-[70%] rounded-ds-lg px-4 py-2 ${
                                     isOwn
-                                      ? 'bg-black text-white rounded-br-sm'
+                                      ? 'bg-mint-500 text-white rounded-br-sm'
                                       : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-bl-sm border border-slate-200 dark:border-slate-700'
                                   }`}
                                 >
-                                  <p className="text-sm whitespace-pre-wrap break-words">{msg.body}</p>
-                                  <p className={`text-xs mt-1 ${isOwn ? 'text-white' : 'text-slate-400 dark:text-slate-500'}`}>
+                                  <p className="text-ds-small whitespace-pre-wrap break-words">{msg.body}</p>
+                                  <p className={`text-ds-tiny mt-1 ${isOwn ? 'text-white/80' : 'text-slate-400 dark:text-slate-500'}`}>
                                     {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                   </p>
                                 </div>
@@ -843,13 +843,13 @@ export default function TeacherMessagesPage() {
                             }}
                             placeholder={t.msg_ph}
                             rows={1}
-                            className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 py-2 pr-12 text-sm dark:text-slate-200 dark:placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent max-h-[120px] overflow-y-auto"
+                            className="w-full rounded-ds-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 py-2 pr-12 text-ds-small dark:text-slate-200 dark:placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-mint-500 focus:border-transparent max-h-[120px] overflow-y-auto"
                           />
                         </div>
                         <button
                           onClick={sendChatMessage}
                           disabled={sending || !chatMessageBody.trim()}
-                          className="p-2 rounded-lg bg-black hover:bg-gray-800 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0 self-end"
+                          className="p-2 rounded-ds-md bg-mint-500 hover:bg-mint-600 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0 self-end"
                         >
                           <Send className="h-5 w-5" />
                         </button>
@@ -859,7 +859,7 @@ export default function TeacherMessagesPage() {
                 ) : (
                   <div className="flex-1 flex items-center justify-center">
                     <div className="text-center">
-                      <MessageSquarePlus className="h-16 w-16 text-slate-300 dark:text-slate-600 mx-auto mb-4" />
+                      <MessageSquarePlus className="h-16 w-16 text-mint-300 dark:text-slate-600 mx-auto mb-4" />
                       <p className="text-slate-500 dark:text-slate-400">{t.select_recipient}</p>
                     </div>
                   </div>

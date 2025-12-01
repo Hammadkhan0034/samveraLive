@@ -65,8 +65,8 @@ export function AnnouncementModal({
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
       onClick={(e) => {
         // Close on outside click
         if (e.target === e.currentTarget) {
@@ -74,14 +74,14 @@ export function AnnouncementModal({
         }
       }}
     >
-      <div className="w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-800 p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+      <div className="w-full max-w-2xl rounded-ds-lg bg-white dark:bg-slate-800 p-ds-md shadow-ds-lg max-h-[90vh] overflow-y-auto">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+          <h3 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">
             {mode === 'edit' ? (lang === 'is' ? 'Breyta tilkynningu' : 'Edit Announcement') : (lang === 'is' ? 'Búa til tilkynningu' : 'Create Announcement')}
           </h3>
           <button
             onClick={onClose}
-            className="rounded-lg p-1 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400"
+            className="rounded-ds-md p-1 hover:bg-mint-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-colors"
           >
             <X className="h-5 w-5" />
           </button>

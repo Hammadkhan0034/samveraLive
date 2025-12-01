@@ -331,18 +331,18 @@ export default function TeacherMenusPage() {
   return (
     <TeacherPageLayout>
       <div className="space-y-6">
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+              <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
                 <div className="mb-4 flex items-center justify-between">
-                  <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">{t.tile_menus || 'Menus'}</h2>
+                  <h2 className="text-ds-h3 font-medium text-slate-900 dark:text-slate-100">{t.tile_menus || 'Menus'}</h2>
                   <button
                     onClick={() => openMenuModal()}
-                    className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
+                    className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600"
                   >
                     <Plus className="h-4 w-4" /> {lang === 'is' ? 'Bæta við matseðli' : 'Add Menu'}
                   </button>
                 </div>
                 {error && (
-                  <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+                  <div className="mb-4 rounded-ds-md bg-red-50 border border-red-200 px-4 py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
                     {error}
                   </div>
                 )}
@@ -350,58 +350,58 @@ export default function TeacherMenusPage() {
                   <LoadingSkeleton type="table" rows={5} />
                 ) : menus.length === 0 ? (
                   <div className="text-center py-12">
-                    <Utensils className="h-12 w-12 mx-auto text-slate-400 dark:text-slate-500 mb-4" />
+                    <Utensils className="h-12 w-12 mx-auto text-mint-400 dark:text-slate-500 mb-4" />
                     <p className="text-slate-600 dark:text-slate-400">{lang === 'is' ? 'Engir matseðillar fundust. Smelltu á "Bæta við matseðli" til að búa til einn.' : 'No menus found. Click "Add Menu" to create one.'}</p>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
+                  <div className="overflow-x-auto rounded-ds-md border border-slate-200 dark:border-slate-700">
                     <table className="w-full border-collapse">
                       <thead>
-                        <tr className="bg-black">
-                          <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                        <tr className="bg-mint-500">
+                          <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
                             {lang === 'is' ? 'Dagur' : 'Date'}
                           </th>
-                          <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                          <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
                             {lang === 'is' ? 'Hópur' : 'Class'}
                           </th>
-                          <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                          <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
                             {lang === 'is' ? 'Morgunmatur' : 'Breakfast'}
                           </th>
-                          <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                          <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
                             {lang === 'is' ? 'Hádegismatur' : 'Lunch'}
                           </th>
-                          <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                          <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
                             {lang === 'is' ? 'Kvöldmatur' : 'Snack'}
                           </th>
-                          <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                          <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
                             {lang === 'is' ? 'Athugasemdir' : 'Notes'}
                           </th>
-                          <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                          <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
                             {t.actions || 'Actions'}
                           </th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
                         {menus.map((menu) => (
-                          <tr key={menu.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30">
-                            <td className="py-2 px-4 text-sm text-slate-900 dark:text-slate-100">
+                          <tr key={menu.id} className="hover:bg-mint-50 dark:hover:bg-slate-700/30 transition-colors">
+                            <td className="py-2 px-4 text-ds-small text-slate-900 dark:text-slate-100">
                               <span suppressHydrationWarning>
                                 {formatMenuDate(menu.day || menu.created_at, lang)}
                               </span>
                             </td>
-                            <td className="py-2 px-4 text-sm text-slate-600 dark:text-slate-400">
+                            <td className="py-2 px-4 text-ds-small text-slate-600 dark:text-slate-400">
                               {menu.classes?.name || (menu.class_id ? `Class ${menu.class_id.substring(0, 8)}...` : lang === 'is' ? 'Allir hópar' : 'All Classes')}
                             </td>
-                            <td className="py-2 px-4 text-sm text-slate-600 dark:text-slate-400">
+                            <td className="py-2 px-4 text-ds-small text-slate-600 dark:text-slate-400">
                               {menu.breakfast || '—'}
                             </td>
-                            <td className="py-2 px-4 text-sm text-slate-600 dark:text-slate-400">
+                            <td className="py-2 px-4 text-ds-small text-slate-600 dark:text-slate-400">
                               {menu.lunch || '—'}
                             </td>
-                            <td className="py-2 px-4 text-sm text-slate-600 dark:text-slate-400">
+                            <td className="py-2 px-4 text-ds-small text-slate-600 dark:text-slate-400">
                               {menu.snack || '—'}
                             </td>
-                            <td className="py-2 px-4 text-sm text-slate-600 dark:text-slate-400">
+                            <td className="py-2 px-4 text-ds-small text-slate-600 dark:text-slate-400">
                               {menu.notes ? (
                                 <span className="line-clamp-2" title={menu.notes}>{menu.notes}</span>
                               ) : (
@@ -412,7 +412,7 @@ export default function TeacherMenusPage() {
                               <div className="flex items-center gap-2">
                                 <button
                                   onClick={() => openMenuModal(menu)}
-                                  className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2 py-1 text-[13px] hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                                  className="inline-flex items-center gap-1 rounded-ds-sm border border-slate-300 px-2 py-1 text-ds-tiny hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
                                   title={t.edit || 'Edit'}
                                 >
                                   <Edit className="h-3.5 w-3.5" />
@@ -420,7 +420,7 @@ export default function TeacherMenusPage() {
                                 </button>
                                 <button
                                   onClick={() => openDeleteModal(menu.id)}
-                                  className="inline-flex items-center gap-1 rounded-lg border border-red-300 px-2 py-1 text-[13px] text-red-600 hover:bg-red-50 dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20"
+                                  className="inline-flex items-center gap-1 rounded-ds-sm border border-red-300 px-2 py-1 text-ds-tiny text-red-600 hover:bg-red-50 transition-colors dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20"
                                   title={t.delete || 'Delete'}
                                 >
                                   <Trash2 className="h-3.5 w-3.5" />

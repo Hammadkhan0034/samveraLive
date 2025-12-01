@@ -222,21 +222,21 @@ export function PhotoUploadModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
         }
       }}
     >
-      <div className="w-full max-w-3xl rounded-2xl bg-white dark:bg-slate-800 p-6 shadow-xl max-h-[95vh] overflow-y-auto">
+      <div className="w-full max-w-3xl rounded-ds-lg bg-white dark:bg-slate-800 p-ds-md shadow-ds-lg max-h-[95vh] overflow-y-auto">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+          <h3 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">
             {t.upload_photos || 'Upload Photos'}
           </h3>
           <button
             onClick={onClose}
-            className="rounded-lg p-1 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400"
+            className="rounded-ds-md p-1 hover:bg-mint-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400"
             disabled={loading}
           >
             <X className="h-5 w-5" />
@@ -244,7 +244,7 @@ export function PhotoUploadModal({
         </div>
 
         {error && (
-          <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+          <div className="mb-4 rounded-ds-md bg-red-50 border border-red-200 px-4 py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
             {error}
           </div>
         )}
@@ -252,7 +252,7 @@ export function PhotoUploadModal({
         <form onSubmit={handleSubmit} className="">
           {/* Upload Mode Dropdown */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
               {t.upload_type || 'Upload Type'} <span className="text-red-500">*</span>
             </label>
             <select
@@ -267,7 +267,7 @@ export function PhotoUploadModal({
                   setSelectedStudentId(null);
                 }
               }}
-              className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 mt-1"
+              className="w-full rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 mt-1"
               required
               disabled={loading}
             >
@@ -280,13 +280,13 @@ export function PhotoUploadModal({
           {/* Class Selection (for class and student modes) */}
           {(uploadMode === 'class' || uploadMode === 'student') && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {t.class_label || 'Class'} <span className="text-red-500">*</span>
               </label>
               <select
                 value={selectedClassId || ''}
                 onChange={(e) => setSelectedClassId(e.target.value || null)}
-                className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                className="w-full rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                 required={uploadMode === 'class' || uploadMode === 'student'}
               >
                 <option value="">{t.select_class || 'Select a class'}</option>
@@ -302,13 +302,13 @@ export function PhotoUploadModal({
           {/* Student Selection (for student mode only) */}
           {uploadMode === 'student' && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {t.student_name || 'Student'} <span className="text-red-500">*</span>
               </label>
               <select
                 value={selectedStudentId || ''}
                 onChange={(e) => setSelectedStudentId(e.target.value || null)}
-                className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                className="w-full rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                 required
                 disabled={!selectedClassId}
               >
@@ -331,13 +331,13 @@ export function PhotoUploadModal({
 
           {/* File Upload Area */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 mt-2">
+            <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1 mt-2">
               {t.photos || 'Photos'}
             </label>
             <div
               onDrop={handleDrop}
               onDragOver={handleDragOver}
-              className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-8 text-center hover:border-slate-400 dark:hover:border-slate-500 transition-colors mt-1"
+              className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-ds-md p-8 text-center hover:border-mint-400 dark:hover:border-slate-500 transition-colors mt-1"
             >
               <input
                 type="file"
@@ -353,10 +353,10 @@ export function PhotoUploadModal({
                 className="cursor-pointer flex flex-col items-center gap-2"
               >
                 <ImageIcon className="h-12 w-12 text-slate-400 dark:text-slate-500" />
-                <div className="text-sm text-slate-600 dark:text-slate-400">
-                  <span className="font-medium text-blue-600 dark:text-blue-400">Click to upload</span> or drag and drop
+                <div className="text-ds-small text-slate-600 dark:text-slate-400">
+                  <span className="font-medium text-mint-600 dark:text-mint-400">Click to upload</span> or drag and drop
                 </div>
-                <div className="text-xs text-slate-500 dark:text-slate-500">
+                <div className="text-ds-tiny text-slate-500 dark:text-slate-500">
                   PNG, JPG, GIF up to 10MB
                 </div>
               </label>
@@ -366,13 +366,13 @@ export function PhotoUploadModal({
           {/* Preview Grid */}
           {previewFiles.length > 0 && (
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Preview ({previewFiles.length} {previewFiles.length === 1 ? 'photo' : 'photos'})
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                 {previewFiles.map((previewFile) => (
                   <div key={previewFile.id} className="relative group">
-                    <div className="aspect-square rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-700">
+                    <div className="aspect-square rounded-ds-md overflow-hidden bg-slate-100 dark:bg-slate-700">
                       <img
                         src={previewFile.preview}
                         alt="Preview"
@@ -395,14 +395,14 @@ export function PhotoUploadModal({
 
           {/* Caption */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 mt-2">
+            <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1 mt-2">
               {t.caption_optional || 'Caption (Optional)'}
             </label>
             <textarea
               value={caption}
               onChange={(e) => setCaption(e.target.value)}
               rows={1}
-              className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-black focus:outline-none focus:ring-1 focus:ring-black dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 mt-1"
+              className="w-full rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 mt-1"
               placeholder={t.caption_optional || 'Add a caption for these photos...'}
               disabled={loading}
             />
@@ -415,10 +415,10 @@ export function PhotoUploadModal({
               id="is_public"
               checked={isPublic}
               onChange={(e) => setIsPublic(e.target.checked)}
-              className="rounded border-slate-300 text-black focus:ring-black"
+              className="rounded border-slate-300 text-mint-600 focus:ring-mint-500"
               disabled={loading}
             />
-            <label htmlFor="is_public" className="text-sm text-slate-700 dark:text-slate-300">
+            <label htmlFor="is_public" className="text-ds-small text-slate-700 dark:text-slate-300">
               {t.make_photos_public || 'Make photos public'}
             </label>
           </div>
@@ -429,14 +429,14 @@ export function PhotoUploadModal({
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="px-4 py-2 text-sm font-medium border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-50"
+              className="px-4 py-2 text-ds-small font-medium border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-ds-md hover:bg-mint-50 dark:hover:bg-slate-700 disabled:opacity-50 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading || previewFiles.length === 0}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 disabled:opacity-50 dark:bg-slate-700 dark:hover:bg-slate-600"
+              className="inline-flex items-center justify-center gap-2 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small text-white hover:bg-mint-600 disabled:opacity-50 transition-colors"
             >
               {loading ? (
                 <>

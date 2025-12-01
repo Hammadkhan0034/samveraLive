@@ -258,10 +258,10 @@ export default function AnnouncementForm({
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-4 py-2 text-md bg-black dark:bg-slate-700 text-white rounded-md hover:bg-slate-900 disabled:opacity-50"
+            className="px-4 py-2 text-ds-body bg-mint-500 text-white rounded-ds-md hover:bg-mint-600 disabled:opacity-50 transition-colors"
           >
-            {isSubmitting 
-              ? (mode === 'edit' ? t.updating : t.creating) 
+            {isSubmitting
+              ? (mode === 'edit' ? t.updating : t.creating)
               : (mode === 'edit' ? t.update_announcement : t.create_announcement)}
           </button>
         </div>

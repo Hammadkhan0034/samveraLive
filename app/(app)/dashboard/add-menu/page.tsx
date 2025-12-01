@@ -156,10 +156,10 @@ function AddMenuPageContent() {
   // Only show loading if we're actually loading and don't have a user yet
   if (loading && !user && isSigningIn) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+      <div className="min-h-screen bg-mint-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-600 mx-auto mb-4"></div>
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-mint-300 border-t-mint-600 mx-auto mb-4"></div>
             <p className="text-slate-600 dark:text-slate-400">
               Loading add menu page...
             </p>
@@ -172,51 +172,51 @@ function AddMenuPageContent() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <div className="min-h-screen bg-mint-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
 
         <main className="mx-auto max-w-5xl px-4 py-8 md:px-6 ml-20">
           {/* Header */}
-          <div className="mb-6 flex flex-col gap-3 mt-14 md:flex-row md:items-center md:justify-between">
+          <div className="mb-ds-md flex flex-col gap-3 mt-14 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => router.push('/dashboard/menus-list')}
-                className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                className="inline-flex items-center gap-2 rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
               >
                 <ArrowLeft className="h-4 w-4" /> {t.back}
               </button>
               <div>
-                <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+                <h1 className="text-ds-h1 font-semibold tracking-tight text-slate-900 dark:text-slate-100">
                   {editingMenu ? t.edit_menu : t.add_menu || 'Add Menu'}
                 </h1>
-                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.subtitle}</p>
+                <p className="mt-1 text-ds-small text-slate-600 dark:text-slate-400">{t.subtitle}</p>
               </div>
             </div>
           </div>
 
           {/* Menu Form */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <div className="rounded-ds-lg border border-slate-200 bg-white p-6 shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
             <form onSubmit={submitMenu} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
                   {t.date} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="date"
                   value={menuForm.day}
                   onChange={(e) => setMenuForm({ ...menuForm, day: e.target.value })}
-                  className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                  className="w-full rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
                   {t.class_label || 'Class'} ({t.optional || 'Optional'})
                 </label>
                 <select
                   value={menuForm.class_id || ''}
                   onChange={(e) => setMenuForm({ ...menuForm, class_id: e.target.value || null })}
-                  className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                  className="w-full rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                   disabled={loadingClasses}
                 >
                   <option value="">{t.all_classes || 'All Classes (Org-wide)'}</option>
@@ -227,58 +227,58 @@ function AddMenuPageContent() {
                   ))}
                 </select>
                 {loadingClasses && (
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t.loading_classes || 'Loading classes...'}</p>
+                  <p className="mt-1 text-ds-tiny text-slate-500 dark:text-slate-400">{t.loading_classes || 'Loading classes...'}</p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
                   {t.breakfast}
                 </label>
                 <input
                   type="text"
                   value={menuForm.breakfast || ''}
                   onChange={(e) => setMenuForm({ ...menuForm, breakfast: e.target.value })}
-                  className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                  className="w-full rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                   placeholder={t.breakfast_placeholder}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
                   {t.lunch}
                 </label>
                 <input
                   type="text"
                   value={menuForm.lunch || ''}
                   onChange={(e) => setMenuForm({ ...menuForm, lunch: e.target.value })}
-                  className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                  className="w-full rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                   placeholder={t.lunch_placeholder}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
                   {t.snack}
                 </label>
                 <input
                   type="text"
                   value={menuForm.snack || ''}
                   onChange={(e) => setMenuForm({ ...menuForm, snack: e.target.value })}
-                  className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                  className="w-full rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                   placeholder={t.snack_placeholder}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
                   {t.notes}
                 </label>
                 <textarea
                   value={menuForm.notes || ''}
                   onChange={(e) => setMenuForm({ ...menuForm, notes: e.target.value })}
                   rows={3}
-                  className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                  className="w-full rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                   placeholder={t.notes_placeholder}
                 />
               </div>
@@ -289,15 +289,15 @@ function AddMenuPageContent() {
                   id="is_public"
                   checked={menuForm.is_public !== false}
                   onChange={(e) => setMenuForm({ ...menuForm, is_public: e.target.checked })}
-                  className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                  className="rounded border-slate-300 text-mint-600 focus:ring-mint-500 accent-mint-500"
                 />
-                <label htmlFor="is_public" className="text-sm text-slate-700 dark:text-slate-300">
+                <label htmlFor="is_public" className="text-ds-small text-slate-700 dark:text-slate-300">
                   {t.is_public}
                 </label>
               </div>
 
               {error && (
-                <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+                <div className="rounded-ds-md bg-red-50 border border-red-200 px-4 py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
                   {error}
                 </div>
               )}
@@ -306,7 +306,7 @@ function AddMenuPageContent() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 disabled:opacity-50 dark:bg-slate-700 dark:hover:bg-slate-600"
+                  className="flex-1 inline-flex items-center justify-center gap-2 rounded-ds-md bg-mint-500 hover:bg-mint-600 px-4 py-2 text-ds-small text-white disabled:opacity-50 transition-colors"
                 >
                   {submitting ? (
                     <>
@@ -323,7 +323,7 @@ function AddMenuPageContent() {
                 <button
                   type="button"
                   onClick={() => router.push('/dashboard/teacher?tab=menus')}
-                  className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                  className="rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
                 >
                   {t.cancel}
                 </button>

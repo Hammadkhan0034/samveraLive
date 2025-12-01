@@ -306,27 +306,27 @@ function StudentsPageContent() {
   return (
     <>
       {/* Content Header */}
-      <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-3">
+      <div className="mb-ds-sm flex flex-col gap-ds-sm md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-ds-sm">
           {/* Mobile menu button */}
           <button
             onClick={() => sidebarRef.current?.open()}
-            className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+            className="md:hidden p-2 rounded-ds-md hover:bg-mint-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
             aria-label="Toggle sidebar"
           >
             <Menu className="h-5 w-5" />
           </button>
           <div>
-            <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.students}</h2>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.add_student_subtitle}</p>
+            <h2 className="text-ds-h1 font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.students}</h2>
+            <p className="mt-1 text-ds-small text-slate-600 dark:text-slate-400">{t.add_student_subtitle}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-ds-sm">
           <ProfileSwitcher />
           <button
             onClick={openCreateStudentModal}
-            className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
+            className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600"
           >
             <Plus className="h-4 w-4" /> {t.add_student}
           </button>
@@ -334,9 +334,9 @@ function StudentsPageContent() {
       </div>
 
       {/* Students Table */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-        <div className="flex items-center justify-between mb-4 gap-3">
-          <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">{t.students}</h2>
+      <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+        <div className="flex items-center justify-between mb-4 gap-ds-sm">
+          <h2 className="text-ds-h3 font-medium text-slate-900 dark:text-slate-100">{t.students}</h2>
           <div className="flex items-center gap-2">
             <div className="relative">
               <input
@@ -344,22 +344,22 @@ function StudentsPageContent() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={'Search students...'}
-                className="pl-3 pr-3 py-1.5 rounded-lg border border-slate-300 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 w-64"
+                className="pl-3 pr-3 py-1.5 rounded-ds-md border border-slate-300 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 w-64"
               />
             </div>
             {/* Filter Dropdown */}
             <div className="relative filter-dropdown">
             <button
               onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
-              className="flex items-center gap-2 rounded-md bg-transparent border border-gray-300 text-sm px-3 py-1.5 text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
+              className="flex items-center gap-2 rounded-ds-md bg-transparent border border-slate-300 text-ds-small px-3 py-1.5 text-slate-700 hover:bg-mint-50 transition-colors dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
             >
               <Filter className="h-4 w-4" />
               <span className="hidden sm:inline">{filterOptions.find(opt => opt.value === selectedClassFilter)?.label || t.all_classes}</span>
               <ChevronDown className={`h-4 w-4 transition-transform ${isFilterDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
-            
+
             {isFilterDropdownOpen && (
-              <div className="absolute right-0 top-full mt-1 w-48 rounded-lg border border-sand-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg z-50">
+              <div className="absolute right-0 top-full mt-1 w-48 rounded-ds-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-ds-lg z-50">
                 {filterOptions.map((option) => (
                   <button
                     key={option.value}
@@ -367,9 +367,9 @@ function StudentsPageContent() {
                       setSelectedClassFilter(option.value);
                       setIsFilterDropdownOpen(false);
                     }}
-                    className={`w-full px-3 py-2 text-sm text-left dark:hover:bg-slate-700 first:rounded-t-lg last:rounded-b-lg ${
-                      selectedClassFilter === option.value 
-                        ? 'bg-slate-200 dark:bg-slate-700 text-gray-700 dark:text-slate-100  dark:hover:bg-slate-700' 
+                    className={`w-full px-3 py-2 text-ds-small text-left hover:bg-mint-50 dark:hover:bg-slate-700 first:rounded-t-ds-md last:rounded-b-ds-md transition-colors ${
+                      selectedClassFilter === option.value
+                        ? 'bg-mint-100 dark:bg-slate-700 text-mint-700 dark:text-slate-100'
                         : 'text-gray-700 dark:text-slate-300'
                     }`}
                   >
@@ -380,7 +380,7 @@ function StudentsPageContent() {
             )}
             </div>
           </div>
-          
+
         </div>
         <StudentTable
           students={paginatedStudents}
@@ -409,7 +409,7 @@ function StudentsPageContent() {
           <button
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className="inline-flex items-center rounded-lg border border-slate-400 px-3 py-1.5 text-sm disabled:opacity-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+            className="inline-flex items-center rounded-ds-md border border-slate-400 px-3 py-1.5 text-ds-small disabled:opacity-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
           >
             {t.prev || 'Prev'}
           </button>
@@ -417,7 +417,7 @@ function StudentsPageContent() {
             <button
               key={idx}
               onClick={() => setCurrentPage(idx + 1)}
-              className={`inline-flex items-center rounded-lg px-3 py-1.5 text-sm ${currentPage === idx + 1 ? 'bg-white text-black border border-slate-400 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600' : 'border border-slate-400 dark:border-slate-600 dark:text-slate-200'}`}
+              className={`inline-flex items-center rounded-ds-md px-3 py-1.5 text-ds-small transition-colors ${currentPage === idx + 1 ? 'bg-mint-500 text-white border border-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600' : 'border border-slate-400 dark:border-slate-600 dark:text-slate-200 hover:bg-mint-50'}`}
             >
               {idx + 1}
             </button>
@@ -425,7 +425,7 @@ function StudentsPageContent() {
           <button
             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
-            className="inline-flex items-center rounded-lg border border-slate-400 px-3 py-1.5 text-sm disabled:opacity-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+            className="inline-flex items-center rounded-ds-md border border-slate-400 px-3 py-1.5 text-ds-small disabled:opacity-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
           >
             {t.next || 'Next'}
           </button>

@@ -18,11 +18,11 @@ export default function FeatureGrid({ items }: { items: FeatureItem[] }) {
         <Link
           key={idx}
           href={href}
-          className="block rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+          className="block rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800 hover:shadow-ds-lg transition-shadow"
         >
           <div className="mb-4 flex items-center gap-3">
             {Icon ? (
-              <span className="inline-flex rounded-xl border border-slate-200 bg-slate-50 p-3 dark:border-slate-600 dark:bg-slate-700">
+              <span className="inline-flex rounded-ds-md border border-slate-200 bg-slate-50 p-3 dark:border-slate-600 dark:bg-slate-700">
                 <Icon className="h-5 w-5 text-slate-600 dark:text-slate-300" />
               </span>
             ) : null}
@@ -31,7 +31,7 @@ export default function FeatureGrid({ items }: { items: FeatureItem[] }) {
                 {title}
               </div>
               {badge !== undefined ? (
-                <span className="ml-auto rounded-full border border-slate-200 bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                <span className="ml-auto rounded-ds-full border border-slate-200 bg-slate-100 px-2 py-1 text-ds-tiny font-medium text-slate-600 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300">
                   {badge}
                 </span>
               ) : null}

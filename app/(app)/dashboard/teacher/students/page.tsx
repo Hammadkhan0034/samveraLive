@@ -60,36 +60,36 @@ interface Student {
 // Translations removed - using centralized translations from @/lib/translations
 
 // Students Page Header Component
-function StudentsPageHeader({ 
-  title, 
+function StudentsPageHeader({
+  title,
   label,
-  value, 
-  todayHint 
-}: { 
-  title: string; 
+  value,
+  todayHint
+}: {
+  title: string;
   label: string;
-  value: number; 
+  value: number;
   todayHint: string;
 }) {
   const { sidebarRef } = useTeacherPageLayout();
-  
+
   return (
-    <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-      <div className="flex items-center gap-3">
+    <div className="mb-ds-sm flex flex-col gap-ds-sm md:flex-row md:items-center md:justify-between">
+      <div className="flex items-center gap-ds-sm">
         {/* Mobile menu button */}
         <button
           onClick={() => sidebarRef.current?.open()}
-          className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+          className="md:hidden p-2 rounded-ds-md hover:bg-mint-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
           aria-label="Toggle sidebar"
         >
           <Menu className="h-5 w-5" />
         </button>
-        <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{title}</h2>
+        <h2 className="text-ds-h2 font-semibold tracking-tight text-slate-900 dark:text-slate-100">{title}</h2>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-ds-sm">
         <ProfileSwitcher />
         {/* Desktop stats */}
-        <div className="hidden md:flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+        <div className="hidden md:flex items-center gap-2 text-ds-small text-slate-600 dark:text-slate-400">
           <Users className="h-4 w-4" />
           <span>
             {label}:{' '}
@@ -100,7 +100,7 @@ function StudentsPageHeader({
           <span>{todayHint}</span>
         </div>
         {/* Mobile stats */}
-        <div className="md:hidden flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+        <div className="md:hidden flex items-center gap-2 text-ds-small text-slate-600 dark:text-slate-400">
           <Users className="h-4 w-4" />
           <span>
             {label}:{' '}
@@ -185,11 +185,11 @@ function StudentsPanel({
   }, [searchQuery]);
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+    <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
       <div className="mb-4 flex items-center">
         <button
           onClick={onAddStudent}
-          className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white dark:bg-slate-700 dark:hover:bg-slate-600"
+          className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600"
         >
           <Plus className="h-4 w-4" />
           {t.add_student || 'Add Student'}
@@ -198,8 +198,8 @@ function StudentsPanel({
 
       {/* Existing Students Section */}
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-md font-medium text-slate-900 dark:text-slate-100">{t.existing_students}</h3>
+        <div className="flex items-center justify-between mb-ds-sm">
+          <h3 className="text-ds-body font-medium text-slate-900 dark:text-slate-100">{t.existing_students}</h3>
           <div className="flex items-center gap-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -208,17 +208,17 @@ function StudentsPanel({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t.search_students_placeholder || 'Search students...'}
-                className="pl-10 pr-4 py-1.5 rounded-lg border border-slate-300 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 w-64"
+                className="pl-10 pr-4 py-1.5 rounded-ds-md border border-slate-300 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 w-64"
               />
             </div>
           </div>
         </div>
         {studentError && (
-          <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:text-red-300">
+          <div className="mb-4 rounded-ds-md bg-red-50 p-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:text-red-300">
             {studentError}
           </div>
         )}
-        <div className="overflow-x-auto overflow-hidden border border-slate-200 dark:border-slate-700 rounded-xl">
+        <div className="overflow-x-auto overflow-hidden border border-slate-200 dark:border-slate-700 rounded-ds-lg">
           {loadingStudents || !hasLoadedOnce ? (
             <LoadingSkeleton type="table" rows={5} />
           ) : filteredStudents.length === 0 ? (
@@ -229,55 +229,55 @@ function StudentsPanel({
             <>
               <table className="w-full border-collapse">
               <thead>
-                <tr className="bg-black">
-                  <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300 rounded-tl-xl">
+                <tr className="bg-mint-500">
+                  <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300 rounded-tl-ds-lg">
                     {t.student_name}
                   </th>
-                  <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                  <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
                     {t.student_dob}
                   </th>
-                  <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                  <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
                     {t.student_gender}
                   </th>
-                  <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                  <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
                     {t.student_class}
                   </th>
-                  <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                  <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
                     {t.guardians || 'Guardians'}
                   </th>
-                  <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300 rounded-tr-xl">
+                  <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300 rounded-tr-ds-lg">
                     {t.actions || 'Actions'}
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedStudents.map((student) => (
-                  <tr key={student.id} className="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                  <tr key={student.id} className="border-b border-slate-100 dark:border-slate-700 hover:bg-mint-50 dark:hover:bg-slate-700/50 transition-colors">
                     <td className="py-2 px-4">
-                      <div className="font-medium text-[13px] text-slate-900 dark:text-slate-100">
+                      <div className="font-medium text-ds-tiny text-slate-900 dark:text-slate-100">
                         {getStudentName(student)}
                       </div>
                     </td>
-                    <td className="py-2 px-4 text-sm text-black dark:text-slate-400">
+                    <td className="py-2 px-4 text-ds-small text-black dark:text-slate-400">
                       <span suppressHydrationWarning>
                         {formatDate(student.users?.dob || student.dob)}
                       </span>
                     </td>
-                    <td className="py-2 px-4 text-sm text-black dark:text-slate-400">
+                    <td className="py-2 px-4 text-ds-small text-black dark:text-slate-400">
                       {student.users?.gender || student.gender || '-'}
                     </td>
-                    <td className="py-2 px-4 text-sm text-black dark:text-slate-400">
+                    <td className="py-2 px-4 text-ds-small text-black dark:text-slate-400">
                       {student.classes?.name || '-'}
                     </td>
-                    <td className="py-2 px-4 text-sm text-black dark:text-slate-400">
+                    <td className="py-2 px-4 text-ds-small text-black dark:text-slate-400">
                       {student.guardians && Array.isArray(student.guardians) && student.guardians.length > 0 ? (
                         <div className="flex flex-col gap-1">
                           {student.guardians.map((guardian, idx) => {
-                            const guardianName = guardian.users 
+                            const guardianName = guardian.users
                               ? `${guardian.users.first_name || ''} ${guardian.users.last_name || ''}`.trim()
                               : null;
                             return guardianName ? (
-                              <span key={guardian.id || idx} className="text-xs">
+                              <span key={guardian.id || idx} className="text-ds-tiny">
                                 {guardianName}
                                 {guardian.relation ? ` (${guardian.relation})` : ''}
                               </span>
@@ -292,7 +292,7 @@ function StudentsPanel({
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => onEditStudent && onEditStudent(student)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2 py-1 text-[13px] hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                          className="inline-flex items-center gap-1 rounded-ds-sm border border-slate-300 px-2 py-1 text-ds-tiny hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
                           title={t.edit || 'Edit'}
                         >
                           <Edit className="h-3.5 w-3.5" />
@@ -301,7 +301,7 @@ function StudentsPanel({
                         
                         <button
                           onClick={() => onDeleteStudent && onDeleteStudent(student.id)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-red-300 px-2 py-1 text-[13px] text-red-600 hover:bg-red-50 dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20"
+                          className="inline-flex items-center gap-1 rounded-ds-sm border border-red-300 px-2 py-1 text-ds-tiny text-red-600 hover:bg-red-50 transition-colors dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20"
                           title={t.delete || 'Delete'}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -313,27 +313,27 @@ function StudentsPanel({
                 ))}
               </tbody>
               </table>
-              
+
               {/* Pagination Controls - Always show when there is at least 1 student */}
               {filteredStudents.length > 0 && (
                 <div className="mt-3 mb-3 mr-3 flex items-center justify-end gap-2">
                   <button
                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                     disabled={currentPage === 1}
-                    className="inline-flex items-center gap-1 rounded-lg border border-slate-400 px-3 py-1.5 text-sm hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                    className="inline-flex items-center gap-1 rounded-ds-md border border-slate-400 px-3 py-1.5 text-ds-small hover:bg-mint-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
                   >
                     {t.prev || 'Prev'}
                   </button>
-                  
+
                   <div className="flex items-center gap-1">
                     {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                       <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
-                        className={`px-3 py-1.5 text-sm rounded-lg ${
+                        className={`px-3 py-1.5 text-ds-small rounded-ds-md transition-colors ${
                           currentPage === page
-                            ? 'bg-white text-black dark:bg-slate-800 dark:text-white border border-slate-300'
-                            : 'border border-slate-300 hover:bg-slate-50 dark:border-slate-600 dark:hover:bg-slate-700 text-black dark:text-white'
+                            ? 'bg-mint-500 text-white dark:bg-slate-800 dark:text-white border border-mint-500'
+                            : 'border border-slate-300 hover:bg-mint-50 dark:border-slate-600 dark:hover:bg-slate-700 text-black dark:text-white'
                         }`}
                       >
                         {page}
@@ -344,7 +344,7 @@ function StudentsPanel({
                   <button
                     onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                     disabled={currentPage === totalPages}
-                    className="inline-flex items-center gap-1 rounded-lg border border-slate-400 px-3 py-1.5 text-sm hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                    className="inline-flex items-center gap-1 rounded-ds-md border border-slate-400 px-3 py-1.5 text-ds-small hover:bg-mint-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
                   >
                     {t.next || 'Next'}
                   </button>

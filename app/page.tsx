@@ -64,7 +64,7 @@ export default function SamveraLanding() {
       <header className="sticky top-0 z-40 w-full border-b border-slate-200 dark:border-slate-700 bg-white/75 dark:bg-slate-900/75 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-6">
           <a href="/" className="flex items-center gap-2">
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900">S</span>
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-ds-md bg-mint-500 text-white shadow-ds-sm">S</span>
             <span className="font-medium">Samvera</span>
           </a>
           <nav className="hidden items-center gap-6 md:flex">
@@ -72,20 +72,20 @@ export default function SamveraLanding() {
             <a className="hover:text-slate-900 dark:hover:text-slate-100" href="#roles">{t.nav_roles}</a>
             <a className="hover:text-slate-900 dark:hover:text-slate-100" href="#security">{t.nav_security}</a>
             <a className="hover:text-slate-900 dark:hover:text-slate-100" href="#contact">{t.nav_contact}</a>
-            <a className="rounded-xl bg-slate-900 dark:bg-slate-100 px-3 py-1.5 text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200" href="/signin">{t.nav_signin}</a>
+            <a className="rounded-ds-md bg-mint-500 px-3 py-1.5 text-white hover:bg-mint-600 transition-colors" href="/signin">{t.nav_signin}</a>
           </nav>
           <div className="flex items-center gap-2 md:hidden">
             <button
               type="button"
               aria-label={
-                theme === 'light' 
-                  ? "Switch to dark mode" 
-                  : theme === 'dark' 
-                  ? "Switch to system mode" 
+                theme === 'light'
+                  ? "Switch to dark mode"
+                  : theme === 'dark'
+                  ? "Switch to system mode"
                   : "Switch to light mode"
               }
               onClick={toggleTheme}
-              className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:border-slate-600 dark:hover:bg-slate-700"
+              className="inline-flex items-center gap-2 rounded-ds-md border border-slate-300 px-3 py-1.5 text-ds-small text-slate-700 hover:bg-mint-50 dark:text-slate-200 dark:border-slate-600 dark:hover:bg-slate-700 transition-colors"
             >
               {!mounted ? (
                 <Moon size={16} /> // Default to dark icon during SSR
@@ -97,7 +97,7 @@ export default function SamveraLanding() {
                 <Monitor size={16} />
               )}
             </button>
-            <a className="rounded-xl bg-slate-900 dark:bg-slate-100 px-3 py-1.5 text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200" href="/signin">{t.nav_signin}</a>
+            <a className="rounded-ds-md bg-mint-500 px-3 py-1.5 text-white hover:bg-mint-600 transition-colors" href="/signin">{t.nav_signin}</a>
           </div>
           <div className="ml-4 hidden md:flex items-center gap-3">
             <button
@@ -176,10 +176,10 @@ export default function SamveraLanding() {
               {t.hero_sub}
             </motion.p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              <a href="/signin" className="inline-flex items-center gap-2 rounded-xl bg-slate-900 dark:bg-slate-100 px-5 py-3 text-white dark:text-slate-900 shadow hover:bg-slate-800 dark:hover:bg-slate-200">
+              <a href="/signin" className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-5 py-3 text-white shadow-ds-md hover:bg-mint-600 transition-colors">
                 {t.cta_demo} <ArrowRight className="h-4 w-4" />
               </a>
-              <a href="#features" className="inline-flex items-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 px-5 py-3 hover:bg-slate-100 dark:hover:bg-slate-800">
+              <a href="#features" className="inline-flex items-center gap-2 rounded-ds-md border border-slate-300 dark:border-slate-600 px-5 py-3 hover:bg-mint-50 dark:hover:bg-slate-800 transition-colors">
                 {t.cta_explore}
               </a>
             </div>
@@ -193,15 +193,15 @@ export default function SamveraLanding() {
           {/* Mock card */}
           <motion.div initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }}
             className="relative mx-auto w-full max-w-xl">
-            <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg">
+            <div className="rounded-ds-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-ds-lg">
               <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-700 px-4 py-2">
                 <span className="h-3 w-3 rounded-full bg-slate-300 dark:bg-slate-600" />
                 <span className="h-3 w-3 rounded-full bg-slate-300 dark:bg-slate-600" />
                 <span className="h-3 w-3 rounded-full bg-slate-300 dark:bg-slate-600" />
-                <span className="ml-3 text-sm text-slate-500 dark:text-slate-400">{t.mock_title}</span>
+                <span className="ml-3 text-ds-small text-slate-500 dark:text-slate-400">{t.mock_title}</span>
               </div>
               <div className="grid gap-4 p-4 md:grid-cols-2">
-                <div className="rounded-xl border border-slate-200 dark:border-slate-600 p-3 md:col-span-2">
+                <div className="rounded-ds-md border border-slate-200 dark:border-slate-600 p-3 md:col-span-2">
                   <div className="mb-2 flex items-center justify-between">
                     <div className="font-medium">{t.mock_stories}</div>
                     <Timer className="h-4 w-4 text-slate-400 dark:text-slate-500" />
@@ -229,26 +229,26 @@ export default function SamveraLanding() {
                     ))}
                   </div>
                 </div>
-                <div className="rounded-xl border border-slate-200 dark:border-slate-600 p-3">
+                <div className="rounded-ds-md border border-slate-200 dark:border-slate-600 p-3">
                   <div className="mb-2 flex items-center justify-between">
                     <div className="font-medium">{t.mock_feed}</div>
                     <Bell className="h-4 w-4 text-slate-400 dark:text-slate-500" />
                   </div>
-                  <div className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                  <div className="space-y-2 text-ds-small text-slate-600 dark:text-slate-300">
                     <p>• {t.mock_post1}</p>
                     <p>• {t.mock_post2}</p>
                     <p>• {t.mock_post3}</p>
                   </div>
                 </div>
-                <div className="rounded-xl border border-slate-200 dark:border-slate-600 p-3">
+                <div className="rounded-ds-md border border-slate-200 dark:border-slate-600 p-3">
                   <div className="mb-2 font-medium">{t.mock_today}</div>
-                  <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+                  <ul className="space-y-2 text-ds-small text-slate-600 dark:text-slate-300">
                     <li>08:30 — {t.mock_breakfast}</li>
                     <li>10:00 — {t.mock_outdoor}</li>
                     <li>12:00 — {t.mock_lunch}</li>
                   </ul>
                 </div>
-                <div className="rounded-xl border border-slate-200 dark:border-slate-600 p-3 md:col-span-2">
+                <div className="rounded-ds-md border border-slate-200 dark:border-slate-600 p-3 md:col-span-2">
                   <div className="mb-2 font-medium">{t.mock_attendance}</div>
                   <div className="flex flex-wrap gap-2 text-sm">
                     {Array.from({ length: 8 }).map((_, i) => (
@@ -273,10 +273,10 @@ export default function SamveraLanding() {
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           {features.map(({ icon: Icon, title, desc }, idx) => (
             <motion.div key={idx} initial={{ opacity: 0, y: 8 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: idx * 0.03 }}
-              className="group rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-sm hover:shadow dark:hover:shadow-lg">
-              <div className="mb-3 inline-flex rounded-xl border border-slate-200 dark:border-slate-600 p-2"><Icon className="h-5 w-5" /></div>
+              className="group rounded-ds-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-5 shadow-ds-card hover:shadow-ds-lg transition-shadow dark:hover:shadow-lg">
+              <div className="mb-3 inline-flex rounded-ds-md border border-slate-200 dark:border-slate-600 p-2"><Icon className="h-5 w-5" /></div>
               <div className="font-medium">{title}</div>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{desc}</p>
+              <p className="mt-1 text-ds-small text-slate-600 dark:text-slate-300">{desc}</p>
             </motion.div>
           ))}
         </div>
@@ -284,15 +284,15 @@ export default function SamveraLanding() {
 
       {/* Roles */}
       <section id="roles" className="mx-auto max-w-7xl px-4 py-16 md:px-6">
-        <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">{t.roles_title}</h2>
+        <h2 className="text-ds-h2 font-semibold tracking-tight md:text-3xl">{t.roles_title}</h2>
         <p className="mt-2 max-w-2xl text-slate-600 dark:text-slate-300">{t.roles_sub}</p>
         <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-3">
           {roles.map((role, i) => (
-            <div key={i} className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
-              <div className="mb-3 inline-flex items-center gap-2 text-sm font-semibold">
+            <div key={i} className="rounded-ds-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-ds-md shadow-ds-card">
+              <div className="mb-3 inline-flex items-center gap-2 text-ds-small font-semibold">
                 <Users className="h-4 w-4" /> {role.name}
               </div>
-              <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
+              <ul className="space-y-2 text-ds-small text-slate-600 dark:text-slate-300">
                 {role.points.map((p, j) => (
                   <li key={j} className="flex items-start gap-2">
                     <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-slate-400 dark:bg-slate-500" />
@@ -307,24 +307,24 @@ export default function SamveraLanding() {
 
       {/* Security */}
       <section id="security" className="mx-auto max-w-7xl px-4 py-16 md:px-6">
-        <div className="rounded-3xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-8 shadow-sm">
+        <div className="rounded-ds-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-ds-lg shadow-ds-card">
           <div className="flex flex-col justify-between gap-6 md:flex-row md:items-center">
             <div>
-              <h2 className="text-2xl font-semibold tracking-tight md:text-3xl">{t.security_title}</h2>
+              <h2 className="text-ds-h2 font-semibold tracking-tight md:text-3xl">{t.security_title}</h2>
               <p className="mt-2 max-w-2xl text-slate-600 dark:text-slate-300">{t.security_sub}</p>
             </div>
           </div>
           <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
             {[t.security_1, t.security_2, t.security_3, t.security_4].map((item, idx) => (
-              <div key={idx} className="rounded-2xl border border-slate-200 dark:border-slate-600 p-5">
-                <div className="mb-2 inline-flex items-center gap-2 text-sm font-medium">
+              <div key={idx} className="rounded-ds-lg border border-slate-200 dark:border-slate-600 p-5">
+                <div className="mb-2 inline-flex items-center gap-2 text-ds-small font-medium">
                   <Shield className="h-4 w-4" /> {t.security_badge}
                 </div>
-                <p className="text-sm text-slate-700 dark:text-slate-300">{item}</p>
+                <p className="text-ds-small text-slate-700 dark:text-slate-300">{item}</p>
               </div>
             ))}
           </div>
-          <p className="mt-4 text-xs text-slate-500 dark:text-slate-400">{t.security_note}</p>
+          <p className="mt-4 text-ds-tiny text-slate-500 dark:text-slate-400">{t.security_note}</p>
         </div>
       </section>
 
@@ -332,7 +332,7 @@ export default function SamveraLanding() {
       <footer className="border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-8 text-sm text-slate-600 dark:text-slate-300 md:flex-row md:px-6">
           <div className="flex items-center gap-2">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900">S</span>
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-ds-md bg-mint-500 text-white shadow-ds-sm">S</span>
             <span>© {new Date().getFullYear()} Samvera</span>
           </div>
           <div className="flex items-center gap-4">

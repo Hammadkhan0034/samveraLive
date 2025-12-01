@@ -192,8 +192,8 @@ function SignInPageContent() {
               className="flex items-center gap-3"
             >
               <div className="relative">
-                <div className="absolute inset-0 rounded-xl blur-sm"></div>
-                <span className="relative inline-flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-bold shadow-lg">
+                <div className="absolute inset-0 rounded-ds-md blur-sm"></div>
+                <span className="relative inline-flex h-10 w-10 items-center justify-center rounded-ds-md bg-mint-500 text-white font-bold shadow-ds-md">
                   S
                 </span>
               </div>
@@ -271,11 +271,11 @@ function SignInPageContent() {
           </div>
 
           {/* Sign in card */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow-xl p-8"
+            className="rounded-ds-lg border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow-ds-lg p-ds-lg"
           >
             <div className="text-center mb-6">
               <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
@@ -368,10 +368,10 @@ function SignInPageContent() {
               </div>
 
               {/* Role info */}
-              <div className="rounded-xl bg-slate-50 dark:bg-slate-700/50 px-4 py-3 text-sm">
+              <div className="rounded-ds-md bg-mint-50 dark:bg-slate-700/50 px-4 py-3 text-ds-small">
                 <p className="text-slate-600 dark:text-slate-300">
                   <span className="font-medium">
-                    {isSignUp 
+                    {isSignUp
                       ? t.signup_role.replace('{role}', roleLabel(initialRole, lang))
                       : t.signin_role.replace('{role}', roleLabel(initialRole, lang))
                     }
@@ -380,11 +380,11 @@ function SignInPageContent() {
               </div>
 
               {invitationMessage ? (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-4 py-3 text-sm text-green-700 dark:text-green-300" 
-                  role="alert" 
+                  className="rounded-ds-md bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-4 py-3 text-ds-small text-green-700 dark:text-green-300"
+                  role="alert"
                   aria-live="polite"
                 >
                   ✅ {invitationMessage}
@@ -392,11 +392,11 @@ function SignInPageContent() {
               ) : null}
 
               {err ? (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-300" 
-                  role="alert" 
+                  className="rounded-ds-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 text-ds-small text-red-700 dark:text-red-300"
+                  role="alert"
                   aria-live="polite"
                 >
                   {err}
@@ -406,7 +406,7 @@ function SignInPageContent() {
               <button
                 type="submit"
                 disabled={submitting || isSigningIn}
-                className="w-full rounded-md bg-slate-900 dark:bg-slate-600 py-2 px-4 font-medium text-white dark:text-slate-100 shadow-lg hover:shadow-xl hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all duration-200 flex items-center justify-center gap-2"
+                className="w-full rounded-ds-md bg-mint-500 py-2 px-4 font-medium text-white shadow-ds-md hover:shadow-ds-lg hover:bg-mint-600 hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all duration-200 flex items-center justify-center gap-2"
               >
                 {submitting ? (
                   <>

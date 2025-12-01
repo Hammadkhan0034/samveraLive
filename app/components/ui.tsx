@@ -1,16 +1,16 @@
 export function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <div className={`bg-white rounded-xl shadow-sm border p-5 ${className}`}>{children}</div>;
+  return <div className={`bg-white dark:bg-slate-800 rounded-ds-lg shadow-ds-card p-ds-md ${className}`}>{children}</div>;
 }
 
 export function SectionTitle({ children }: { children: React.ReactNode }) {
-  return <h2 className="text-lg font-semibold mb-3">{children}</h2>;
+  return <h2 className="text-ds-h3 font-semibold mb-3 text-slate-900 dark:text-slate-100">{children}</h2>;
 }
 
 export function Button(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
   return (
     <button
       {...props}
-      className={`px-3 py-2 rounded-md border bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 ${props.className || ""}`}
+      className={`px-4 py-2 rounded-ds-md bg-mint-500 text-white hover:bg-mint-600 disabled:opacity-50 transition-colors duration-200 font-medium ${props.className || ""}`}
     />
   );
 }
@@ -19,7 +19,7 @@ export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       {...props}
-      className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${props.className || ""}`}
+      className={`w-full border border-slate-200 dark:border-slate-600 rounded-ds-md px-4 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-mint-500 focus:border-transparent transition-all duration-200 ${props.className || ""}`}
     />
   );
 }
@@ -28,17 +28,18 @@ export function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement
   return (
     <textarea
       {...props}
-      className={`w-full border rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 ${props.className || ""}`}
+      className={`w-full border border-slate-200 dark:border-slate-600 rounded-ds-md px-4 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-mint-500 focus:border-transparent transition-all duration-200 ${props.className || ""}`}
     />
   );
 }
 
-export function Pill({ children, tone = "gray" }: { children: React.ReactNode; tone?: "gray" | "green" | "blue" | "amber" }) {
+export function Pill({ children, tone = "gray" }: { children: React.ReactNode; tone?: "gray" | "green" | "blue" | "amber" | "mint" }) {
   const tones: Record<string, string> = {
-    gray: "bg-gray-100 text-gray-700",
-    green: "bg-green-100 text-green-700",
-    blue: "bg-blue-100 text-blue-700",
-    amber: "bg-amber-100 text-amber-800",
+    gray: "bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-slate-300",
+    green: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
+    blue: "bg-pale-blue text-blue-700 dark:bg-blue-900 dark:text-blue-300",
+    amber: "bg-pale-yellow text-amber-800 dark:bg-amber-900 dark:text-amber-300",
+    mint: "bg-mint-100 text-mint-700 dark:bg-mint-900 dark:text-mint-300",
   };
-  return <span className={`inline-block text-xs px-2 py-1 rounded-full ${tones[tone]}`}>{children}</span>;
+  return <span className={`inline-block text-ds-tiny px-2 py-1 rounded-ds-full ${tones[tone]}`}>{children}</span>;
 }

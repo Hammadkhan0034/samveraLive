@@ -200,9 +200,9 @@ export default function TeacherLayout({
                     )}
                   >
                     <span className={clsx(
-                      'flex-shrink-0 rounded-lg p-2',
+                      'flex-shrink-0 rounded-ds-md p-2 transition-colors',
                       isActive
-                        ? 'bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900'
+                        ? 'bg-mint-500 text-white'
                         : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
                     )}>
                       <Icon className="h-5 w-5" />
@@ -235,7 +235,7 @@ export default function TeacherLayout({
         {/* Mobile overlay */}
         {sidebarOpen && (
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+            className="fixed inset-0 bg-black/50 z-40 md:hidden"
             onClick={() => setSidebarOpen(false)}
             aria-hidden="true"
           />

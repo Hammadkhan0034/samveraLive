@@ -221,7 +221,7 @@ function ClassDetailsPageContent() {
 
   if (error) {
     return (
-      <div className="rounded-2xl border border-red-200 bg-red-50 p-6 dark:border-red-800 dark:bg-red-900/20">
+      <div className="rounded-ds-lg border border-red-200 bg-red-50 p-ds-md dark:border-red-800 dark:bg-red-900/20">
         <p className="text-red-700 dark:text-red-400">{error || 'Class not found'}</p>
       </div>
     );
@@ -230,17 +230,17 @@ function ClassDetailsPageContent() {
   return (
     <>
       {/* Content Header */}
-      <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div className="mb-ds-sm flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3">
           {/* Mobile menu button */}
           <button
             onClick={() => sidebarRef.current?.open()}
-            className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+            className="md:hidden p-2 rounded-ds-md hover:bg-mint-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
             aria-label="Toggle sidebar"
           >
             <Menu className="h-5 w-5" />
           </button>
-          <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+          <h2 className="text-ds-h2 font-semibold tracking-tight text-slate-900 dark:text-slate-100">
             {t.class_details || 'Class Details'} {classData ? `- ${classData.name}` : ''}
           </h2>
         </div>
@@ -250,14 +250,14 @@ function ClassDetailsPageContent() {
       </div>
 
         {/* Class Details Table */}
-        <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-          <h2 className="mb-4 text-lg font-medium text-slate-900 dark:text-slate-100">
+        <div className="mb-ds-md rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+          <h2 className="mb-4 text-ds-h3 font-medium text-slate-900 dark:text-slate-100">
             {t.class_details || 'Class Details'}
           </h2>
           {classData ? (
-            <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
-              <table className="min-w-full text-sm">
-                <thead className="bg-black text-white">
+            <div className="overflow-x-auto rounded-ds-md border border-slate-200 dark:border-slate-700">
+              <table className="min-w-full text-ds-small">
+                <thead className="bg-mint-500 text-white">
                   <tr>
                     <th className="px-4 py-2 text-left text-white">{t.col_name || 'Name'}</th>
                     <th className="px-4 py-2 text-left text-white">{t.col_students || 'Students'}</th>
@@ -273,7 +273,7 @@ function ClassDetailsPageContent() {
                     <td className="px-4 py-2 text-slate-700 dark:text-slate-300">{assignedTeachers.length}</td>
                     <td className="px-4 py-2 text-slate-700 dark:text-slate-300">{classData.code || '-'}</td>
                     <td className="px-4 py-2">
-                      <span className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300">
+                      <span className="inline-flex items-center gap-1 rounded-ds-full border px-2 py-0.5 text-ds-tiny border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300">
                         {t.visible_yes || 'Visible'}
                       </span>
                     </td>
@@ -282,13 +282,13 @@ function ClassDetailsPageContent() {
               </table>
             </div>
           ) : (
-            <p className="text-sm text-slate-500 dark:text-slate-400">No class data available.</p>
+            <p className="text-ds-small text-slate-500 dark:text-slate-400">No class data available.</p>
           )}
         </div>
 
         {/* Staff Assigned Table */}
-        <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-          <h2 className="mb-4 text-lg font-medium text-slate-900 dark:text-slate-100">
+        <div className="mb-ds-md rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+          <h2 className="mb-4 text-ds-h3 font-medium text-slate-900 dark:text-slate-100">
             {t.assigned_staff || 'Assigned Staff'}
           </h2>
           <div className="mb-3">
@@ -302,7 +302,7 @@ function ClassDetailsPageContent() {
               trigger={(open) => (
                 <button
                   onClick={open}
-                  className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2.5 py-1 text-xs hover:bg-white dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                  className="inline-flex items-center gap-1 rounded-ds-md border border-slate-300 px-2.5 py-1 text-ds-tiny hover:bg-mint-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 transition-colors"
                 >
                   <Users className="h-3.5 w-3.5" />
                   {t.assign_teacher || 'Assign Teacher'}
@@ -311,9 +311,9 @@ function ClassDetailsPageContent() {
             />
           </div>
           {assignedTeachers.length > 0 || classData ? (
-            <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
-              <table className="min-w-full text-sm">
-                <thead className="bg-black text-white">
+            <div className="overflow-x-auto rounded-ds-md border border-slate-200 dark:border-slate-700">
+              <table className="min-w-full text-ds-small">
+                <thead className="bg-mint-500 text-white">
                   <tr>
                     <th className="px-4 py-2 text-left text-white">{t.first_name || 'First Name'}</th>
                     <th className="px-4 py-2 text-left text-white">{t.last_name || 'Last Name'}</th>
@@ -323,14 +323,14 @@ function ClassDetailsPageContent() {
                 </thead>
                 <tbody>
                   {assignedTeachers.map((teacher: any, index: number) => (
-                    <tr key={index} className="border-t border-slate-200 dark:border-slate-700">
+                    <tr key={index} className="border-t border-slate-200 dark:border-slate-700 hover:bg-mint-50 dark:hover:bg-slate-700/50 transition-colors">
                       <td className="px-4 py-2 text-slate-900 dark:text-slate-100">{teacher.first_name || '-'}</td>
                       <td className="px-4 py-2 text-slate-900 dark:text-slate-100">{teacher.last_name || '-'}</td>
                       <td className="px-4 py-2 text-slate-700 dark:text-slate-300">{teacher.email || '-'}</td>
                       <td className="px-4 py-2">
                         <button
                           onClick={() => openDeleteTeacherModal(teacher)}
-                          className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                          className="inline-flex items-center gap-1 rounded-ds-md px-2 py-1 text-ds-tiny text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors"
                           title={t.delete || 'Delete'}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
@@ -343,15 +343,15 @@ function ClassDetailsPageContent() {
               </table>
             </div>
           ) : (
-            <div className="rounded-lg border border-slate-200 p-4 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+            <div className="rounded-ds-md border border-slate-200 p-4 text-ds-small text-slate-500 dark:border-slate-700 dark:text-slate-400">
               {t.no_staff_assigned || 'No staff assigned to this class.'}
             </div>
           )}
         </div>
 
         {/* Students Assigned Table */}
-        <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-          <h2 className="mb-4 text-lg font-medium text-slate-900 dark:text-slate-100">
+        <div className="mb-ds-md rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+          <h2 className="mb-4 text-ds-h3 font-medium text-slate-900 dark:text-slate-100">
             {t.assigned_students || 'Assigned Students'}
           </h2>
           <div className="mb-3">
@@ -365,7 +365,7 @@ function ClassDetailsPageContent() {
               trigger={(open) => (
                 <button
                   onClick={open}
-                  className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2.5 py-1 text-xs hover:bg-white dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                  className="inline-flex items-center gap-1 rounded-ds-md border border-slate-300 px-2.5 py-1 text-ds-tiny hover:bg-mint-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 transition-colors"
                 >
                   <UserPlus className="h-3.5 w-3.5" />
                   {t.add_student || 'Add Student'}
@@ -374,10 +374,10 @@ function ClassDetailsPageContent() {
             />
           </div>
           {assignedStudents.length > 0 || classData ? (
-            <div className="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <div className="rounded-ds-md border border-slate-200 dark:border-slate-700 overflow-hidden">
               <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
-                <table className="min-w-full text-sm">
-                  <thead className="bg-black text-white sticky top-0">
+                <table className="min-w-full text-ds-small">
+                  <thead className="bg-mint-500 text-white sticky top-0">
                     <tr>
                       <th className="px-4 py-2 text-left text-white">{t.first_name || 'First Name'}</th>
                       <th className="px-4 py-2 text-left text-white">{t.last_name || 'Last Name'}</th>
@@ -391,7 +391,7 @@ function ClassDetailsPageContent() {
                       const dob = student.users?.dob || student.dob;
                       const gender = student.users?.gender || student.gender;
                       return (
-                        <tr key={student.id} className="border-t border-slate-200 dark:border-slate-700">
+                        <tr key={student.id} className="border-t border-slate-200 dark:border-slate-700 hover:bg-mint-50 dark:hover:bg-slate-700/50 transition-colors">
                           <td className="px-4 py-2 text-slate-900 dark:text-slate-100">
                             {student.first_name || student.users?.first_name || '-'}
                           </td>
@@ -405,7 +405,7 @@ function ClassDetailsPageContent() {
                           <td className="px-4 py-2">
                             <button
                               onClick={() => openDeleteStudentModal(student)}
-                              className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                              className="inline-flex items-center gap-1 rounded-ds-md px-2 py-1 text-ds-tiny text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors"
                               title={t.delete || 'Delete'}
                             >
                               <Trash2 className="h-3.5 w-3.5" />
@@ -420,7 +420,7 @@ function ClassDetailsPageContent() {
               </div>
             </div>
           ) : (
-            <div className="rounded-lg border border-slate-200 p-4 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+            <div className="rounded-ds-md border border-slate-200 p-4 text-ds-small text-slate-500 dark:border-slate-700 dark:text-slate-400">
               {t.no_students_assigned || 'No students assigned to this class.'}
             </div>
           )}
@@ -428,24 +428,24 @@ function ClassDetailsPageContent() {
 
         {/* Delete Teacher Confirmation Modal */}
         {showDeleteTeacherModal && teacherToDelete && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-800">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="w-full max-w-md rounded-ds-lg bg-white p-ds-md shadow-ds-lg dark:bg-slate-800">
               <div className="mb-4 flex items-center gap-3">
-                <div className="rounded-full bg-red-100 p-2 dark:bg-red-900/20">
+                <div className="rounded-ds-full bg-red-100 p-2 dark:bg-red-900/20">
                   <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                <h3 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">
                   {t.delete_teacher || 'Remove Teacher'}
                 </h3>
               </div>
-              
+
               {deleteError && (
-                <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+                <div className="mb-4 rounded-ds-md bg-red-50 border border-red-200 px-4 py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
                   {deleteError}
                 </div>
               )}
 
-              <p className="mb-4 text-sm text-slate-600 dark:text-slate-400">
+              <p className="mb-4 text-ds-small text-slate-600 dark:text-slate-400">
                 {t.delete_teacher_message?.replace('{name}', `${teacherToDelete.first_name || ''} ${teacherToDelete.last_name || ''}`.trim() || 'this teacher') || `Are you sure you want to remove this teacher from the class?`}
               </p>
 
@@ -457,14 +457,14 @@ function ClassDetailsPageContent() {
                     setDeleteError(null);
                   }}
                   disabled={deletingTeacher}
-                  className="flex-1 rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small text-slate-700 hover:bg-mint-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {t.cancel || 'Cancel'}
                 </button>
                 <button
                   onClick={handleDeleteTeacher}
                   disabled={deletingTeacher}
-                  className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 rounded-ds-md bg-red-600 px-4 py-2 text-ds-small text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
                 >
                   {deletingTeacher ? (
                     <>
@@ -482,24 +482,24 @@ function ClassDetailsPageContent() {
 
         {/* Delete Student Confirmation Modal */}
         {showDeleteStudentModal && studentToDelete && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-800">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <div className="w-full max-w-md rounded-ds-lg bg-white p-ds-md shadow-ds-lg dark:bg-slate-800">
               <div className="mb-4 flex items-center gap-3">
-                <div className="rounded-full bg-red-100 p-2 dark:bg-red-900/20">
+                <div className="rounded-ds-full bg-red-100 p-2 dark:bg-red-900/20">
                   <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
                 </div>
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                <h3 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">
                   {t.delete_student || 'Remove Student'}
                 </h3>
               </div>
-              
+
               {deleteError && (
-                <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+                <div className="mb-4 rounded-ds-md bg-red-50 border border-red-200 px-4 py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
                   {deleteError}
                 </div>
               )}
 
-              <p className="mb-4 text-sm text-slate-600 dark:text-slate-400">
+              <p className="mb-4 text-ds-small text-slate-600 dark:text-slate-400">
                 {t.delete_student_message?.replace('{name}', `${studentToDelete.first_name || studentToDelete.users?.first_name || ''} ${studentToDelete.last_name || studentToDelete.users?.last_name || ''}`.trim() || 'this student') || `Are you sure you want to remove this student from the class?`}
               </p>
 
@@ -511,14 +511,14 @@ function ClassDetailsPageContent() {
                     setDeleteError(null);
                   }}
                   disabled={deletingStudent}
-                  className="flex-1 rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small text-slate-700 hover:bg-mint-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {t.cancel || 'Cancel'}
                 </button>
                 <button
                   onClick={handleDeleteStudent}
                   disabled={deletingStudent}
-                  className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="flex-1 rounded-ds-md bg-red-600 px-4 py-2 text-ds-small text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
                 >
                   {deletingStudent ? (
                     <>

@@ -353,35 +353,35 @@ export default function EditStoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <div className="min-h-screen bg-mint-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
         <main className="mx-auto max-w-4xl px-4 py-8 md:px-6 ml-20">
-          <div className="mb-6 mt-14 flex items-center gap-4">
+          <div className="mb-ds-md mt-14 flex items-center gap-4">
             <button
               onClick={() => router.back()}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              className="inline-flex items-center gap-2 rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition-colors"
             >
               <ArrowLeft className="h-4 w-4" /> {t.back}
             </button>
             <div>
-              <h1 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.edit_story}</h1>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.edit_story_subtitle}</p>
+              <h1 className="text-ds-h2 font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.edit_story}</h1>
+              <p className="mt-1 text-ds-small text-slate-600 dark:text-slate-400">{t.edit_story_subtitle}</p>
             </div>
           </div>
 
           {error && (
-            <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+            <div className="mb-4 rounded-ds-md bg-red-50 border border-red-200 px-4 py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
               {error}
             </div>
           )}
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
             <div className="grid gap-3 md:grid-cols-2">
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">{t.class_label} {isTeacher && '*'}</label>
+                <label className="mb-1 block text-ds-small font-medium text-slate-700 dark:text-slate-300">{t.class_label} {isTeacher && '*'}</label>
                 <select
                   value={form.class_id || ''}
                   onChange={(e)=>setForm(f=>({...f, class_id: e.target.value}))}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                  className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 focus:border-mint-500 focus:ring-mint-500"
                   required={isTeacher}
                 >
                   {!isTeacher && <option value="">{t.org_wide}</option>}
@@ -397,11 +397,11 @@ export default function EditStoryPage() {
                   )}
                 </select>
                 {isTeacher && !form.class_id && (
-                  <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">Please select a class for your story</p>
+                  <p className="mt-1 text-ds-tiny text-amber-600 dark:text-amber-400">Please select a class for your story</p>
                 )}
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">{t.expires_label}</label>
+                <label className="mb-1 block text-ds-small font-medium text-slate-700 dark:text-slate-300">{t.expires_label}</label>
                 <input
                   type="datetime-local"
                   value={toLocalInput(form.expires_at)}
@@ -420,34 +420,34 @@ export default function EditStoryPage() {
                       }
                     }
                   }}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                  className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 focus:border-mint-500 focus:ring-mint-500"
                   required
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">{t.title_label}</label>
+                <label className="mb-1 block text-ds-small font-medium text-slate-700 dark:text-slate-300">{t.title_label}</label>
                 <input
                   value={form.title}
                   onChange={(e)=>setForm(f=>({...f, title: e.target.value}))}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                  className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 focus:border-mint-500 focus:ring-mint-500"
                   placeholder={t.title_ph}
                 />
               </div>
               {!isTeacher && (
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">{t.is_public}</label>
+                  <label className="mb-1 block text-ds-small font-medium text-slate-700 dark:text-slate-300">{t.is_public}</label>
                   <div className="flex items-center gap-2">
-                    <input type="checkbox" checked={form.is_public} onChange={(e)=>setForm(f=>({...f, is_public: e.target.checked}))} />
-                    <span className="text-sm text-slate-600 dark:text-slate-300">{form.is_public ? t.public_yes : t.public_no}</span>
+                    <input type="checkbox" checked={form.is_public} onChange={(e)=>setForm(f=>({...f, is_public: e.target.checked}))} className="accent-mint-500" />
+                    <span className="text-ds-small text-slate-600 dark:text-slate-300">{form.is_public ? t.public_yes : t.public_no}</span>
                   </div>
                 </div>
               )}
               <div className="md:col-span-2">
-                <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">{t.caption_label}</label>
+                <label className="mb-1 block text-ds-small font-medium text-slate-700 dark:text-slate-300">{t.caption_label}</label>
                 <textarea
                   value={form.caption}
                   onChange={(e)=>setForm(f=>({...f, caption: e.target.value}))}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                  className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 focus:border-mint-500 focus:ring-mint-500"
                   placeholder={t.caption_ph}
                   rows={3}
                 />
@@ -455,31 +455,31 @@ export default function EditStoryPage() {
             </div>
 
             <div className="mt-6">
-              <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">{t.items_label}</label>
+              <label className="mb-2 block text-ds-small font-medium text-slate-700 dark:text-slate-300">{t.items_label}</label>
               <div className="space-y-2">
                 {items.length === 0 && (
-                  <div className="text-xs text-slate-500 dark:text-slate-400">{t.items_empty}</div>
+                  <div className="text-ds-tiny text-slate-500 dark:text-slate-400">{t.items_empty}</div>
                 )}
                 {items.map((it, i) => (
-                  <div key={i} className="rounded-md border border-slate-300 p-3 dark:border-slate-700">
+                  <div key={i} className="rounded-ds-md border border-slate-300 p-3 dark:border-slate-700">
                     <div className="flex items-center gap-2 mb-2">
                       <select
                         value={it.type}
                         onChange={(e)=>setItems(prev=>prev.map((x,idx)=> idx===i?{...x, type: e.target.value as any }: x))}
-                        className="rounded-md border border-slate-300 px-2 py-1 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                        className="rounded-ds-md border border-slate-300 px-2 py-1 text-ds-small dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 focus:border-mint-500 focus:ring-mint-500"
                       >
                         <option value="text">{t.item_type_text}</option>
                         <option value="image">{t.item_type_image}</option>
                       </select>
                       <button
-                        className="ml-auto text-xs rounded-md border border-slate-300 px-2 py-1 dark:border-slate-600 dark:text-slate-200"
+                        className="ml-auto text-ds-tiny rounded-ds-md border border-slate-300 px-2 py-1 dark:border-slate-600 dark:text-slate-200 hover:bg-mint-50 transition-colors"
                         onClick={()=>setItems(prev=>prev.filter((_,idx)=>idx!==i))}
                         type="button"
                       >{t.remove}</button>
                     </div>
                     {it.type === 'image' && (
                       <div className="space-y-2">
-                        <label className="block text-xs text-slate-600 dark:text-slate-400">{t.choose_file}</label>
+                        <label className="block text-ds-tiny text-slate-600 dark:text-slate-400">{t.choose_file}</label>
                         <input
                           type="file"
                           accept="image/*"
@@ -488,7 +488,7 @@ export default function EditStoryPage() {
                             if (file) {
                               const reader = new FileReader();
                               reader.onload = () => {
-                                setItems(prev => prev.map((x, idx) => 
+                                setItems(prev => prev.map((x, idx) =>
                                   idx === i ? {
                                     ...x,
                                     imageFile: file,
@@ -501,10 +501,10 @@ export default function EditStoryPage() {
                               reader.readAsDataURL(file);
                             }
                           }}
-                          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                          className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                         />
                         {(it.imagePreview || it.url) && (
-                          <div className="relative w-32 h-32 rounded-lg overflow-hidden border border-slate-300 dark:border-slate-600">
+                          <div className="relative w-32 h-32 rounded-ds-md overflow-hidden border border-slate-300 dark:border-slate-600">
                             <Image src={it.imagePreview || it.url || ''} alt="Preview" fill sizes="128px" className="object-cover" />
                           </div>
                         )}
@@ -515,14 +515,14 @@ export default function EditStoryPage() {
                         placeholder={t.item_caption_ph}
                         value={it.caption || ''}
                         onChange={(e)=>setItems(prev=>prev.map((x,idx)=> idx===i?{...x, caption: e.target.value }: x))}
-                        className="rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                        className="rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 focus:border-mint-500 focus:ring-mint-500"
                       />
                       <input
                         type="number"
                         placeholder={t.duration_ms_ph}
                         value={it.duration_ms || 30000}
                         onChange={(e)=>setItems(prev=>prev.map((x,idx)=> idx===i?{...x, duration_ms: e.target.value ? parseInt(e.target.value) : 30000 }: x))}
-                        className="rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                        className="rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 focus:border-mint-500 focus:ring-mint-500"
                       />
                     </div>
                   </div>
@@ -531,33 +531,33 @@ export default function EditStoryPage() {
                   <button
                     type="button"
                     onClick={()=>setItems(prev=>[...prev, { type: 'text', caption: '', duration_ms: 30000 }])}
-                    className="rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:text-slate-200"
+                    className="rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small dark:border-slate-600 dark:text-slate-200 hover:bg-mint-50 transition-colors"
                   >{t.add_text_item}</button>
                   <button
                     type="button"
                     onClick={()=>setItems(prev=>[...prev, { type: 'image', mime_type: 'image/jpeg', duration_ms: 30000 }])}
-                    className="ml-2 rounded-md border border-slate-300 px-3 py-2 text-sm dark:border-slate-600 dark:text-slate-200"
+                    className="ml-2 rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small dark:border-slate-600 dark:text-slate-200 hover:bg-mint-50 transition-colors"
                   >{t.add_image_item}</button>
                 </div>
               </div>
             </div>
 
             <div className="mt-6 flex items-center justify-end gap-2">
-              <button 
-                className="rounded-md px-4 py-2 text-sm border border-slate-400 text-slate-700 hover:underline dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed" 
+              <button
+                className="rounded-ds-md px-4 py-2 text-ds-small border border-slate-400 text-slate-700 hover:bg-mint-50 dark:text-slate-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 onClick={()=>router.push('/dashboard/stories')}
                 disabled={submitting}
               >
                 {t.cancel}
               </button>
-              <button 
-                className="inline-flex items-center gap-2 rounded-md bg-slate-900 px-4 py-2 text-sm text-white disabled:opacity-60 disabled:cursor-not-allowed dark:bg-black dark:text-white" 
-                disabled={submitting} 
+              <button
+                className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 hover:bg-mint-600 px-4 py-2 text-ds-small text-white disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                disabled={submitting}
                 onClick={submit}
               >
                 {submitting ? (
                   <>
-                    <svg className="animate-spin h-4 w-4 text-white dark:text-slate-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>

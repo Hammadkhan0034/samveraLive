@@ -172,27 +172,27 @@ export default function MenusPage() {
   const todayMenu = menus.find(m => m.day === selectedDate);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <div className="min-h-screen bg-mint-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
         <main className="mx-auto max-w-7xl px-4 py-8 md:px-6">
           {/* Header */}
-          <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-center gap-4">
+          <div className="mb-ds-md flex flex-col gap-ds-sm md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-ds-sm">
               <button
                 onClick={() => router.back()}
-                className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+                className="inline-flex items-center gap-2 rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
               >
                 <ArrowLeft className="h-4 w-4" /> {t.back}
               </button>
               <div>
-                <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.title}</h1>
-                <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.subtitle}</p>
+                <h1 className="text-ds-h1 font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.title}</h1>
+                <p className="mt-1 text-ds-small text-slate-600 dark:text-slate-400">{t.subtitle}</p>
               </div>
             </div>
 
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={openCreateModal}
-                className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
+                className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600"
               >
                 <Plus className="h-4 w-4" /> {t.add_menu}
               </button>
@@ -200,16 +200,16 @@ export default function MenusPage() {
           </div>
 
           {/* Date Selector */}
-          <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-            <div className="flex items-center gap-4">
-              <Calendar className="h-5 w-5 text-slate-500 dark:text-slate-400" />
+          <div className="mb-ds-md rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+            <div className="flex items-center gap-ds-sm">
+              <Calendar className="h-5 w-5 text-mint-600 dark:text-mint-400" />
               <label className="flex-1">
-                <span className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t.select_date}</span>
+                <span className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-2">{t.select_date}</span>
                 <input
                   type="date"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                  className="w-full rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                 />
               </label>
             </div>
@@ -217,36 +217,36 @@ export default function MenusPage() {
 
           {/* Error Message */}
           {error && (
-            <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+            <div className="mb-4 rounded-ds-md bg-red-50 border border-red-200 px-4 py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
               {error}
             </div>
           )}
 
           {/* Menu Display */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
             {loadingMenus ? (
               <div className="flex items-center justify-center py-12">
                 <div className="text-center">
-                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-600 mx-auto mb-4"></div>
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-mint-300 border-t-mint-600 mx-auto mb-4"></div>
                   <p className="text-slate-600 dark:text-slate-400">{t.loading}</p>
                 </div>
               </div>
             ) : todayMenu ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                  <h2 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">
                     {t.menu_for} {new Date(selectedDate).toLocaleDateString(lang === 'is' ? 'is-IS' : 'en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                   </h2>
                   <div className="flex gap-2">
                     <button
                       onClick={() => openEditModal(todayMenu)}
-                      className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                      className="inline-flex items-center gap-1 rounded-ds-md border border-slate-300 px-3 py-1.5 text-ds-small hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
                     >
                       <Edit className="h-4 w-4" /> {t.edit}
                     </button>
                     <button
                       onClick={() => deleteMenu(todayMenu.id!)}
-                      className="inline-flex items-center gap-1 rounded-lg border border-red-300 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20"
+                      className="inline-flex items-center gap-1 rounded-ds-md border border-red-300 px-3 py-1.5 text-ds-small text-red-600 hover:bg-red-50 transition-colors dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20"
                     >
                       <Trash2 className="h-4 w-4" /> {t.delete}
                     </button>
@@ -254,45 +254,45 @@ export default function MenusPage() {
                 </div>
 
                 {todayMenu.breakfast && (
-                  <div className="flex items-center gap-3 p-4 rounded-lg bg-amber-50 border border-amber-200 dark:bg-amber-900/20 dark:border-amber-800">
+                  <div className="flex items-center gap-ds-sm p-ds-sm rounded-ds-md bg-pale-yellow/30 border border-amber-200 dark:bg-amber-900/20 dark:border-amber-800">
                     <Utensils className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                     <div className="flex-1">
-                      <div className="text-sm font-medium text-amber-900 dark:text-amber-100">{t.breakfast}</div>
-                      <div className="text-sm text-amber-700 dark:text-amber-300">{todayMenu.breakfast}</div>
+                      <div className="text-ds-small font-medium text-amber-900 dark:text-amber-100">{t.breakfast}</div>
+                      <div className="text-ds-small text-amber-700 dark:text-amber-300">{todayMenu.breakfast}</div>
                     </div>
                   </div>
                 )}
 
                 {todayMenu.lunch && (
-                  <div className="flex items-center gap-3 p-4 rounded-lg bg-blue-50 border border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
+                  <div className="flex items-center gap-ds-sm p-ds-sm rounded-ds-md bg-pale-blue/30 border border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
                     <Utensils className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                     <div className="flex-1">
-                      <div className="text-sm font-medium text-blue-900 dark:text-blue-100">{t.lunch}</div>
-                      <div className="text-sm text-blue-700 dark:text-blue-300">{todayMenu.lunch}</div>
+                      <div className="text-ds-small font-medium text-blue-900 dark:text-blue-100">{t.lunch}</div>
+                      <div className="text-ds-small text-blue-700 dark:text-blue-300">{todayMenu.lunch}</div>
                     </div>
                   </div>
                 )}
 
                 {todayMenu.snack && (
-                  <div className="flex items-center gap-3 p-4 rounded-lg bg-green-50 border border-green-200 dark:bg-green-900/20 dark:border-green-800">
-                    <Utensils className="h-5 w-5 text-green-600 dark:text-green-400" />
+                  <div className="flex items-center gap-ds-sm p-ds-sm rounded-ds-md bg-mint-50 border border-mint-200 dark:bg-green-900/20 dark:border-green-800">
+                    <Utensils className="h-5 w-5 text-mint-600 dark:text-green-400" />
                     <div className="flex-1">
-                      <div className="text-sm font-medium text-green-900 dark:text-green-100">{t.snack}</div>
-                      <div className="text-sm text-green-700 dark:text-green-300">{todayMenu.snack}</div>
+                      <div className="text-ds-small font-medium text-mint-900 dark:text-green-100">{t.snack}</div>
+                      <div className="text-ds-small text-mint-700 dark:text-green-300">{todayMenu.snack}</div>
                     </div>
                   </div>
                 )}
 
                 {todayMenu.notes && (
-                  <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 dark:bg-slate-700 dark:border-slate-600">
-                    <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{t.notes}</div>
-                    <div className="text-sm text-slate-700 dark:text-slate-300">{todayMenu.notes}</div>
+                  <div className="p-ds-sm rounded-ds-md bg-slate-50 border border-slate-200 dark:bg-slate-700 dark:border-slate-600">
+                    <div className="text-ds-tiny font-medium text-slate-500 dark:text-slate-400 mb-1">{t.notes}</div>
+                    <div className="text-ds-small text-slate-700 dark:text-slate-300">{todayMenu.notes}</div>
                   </div>
                 )}
               </div>
             ) : (
               <div className="text-center py-12">
-                <Utensils className="h-12 w-12 mx-auto text-slate-400 dark:text-slate-500 mb-4" />
+                <Utensils className="h-12 w-12 mx-auto text-mint-400 dark:text-slate-500 mb-4" />
                 <p className="text-slate-600 dark:text-slate-400">{t.no_menu}</p>
               </div>
             )}
@@ -301,14 +301,14 @@ export default function MenusPage() {
           {/* Menu Form Modal */}
           {isModalOpen && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-              <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-800">
+              <div className="w-full max-w-2xl rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-lg dark:border-slate-700 dark:bg-slate-800">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+                  <h2 className="text-ds-h2 font-semibold text-slate-900 dark:text-slate-100">
                     {editingMenu ? t.edit_menu : t.add_menu}
                   </h2>
                   <button
                     onClick={() => setIsModalOpen(false)}
-                    className="rounded-lg p-1 hover:bg-slate-100 dark:hover:bg-slate-700"
+                    className="rounded-ds-md p-1 hover:bg-mint-100 transition-colors dark:hover:bg-slate-700"
                   >
                     <X className="h-5 w-5" />
                   </button>
@@ -316,66 +316,66 @@ export default function MenusPage() {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
                       {t.date}
                     </label>
                     <input
                       type="date"
                       value={menuForm.day}
                       onChange={(e) => setMenuForm({ ...menuForm, day: e.target.value })}
-                      className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                      className="w-full rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
                       {t.breakfast}
                     </label>
                     <input
                       type="text"
                       value={menuForm.breakfast || ''}
                       onChange={(e) => setMenuForm({ ...menuForm, breakfast: e.target.value })}
-                      className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                      className="w-full rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                       placeholder={t.breakfast_placeholder}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
                       {t.lunch}
                     </label>
                     <input
                       type="text"
                       value={menuForm.lunch || ''}
                       onChange={(e) => setMenuForm({ ...menuForm, lunch: e.target.value })}
-                      className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                      className="w-full rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                       placeholder={t.lunch_placeholder}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
                       {t.snack}
                     </label>
                     <input
                       type="text"
                       value={menuForm.snack || ''}
                       onChange={(e) => setMenuForm({ ...menuForm, snack: e.target.value })}
-                      className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                      className="w-full rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                       placeholder={t.snack_placeholder}
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                    <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
                       {t.notes}
                     </label>
                     <textarea
                       value={menuForm.notes || ''}
                       onChange={(e) => setMenuForm({ ...menuForm, notes: e.target.value })}
                       rows={3}
-                      className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                      className="w-full rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                       placeholder={t.notes_placeholder}
                     />
                   </div>
@@ -386,9 +386,9 @@ export default function MenusPage() {
                       id="is_public"
                       checked={menuForm.is_public !== false}
                       onChange={(e) => setMenuForm({ ...menuForm, is_public: e.target.checked })}
-                      className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      className="rounded-ds-sm border-slate-300 text-mint-600 focus:ring-mint-500"
                     />
-                    <label htmlFor="is_public" className="text-sm text-slate-700 dark:text-slate-300">
+                    <label htmlFor="is_public" className="text-ds-small text-slate-700 dark:text-slate-300">
                       {t.is_public}
                     </label>
                   </div>
@@ -397,7 +397,7 @@ export default function MenusPage() {
                     <button
                       onClick={submitMenu}
                       disabled={submitting}
-                      className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 disabled:opacity-50 dark:bg-slate-700 dark:hover:bg-slate-600"
+                      className="flex-1 inline-flex items-center justify-center gap-2 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small text-white hover:bg-mint-600 transition-colors disabled:opacity-50 dark:bg-slate-700 dark:hover:bg-slate-600"
                     >
                       {submitting ? (
                         <>
@@ -413,7 +413,7 @@ export default function MenusPage() {
                     </button>
                     <button
                       onClick={() => setIsModalOpen(false)}
-                      className="rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                      className="rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
                     >
                       {t.cancel}
                     </button>

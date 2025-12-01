@@ -2,48 +2,183 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===== DESIGN SYSTEM CSS VARIABLES ===== */
+:root {
+  /* Color Palette */
+  --ds-mint: #C5E8D5;
+  --ds-pale-blue: #D4E4F7;
+  --ds-pale-yellow: #FFD966;
+  --ds-pale-peach: #F5D5C8;
+
+  /* Text Colors */
+  --ds-text-primary: #1F2937;
+  --ds-text-secondary: #4B5563;
+  --ds-text-muted: #6B7280;
+
+  /* Surface Colors */
+  --ds-surface-white: #FFFFFF;
+  --ds-surface-card: #F9FAFB;
+
+  /* Spacing Scale (8px base) */
+  --ds-space-xs: 8px;
+  --ds-space-sm: 16px;
+  --ds-space-md: 24px;
+  --ds-space-lg: 32px;
+  --ds-space-xl: 48px;
+  --ds-space-2xl: 64px;
+
+  /* Border Radius */
+  --ds-radius-sm: 8px;
+  --ds-radius-md: 12px;
+  --ds-radius-lg: 16px;
+  --ds-radius-xl: 24px;
+  --ds-radius-full: 9999px;
+
+  /* Shadows */
+  --ds-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --ds-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+  --ds-shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --ds-shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+  /* Typography */
+  --ds-font-family: system-ui, -apple-system, sans-serif;
+
+  /* Layout */
+  --ds-sidebar-width: 280px;
+
+  /* Legacy variables */
+  --foreground-rgb: 31, 41, 55;
+  --background-start-rgb: 197, 232, 213;
+  --background-end-rgb: 197, 232, 213;
+}
+
+/* Dark mode design system overrides */
+.dark {
+  --ds-mint: #1e293b;
+  --ds-pale-blue: #1e3a5f;
+  --ds-pale-yellow: #422006;
+  --ds-pale-peach: #44403c;
+  --ds-text-primary: #f1f5f9;
+  --ds-text-secondary: #cbd5e1;
+  --ds-text-muted: #94a3b8;
+  --ds-surface-white: #1e293b;
+  --ds-surface-card: #0f172a;
+  --foreground-rgb: 241, 245, 249;
+  --background-start-rgb: 15, 23, 42;
+  --background-end-rgb: 15, 23, 42;
+}
+
 /* Improve form input contrast and visibility */
 input, textarea, select {
-  color: rgb(15 23 42); /* slate-900 for light mode */
+  color: var(--ds-text-primary);
 }
 
 .dark input, .dark textarea, .dark select {
-  color: rgb(241 245 249) !important; /* slate-100 for dark mode */
+  color: rgb(241 245 249) !important;
 }
 
 input::placeholder, textarea::placeholder {
-  color: rgb(100 116 139); /* slate-500 for light mode */
+  color: var(--ds-text-muted);
 }
 
 .dark input::placeholder, .dark textarea::placeholder {
-  color: rgb(148 163 184) !important; /* slate-400 for dark mode */
+  color: rgb(148 163 184) !important;
 }
 
-/* Ensure good contrast for all text elements */
+/* Base body styles with design system */
 body {
-  color: rgb(15 23 42); /* slate-900 for better readability */
+  font-family: var(--ds-font-family);
+  color: var(--ds-text-primary);
+  background-color: var(--ds-mint);
 }
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+.dark body {
+  background-color: #0f172a;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
+/* ===== DESIGN SYSTEM UTILITY CLASSES ===== */
+@layer components {
+
+  /* Stat Card Variants */
+  .ds-stat-card {
+    border-radius: var(--ds-radius-lg);
+    padding: var(--ds-space-md);
+    box-shadow: var(--ds-shadow-card);
+    transition: all 0.2s ease;
   }
-}
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+  .ds-stat-card-blue {
+    background-color: var(--ds-pale-blue);
+  }
+
+  .ds-stat-card-yellow {
+    background-color: var(--ds-pale-yellow);
+  }
+
+  .ds-stat-card-peach {
+    background-color: var(--ds-pale-peach);
+  }
+
+  .ds-stat-card-white {
+    background-color: var(--ds-surface-white);
+  }
+
+  /* Info Card */
+  .ds-info-card {
+    background-color: var(--ds-surface-white);
+    border-radius: var(--ds-radius-lg);
+    padding: var(--ds-space-md);
+    box-shadow: var(--ds-shadow-card);
+  }
+
+  /* Search Bar - Pill shaped */
+  .ds-search-bar {
+    width: 100%;
+    height: 48px;
+    padding-left: var(--ds-space-sm);
+    padding-right: var(--ds-space-sm);
+    border-radius: var(--ds-radius-full);
+    background-color: var(--ds-surface-white);
+    border: none;
+  }
+
+  .ds-search-bar:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--ds-mint);
+  }
+
+  /* Navigation Item */
+  .ds-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: var(--ds-space-sm) var(--ds-space-sm);
+    border-radius: var(--ds-radius-md);
+    color: var(--ds-text-secondary);
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  .ds-nav-item:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+
+  .ds-nav-item-active {
+    background-color: var(--ds-mint);
+    font-weight: 500;
+    border-left: 4px solid #22c55e;
+  }
+
+  /* Content Section */
+  .ds-section-heading {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--ds-text-primary);
+    line-height: 1.2;
+  }
+
+  .ds-section-subheading {
+    font-size: 14px;
+    color: var(--ds-text-muted);
+    margin-top: 4px;
+  }
 }

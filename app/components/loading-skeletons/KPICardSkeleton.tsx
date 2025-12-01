@@ -27,14 +27,14 @@ export default function KPICardSkeleton({
       {Array.from({ length: count }).map((_, index) => (
         <div
           key={index}
-          className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-800"
+          className="rounded-ds-lg border border-slate-200 bg-white p-5 shadow-ds-card dark:border-slate-700 dark:bg-slate-800"
         >
           {/* Top row: Label and Icon container */}
           <div className="flex items-center justify-between">
             {/* Label skeleton */}
             <div className={`h-4 w-20 ${baseSkeletonClass}`}></div>
             {/* Icon container skeleton */}
-            <div className="h-8 w-8 rounded-xl border border-slate-200 dark:border-slate-600">
+            <div className="h-8 w-8 rounded-ds-md border border-slate-200 dark:border-slate-600">
               <div className={`h-full w-full ${baseSkeletonClass}`}></div>
             </div>
           </div>

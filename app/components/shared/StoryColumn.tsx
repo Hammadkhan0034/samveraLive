@@ -708,10 +708,10 @@ export default function StoryColumn({
             className="flex-shrink-0 flex flex-col items-center gap-2 cursor-pointer group"
             title={t.create_story || 'Create Story'}
           >
-            <div className="w-16 h-16 rounded-full border-2 border-dashed border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800 flex items-center justify-center group-hover:border-slate-400 dark:group-hover:border-slate-500 transition-colors">
-              <Plus className="h-6 w-6 text-slate-400 dark:text-slate-500" />
+            <div className="w-16 h-16 rounded-full border-2 border-dashed border-mint-300 dark:border-slate-600 bg-mint-50 dark:bg-slate-800 flex items-center justify-center group-hover:border-mint-500 dark:group-hover:border-mint-400 transition-colors">
+              <Plus className="h-6 w-6 text-mint-500 dark:text-slate-500" />
             </div>
-            <span className="text-xs text-slate-600 dark:text-slate-400 text-center max-w-[64px] truncate">
+            <span className="text-ds-tiny text-slate-600 dark:text-slate-400 text-center max-w-[64px] truncate">
               {t.create_story || 'Create'}
             </span>
           </button>
@@ -725,7 +725,7 @@ export default function StoryColumn({
             className="flex-shrink-0 flex flex-col items-center gap-2 cursor-pointer group"
             title={story.title || 'Story'}
           >
-            <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-slate-300 dark:border-slate-600 group-hover:border-blue-500 dark:group-hover:border-blue-400 transition-colors">
+            <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-slate-300 dark:border-slate-600 group-hover:border-mint-500 dark:group-hover:border-mint-400 transition-colors">
               {story.previewUrl ? (
                 <Image
                   src={story.previewUrl}
@@ -739,12 +739,12 @@ export default function StoryColumn({
                   }}
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-blue-400 to-purple-500 dark:from-blue-600 dark:to-purple-600 flex items-center justify-center">
+                <div className="w-full h-full bg-gradient-to-br from-mint-400 to-mint-600 dark:from-mint-600 dark:to-mint-800 flex items-center justify-center">
                   <ImageIcon className="h-6 w-6 text-white" />
                 </div>
               )}
             </div>
-            <span className="text-xs text-slate-600 dark:text-slate-400 text-center max-w-[64px] truncate">
+            <span className="text-ds-tiny text-slate-600 dark:text-slate-400 text-center max-w-[64px] truncate">
               {story.title || 'Story'}
             </span>
           </button>
@@ -752,7 +752,7 @@ export default function StoryColumn({
 
         {/* Empty state message (only if can create but no stories) */}
         {stories.length === 0 && canCreateStory && (
-          <div className="flex-shrink-0 flex items-center text-sm text-slate-500 dark:text-slate-400 px-4">
+          <div className="flex-shrink-0 flex items-center text-ds-small text-slate-500 dark:text-slate-400 px-4">
             {t.no_stories || 'No stories yet'}
           </div>
         )}

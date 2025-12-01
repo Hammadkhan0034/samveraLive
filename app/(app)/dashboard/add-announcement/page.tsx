@@ -67,10 +67,10 @@ function AddAnnouncementContent() {
   const showInitialLoading = loading && !user && isSigningIn;
   if (showInitialLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+      <div className="min-h-screen bg-mint-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-600 mx-auto mb-4"></div>
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-mint-300 border-t-mint-600 mx-auto mb-4"></div>
             <p className="text-slate-600 dark:text-slate-400">{t.loading}</p>
           </div>
         </div>
@@ -81,21 +81,21 @@ function AddAnnouncementContent() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <div className="min-h-screen bg-mint-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       <main className="mx-auto max-w-6xl px-4 py-8 md:px-6  ml-20">
-        <div className="mb-6 flex flex-col gap-3 mt-14 md:flex-row md:items-center md:justify-between">
+        <div className="mb-ds-md flex flex-col gap-3 mt-14 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.back()}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              className="inline-flex items-center gap-2 rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
             >
               <ArrowLeft className="h-4 w-4" /> {t.back}
             </button>
             <div>
-              <h1 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+              <h1 className="text-ds-h2 font-semibold tracking-tight text-slate-900 dark:text-slate-100">
                 {editingAnnouncement?.id ? t.edit_announcement : t.add_announcement || 'Add Announcement'}
               </h1>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+              <p className="mt-1 text-ds-small text-slate-600 dark:text-slate-400">
                 {editingAnnouncement?.id ? '' : t.add_announcement_subtitle || 'Create a new announcement for your organization or classes.'}
               </p>
             </div>
@@ -103,12 +103,12 @@ function AddAnnouncementContent() {
         </div>
 
         {error && (
-          <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+          <div className="mb-4 rounded-ds-md bg-red-50 border border-red-200 px-4 py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
             {error}
           </div>
         )}
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        <div className="rounded-ds-lg border border-slate-200 bg-white p-6 shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
           <AnnouncementForm
             mode={editingAnnouncement?.id ? 'edit' : 'create'}
             initialData={editingAnnouncement || undefined}

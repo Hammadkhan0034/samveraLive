@@ -408,43 +408,43 @@ export default function TeacherStoriesPage() {
   return (
     <TeacherPageLayout>
       {/* Stories Panel */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+      <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">{t.stories_title}</h2>
-                <button 
+                <h2 className="text-ds-h3 font-medium text-slate-900 dark:text-slate-100">{t.stories_title}</h2>
+                <button
                   onClick={() => router.push('/dashboard/add-story')}
-                  className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
+                  className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600"
                 >
                   <Plus className="h-4 w-4" />
                   {t.add_story}
                 </button>
               </div>
 
-              <div className="flex gap-4 overflow-x-auto py-1">
-                <button 
+              <div className="flex gap-ds-sm overflow-x-auto py-1">
+                <button
                   onClick={() => router.push('/dashboard/add-story')}
                   className="flex w-20 flex-col items-center gap-1"
                 >
-                  <span className="rounded-full bg-gradient-to-tr from-slate-300 to-slate-400 p-0.5">
-                    <span className="block rounded-full bg-white p-0.5">
-                      <span className="flex h-16 w-16 items-center justify-center rounded-full border border-dashed">
+                  <span className="rounded-ds-full bg-gradient-to-tr from-mint-300 to-mint-400 p-0.5">
+                    <span className="block rounded-ds-full bg-white p-0.5">
+                      <span className="flex h-16 w-16 items-center justify-center rounded-ds-full border border-dashed">
                         <Plus className="h-5 w-5" />
                       </span>
                     </span>
                   </span>
-                  <span className="truncate text-xs text-slate-600 dark:text-slate-400">{t.add}</span>
+                  <span className="truncate text-ds-tiny text-slate-600 dark:text-slate-400">{t.add}</span>
                 </button>
-                
+
                 {loading ? (
                   <>
                     {Array.from({ length: 5 }).map((_, index) => (
                       <div key={index} className="flex w-20 flex-col items-center gap-1">
-                        <span className="rounded-full bg-gradient-to-tr from-slate-300 to-slate-400 p-0.5">
-                          <span className="block rounded-full bg-white p-0.5">
-                            <span className="h-16 w-16 rounded-full bg-slate-200 dark:bg-slate-600 animate-pulse"></span>
+                        <span className="rounded-ds-full bg-gradient-to-tr from-mint-300 to-mint-400 p-0.5">
+                          <span className="block rounded-ds-full bg-white p-0.5">
+                            <span className="h-16 w-16 rounded-ds-full bg-mint-100 dark:bg-slate-600 animate-pulse"></span>
                           </span>
                         </span>
-                        <span className="h-3 w-16 bg-slate-200 dark:bg-slate-600 rounded animate-pulse"></span>
+                        <span className="h-3 w-16 bg-mint-100 dark:bg-slate-600 rounded-ds-sm animate-pulse"></span>
                       </div>
                     ))}
                   </>
@@ -456,14 +456,14 @@ export default function TeacherStoriesPage() {
                         onClick={() => openStory(story)}
                         className="flex w-20 flex-col items-center gap-1"
                       >
-                        <span className="rounded-full bg-gradient-to-tr from-rose-400 to-amber-400 p-0.5">
-                          <span className="block rounded-full bg-white p-0.5">
-                            <span className="h-16 w-16 rounded-full bg-slate-200 dark:bg-slate-600 flex items-center justify-center text-xs text-slate-600 dark:text-slate-300">
+                        <span className="rounded-ds-full bg-gradient-to-tr from-rose-400 to-amber-400 p-0.5">
+                          <span className="block rounded-ds-full bg-white p-0.5">
+                            <span className="h-16 w-16 rounded-ds-full bg-mint-100 dark:bg-slate-600 flex items-center justify-center text-ds-tiny text-slate-600 dark:text-slate-300">
                               {story.title ? story.title.charAt(0).toUpperCase() : 'S'}
                             </span>
                           </span>
                         </span>
-                        <span className="truncate text-xs text-slate-600 dark:text-slate-400 max-w-[80px]" title={group.class.name}>
+                        <span className="truncate text-ds-tiny text-slate-600 dark:text-slate-400 max-w-[80px]" title={group.class.name}>
                           {group.class.name}
                         </span>
                       </button>
@@ -484,12 +484,12 @@ export default function TeacherStoriesPage() {
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full">
-                      <thead className="bg-black text-white">
+                      <thead className="bg-mint-500 text-white">
                         <tr>
-                          <th className="px-4 py-2 text-left text-sm font-semibold text-white rounded-tl-xl">{t.col_title}</th>
-                          <th className="px-4 py-2 text-left text-sm font-semibold text-white">{t.col_scope}</th>
-                          <th className="px-4 py-2 text-left text-sm font-semibold text-white">{t.col_caption}</th>
-                          <th className="px-4 py-2 text-left text-sm font-semibold text-white rounded-tr-xl">{t.actions || 'Actions'}</th>
+                          <th className="px-4 py-2 text-left text-ds-small font-semibold text-white rounded-tl-ds-md">{t.col_title}</th>
+                          <th className="px-4 py-2 text-left text-ds-small font-semibold text-white">{t.col_scope}</th>
+                          <th className="px-4 py-2 text-left text-ds-small font-semibold text-white">{t.col_caption}</th>
+                          <th className="px-4 py-2 text-left text-ds-small font-semibold text-white rounded-tr-ds-md">{t.actions || 'Actions'}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
@@ -497,21 +497,21 @@ export default function TeacherStoriesPage() {
                           const classInfo = s.class_id ? teacherClasses.find(c => c.id === s.class_id) : null;
                           const className = classInfo ? classInfo.name : (s.class_id ? `Class ${s.class_id.substring(0, 8)}` : null);
                           return (
-                          <tr key={s.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-700/30">
-                            <td className="px-4 py-2 text-sm text-slate-900 dark:text-slate-100">
+                          <tr key={s.id} className="hover:bg-mint-50 dark:hover:bg-slate-700/30 transition-colors">
+                            <td className="px-4 py-2 text-ds-small text-slate-900 dark:text-slate-100">
                               {s.title || '—'}
                             </td>
-                            <td className="px-4 py-2 text-sm text-slate-600 dark:text-slate-400">
+                            <td className="px-4 py-2 text-ds-small text-slate-600 dark:text-slate-400">
                               {s.class_id ? (className || t.class_label) : t.org_wide}
                             </td>
-                            <td className="px-4 py-2 text-sm text-slate-600 dark:text-slate-400">
+                            <td className="px-4 py-2 text-ds-small text-slate-600 dark:text-slate-400">
                               {s.caption || t.no_caption}
                             </td>
                             <td className="px-4 py-2">
                               <div className="flex items-center gap-2">
                                 <button
                                   onClick={() => openStory(s)}
-                                  className="inline-flex items-center gap-1 rounded-md border border-slate-300 px-2 py-1 text-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                                  className="inline-flex items-center gap-1 rounded-ds-md border border-slate-300 px-2 py-1 text-ds-small hover:bg-mint-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 transition-colors"
                                   title={t.view}
                                 >
                                   <Eye className="h-3.5 w-3.5" />
@@ -519,7 +519,7 @@ export default function TeacherStoriesPage() {
                                 </button>
                                 <button
                                   onClick={() => router.push(`/dashboard/edit-story/${s.id}`)}
-                                  className="inline-flex items-center gap-1 rounded-md border border-slate-300 px-2 py-1 text-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                                  className="inline-flex items-center gap-1 rounded-ds-md border border-slate-300 px-2 py-1 text-ds-small hover:bg-mint-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 transition-colors"
                                   title={t.edit || 'Edit'}
                                 >
                                   <Edit className="h-3.5 w-3.5" />
@@ -527,7 +527,7 @@ export default function TeacherStoriesPage() {
                                 </button>
                                 <button
                                   onClick={() => openDeleteModal(s)}
-                                  className="inline-flex items-center gap-1 rounded-md border border-red-300 px-2 py-1 text-sm text-red-600 hover:bg-red-50 dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20"
+                                  className="inline-flex items-center gap-1 rounded-ds-md border border-red-300 px-2 py-1 text-ds-small text-red-600 hover:bg-red-50 dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors"
                                   title={t.delete || 'Delete'}
                                 >
                                   <Trash2 className="h-3.5 w-3.5" />

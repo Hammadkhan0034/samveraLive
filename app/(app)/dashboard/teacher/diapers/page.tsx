@@ -18,21 +18,21 @@ import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton'
 // Diapers Page Header Component
 function DiapersPageHeader({ title }: { title: string }) {
   const { sidebarRef } = useTeacherPageLayout();
-  
+
   return (
-    <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-      <div className="flex items-center gap-3">
+    <div className="mb-ds-sm flex flex-col gap-ds-sm md:flex-row md:items-center md:justify-between">
+      <div className="flex items-center gap-ds-sm">
         {/* Mobile menu button */}
         <button
           onClick={() => sidebarRef.current?.open()}
-          className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+          className="md:hidden p-2 rounded-ds-md hover:bg-mint-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
           aria-label="Toggle sidebar"
         >
           <Menu className="h-5 w-5" />
         </button>
-        <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{title}</h2>
+        <h2 className="text-ds-h2 font-semibold tracking-tight text-slate-900 dark:text-slate-100">{title}</h2>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-ds-sm">
         <ProfileSwitcher />
       </div>
     </div>
@@ -46,7 +46,7 @@ export default function TeacherDiapersPage() {
     <TeacherPageLayout>
       {/* Content Header */}
       <DiapersPageHeader title={t.di_title} />
-      <p className="mb-3 text-sm text-slate-600 dark:text-slate-400">{t.di_hint}</p>
+      <p className="mb-ds-sm text-ds-small text-slate-600 dark:text-slate-400">{t.di_hint}</p>
       {/* Diapers Panel */}
       <section>
         <DiaperPanel t={t} />
@@ -261,16 +261,16 @@ function DiaperPanel({ t }: { t: typeof enText | typeof isText }) {
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">
+    <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+      <div className="mb-4 flex flex-col gap-ds-sm sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-ds-h3 font-medium text-slate-900 dark:text-slate-100">
           {t.di_title || 'Health Logs'}
         </h2>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-ds-sm">
           <select
             value={selectedFilterType}
             onChange={(e) => setSelectedFilterType(e.target.value)}
-            className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+            className="rounded-ds-md border border-slate-300 bg-white px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
           >
             <option value="all">{lang === 'is' ? 'Allt' : 'All'}</option>
             {Object.entries(HEALTH_LOG_TYPE_LABELS).map(([type, labels]) => (
@@ -281,7 +281,7 @@ function DiaperPanel({ t }: { t: typeof enText | typeof isText }) {
           </select>
           <button
             onClick={() => openModal()}
-            className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
+            className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600"
           >
             <Plus className="h-4 w-4" /> {lang === 'is' ? 'Bæta við skráningu' : 'Add Log'}
           </button>
@@ -289,7 +289,7 @@ function DiaperPanel({ t }: { t: typeof enText | typeof isText }) {
       </div>
 
       {error && (
-        <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+        <div className="mb-4 rounded-ds-md bg-red-50 border border-red-200 px-4 py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
           {error}
         </div>
       )}
@@ -298,7 +298,7 @@ function DiaperPanel({ t }: { t: typeof enText | typeof isText }) {
         <LoadingSkeleton type="table" rows={5} />
       ) : healthLogs.length === 0 ? (
         <div className="text-center py-12">
-          <Baby className="h-12 w-12 mx-auto text-slate-400 dark:text-slate-500 mb-4" />
+          <Baby className="h-12 w-12 mx-auto text-mint-400 dark:text-slate-500 mb-4" />
           <p className="text-slate-600 dark:text-slate-400">
             {selectedFilterType === 'all'
               ? lang === 'is'
@@ -310,47 +310,47 @@ function DiaperPanel({ t }: { t: typeof enText | typeof isText }) {
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
+        <div className="overflow-x-auto rounded-ds-md border border-slate-200 dark:border-slate-700">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="bg-black">
-                <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+              <tr className="bg-mint-500">
+                <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
                   {lang === 'is' ? 'Dagsetning/Tími' : 'Date/Time'}
                 </th>
-                <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
                   {t.child || 'Child'}
                 </th>
-                <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
                   {t.di_type || 'Type'}
                 </th>
-                <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
                   {t.notes || 'Notes'}
                 </th>
-                <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
                   {t.actions || 'Actions'}
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
               {healthLogs.map((log) => (
-                <tr key={log.id} className="hover:bg-slate-50 dark:hover:bg-slate-700/30">
-                  <td className="py-2 px-4 text-sm text-slate-900 dark:text-slate-100">
+                <tr key={log.id} className="hover:bg-mint-50 dark:hover:bg-slate-700/30 transition-colors">
+                  <td className="py-2 px-4 text-ds-small text-slate-900 dark:text-slate-100">
                     <span suppressHydrationWarning>
                       {formatHealthLogDate(log.recorded_at, lang)}
                     </span>
                   </td>
-                  <td className="py-2 px-4 text-sm text-slate-600 dark:text-slate-400">
+                  <td className="py-2 px-4 text-ds-small text-slate-600 dark:text-slate-400">
                     {getStudentName(log)}
                   </td>
-                  <td className="py-2 px-4 text-sm text-slate-600 dark:text-slate-400">
+                  <td className="py-2 px-4 text-ds-small text-slate-600 dark:text-slate-400">
                     {HEALTH_LOG_TYPE_LABELS[log.type]?.[lang] || log.type}
                     {log.temperature_celsius && (
-                      <span className="ml-2 text-xs text-slate-500 dark:text-slate-400">
+                      <span className="ml-2 text-ds-tiny text-slate-500 dark:text-slate-400">
                         ({log.temperature_celsius}°C)
                       </span>
                     )}
                   </td>
-                  <td className="py-2 px-4 text-sm text-slate-600 dark:text-slate-400">
+                  <td className="py-2 px-4 text-ds-small text-slate-600 dark:text-slate-400">
                     {log.notes ? (
                       <span className="line-clamp-2" title={log.notes}>
                         {log.notes}
@@ -363,7 +363,7 @@ function DiaperPanel({ t }: { t: typeof enText | typeof isText }) {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => openModal(log)}
-                        className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2 py-1 text-[13px] hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                        className="inline-flex items-center gap-1 rounded-ds-sm border border-slate-300 px-2 py-1 text-ds-tiny hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
                         title={t.edit || 'Edit'}
                       >
                         <Edit className="h-3.5 w-3.5" />
@@ -371,7 +371,7 @@ function DiaperPanel({ t }: { t: typeof enText | typeof isText }) {
                       </button>
                       <button
                         onClick={() => openDeleteModal(log.id)}
-                        className="inline-flex items-center gap-1 rounded-lg border border-red-300 px-2 py-1 text-[13px] text-red-600 hover:bg-red-50 dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20"
+                        className="inline-flex items-center gap-1 rounded-ds-sm border border-red-300 px-2 py-1 text-ds-tiny text-red-600 hover:bg-red-50 transition-colors dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20"
                         title={t.delete || 'Delete'}
                       >
                         <Trash2 className="h-3.5 w-3.5" />

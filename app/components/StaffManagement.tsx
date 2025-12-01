@@ -226,13 +226,13 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
         <div className="flex items-center gap-4">
           <button
             onClick={() => router.back()}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            className="inline-flex items-center gap-2 rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition-colors"
           >
             <ArrowLeft className="h-4 w-4" /> {t.back}
           </button>
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.staff_management}</h1>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.manage_staff}</p>
+            <h1 className="text-ds-h2 font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.staff_management}</h1>
+            <p className="mt-1 text-ds-small text-slate-600 dark:text-slate-400">{t.manage_staff}</p>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -241,7 +241,7 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
               setStaffError(null);
               setIsStaffModalOpen(true);
             }}
-            className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
+            className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small text-white hover:bg-mint-600 transition-colors"
           >
             <Users className="h-4 w-4" /> {t.create_staff}
           </button>
@@ -255,29 +255,29 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
       )}
 
       {/* Active Staff Table */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+      <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
         <h4 className="text-md font-medium mb-3 text-slate-900 dark:text-slate-100">{t.active_staff_members}</h4>
         {loadingStaff || staff.length === 0 ? (
           <LoadingSkeleton type="table" rows={5} />
         ) : (
-          <div className="rounded-t-lg overflow-hidden border border-slate-200 dark:border-slate-700">
-            <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-black text-white z-10">
+          <div className="rounded-t-ds-md overflow-hidden border border-slate-200 dark:border-slate-700">
+            <table className="w-full text-ds-small">
+              <thead className="sticky top-0 bg-mint-500 text-white z-10">
                 <tr className="text-left">
-                  <th className="py-2 pr-3 pl-3 text-white rounded-tl-lg">{t.first_name || 'First Name'}</th>
+                  <th className="py-2 pr-3 pl-3 text-white rounded-tl-ds-md">{t.first_name || 'First Name'}</th>
                   <th className="py-2 pr-3 text-white">{t.last_name || 'Last Name'}</th>
                   <th className="py-2 pr-3 text-white">{t.email}</th>
                   <th className="py-2 pr-3 text-white">{t.staff_role || 'Role'}</th>
                   <th className="py-2 pr-3 text-white">{t.status}</th>
                   <th className="py-2 pr-3 text-white">{t.joined}</th>
-                  <th className="py-2 pr-3 text-white rounded-tr-lg">{t.actions}</th>
+                  <th className="py-2 pr-3 text-white rounded-tr-ds-md">{t.actions}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-600">
                 {paginatedStaff.map((s) => (
-                  <tr 
-                    key={s.id} 
-                    className="h-12 hover:bg-slate-50/50 dark:hover:bg-slate-700/50"
+                  <tr
+                    key={s.id}
+                    className="h-12 hover:bg-mint-50 dark:hover:bg-slate-700/50 transition-colors"
                     onClick={(e) => {
                       // Prevent row click from triggering navigation
                       // Only allow clicks on buttons to work
@@ -363,41 +363,41 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
 
       {/* Add Staff Modal */}
       {isStaffModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="w-full max-w-xl rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-800">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-xl rounded-ds-lg bg-white p-ds-md shadow-ds-lg dark:bg-slate-800">
             <div className="mb-2 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t.create_staff}</h3>
-              <button onClick={() => setIsStaffModalOpen(false)} className="rounded-lg p-1 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">
+              <h3 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">{t.create_staff}</h3>
+              <button onClick={() => setIsStaffModalOpen(false)} className="rounded-ds-md p-1 hover:bg-mint-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-colors">
                 <X className="h-5 w-5" />
               </button>
             </div>
             {staffError && (
-              <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+              <div className="mb-4 rounded-ds-md bg-red-50 border border-red-200 px-4 py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
                 {staffError}
               </div>
             )}
             <form onSubmit={handleAddStaff} className="space-y-3">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.first_name || 'First name'}</label>
-                  <input type="text" value={newStaff.first_name} onChange={(e) => setNewStaff((prev) => ({ ...prev, first_name: e.target.value }))} placeholder={t.first_name || 'First name'} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" required />
+                  <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.first_name || 'First name'}</label>
+                  <input type="text" value={newStaff.first_name} onChange={(e) => setNewStaff((prev) => ({ ...prev, first_name: e.target.value }))} placeholder={t.first_name || 'First name'} className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" required />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.last_name || 'Last name'}</label>
-                  <input type="text" value={newStaff.last_name} onChange={(e) => setNewStaff((prev) => ({ ...prev, last_name: e.target.value }))} placeholder={t.last_name || 'Last name'} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
+                  <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.last_name || 'Last name'}</label>
+                  <input type="text" value={newStaff.last_name} onChange={(e) => setNewStaff((prev) => ({ ...prev, last_name: e.target.value }))} placeholder={t.last_name || 'Last name'} className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_email}</label>
-                <input type="email" value={newStaff.email} onChange={(e) => setNewStaff((prev) => ({ ...prev, email: e.target.value }))} placeholder={t.staff_email_placeholder} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" required />
+                <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_email}</label>
+                <input type="email" value={newStaff.email} onChange={(e) => setNewStaff((prev) => ({ ...prev, email: e.target.value }))} placeholder={t.staff_email_placeholder} className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" required />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_address || 'Address'}</label>
-                <input type="text" value={newStaff.address} onChange={(e) => setNewStaff((prev) => ({ ...prev, address: e.target.value }))} placeholder={t.staff_address_placeholder || 'Enter address'} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
+                <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_address || 'Address'}</label>
+                <input type="text" value={newStaff.address} onChange={(e) => setNewStaff((prev) => ({ ...prev, address: e.target.value }))} placeholder={t.staff_address_placeholder || 'Enter address'} className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_phone}</label>
+                  <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_phone}</label>
                   <input
                     type="tel"
                     inputMode="tel"
@@ -414,28 +414,28 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
                       }
                     }}
                     placeholder={t.staff_phone_placeholder}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+                    className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
                   />
                   {phoneError && (
-                    <p className="mt-1 text-xs text-red-600 dark:text-red-400">{phoneError}</p>
+                    <p className="mt-1 text-ds-tiny text-red-600 dark:text-red-400">{phoneError}</p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_ssn || 'SSN'}</label>
-                  <input type="text" value={newStaff.ssn} onChange={(e) => setNewStaff((prev) => ({ ...prev, ssn: e.target.value }))} placeholder={'000000-0000'} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
+                  <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_ssn || 'SSN'}</label>
+                  <input type="text" value={newStaff.ssn} onChange={(e) => setNewStaff((prev) => ({ ...prev, ssn: e.target.value }))} placeholder={'000000-0000'} className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_education_level || 'Education Level'}</label>
-                  <input type="text" value={newStaff.education_level} onChange={(e) => setNewStaff((prev) => ({ ...prev, education_level: e.target.value }))} placeholder={t.staff_education_level_placeholder || 'e.g. B.Ed, M.Ed'} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
+                  <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_education_level || 'Education Level'}</label>
+                  <input type="text" value={newStaff.education_level} onChange={(e) => setNewStaff((prev) => ({ ...prev, education_level: e.target.value }))} placeholder={t.staff_education_level_placeholder || 'e.g. B.Ed, M.Ed'} className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <input id="union_membership" type="checkbox" checked={!!newStaff.union_membership} onChange={(e) => setNewStaff((prev) => ({ ...prev, union_membership: e.target.checked }))} className="h-3 w-3 rounded border-slate-300 text-slate-900 focus:ring-slate-900" />
-                <label htmlFor="union_membership" className="text-sm text-slate-700 dark:text-slate-300">{t.staff_union_membership || 'Union Membership'}</label>
+                <input id="union_membership" type="checkbox" checked={!!newStaff.union_membership} onChange={(e) => setNewStaff((prev) => ({ ...prev, union_membership: e.target.checked }))} className="h-3 w-3 rounded border-slate-300 text-mint-500 focus:ring-mint-500" />
+                <label htmlFor="union_membership" className="text-ds-small text-slate-700 dark:text-slate-300">{t.staff_union_membership || 'Union Membership'}</label>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.assign_to_class}</label>
-                <select value={newStaff.class_id} onChange={(e) => setNewStaff((prev) => ({ ...prev, class_id: e.target.value }))} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400">
+                <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.assign_to_class}</label>
+                <select value={newStaff.class_id} onChange={(e) => setNewStaff((prev) => ({ ...prev, class_id: e.target.value }))} className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400">
                   <option value="">{t.no_class_assigned}</option>
                   {classesForDropdown.map((cls) => (
                     <option key={cls.id} value={cls.id}>
@@ -443,11 +443,11 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
                     </option>
                   ))}
                 </select>
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{t.class_assignment_note}</p>
+                <p className="mt-1 text-ds-tiny text-slate-500 dark:text-slate-400">{t.class_assignment_note}</p>
               </div>
               <div className="flex gap-3 pt-4">
-                <button type="button" onClick={() => setIsStaffModalOpen(false)} disabled={loadingStaff} className="flex-1 rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed">{t.cancel}</button>
-                <button type="submit" disabled={loadingStaff} className="flex-1 rounded-lg bg-black px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-600 dark:hover:bg-slate-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ">
+                <button type="button" onClick={() => setIsStaffModalOpen(false)} disabled={loadingStaff} className="flex-1 rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small text-slate-700 hover:bg-mint-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">{t.cancel}</button>
+                <button type="submit" disabled={loadingStaff} className="flex-1 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small text-white hover:bg-mint-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors">
                   {loadingStaff ? (
                     <>
                       <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -468,57 +468,57 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
 
       {/* Edit Staff Modal */}
       {isEditStaffModalOpen && editingStaff && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="w-full max-w-xl rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-800 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-xl rounded-ds-lg bg-white p-ds-md shadow-ds-lg dark:bg-slate-800 max-h-[90vh] overflow-y-auto">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t.edit_staff || 'Edit Staff Member'}</h3>
-              <button onClick={() => { setIsEditStaffModalOpen(false); setEditingStaff(null); }} className="rounded-lg p-1 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400">
+              <h3 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">{t.edit_staff || 'Edit Staff Member'}</h3>
+              <button onClick={() => { setIsEditStaffModalOpen(false); setEditingStaff(null); }} className="rounded-ds-md p-1 hover:bg-mint-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-colors">
                 <X className="h-5 w-5" />
               </button>
             </div>
             {staffError && (
-              <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">{staffError}</div>
+              <div className="mb-4 rounded-ds-md bg-red-50 border border-red-200 px-4 py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">{staffError}</div>
             )}
             <form onSubmit={handleUpdateStaff} className="space-y-1">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.first_name || 'First Name'}</label>
-                  <input type="text" value={editingStaff.first_name} onChange={(e) => setEditingStaff({ ...editingStaff, first_name: e.target.value })} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" required />
+                  <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.first_name || 'First Name'}</label>
+                  <input type="text" value={editingStaff.first_name} onChange={(e) => setEditingStaff({ ...editingStaff, first_name: e.target.value })} className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" required />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.last_name || 'Last Name'}</label>
-                  <input type="text" value={editingStaff.last_name} onChange={(e) => setEditingStaff({ ...editingStaff, last_name: e.target.value })} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
+                  <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.last_name || 'Last Name'}</label>
+                  <input type="text" value={editingStaff.last_name} onChange={(e) => setEditingStaff({ ...editingStaff, last_name: e.target.value })} className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.email}</label>
-                <input type="email" value={editingStaff.email} onChange={(e) => setEditingStaff({ ...editingStaff, email: e.target.value })} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" required />
+                <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.email}</label>
+                <input type="email" value={editingStaff.email} onChange={(e) => setEditingStaff({ ...editingStaff, email: e.target.value })} className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" required />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_phone || 'Phone'}</label>
-                  <input type="tel" value={editingStaff.phone} onChange={(e) => setEditingStaff({ ...editingStaff, phone: e.target.value })} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
+                  <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_phone || 'Phone'}</label>
+                  <input type="tel" value={editingStaff.phone} onChange={(e) => setEditingStaff({ ...editingStaff, phone: e.target.value })} className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_ssn || 'SSN'}</label>
-                  <input type="text" value={editingStaff.ssn} onChange={(e) => setEditingStaff({ ...editingStaff, ssn: e.target.value })} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
+                  <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_ssn || 'SSN'}</label>
+                  <input type="text" value={editingStaff.ssn} onChange={(e) => setEditingStaff({ ...editingStaff, ssn: e.target.value })} className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_education_level || 'Education Level'}</label>
-                  <input type="text" value={editingStaff.education_level} onChange={(e) => setEditingStaff({ ...editingStaff, education_level: e.target.value })} placeholder={t.staff_education_level_placeholder || 'e.g. B.Ed, M.Ed'} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
+                  <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_education_level || 'Education Level'}</label>
+                  <input type="text" value={editingStaff.education_level} onChange={(e) => setEditingStaff({ ...editingStaff, education_level: e.target.value })} placeholder={t.staff_education_level_placeholder || 'e.g. B.Ed, M.Ed'} className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_address || 'Address'}</label>
-                <input type="text" value={editingStaff.address} onChange={(e) => setEditingStaff({ ...editingStaff, address: e.target.value })} placeholder={t.staff_address_placeholder || 'Enter address'} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
+                <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_address || 'Address'}</label>
+                <input type="text" value={editingStaff.address} onChange={(e) => setEditingStaff({ ...editingStaff, address: e.target.value })} placeholder={t.staff_address_placeholder || 'Enter address'} className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
               </div>
               {/* Role selection */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_role || 'Role'}</label>
+                <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_role || 'Role'}</label>
                 <select
                   value={editingStaff.role || 'teacher'}
                   onChange={(e) => setEditingStaff({ ...editingStaff, role: e.target.value })}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                  className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                 >
                   <option value="teacher">{t.role_teacher || 'Teacher'}</option>
                   <option value="assistant">{t.role_assistant || 'Assistant'}</option>
@@ -526,12 +526,12 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
                 </select>
               </div>
               <div className="flex items-center gap-2">
-                <input type="checkbox" id="union_membership" checked={!!editingStaff.union_membership} onChange={(e) => setEditingStaff({ ...editingStaff, union_membership: e.target.checked })} className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 dark:border-slate-600" />
-                <label htmlFor="union_membership" className="text-sm text-slate-700 dark:text-slate-300">{t.staff_union_membership || 'Union Membership'}</label>
+                <input type="checkbox" id="union_membership" checked={!!editingStaff.union_membership} onChange={(e) => setEditingStaff({ ...editingStaff, union_membership: e.target.checked })} className="h-4 w-4 rounded border-slate-300 text-mint-500 focus:ring-mint-500 dark:border-slate-600" />
+                <label htmlFor="union_membership" className="text-ds-small text-slate-700 dark:text-slate-300">{t.staff_union_membership || 'Union Membership'}</label>
               </div>
               <div className="flex gap-3 pt-4">
-                <button type="button" onClick={() => { setIsEditStaffModalOpen(false); setEditingStaff(null); }} className="flex-1 rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600">{t.cancel || 'Cancel'}</button>
-                <button type="submit" disabled={loadingStaff} className="flex-1 rounded-lg bg-black px-4 py-2 text-sm text-white disabled:opacity-50 dark:bg-black dark:hover:bg-black">{loadingStaff ? (t.updating || 'Updating...') : (t.update || 'Update')}</button>
+                <button type="button" onClick={() => { setIsEditStaffModalOpen(false); setEditingStaff(null); }} className="flex-1 rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small text-slate-700 hover:bg-mint-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 transition-colors">{t.cancel || 'Cancel'}</button>
+                <button type="submit" disabled={loadingStaff} className="flex-1 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small text-white hover:bg-mint-600 disabled:opacity-50 transition-colors">{loadingStaff ? (t.updating || 'Updating...') : (t.update || 'Update')}</button>
               </div>
             </form>
           </div>

@@ -313,16 +313,16 @@ export function StudentAssignmentModal({
       {trigger(openModal)}
 
       {!isOpen ? null : (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="flex h-[700px] w-full max-w-2xl flex-col rounded-2xl bg-white shadow-xl dark:bg-slate-800">
-            <div className="border-b border-slate-200 p-6 dark:border-slate-700">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="flex h-[700px] w-full max-w-2xl flex-col rounded-ds-lg bg-white shadow-ds-lg dark:bg-slate-800">
+            <div className="border-b border-slate-200 p-ds-md dark:border-slate-700">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+                <h3 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">
                   {t.add_student_to_class} - {className}
                 </h3>
                 <button
                   onClick={closeModal}
-                  className="rounded-lg p-1 text-slate-600 dark:text-slate-400"
+                  className="rounded-ds-md p-1 text-slate-600 dark:text-slate-400 hover:bg-mint-50 transition-colors"
                   aria-label={t.close}
                 >
                   <X className="h-5 w-5" />
@@ -330,15 +330,15 @@ export function StudentAssignmentModal({
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 min-h-0">
+            <div className="flex-1 overflow-y-auto p-ds-md min-h-0">
               {assignmentError && (
-                <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
+                <div className="mb-4 rounded-ds-md border border-red-200 bg-red-50 px-4 py-3 text-ds-small text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
                   {assignmentError}
                 </div>
               )}
 
               {assignmentSuccess && (
-                <div className="mb-4 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400">
+                <div className="mb-4 flex items-center gap-2 rounded-ds-md border border-mint-200 bg-mint-50 px-4 py-3 text-ds-small text-mint-700 dark:border-mint-800 dark:bg-mint-900/20 dark:text-mint-400">
                   <CheckCircle2 className="h-4 w-4" />
                   {assignmentSuccess}
                 </div>
@@ -352,14 +352,14 @@ export function StudentAssignmentModal({
                     value={studentSearchQuery}
                     onChange={(e) => setStudentSearchQuery(e.target.value)}
                     placeholder={t.search_students_placeholder}
-                    className="w-full rounded-lg border border-slate-300 py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+                    className="w-full rounded-ds-md border border-slate-300 py-2 pl-9 pr-3 text-ds-small text-slate-900 placeholder:text-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
                   />
                 </div>
               </div>
 
               {loadingStudents ? (
                 <div className="py-8 text-center">
-                  <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-600" />
+                  <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-mint-300 border-t-mint-600" />
                   <p className="text-slate-600 dark:text-slate-400">{t.loading_students}</p>
                 </div>
               ) : filteredStudents.length === 0 ? (
@@ -379,9 +379,9 @@ export function StudentAssignmentModal({
                           key={student.id}
                           onClick={() => toggleStudentSelection(student.id)}
                           disabled={assigningStudent}
-                          className={`flex w-full items-center justify-between rounded-lg border p-4 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 ${
+                          className={`flex w-full items-center justify-between rounded-ds-md border p-4 hover:bg-mint-50 dark:hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 transition-colors ${
                             isSelected
-                              ? 'border-black bg-slate-100 dark:border-slate-400 dark:bg-slate-700'
+                              ? 'border-mint-500 bg-mint-50 dark:border-mint-400 dark:bg-mint-900/20'
                               : isInOtherClass
                                 ? 'border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-900/20'
                                 : 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900'
@@ -391,7 +391,7 @@ export function StudentAssignmentModal({
                             <div
                               className={`flex h-5 w-5 items-center justify-center rounded border ${
                                 isSelected
-                                  ? 'border-black bg-black dark:border-slate-300 dark:bg-slate-300'
+                                  ? 'border-mint-500 bg-mint-500 dark:border-mint-400 dark:bg-mint-400'
                                   : 'border-slate-300 dark:border-slate-600'
                               }`}
                             >
@@ -404,13 +404,13 @@ export function StudentAssignmentModal({
                                 {student.full_name}
                               </div>
                               {isInOtherClass && (
-                                <div className="mt-1 flex items-center gap-1 text-xs text-amber-700 dark:text-amber-300">
+                                <div className="mt-1 flex items-center gap-1 text-ds-tiny text-amber-700 dark:text-amber-300">
                                   <AlertTriangle className="h-3 w-3" />
                                   {t.currently_in_class}: {student.current_class_name}
                                 </div>
                               )}
                               {student.email && (
-                                <div className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                                <div className="mt-1 text-ds-tiny text-slate-500 dark:text-slate-400">
                                   {student.email}
                                 </div>
                               )}
@@ -421,15 +421,15 @@ export function StudentAssignmentModal({
                     })}
                   </div>
 
-               
+
                 </>
               )}
             </div>
 
             {selectedStudentIds.size > 0 && (
-                    <div className="m-4 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
+                    <div className="m-4 rounded-ds-md border border-mint-200 bg-mint-50 p-3 dark:border-slate-700 dark:bg-slate-800">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm text-slate-700 dark:text-slate-300">
+                        <span className="text-ds-small text-slate-700 dark:text-slate-300">
                           {selectedStudentIds.size}{' '}
                           {selectedStudentIds.size === 1
                             ? t.student_selected
@@ -438,7 +438,7 @@ export function StudentAssignmentModal({
                         <button
                           onClick={assignSelectedStudents}
                           disabled={assigningStudent}
-                          className="inline-flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-sm text-white disabled:cursor-not-allowed disabled:opacity-50 dark:bg-black"
+                          className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 hover:bg-mint-600 px-4 py-2 text-ds-small text-white disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
                         >
                           {assigningStudent ? (
                             <>

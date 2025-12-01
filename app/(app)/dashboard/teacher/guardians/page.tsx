@@ -250,14 +250,14 @@ export default function TeacherGuardiansPage() {
     <TeacherPageLayout>
       {/* Guardians Panel */}
       <div className="space-y-6">
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+              <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
                 <div className="mb-4">
-                  <h2 className="text-lg font-medium text-slate-900 dark:text-slate-100">{t.guardians || 'Guardians'}</h2>
+                  <h2 className="text-ds-h3 font-medium text-slate-900 dark:text-slate-100">{t.guardians || 'Guardians'}</h2>
                 </div>
-                <div className="mb-3 flex items-center justify-between gap-3 ml-6 mr-6">
+                <div className="mb-ds-sm flex items-center justify-between gap-ds-sm ml-6 mr-6">
                   <button
                     onClick={openCreateGuardianModal}
-                    className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
+                    className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600"
                   >
                     <Plus className="h-4 w-4" /> {lang === 'is' ? 'Bæta við forráðamanni' : 'Add Guardian'}
                   </button>
@@ -266,7 +266,7 @@ export default function TeacherGuardiansPage() {
                     value={searchQuery}
                     onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                     placeholder={lang === 'is' ? 'Leita...' : 'Search guardians...'}
-                    className="w-64 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                    className="w-64 rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                   />
                 </div>
                 {loadingGuardians ? (
@@ -286,15 +286,15 @@ export default function TeacherGuardiansPage() {
                     <button
                       onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                       disabled={currentPage === 1}
-                      className="rounded-lg border border-slate-400 px-3 py-1.5 text-sm disabled:opacity-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                      className="rounded-ds-md border border-slate-400 px-3 py-1.5 text-ds-small disabled:opacity-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                     >
                       {lang === 'is' ? 'Fyrri' : 'Prev'}
                     </button>
-                    <span className="px-3 py-1.5 text-sm">{currentPage} / {totalPages}</span>
+                    <span className="px-3 py-1.5 text-ds-small">{currentPage} / {totalPages}</span>
                     <button
                       onClick={() => setCurrentPage(p => p + 1)}
                       disabled={currentPage >= totalPages}
-                      className="rounded-lg border border-slate-400 px-3 py-1.5 text-sm disabled:opacity-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                      className="rounded-ds-md border border-slate-400 px-3 py-1.5 text-ds-small disabled:opacity-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                     >
                       {lang === 'is' ? 'Næsta' : 'Next'}
                     </button>

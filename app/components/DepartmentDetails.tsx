@@ -12,8 +12,8 @@ type Props = {
 
 export default function DepartmentDetails({ title = "Deild", details }: Props) {
   return (
-    <div className="bg-white shadow rounded-2xl overflow-hidden">
-      <div className="bg-red-500 px-4 py-2 text-white font-semibold">{title}</div>
+    <div className="bg-white shadow-ds-card rounded-ds-lg overflow-hidden dark:bg-slate-800">
+      <div className="bg-mint-500 px-4 py-2 text-white font-semibold">{title}</div>
       <dl className="grid grid-cols-2 gap-x-4 gap-y-2 p-4 text-sm">
         {details.map((item, idx) => (
           <React.Fragment key={idx}>

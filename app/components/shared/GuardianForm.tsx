@@ -125,16 +125,16 @@ export function GuardianForm({
   if (!asPage && !isOpen) return null;
 
   return (
-    <div className={asPage ? "w-full" : "fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"}>
-      <div className={asPage ? "w-[70%] ml-20 rounded-xl bg-white dark:bg-slate-800 p-6 shadow-sm" : "w-full max-w-md rounded-2xl bg-white dark:bg-slate-800 p-6 shadow-xl"}>
+    <div className={asPage ? "w-full" : "fixed inset-0 z-50 flex items-center justify-center bg-black/50"}>
+      <div className={asPage ? "w-[70%] ml-20 rounded-ds-lg bg-white dark:bg-slate-800 p-ds-md shadow-ds-card" : "w-full max-w-md rounded-ds-lg bg-white dark:bg-slate-800 p-ds-md shadow-ds-lg"}>
         {!asPage && (
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+            <h3 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">
               {formData.id ? t.edit_guardian : t.create_guardian}
             </h3>
             <button
               onClick={handleClose}
-              className="rounded-lg p-1 hover:bg-slate-100 dark:hover:bg-slate-700"
+              className="rounded-ds-md p-1 hover:bg-mint-100 dark:hover:bg-slate-700"
             >
               <X className="h-5 w-5" />
             </button>
@@ -144,27 +144,27 @@ export function GuardianForm({
         <form onSubmit={handleSubmit} className="space-y-2 mt-2">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {t.first_name || 'First Name'}
               </label>
               <input
                 type="text"
                 value={formData.first_name}
                 onChange={(e) => setFormData(prev => ({ ...prev, first_name: e.target.value }))}
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:text-white"
+                className="w-full rounded-ds-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
                 required
                 placeholder={t.first_name_placeholder || 'Enter first name'}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {t.last_name || 'Last Name'}
               </label>
               <input
                 type="text"
                 value={formData.last_name}
                 onChange={(e) => setFormData(prev => ({ ...prev, last_name: e.target.value }))}
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:text-white"
+                className="w-full rounded-ds-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
                 required
                 placeholder={t.last_name_placeholder || 'Enter last name'}
               />
@@ -172,14 +172,14 @@ export function GuardianForm({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
               {t.email}
             </label>
             <input
               type="email"
               value={formData.email}
               onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:text-white"
+              className="w-full rounded-ds-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
               required
               placeholder={t.email_placeholder}
             />
@@ -187,40 +187,40 @@ export function GuardianForm({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {t.phone}
               </label>
               <input
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 placeholder-slate-500 dark:placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:text-white"
+                className="w-full rounded-ds-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
                 placeholder={t.phone_placeholder}
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {t.ssn || 'Social Security Number'}
               </label>
               <input
                 type="text"
                 value={formData.ssn || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, ssn: e.target.value }))}
-                className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 placeholder-slate-500 dark:placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:text-white"
+                className="w-full rounded-ds-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
                 placeholder={t.ssn_placeholder || '000000-0000'}
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
               {t.address || 'Address'}
             </label>
             <input
               type="text"
               value={formData.address || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 placeholder-slate-500 dark:placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:text-white"
+              className="w-full rounded-ds-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
               placeholder={t.address_placeholder || 'Enter address'}
             />
           </div>
@@ -232,13 +232,13 @@ export function GuardianForm({
           />
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
               {t.status}
             </label>
             <select
               value={formData.is_active ? 'true' : 'false'}
               onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.value === 'true' }))}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 placeholder-slate-500 dark:placeholder-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:text-white"
+              className="w-full rounded-ds-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
             >
               <option value="true">{t.active}</option>
               <option value="false">{t.inactive}</option>
@@ -246,25 +246,25 @@ export function GuardianForm({
           </div>
 
           {error && (
-            <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
+            <div className="text-ds-small text-red-600 dark:text-red-400">{error}</div>
           )}
 
           {successMessage && (
-            <div className="text-sm text-emerald-600 dark:text-emerald-400">{successMessage}</div>
+            <div className="text-ds-small text-mint-600 dark:text-emerald-400">{successMessage}</div>
           )}
 
           <div className="flex gap-3 pt-4">
             <button
               type="button"
               onClick={handleClose}
-              className="flex-1 rounded-lg border border-slate-300 dark:border-slate-600 px-4 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700"
+              className="flex-1 rounded-ds-md border border-slate-300 dark:border-slate-600 px-4 py-2 text-ds-small hover:bg-mint-50 dark:hover:bg-slate-700 transition-colors"
             >
               {t.cancel}
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 rounded-lg bg-black px-4 py-2 text-sm text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 rounded-ds-md bg-mint-500 hover:bg-mint-600 px-4 py-2 text-ds-small text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
             >
               {loading ? (
                 <>

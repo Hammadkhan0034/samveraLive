@@ -262,28 +262,28 @@ export default function AddStoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <div className="min-h-screen bg-mint-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
         <main className="mx-auto max-w-5xl px-4 py-8 md:px-6 ml-20">
-          <div className="mb-6 flex items-center gap-4 mt-14">
+          <div className="mb-ds-md flex items-center gap-4 mt-14">
             <button
               onClick={() => router.back()}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              className="inline-flex items-center gap-2 rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
             >
               <ArrowLeft className="h-4 w-4" /> {t.back}
             </button>
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.add_story || 'Add Story'}</h1>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.add_story_subtitle || 'Add a new story to your class'}</p>
+              <h1 className="text-ds-h1 font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.add_story || 'Add Story'}</h1>
+              <p className="mt-1 text-ds-small text-slate-600 dark:text-slate-400">{t.add_story_subtitle || 'Add a new story to your class'}</p>
             </div>
           </div>
 
           {error && (
-            <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+            <div className="mb-4 rounded-ds-md bg-red-50 border border-red-200 px-4 py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
               {error}
             </div>
           )}
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <div className="rounded-ds-lg border border-slate-200 bg-white p-6 shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
             <div className="grid gap-3 md:grid-cols-2">
               <div>
                 <label className="mb-1 block text-sm font-medium text-slate-700 dark:text-slate-300">{t.class_label}</label>
@@ -430,21 +430,21 @@ export default function AddStoryPage() {
             </div>
 
             <div className="mt-6 flex items-center justify-end gap-2">
-              <button 
-                className="rounded-md border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:underline  disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200" 
+              <button
+                className="rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small text-slate-700 hover:bg-mint-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                 onClick={()=>router.push('/dashboard/stories')}
                 disabled={submitting}
               >
                 {t.cancel}
               </button>
-              <button 
-                className="inline-flex items-center gap-2 rounded-md bg-slate-900 px-4 py-2 text-sm text-white disabled:opacity-60 disabled:cursor-not-allowed dark:bg-black dark:text-white" 
-                disabled={submitting} 
+              <button
+                className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 hover:bg-mint-600 px-4 py-2 text-ds-small text-white disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+                disabled={submitting}
                 onClick={submit}
               >
                 {submitting ? (
                   <>
-                    <svg className="animate-spin h-4 w-4 text-white dark:text-slate-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>

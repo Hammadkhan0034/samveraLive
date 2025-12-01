@@ -161,17 +161,17 @@ export default function TeacherSelection({
   }, [teacherResults, selectedTeacherIds]);
 
   const containerClass = asPage
-    ? 'min-h-screen bg-slate-50 dark:bg-slate-900 p-6'
-    : 'rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800';
+    ? 'min-h-screen bg-mint-100 dark:bg-slate-900 p-ds-md'
+    : 'rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800';
 
   return (
     <div className={containerClass}>
       <div className="mb-4">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t.title}</h3>
+        <h3 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">{t.title}</h3>
       </div>
 
       <div className="mb-6">
-        <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">
+        <label className="mb-2 block text-ds-small font-medium text-slate-700 dark:text-slate-300">
           {t.searchLabel}
         </label>
         <div className="relative">
@@ -180,7 +180,7 @@ export default function TeacherSelection({
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={t.placeholder}
-            className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+            className="w-full rounded-ds-md border border-slate-300 bg-white py-2 pl-9 pr-3 text-ds-small text-slate-900 placeholder:text-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
           />
         </div>
         {!q && (

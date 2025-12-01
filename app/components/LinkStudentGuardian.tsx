@@ -188,14 +188,14 @@ export default function LinkStudentGuardian({ lang = 'en' }: { lang?: Lang }) {
   }
 
   return (
-    <div className="rounded-2xl p-2 dark:border-slate-700 dark:bg-slate-800 pb-12">
+    <div className="rounded-ds-lg p-2 dark:border-slate-700 dark:bg-slate-800 pb-12">
       
       <div className="grid gap-6 md:grid-cols-2">
         <div>
-          <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">{t.guardianSearchLabel}</label>
+          <label className="mb-2 block text-ds-small font-medium text-slate-700 dark:text-slate-300">{t.guardianSearchLabel}</label>
           <div className="mb-2 flex gap-2">
-            <button className={`px-3 py-1 rounded-md text-sm border ${modeGuardian === 'email' ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200'}`} onClick={() => setModeGuardian('email')}>{t.emailTab}</button>
-            <button className={`px-3 py-1 rounded-md text-sm border ${modeGuardian === 'name' ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200'}`} onClick={() => setModeGuardian('name')}>{t.nameTab}</button>
+            <button className={`px-3 py-1 rounded-ds-md text-ds-small border transition-colors ${modeGuardian === 'email' ? 'bg-mint-500 text-white' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-mint-50'}`} onClick={() => setModeGuardian('email')}>{t.emailTab}</button>
+            <button className={`px-3 py-1 rounded-ds-md text-ds-small border transition-colors ${modeGuardian === 'name' ? 'bg-mint-500 text-white' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-mint-50'}`} onClick={() => setModeGuardian('name')}>{t.nameTab}</button>
           </div>
           <div className="relative">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
@@ -250,10 +250,10 @@ export default function LinkStudentGuardian({ lang = 'en' }: { lang?: Lang }) {
         </div>
 
         <div>
-          <label className="mb-2 block text-sm font-medium text-slate-700 dark:text-slate-300">{t.studentSearchLabel}</label>
+          <label className="mb-2 block text-ds-small font-medium text-slate-700 dark:text-slate-300">{t.studentSearchLabel}</label>
           <div className="mb-2 flex gap-2">
-            <button className={`px-3 py-1 rounded-md text-sm border ${modeStudent === 'email' ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200'}`} onClick={() => setModeStudent('email')}>{t.emailTab}</button>
-            <button className={`px-3 py-1 rounded-md text-sm border ${modeStudent === 'name' ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200'}`} onClick={() => setModeStudent('name')}>{t.nameTab}</button>
+            <button className={`px-3 py-1 rounded-ds-md text-ds-small border transition-colors ${modeStudent === 'email' ? 'bg-mint-500 text-white' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-mint-50'}`} onClick={() => setModeStudent('email')}>{t.emailTab}</button>
+            <button className={`px-3 py-1 rounded-ds-md text-ds-small border transition-colors ${modeStudent === 'name' ? 'bg-mint-500 text-white' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-mint-50'}`} onClick={() => setModeStudent('name')}>{t.nameTab}</button>
           </div>
           <div className="relative">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
@@ -312,7 +312,7 @@ export default function LinkStudentGuardian({ lang = 'en' }: { lang?: Lang }) {
         <button
           disabled={!selectedGuardian || !selectedStudent}
           onClick={() => setConfirmOpen(true)}
-          className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-400 dark:bg-slate-100 dark:text-slate-900"
+          className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-400 hover:bg-mint-600 transition-colors"
         >
           <LinkIcon className="h-4 w-4" />{t.linkButton}
         </button>
@@ -320,11 +320,11 @@ export default function LinkStudentGuardian({ lang = 'en' }: { lang?: Lang }) {
       </div>
 
       {confirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
-          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-xl dark:border-slate-700 dark:bg-slate-800">
-            <h4 className="text-base font-semibold text-slate-900 dark:text-slate-100">{t.confirmTitle}</h4>
-            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{t.confirmText}</p>
-            <div className="mt-4 rounded-lg border border-slate-200 p-3 text-sm dark:border-slate-700">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-lg dark:border-slate-700 dark:bg-slate-800">
+            <h4 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">{t.confirmTitle}</h4>
+            <p className="mt-2 text-ds-small text-slate-600 dark:text-slate-300">{t.confirmText}</p>
+            <div className="mt-4 rounded-ds-md border border-slate-200 p-3 text-ds-small dark:border-slate-700">
               <div className="flex justify-between">
                 <span className="font-medium">{t.roleGuardian}:</span>
                 <span>{selectedGuardian?.label} ({selectedGuardian?.email})</span>
@@ -337,14 +337,14 @@ export default function LinkStudentGuardian({ lang = 'en' }: { lang?: Lang }) {
             <div className="mt-6 flex items-center justify-end gap-3">
               <button
                 disabled={linking}
-                className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 disabled:opacity-60 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
+                className="rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small text-slate-700 hover:bg-mint-50 disabled:opacity-60 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700 transition-colors"
                 onClick={() => setConfirmOpen(false)}
               >
                 {t.no}
               </button>
               <button
                 disabled={linking}
-                className="inline-flex items-center gap-2 rounded-lg bg-black dark:bg-white dark:text-black px-4 py-2 text-sm font-medium text-white disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small font-medium text-white hover:bg-mint-600 disabled:opacity-60 transition-colors"
                 onClick={onConfirmLink}
                 aria-busy={linking}
               >

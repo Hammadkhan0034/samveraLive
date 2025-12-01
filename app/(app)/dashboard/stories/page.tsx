@@ -681,26 +681,26 @@ function StoriesPageContent() {
 
   // Content for teacher/parent layout (with gradient background and back button)
   const teacherContent = (
-    <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <div className="min-h-screen bg-mint-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       <main className="mx-auto max-w-6xl px-4 py-8 md:px-6">
-        <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between mt-14">
+        <div className="mb-ds-md flex flex-col gap-ds-sm md:flex-row md:items-center md:justify-between mt-14">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.back()}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              className="inline-flex items-center gap-2 rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
             >
               <ArrowLeft className="h-4 w-4" /> {t.back}
             </button>
             <div>
-              <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.stories_title}</h1>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.subtitle}</p>
+              <h1 className="text-ds-h1 font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.stories_title}</h1>
+              <p className="mt-1 text-ds-small text-slate-600 dark:text-slate-400">{t.subtitle}</p>
             </div>
           </div>
           {canCreateStory && (
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => router.push('/dashboard/add-story')}
-                className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
+                className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 hover:bg-mint-600 px-4 py-2 text-ds-small text-white transition-colors"
               >
                 <Plus className="h-4 w-4" /> {t.create_story}
               </button>
@@ -709,12 +709,12 @@ function StoriesPageContent() {
         </div>
 
           {error && (
-            <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+            <div className="mb-4 rounded-ds-md bg-red-50 border border-red-200 px-4 py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
               {error}
             </div>
           )}
 
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
             {loading && stories.length === 0 ? (
               <LoadingSkeleton type="table" rows={10} />
             ) : stories.length === 0 ? (
@@ -722,41 +722,41 @@ function StoriesPageContent() {
                 <p className="text-slate-600 dark:text-slate-400">{t.empty}</p>
               </div>
             ) : (
-              <div className="overflow-x-auto overflow-hidden border border-slate-200 dark:border-slate-700 rounded-xl">
+              <div className="overflow-x-auto overflow-hidden border border-slate-200 dark:border-slate-700 rounded-ds-md">
                 <table className="w-full border-collapse">
                   <thead>
-                    <tr className="bg-black">
-                      <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300 rounded-tl-xl">
+                    <tr className="bg-mint-500">
+                      <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300 rounded-tl-ds-md">
                         {t.col_title}
                       </th>
-                      <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                      <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
                         {t.col_scope}
                       </th>
-                      <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                      <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
                         {t.col_caption}
                       </th>
-                      <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300 rounded-tr-xl">
+                      <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300 rounded-tr-ds-md">
                         {t.actions}
                       </th>
                     </tr>
                   </thead>
                   <tbody>
                     {stories.map((s) => (
-                      <tr key={s.id} className="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                        <td className="text-left py-2 px-4 text-sm text-slate-900 dark:text-slate-100">
+                      <tr key={s.id} className="border-b border-slate-100 dark:border-slate-700 hover:bg-mint-50 dark:hover:bg-slate-700/50 transition-colors">
+                        <td className="text-left py-2 px-4 text-ds-small text-slate-900 dark:text-slate-100">
                           {s.title || '—'}
                         </td>
-                        <td className="text-left py-2 px-4 text-sm text-slate-600 dark:text-slate-400">
+                        <td className="text-left py-2 px-4 text-ds-small text-slate-600 dark:text-slate-400">
                           {s.class_id ? t.class_label : t.org_wide}
                         </td>
-                        <td className="text-left py-2 px-4 text-sm text-slate-600 dark:text-slate-400">
+                        <td className="text-left py-2 px-4 text-ds-small text-slate-600 dark:text-slate-400">
                           {s.caption || t.no_caption}
                         </td>
                         <td className="text-left py-2 px-4">
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => openStoryViewer(s)}
-                              className="inline-flex items-center gap-1 rounded-md border border-slate-300 px-2 py-1 text-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                              className="inline-flex items-center gap-1 rounded-ds-sm border border-slate-300 px-2 py-1 text-ds-small hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
                               title={t.view}
                             >
                               <Eye className="h-3.5 w-3.5" />
@@ -764,7 +764,7 @@ function StoriesPageContent() {
                             </button>
                             <button
                               onClick={() => router.push(`/dashboard/edit-story/${s.id}`)}
-                              className="inline-flex items-center gap-1 rounded-md border border-slate-300 px-2 py-1 text-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                              className="inline-flex items-center gap-1 rounded-ds-sm border border-slate-300 px-2 py-1 text-ds-small hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
                               title={t.edit}
                             >
                               <Edit className="h-3.5 w-3.5" />
@@ -772,7 +772,7 @@ function StoriesPageContent() {
                             </button>
                             <button
                               onClick={() => openDeleteModal(s)}
-                              className="inline-flex items-center gap-1 rounded-md border border-red-300 px-2 py-1 text-sm text-red-600 hover:bg-red-50 dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20"
+                              className="inline-flex items-center gap-1 rounded-ds-sm border border-red-300 px-2 py-1 text-ds-small text-red-600 hover:bg-red-50 transition-colors dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20"
                               title={t.delete}
                             >
                               <Trash2 className="h-3.5 w-3.5" />
@@ -906,28 +906,28 @@ function StoriesPageContent() {
     return (
       <>
         {/* Content Header */}
-        <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-3">
+        <div className="mb-ds-sm flex flex-col gap-ds-sm md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-ds-sm">
             {/* Mobile menu button */}
             <button
               onClick={() => sidebarRef.current?.open()}
-              className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+              className="md:hidden p-2 rounded-ds-md hover:bg-mint-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
               aria-label="Toggle sidebar"
             >
               <Menu className="h-5 w-5" />
             </button>
             <div>
-              <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.stories_title}</h2>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{t.subtitle || 'View and manage stories'}</p>
+              <h2 className="text-ds-h1 font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.stories_title}</h2>
+              <p className="mt-1 text-ds-small text-slate-600 dark:text-slate-400">{t.subtitle || 'View and manage stories'}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-ds-sm">
             <ProfileSwitcher />
             {canCreateStory && (
               <button
                 onClick={() => router.push('/dashboard/add-story')}
-                className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
+                className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 hover:bg-mint-600 px-4 py-2 text-ds-small text-white transition-colors"
               >
                 <Plus className="h-4 w-4" /> {t.create_story}
               </button>
@@ -936,13 +936,13 @@ function StoriesPageContent() {
         </div>
 
         {error && (
-          <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+          <div className="mb-4 rounded-ds-md bg-red-50 border border-red-200 px-4 py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
             {error}
           </div>
         )}
 
         {/* Stories Table */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
           {loading && stories.length === 0 ? (
             <LoadingSkeleton type="table" rows={10} />
           ) : stories.length === 0 ? (
@@ -950,41 +950,41 @@ function StoriesPageContent() {
               <p className="text-slate-600 dark:text-slate-400">{t.empty || 'No stories yet.'}</p>
             </div>
           ) : (
-            <div className="overflow-x-auto overflow-hidden border border-slate-200 dark:border-slate-700 rounded-xl">
+            <div className="overflow-x-auto overflow-hidden border border-slate-200 dark:border-slate-700 rounded-ds-md">
               <table className="w-full border-collapse">
                 <thead>
-                  <tr className="bg-black">
-                    <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300 rounded-tl-xl">
+                  <tr className="bg-mint-500">
+                    <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300 rounded-tl-ds-md">
                       {t.col_title}
                     </th>
-                    <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                    <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
                       {t.col_scope}
                     </th>
-                    <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300">
+                    <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
                       {t.col_caption}
                     </th>
-                    <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300 rounded-tr-xl">
+                    <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300 rounded-tr-ds-md">
                       {t.actions}
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {paginatedStories.map((s) => (
-                    <tr key={s.id} className="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                      <td className="text-left py-2 px-4 text-sm text-slate-900 dark:text-slate-100">
+                    <tr key={s.id} className="border-b border-slate-100 dark:border-slate-700 hover:bg-mint-50 dark:hover:bg-slate-700/50 transition-colors">
+                      <td className="text-left py-2 px-4 text-ds-small text-slate-900 dark:text-slate-100">
                         {s.title || '—'}
                       </td>
-                      <td className="text-left py-2 px-4 text-sm text-slate-600 dark:text-slate-400">
+                      <td className="text-left py-2 px-4 text-ds-small text-slate-600 dark:text-slate-400">
                         {s.class_id ? t.class_label : t.org_wide}
                       </td>
-                      <td className="text-left py-2 px-4 text-sm text-slate-600 dark:text-slate-400">
+                      <td className="text-left py-2 px-4 text-ds-small text-slate-600 dark:text-slate-400">
                         {s.caption || t.no_caption}
                       </td>
                       <td className="text-left py-2 px-4">
                         <div className="flex items-center gap-2">
                           <button
                             onClick={() => openStoryViewer(s)}
-                            className="inline-flex items-center gap-1 rounded-md border border-slate-300 px-2 py-1 text-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                            className="inline-flex items-center gap-1 rounded-ds-sm border border-slate-300 px-2 py-1 text-ds-small hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
                             title={t.view}
                           >
                             <Eye className="h-3.5 w-3.5" />
@@ -992,7 +992,7 @@ function StoriesPageContent() {
                           </button>
                           <button
                             onClick={() => router.push(`/dashboard/edit-story/${s.id}`)}
-                            className="inline-flex items-center gap-1 rounded-md border border-slate-300 px-2 py-1 text-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                            className="inline-flex items-center gap-1 rounded-ds-sm border border-slate-300 px-2 py-1 text-ds-small hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
                             title={t.edit}
                           >
                             <Edit className="h-3.5 w-3.5" />
@@ -1000,7 +1000,7 @@ function StoriesPageContent() {
                           </button>
                           <button
                             onClick={() => openDeleteModal(s)}
-                            className="inline-flex items-center gap-1 rounded-md border border-red-300 px-2 py-1 text-sm text-red-600 hover:bg-red-50 dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20"
+                            className="inline-flex items-center gap-1 rounded-ds-sm border border-red-300 px-2 py-1 text-ds-small text-red-600 hover:bg-red-50 transition-colors dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20"
                             title={t.delete}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -1020,7 +1020,7 @@ function StoriesPageContent() {
               <button
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="inline-flex items-center rounded-lg border border-slate-400 px-3 py-1.5 text-sm disabled:opacity-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                className="inline-flex items-center rounded-ds-md border border-slate-400 px-3 py-1.5 text-ds-small disabled:opacity-50 hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
               >
                 {t.prev || 'Prev'}
               </button>
@@ -1028,7 +1028,7 @@ function StoriesPageContent() {
                 <button
                   key={idx}
                   onClick={() => setCurrentPage(idx + 1)}
-                  className={`inline-flex items-center rounded-lg px-3 py-1.5 text-sm ${currentPage === idx + 1 ? 'bg-white text-black border border-slate-400 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600' : 'border border-slate-400 dark:border-slate-600 dark:text-slate-200'}`}
+                  className={`inline-flex items-center rounded-ds-md px-3 py-1.5 text-ds-small transition-colors ${currentPage === idx + 1 ? 'bg-mint-500 text-white border border-mint-500' : 'border border-slate-400 hover:bg-mint-50 dark:border-slate-600 dark:text-slate-200'}`}
                 >
                   {idx + 1}
                 </button>
@@ -1036,7 +1036,7 @@ function StoriesPageContent() {
               <button
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                className="inline-flex items-center rounded-lg border border-slate-400 px-3 py-1.5 text-sm disabled:opacity-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                className="inline-flex items-center rounded-ds-md border border-slate-400 px-3 py-1.5 text-ds-small disabled:opacity-50 hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
               >
                 {t.next || 'Next'}
               </button>
@@ -1165,10 +1165,10 @@ function StoriesPageContent() {
 export default function StoriesPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      <div className="min-h-screen bg-mint-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
         <div className="mx-auto max-w-6xl px-4 py-8 md:px-6">
-          <div className="mb-6 mt-14">
-            <div className="h-10 w-20 animate-pulse bg-slate-200 dark:bg-slate-700 rounded-lg"></div>
+          <div className="mb-ds-md mt-14">
+            <div className="h-10 w-20 animate-pulse bg-mint-200 dark:bg-slate-700 rounded-ds-md"></div>
           </div>
           <LoadingSkeleton type="table" rows={10} />
         </div>

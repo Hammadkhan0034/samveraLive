@@ -258,21 +258,21 @@ function CreateClassPageContent() {
   return (
     <>
       {/* Content Header */}
-      <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div className="mb-ds-sm flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3">
           {/* Mobile menu button */}
           <button
             onClick={() => sidebarRef.current?.open()}
-            className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+            className="md:hidden p-2 rounded-ds-md hover:bg-mint-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
             aria-label="Toggle sidebar"
           >
             <Menu className="h-5 w-5" />
           </button>
           <div>
-            <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+            <h2 className="text-ds-h2 font-semibold tracking-tight text-slate-900 dark:text-slate-100">
               {isEditMode ? t.edit_class : t.add_class}
             </h2>
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
+            <p className="mt-1 text-ds-small text-slate-600 dark:text-slate-400">
               {isEditMode ? t.edit_class_subtitle : t.create_class_subtitle}
             </p>
           </div>
@@ -284,7 +284,7 @@ function CreateClassPageContent() {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+          <div className="mb-4 rounded-ds-md bg-red-50 border border-red-200 px-4 py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
             {error}
           </div>
         )}
@@ -292,10 +292,10 @@ function CreateClassPageContent() {
         {/* Loading banner removed per requirements */}
 
         {/* Create/Edit Class Form */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
           <form onSubmit={handleAddClass} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {t.class_name}
               </label>
               <input
@@ -303,26 +303,26 @@ function CreateClassPageContent() {
                 value={newClass.name}
                 onChange={(e) => setNewClass(prev => ({ ...prev, name: e.target.value }))}
                 placeholder={t.class_name_placeholder}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+                className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {t.class_description}
               </label>
               <textarea
                 value={newClass.description}
                 onChange={(e) => setNewClass(prev => ({ ...prev, description: e.target.value }))}
                 placeholder={t.class_description_placeholder}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+                className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
                 rows={3}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {t.class_capacity}
               </label>
               <input
@@ -330,7 +330,7 @@ function CreateClassPageContent() {
                 value={newClass.capacity}
                 onChange={(e) => setNewClass(prev => ({ ...prev, capacity: e.target.value }))}
                 placeholder={t.class_capacity_placeholder}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+                className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
                 min="1"
               />
             </div>
@@ -350,14 +350,14 @@ function CreateClassPageContent() {
                 type="button"
                 onClick={() => router.push('/dashboard/principal/classes')}
                 disabled={loadingClass}
-                className="flex-1 rounded-lg border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                className="flex-1 rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small hover:bg-mint-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 transition-colors"
               >
                 {t.cancel}
               </button>
               <button
                 type="submit"
                 disabled={loadingClass}
-                className="flex-1 rounded-lg bg-black px-4 py-2 text-sm text-white hover:bg-slate-900 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 dark:bg-black"
+                className="flex-1 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small text-white hover:bg-mint-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
               >
                 {loadingClass ? (
                   <>

@@ -490,14 +490,21 @@ export default function ParentDashboard() {
   ];
 
 
+  // Cycle through tinted backgrounds for feature cards
+  const bgColors = [
+    'bg-pale-blue dark:bg-slate-800',
+    'bg-pale-yellow dark:bg-slate-800',
+    'bg-pale-peach dark:bg-slate-800',
+  ];
+
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8 md:px-6">
+    <main className="mx-auto max-w-7xl px-4 py-ds-lg md:px-6">
       {/* Welcome Section */}
-      <div className="mb-8 mt-10">
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+      <div className="mb-ds-lg mt-10">
+        <h1 className="text-ds-h1 font-bold tracking-tight text-slate-900 dark:text-slate-100">
           {t.parent_dashboard_title}
         </h1>
-        <p className="mt-2 text-slate-600 dark:text-slate-400">
+        <p className="mt-2 text-ds-body text-slate-600 dark:text-slate-400">
           {t.parent_dashboard_subtitle}
         </p>
       </div>
@@ -513,31 +520,32 @@ export default function ParentDashboard() {
       />
 
       {/* Shared FeatureGrid for tiles */}
-      <div className="mt-6">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-ds-md">
+        <div className="grid grid-cols-1 gap-ds-md sm:grid-cols-2 lg:grid-cols-4">
           {/* Calendar Card - Same design as Teacher Dashboard KPI */}
           <button
             onClick={() => {
               router.prefetch('/dashboard/parent/calendar');
               router.push('/dashboard/parent/calendar');
             }}
-            className="block rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200 dark:border-slate-700 dark:bg-slate-800 text-left w-full cursor-pointer"
+            className="block rounded-ds-lg p-ds-md shadow-ds-card hover:shadow-ds-lg transition-all duration-200 bg-pale-blue dark:bg-slate-800 text-left w-full cursor-pointer"
           >
             <div className="flex items-center justify-between">
-              <div className="text-sm text-slate-600 dark:text-slate-400">
+              <div className="text-ds-small text-slate-600 dark:text-slate-400">
                 {t.calendar || 'Calendar'}
               </div>
-              <span className="rounded-xl border border-slate-200 p-2 dark:border-slate-600">
+              <span className="rounded-ds-md bg-white/50 dark:bg-slate-700 p-2">
                 <CalendarDays className="h-4 w-4 text-slate-700 dark:text-slate-300" />
               </span>
             </div>
             {t.calendar_desc ? (
-              <p className="mt-3 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+              <p className="mt-3 text-ds-small text-slate-600 dark:text-slate-400 leading-relaxed">
                 {t.calendar_desc}
               </p>
             ) : null}
           </button>
           {items.map((item, idx) => {
+            const bgColor = bgColors[(idx + 1) % 3]; // +1 because calendar already uses first color
             if (item.href === '#' && (item.title === t.menu || item.title === t.stories || item.title === t.attendance || item.title === (t.di_title || 'Diapers & Health'))) {
               // Custom menu/stories/attendance/diapers tile with onClick
               const getRoute = () => {
@@ -566,20 +574,20 @@ export default function ParentDashboard() {
                       router.push('/dashboard/parent/diapers');
                     }
                   }}
-                  className="block rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200 dark:border-slate-700 dark:bg-slate-800 text-left w-full cursor-pointer"
+                  className={`block rounded-ds-lg p-ds-md shadow-ds-card hover:shadow-ds-lg transition-all duration-200 ${bgColor} text-left w-full cursor-pointer`}
                 >
                   <div className="flex items-center justify-between">
-                    <div className="text-sm text-slate-600 dark:text-slate-400">
+                    <div className="text-ds-small text-slate-600 dark:text-slate-400">
                       {item.title}
                     </div>
                     {item.Icon ? (
-                      <span className="rounded-xl border border-slate-200 p-2 dark:border-slate-600">
+                      <span className="rounded-ds-md bg-white/50 dark:bg-slate-700 p-2">
                         <item.Icon className="h-4 w-4 text-slate-700 dark:text-slate-300" />
                       </span>
                     ) : null}
                   </div>
                   {item.desc ? (
-                    <p className="mt-3 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                    <p className="mt-3 text-ds-small text-slate-600 dark:text-slate-400 leading-relaxed">
                       {item.desc}
                     </p>
                   ) : null}
@@ -595,25 +603,25 @@ export default function ParentDashboard() {
                     router.push(item.href);
                   }
                 }}
-                className="block rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200 dark:border-slate-700 dark:bg-slate-800 text-left w-full cursor-pointer"
+                className={`block rounded-ds-lg p-ds-md shadow-ds-card hover:shadow-ds-lg transition-all duration-200 ${bgColor} text-left w-full cursor-pointer`}
               >
                 <div className="flex items-center justify-between">
-                  <div className="text-sm text-slate-600 dark:text-slate-400">
+                  <div className="text-ds-small text-slate-600 dark:text-slate-400">
                     {item.title}
                     {item.badge !== undefined ? (
-                      <span className="ml-2 rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300">
+                      <span className="ml-2 rounded-ds-full bg-mint-500 px-2 py-0.5 text-ds-tiny font-medium text-white">
                         {item.badge}
                       </span>
                     ) : null}
                   </div>
                   {item.Icon ? (
-                    <span className="rounded-xl border border-slate-200 p-2 dark:border-slate-600">
+                    <span className="rounded-ds-md bg-white/50 dark:bg-slate-700 p-2">
                       <item.Icon className="h-4 w-4 text-slate-700 dark:text-slate-300" />
                     </span>
                   ) : null}
                 </div>
                 {item.desc ? (
-                  <p className="mt-3 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                  <p className="mt-3 text-ds-small text-slate-600 dark:text-slate-400 leading-relaxed">
                     {item.desc}
                   </p>
                 ) : null}
@@ -624,17 +632,17 @@ export default function ParentDashboard() {
       </div>
 
       {/* Feed + Schedule */}
-      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+      <div className="mt-ds-lg grid gap-ds-md lg:grid-cols-2">
         {/* Class Feed Card */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        <div className="rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+            <h2 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">
               {t.class_feed}
             </h2>
-            <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
+            <div className="h-2 w-2 rounded-full bg-mint-500 animate-pulse"></div>
           </div>
           <div className="mt-3">
-            <AnnouncementList 
+            <AnnouncementList
               classId={(session?.user?.user_metadata as any)?.class_id}
               orgId={(session?.user?.user_metadata as any)?.org_id}
               userId={session?.user?.id}
@@ -647,28 +655,28 @@ export default function ParentDashboard() {
         </div>
 
         {/* Today's Schedule Card */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        <div className="rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+            <h2 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">
               {t.today}
             </h2>
-            <div className="text-sm text-slate-500 dark:text-slate-400" suppressHydrationWarning>
-              {mounted ? new Date().toLocaleDateString(lang === 'is' ? 'is-IS' : 'en-US', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
+            <div className="text-ds-small text-slate-500 dark:text-slate-400" suppressHydrationWarning>
+              {mounted ? new Date().toLocaleDateString(lang === 'is' ? 'is-IS' : 'en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
               }) : ''}
             </div>
           </div>
           {displayStudent && (
-            <div className="mb-2 text-xs text-slate-500 dark:text-slate-400">
+            <div className="mb-2 text-ds-tiny text-slate-500 dark:text-slate-400">
               {displayStudent.name}{displayStudent.className ? ` · ${displayStudent.className}` : ''}
             </div>
           )}
-          
+
           {error ? (
-            <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300">
+            <div className="rounded-ds-md bg-red-50 border border-red-200 p-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300">
               {error}
             </div>
           ) : !menu ? (
@@ -678,41 +686,41 @@ export default function ParentDashboard() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <p className="text-sm text-slate-500 dark:text-slate-400">{t.empty_menu}</p>
+              <p className="text-ds-small text-slate-500 dark:text-slate-400">{t.empty_menu}</p>
             </div>
           ) : (
             <div className="space-y-3">
               {menu.breakfast && (
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-amber-50 border border-amber-200 dark:bg-amber-900/20 dark:border-amber-800">
+                <div className="flex items-center gap-3 p-3 rounded-ds-md bg-pale-yellow dark:bg-amber-900/20">
                   <div className="flex-shrink-0 w-2 h-2 rounded-full bg-amber-500"></div>
                   <div className="flex-1">
-                    <div className="text-sm font-medium text-amber-900 dark:text-amber-100">08:30</div>
-                    <div className="text-sm text-amber-700 dark:text-amber-300">{menu.breakfast}</div>
+                    <div className="text-ds-small font-medium text-amber-900 dark:text-amber-100">08:30</div>
+                    <div className="text-ds-small text-amber-700 dark:text-amber-300">{menu.breakfast}</div>
                   </div>
                 </div>
               )}
               {menu.lunch && (
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-50 border border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
+                <div className="flex items-center gap-3 p-3 rounded-ds-md bg-pale-blue dark:bg-blue-900/20">
                   <div className="flex-shrink-0 w-2 h-2 rounded-full bg-blue-500"></div>
                   <div className="flex-1">
-                    <div className="text-sm font-medium text-blue-900 dark:text-blue-100">12:00</div>
-                    <div className="text-sm text-blue-700 dark:text-blue-300">{menu.lunch}</div>
+                    <div className="text-ds-small font-medium text-blue-900 dark:text-blue-100">12:00</div>
+                    <div className="text-ds-small text-blue-700 dark:text-blue-300">{menu.lunch}</div>
                   </div>
                 </div>
               )}
               {menu.snack && (
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-green-50 border border-green-200 dark:bg-green-900/20 dark:border-green-800">
-                  <div className="flex-shrink-0 w-2 h-2 rounded-full bg-green-500"></div>
+                <div className="flex items-center gap-3 p-3 rounded-ds-md bg-mint-100 dark:bg-green-900/20">
+                  <div className="flex-shrink-0 w-2 h-2 rounded-full bg-mint-500"></div>
                   <div className="flex-1">
-                    <div className="text-sm font-medium text-green-900 dark:text-green-100">14:00</div>
-                    <div className="text-sm text-green-700 dark:text-green-300">{menu.snack}</div>
+                    <div className="text-ds-small font-medium text-green-900 dark:text-green-100">14:00</div>
+                    <div className="text-ds-small text-green-700 dark:text-green-300">{menu.snack}</div>
                   </div>
                 </div>
               )}
               {menu.notes && (
-                <div className="mt-4 p-3 rounded-lg bg-slate-50 border border-slate-200 dark:bg-slate-700 dark:border-slate-600">
-                  <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">{t.notes}</div>
-                  <div className="text-sm text-slate-700 dark:text-slate-300">{menu.notes}</div>
+                <div className="mt-4 p-3 rounded-ds-md bg-slate-50 dark:bg-slate-700">
+                  <div className="text-ds-tiny font-medium text-slate-500 dark:text-slate-400 mb-1">{t.notes}</div>
+                  <div className="text-ds-small text-slate-700 dark:text-slate-300">{menu.notes}</div>
                 </div>
               )}
             </div>
@@ -721,22 +729,22 @@ export default function ParentDashboard() {
 
         {/* Attendance Card */}
         {linkedStudents.length > 0 && (
-          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+          <div className="rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+              <h2 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">
                 {t.attendance_title || 'Today\'s Attendance'}
               </h2>
-              <div className="text-sm text-slate-500 dark:text-slate-400" suppressHydrationWarning>
-                {mounted ? new Date().toLocaleDateString(lang === 'is' ? 'is-IS' : 'en-US', { 
-                  month: 'short', 
-                  day: 'numeric' 
+              <div className="text-ds-small text-slate-500 dark:text-slate-400" suppressHydrationWarning>
+                {mounted ? new Date().toLocaleDateString(lang === 'is' ? 'is-IS' : 'en-US', {
+                  month: 'short',
+                  day: 'numeric'
                 }) : ''}
               </div>
             </div>
             {loadingAttendance ? (
               <div className="space-y-3">
                 {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-700">
+                  <div key={i} className="flex items-center justify-between p-3 rounded-ds-md border border-slate-200 dark:border-slate-700">
                     <div className="flex-1 space-y-2">
                       <div className="h-4 w-32 animate-pulse bg-slate-200 dark:bg-slate-700 rounded"></div>
                       <div className="h-3 w-24 animate-pulse bg-slate-200 dark:bg-slate-700 rounded"></div>
@@ -747,7 +755,7 @@ export default function ParentDashboard() {
               </div>
             ) : attendanceData.length === 0 ? (
               <div className="text-center py-6">
-                <p className="text-sm text-slate-500 dark:text-slate-400">
+                <p className="text-ds-small text-slate-500 dark:text-slate-400">
                   {t.no_attendance_data || 'No attendance data available'}
                 </p>
               </div>
@@ -757,15 +765,15 @@ export default function ParentDashboard() {
                   const getStatusColor = (status: string) => {
                     switch (status) {
                       case 'present':
-                        return 'bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-300';
+                        return 'bg-mint-100 text-mint-800 dark:bg-emerald-900/20 dark:text-emerald-300';
                       case 'absent':
-                        return 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300';
+                        return 'bg-red-50 text-red-800 dark:bg-red-900/20 dark:text-red-300';
                       case 'late':
-                        return 'bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-900/20 dark:border-amber-800 dark:text-amber-300';
+                        return 'bg-pale-yellow text-amber-800 dark:bg-amber-900/20 dark:text-amber-300';
                       case 'excused':
-                        return 'bg-blue-50 border-blue-200 text-blue-800 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300';
+                        return 'bg-pale-blue text-blue-800 dark:bg-blue-900/20 dark:text-blue-300';
                       default:
-                        return 'bg-slate-50 border-slate-200 text-slate-800 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-300';
+                        return 'bg-slate-50 text-slate-800 dark:bg-slate-700 dark:text-slate-300';
                     }
                   };
                   const getStatusText = (status: string) => {
@@ -785,15 +793,15 @@ export default function ParentDashboard() {
                   return (
                     <div
                       key={att.studentId}
-                      className={`flex items-center justify-between p-3 rounded-lg border ${getStatusColor(att.status)}`}
+                      className={`flex items-center justify-between p-3 rounded-ds-md ${getStatusColor(att.status)}`}
                     >
                       <div className="flex-1">
                         <div className="font-medium">{att.studentName}</div>
                         {att.className && (
-                          <div className="text-xs opacity-75 mt-0.5">{att.className}</div>
+                          <div className="text-ds-tiny opacity-75 mt-0.5">{att.className}</div>
                         )}
                       </div>
-                      <div className="text-sm font-semibold">
+                      <div className="text-ds-small font-semibold">
                         {getStatusText(att.status)}
                       </div>
                     </div>
@@ -806,25 +814,25 @@ export default function ParentDashboard() {
 
         {/* Linked Students Table */}
         {linkedStudents.length > 0 && (
-          <div className="mt-8 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-            <h3 className="text-md font-medium text-slate-900 dark:text-slate-100 mb-3">{t.my_students || 'My Students'}</h3>
-            <div className="overflow-x-auto overflow-hidden border border-slate-200 dark:border-slate-700 rounded-xl">
+          <div className="mt-ds-lg rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">
+            <h3 className="text-ds-body font-medium text-slate-900 dark:text-slate-100 mb-3">{t.my_students || 'My Students'}</h3>
+            <div className="overflow-x-auto overflow-hidden rounded-ds-md">
               <table className="w-full border-collapse">
                 <thead>
-                  <tr className="bg-black">
-                    <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300 rounded-tl-xl">
+                  <tr className="bg-mint-500">
+                    <th className="text-left py-2 px-4 text-ds-small font-medium text-white rounded-tl-ds-md">
                       {t.student_name || 'Name'}
                     </th>
-                    <th className="text-left py-2 px-4 text-sm font-medium text-white dark:text-slate-300 rounded-tr-xl">
+                    <th className="text-left py-2 px-4 text-ds-small font-medium text-white rounded-tr-ds-md">
                       {t.student_class || 'Class'}
                     </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-slate-800">
                   {linkedStudents.map((s) => (
-                    <tr key={s.id} className="border-b border-slate-100 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                      <td className="text-left py-2 px-4 text-sm text-slate-900 dark:text-slate-100">{s.first_name} {s.last_name || ''}</td>
-                      <td className="text-left py-2 px-4 text-sm text-slate-600 dark:text-slate-300">{s.classes?.name || '-'}</td>
+                    <tr key={s.id} className="border-b border-slate-100 dark:border-slate-700 hover:bg-mint-50 dark:hover:bg-slate-700/50">
+                      <td className="text-left py-2 px-4 text-ds-small text-slate-900 dark:text-slate-100">{s.first_name} {s.last_name || ''}</td>
+                      <td className="text-left py-2 px-4 text-ds-small text-slate-600 dark:text-slate-300">{s.classes?.name || '-'}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -836,20 +844,20 @@ export default function ParentDashboard() {
 
       {/* Linked Students Section */}
       {false && linkedStudents.length > 0 && (
-        <div className="mt-8">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
+        <div className="mt-ds-lg">
+          <h3 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100 mb-4">
             {t.my_students || 'My Students'}
           </h3>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-ds-md sm:grid-cols-2 lg:grid-cols-3">
             {linkedStudents.map((student) => (
-              <div key={student.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+              <div key={student.id} className="rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="font-medium text-slate-900 dark:text-slate-100">
                       {student.first_name} {student.last_name || ''}
                     </div>
                     {student.classes?.name && (
-                      <div className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                      <div className="text-ds-small text-slate-500 dark:text-slate-400 mt-1">
                         {student.classes.name}
                       </div>
                     )}
@@ -862,48 +870,48 @@ export default function ParentDashboard() {
       )}
 
       {/* Quick Actions */}
-      <div className="mt-8">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
+      <div className="mt-ds-lg">
+        <h3 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100 mb-4">
           {t.quick_actions}
         </h3>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <button className="flex items-center gap-3 p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors">
-            <div className="w-10 h-10 rounded-lg bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
+        <div className="grid gap-ds-md sm:grid-cols-2 lg:grid-cols-4">
+          <button className="flex items-center gap-3 p-ds-md rounded-ds-lg bg-white hover:bg-mint-50 shadow-ds-card hover:shadow-ds-lg dark:bg-slate-800 dark:hover:bg-slate-700 transition-all duration-200">
+            <div className="w-10 h-10 rounded-ds-md bg-pale-blue dark:bg-blue-900/20 flex items-center justify-center">
               <Bell className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div className="text-left">
-              <div className="text-sm font-medium text-slate-900 dark:text-slate-100">{t.contact_teacher}</div>
-              <div className="text-xs text-slate-500 dark:text-slate-400">{t.contact_teacher_desc}</div>
+              <div className="text-ds-small font-medium text-slate-900 dark:text-slate-100">{t.contact_teacher}</div>
+              <div className="text-ds-tiny text-slate-500 dark:text-slate-400">{t.contact_teacher_desc}</div>
             </div>
           </button>
-          
-          <button className="flex items-center gap-3 p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors">
-            <div className="w-10 h-10 rounded-lg bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
-              <CalendarDays className="w-5 h-5 text-green-600 dark:text-green-400" />
+
+          <button className="flex items-center gap-3 p-ds-md rounded-ds-lg bg-white hover:bg-mint-50 shadow-ds-card hover:shadow-ds-lg dark:bg-slate-800 dark:hover:bg-slate-700 transition-all duration-200">
+            <div className="w-10 h-10 rounded-ds-md bg-mint-100 dark:bg-green-900/20 flex items-center justify-center">
+              <CalendarDays className="w-5 h-5 text-mint-600 dark:text-green-400" />
             </div>
             <div className="text-left">
-              <div className="text-sm font-medium text-slate-900 dark:text-slate-100">{t.view_calendar}</div>
-              <div className="text-xs text-slate-500 dark:text-slate-400">{t.view_calendar_desc}</div>
+              <div className="text-ds-small font-medium text-slate-900 dark:text-slate-100">{t.view_calendar}</div>
+              <div className="text-ds-tiny text-slate-500 dark:text-slate-400">{t.view_calendar_desc}</div>
             </div>
           </button>
-          
-          <button className="flex items-center gap-3 p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors">
-            <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center">
+
+          <button className="flex items-center gap-3 p-ds-md rounded-ds-lg bg-white hover:bg-mint-50 shadow-ds-card hover:shadow-ds-lg dark:bg-slate-800 dark:hover:bg-slate-700 transition-all duration-200">
+            <div className="w-10 h-10 rounded-ds-md bg-pale-peach dark:bg-purple-900/20 flex items-center justify-center">
               <MessageSquare className="w-5 h-5 text-purple-600 dark:text-purple-400" />
             </div>
             <div className="text-left">
-              <div className="text-sm font-medium text-slate-900 dark:text-slate-100">{t.send_message}</div>
-              <div className="text-xs text-slate-500 dark:text-slate-400">{t.send_message_desc}</div>
+              <div className="text-ds-small font-medium text-slate-900 dark:text-slate-100">{t.send_message}</div>
+              <div className="text-ds-tiny text-slate-500 dark:text-slate-400">{t.send_message_desc}</div>
             </div>
           </button>
-          
-          <button className="flex items-center gap-3 p-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors">
-            <div className="w-10 h-10 rounded-lg bg-orange-100 dark:bg-orange-900/20 flex items-center justify-center">
+
+          <button className="flex items-center gap-3 p-ds-md rounded-ds-lg bg-white hover:bg-mint-50 shadow-ds-card hover:shadow-ds-lg dark:bg-slate-800 dark:hover:bg-slate-700 transition-all duration-200">
+            <div className="w-10 h-10 rounded-ds-md bg-pale-yellow dark:bg-orange-900/20 flex items-center justify-center">
               <Camera className="w-5 h-5 text-orange-600 dark:text-orange-400" />
             </div>
             <div className="text-left">
-              <div className="text-sm font-medium text-slate-900 dark:text-slate-100">{t.view_photos}</div>
-              <div className="text-xs text-slate-500 dark:text-slate-400">{t.view_photos_desc}</div>
+              <div className="text-ds-small font-medium text-slate-900 dark:text-slate-100">{t.view_photos}</div>
+              <div className="text-ds-tiny text-slate-500 dark:text-slate-400">{t.view_photos_desc}</div>
             </div>
           </button>
         </div>

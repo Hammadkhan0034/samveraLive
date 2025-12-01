@@ -20,17 +20,17 @@ function TeacherDashboardContent({
   return (
     <>
       {/* Content Header */}
-      <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div className="mb-ds-sm flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3">
           {/* Mobile menu button */}
           <button
             onClick={() => sidebarRef.current?.open()}
-            className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+            className="md:hidden p-2 rounded-ds-md hover:bg-mint-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
             aria-label="Toggle sidebar"
           >
             <Menu className="h-5 w-5" />
           </button>
-          <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+          <h2 className="text-ds-h2 font-semibold tracking-tight text-slate-900 dark:text-slate-100">
             {t.teacher_dashboard}
           </h2>
         </div>
@@ -40,16 +40,16 @@ function TeacherDashboardContent({
       </div>
       {/* Error Message */}
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
+        <div className="mb-ds-md rounded-ds-md border border-red-200 bg-red-50 p-ds-md dark:border-red-800 dark:bg-red-900/20">
           <div className="flex items-center gap-3">
             <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
             <div className="flex-1">
-              <p className="text-sm font-medium text-red-800 dark:text-red-200">{error}</p>
+              <p className="text-ds-small font-medium text-red-800 dark:text-red-200">{error}</p>
             </div>
             {onRetry && (
               <button
                 onClick={onRetry}
-                className="rounded-lg bg-red-100 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-200 dark:bg-red-800/50 dark:text-red-200 dark:hover:bg-red-800/70"
+                className="rounded-ds-md bg-red-100 px-3 py-1.5 text-ds-small font-medium text-red-700 hover:bg-red-200 dark:bg-red-800/50 dark:text-red-200 dark:hover:bg-red-800/70"
               >
                 Retry
               </button>
@@ -59,26 +59,34 @@ function TeacherDashboardContent({
       )}
 
       {/* KPIs Section */}
-      <section className="mb-6">
+      <section className="mb-ds-md">
         {isLoading ? (
           <KPICardSkeleton count={6} />
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {kpis.map(({ label, value, icon: Icon, onClick }, i) => (
-              <div
-                key={i}
-                className="cursor-pointer rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:border-slate-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-600"
-                onClick={onClick}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="text-sm text-slate-600 dark:text-slate-400">{label}</div>
-                  <span className="rounded-xl border border-slate-200 p-2 dark:border-slate-600">
-                    <Icon className="h-4 w-4 text-slate-700 dark:text-slate-300" />
-                  </span>
+          <div className="grid grid-cols-1 gap-ds-md sm:grid-cols-2 lg:grid-cols-3">
+            {kpis.map(({ label, value, icon: Icon, onClick }, i) => {
+              const bgColors = [
+                'bg-pale-blue dark:bg-slate-800',
+                'bg-pale-yellow dark:bg-slate-800',
+                'bg-pale-peach dark:bg-slate-800',
+              ];
+              const bgColor = bgColors[i % 3];
+              return (
+                <div
+                  key={i}
+                  className={`cursor-pointer rounded-ds-lg p-ds-md shadow-ds-card transition-all duration-200 hover:shadow-ds-lg ${bgColor}`}
+                  onClick={onClick}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="text-ds-small text-slate-600 dark:text-slate-400">{label}</div>
+                    <span className="rounded-ds-md bg-white/50 dark:bg-slate-700 p-2">
+                      <Icon className="h-4 w-4 text-slate-700 dark:text-slate-300" />
+                    </span>
+                  </div>
+                  <div className="mt-3 text-ds-h2 font-semibold text-slate-900 dark:text-slate-100">{value}</div>
                 </div>
-                <div className="mt-3 text-2xl font-semibold text-slate-900 dark:text-slate-100">{value}</div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>

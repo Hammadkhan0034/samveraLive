@@ -19,13 +19,13 @@ export default function LoadingSkeleton({
 
   if (type === 'table') {
     return (
-      <div className={`rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800 ${className}`}>
+      <div className={`rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800 ${className}`}>
         {/* Table header skeleton */}
         <div className="mb-4 flex items-center justify-between">
           <div className={`h-6 w-32 ${baseSkeletonClass}`}></div>
           <div className={`h-10 w-24 ${baseSkeletonClass}`}></div>
         </div>
-        
+
         {/* Search bar skeleton */}
         <div className="mb-4">
           <div className={`h-10 w-full max-w-md ${baseSkeletonClass}`}></div>
@@ -64,9 +64,9 @@ export default function LoadingSkeleton({
     return (
       <div className={`space-y-4 ${className}`}>
         {Array.from({ length: rows }).map((_, index) => (
-          <div 
-            key={index} 
-            className={`rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800`}
+          <div
+            key={index}
+            className={`rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800`}
           >
             <div className="flex items-start gap-4">
               <div className={`h-12 w-12 flex-shrink-0 ${baseSkeletonClass}`}></div>
@@ -84,7 +84,7 @@ export default function LoadingSkeleton({
 
   if (type === 'list') {
     return (
-      <div className={`rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800 ${className}`}>
+      <div className={`rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800 ${className}`}>
         <div className="space-y-3">
           {Array.from({ length: rows }).map((_, index) => (
             <div key={index} className="flex items-center gap-3 py-3 border-b border-slate-100 dark:border-slate-700 last:border-0">
@@ -103,7 +103,7 @@ export default function LoadingSkeleton({
 
   // Default skeleton
   return (
-    <div className={`rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800 ${className}`}>
+    <div className={`rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800 ${className}`}>
       <div className="space-y-4">
         {Array.from({ length: rows }).map((_, index) => (
           <div key={index} className="space-y-2">

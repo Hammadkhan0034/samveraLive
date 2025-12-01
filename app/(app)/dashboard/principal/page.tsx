@@ -39,12 +39,12 @@ function PrincipalDashboardContent({
           {/* Mobile menu button */}
           <button
             onClick={() => sidebarRef.current?.open()}
-            className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+            className="md:hidden p-2 rounded-ds-md hover:bg-mint-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
             aria-label="Toggle sidebar"
           >
             <Menu className="h-5 w-5" />
           </button>
-          <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+          <h2 className="text-ds-h1 font-semibold tracking-tight text-slate-900 dark:text-slate-100">
             {t.title || 'Principal Dashboard'}
           </h2>
         </div>
@@ -54,16 +54,16 @@ function PrincipalDashboardContent({
       </div>
       {/* Error Message */}
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
+        <div className="mb-4 rounded-ds-md border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
           <div className="flex items-center gap-3">
             <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
             <div className="flex-1">
-              <p className="text-sm font-medium text-red-800 dark:text-red-200">{error}</p>
+              <p className="text-ds-small font-medium text-red-800 dark:text-red-200">{error}</p>
             </div>
             {onRetry && (
               <button
                 onClick={onRetry}
-                className="rounded-lg bg-red-100 px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-200 dark:bg-red-800/50 dark:text-red-200 dark:hover:bg-red-800/70"
+                className="rounded-ds-md bg-red-100 px-3 py-1.5 text-ds-small font-medium text-red-700 hover:bg-red-200 transition-colors dark:bg-red-800/50 dark:text-red-200 dark:hover:bg-red-800/70"
               >
                 Retry
               </button>
@@ -77,34 +77,34 @@ function PrincipalDashboardContent({
         {isLoading ? (
           <KPICardSkeleton count={11} />
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-ds-md sm:grid-cols-2 lg:grid-cols-3">
             {kpis.map(({ label, value, icon: Icon, onClick }, i) => (
               <div
                 key={i}
-                className="cursor-pointer rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:border-slate-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-600"
+                className="cursor-pointer rounded-ds-lg border border-slate-200 bg-white p-5 shadow-ds-card transition-all duration-200 hover:border-mint-300 hover:shadow-ds-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-600"
                 onClick={onClick}
               >
                 <div className="flex items-center justify-between">
-                  <div className="text-sm text-slate-600 dark:text-slate-400">{label}</div>
-                  <span className="rounded-xl border border-slate-200 p-2 dark:border-slate-600">
-                    <Icon className="h-4 w-4 text-slate-700 dark:text-slate-300" />
+                  <div className="text-ds-small text-slate-600 dark:text-slate-400">{label}</div>
+                  <span className="rounded-ds-md border border-slate-200 p-2 dark:border-slate-600">
+                    <Icon className="h-4 w-4 text-mint-600 dark:text-slate-300" />
                   </span>
                 </div>
-                <div className="mt-3 text-2xl font-semibold text-slate-900 dark:text-slate-100">{value}</div>
+                <div className="mt-3 text-ds-h1 font-semibold text-slate-900 dark:text-slate-100">{value}</div>
               </div>
             ))}
             {/* Calendar KPI Card */}
             <div
               onClick={() => router.push('/dashboard/principal/calendar')}
-              className="cursor-pointer rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:border-slate-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-600"
+              className="cursor-pointer rounded-ds-lg border border-slate-200 bg-white p-5 shadow-ds-card transition-all duration-200 hover:border-mint-300 hover:shadow-ds-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-600"
             >
               <div className="flex items-center justify-between">
-                <div className="text-sm text-slate-600 dark:text-slate-400">{t.tile_calendar || 'Calendar'}</div>
-                <span className="rounded-xl border border-slate-200 p-2 dark:border-slate-600">
-                  <CalendarDays className="h-4 w-4 text-slate-700 dark:text-slate-300" />
+                <div className="text-ds-small text-slate-600 dark:text-slate-400">{t.tile_calendar || 'Calendar'}</div>
+                <span className="rounded-ds-md border border-slate-200 p-2 dark:border-slate-600">
+                  <CalendarDays className="h-4 w-4 text-mint-600 dark:text-slate-300" />
                 </span>
               </div>
-              <div className="mt-3 text-2xl font-semibold text-slate-900 dark:text-slate-100">
+              <div className="mt-3 text-ds-h1 font-semibold text-slate-900 dark:text-slate-100">
                 {calendarEventsCount}
               </div>
             </div>

@@ -235,27 +235,27 @@ function PrincipalPhotosPageContent() {
   return (
     <>
       {/* Content Header */}
-      <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-3">
+      <div className="mb-ds-sm flex flex-col gap-ds-sm md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-ds-sm">
           {/* Mobile menu button */}
           <button
             onClick={() => sidebarRef.current?.open()}
-            className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+            className="md:hidden p-2 rounded-ds-md hover:bg-mint-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
             aria-label="Toggle sidebar"
           >
             <Menu className="h-5 w-5" />
           </button>
-          <h2 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+          <h2 className="text-ds-h1 font-semibold tracking-tight text-slate-900 dark:text-slate-100">
             {t.photos || 'Photos'}
           </h2>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-ds-sm">
           <ProfileSwitcher />
           {orgId && (
             <button
               onClick={() => setIsModalOpen(true)}
-              className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm text-white hover:bg-slate-800 dark:bg-slate-700 dark:hover:bg-slate-600"
+              className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600"
             >
               <Plus className="h-4 w-4" />
               {t.upload_photo || 'Upload Photo'}
@@ -265,38 +265,38 @@ function PrincipalPhotosPageContent() {
       </div>
 
         {/* Photos Panel */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+        <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
           {/* Error State */}
           {error && (
-            <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+            <div className="mb-4 rounded-ds-md bg-red-50 border border-red-200 px-4 py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
               {error}
             </div>
           )}
 
           {/* Loading State */}
           {isLoading ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-ds-sm sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
               {Array.from({ length: 8 }).map((_, index) => (
                 <div
                   key={index}
-                  className="aspect-square rounded-lg overflow-hidden bg-slate-200 dark:bg-slate-700 animate-pulse"
+                  className="aspect-square rounded-ds-md overflow-hidden bg-mint-100 dark:bg-slate-700 animate-pulse"
                 />
               ))}
             </div>
           ) : (
             /* Photos Grid */
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-ds-sm sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
               {photos.length === 0 ? (
                 <div className="col-span-full text-center py-12 text-slate-500 dark:text-slate-400">
-                  <ImageIcon className="h-12 w-12 mx-auto mb-3 text-slate-300 dark:text-slate-600" />
+                  <ImageIcon className="h-12 w-12 mx-auto mb-3 text-mint-300 dark:text-slate-600" />
                   <p>{t.no_photos_uploaded || 'No photos uploaded yet'}</p>
-                  <p className="text-sm mt-1">{t.click_upload_photo || 'Click "Upload Photo" to get started'}</p>
+                  <p className="text-ds-small mt-1">{t.click_upload_photo || 'Click "Upload Photo" to get started'}</p>
                 </div>
               ) : (
                 photos.map((photo) => (
                   <div
                     key={photo.id}
-                    className="group relative aspect-square overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-700"
+                    className="group relative aspect-square overflow-hidden rounded-ds-md bg-slate-100 dark:bg-slate-700"
                   >
                     {photo.url ? (
                       <img
@@ -309,40 +309,40 @@ function PrincipalPhotosPageContent() {
                         <ImageIcon className="h-8 w-8 text-slate-400" />
                       </div>
                     )}
-                    
+
                     {/* Delete button - top right */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handleDeleteClick(photo);
                       }}
-                      className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                      className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-ds-full p-2 opacity-0 group-hover:opacity-100 transition-opacity z-10"
                       title={t.delete_photo || 'Delete Photo'}
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
-                    
+
                     {/* Overlay with info */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="absolute bottom-0 left-0 right-0 p-3 text-white text-sm">
+                      <div className="absolute bottom-0 left-0 right-0 p-3 text-white text-ds-small">
                         {photo.caption && (
                           <p className="truncate font-medium mb-1">{photo.caption}</p>
                         )}
-                        <div className="flex items-center justify-between text-xs opacity-90">
+                        <div className="flex items-center justify-between text-ds-tiny opacity-90">
                           <span>
                             {new Date(photo.created_at).toLocaleDateString()}
                           </span>
                           {photo.is_public && (
-                            <span className="px-2 py-0.5 bg-white/20 rounded">{t.public || 'Public'}</span>
+                            <span className="px-2 py-0.5 bg-white/20 rounded-ds-sm">{t.public || 'Public'}</span>
                           )}
                         </div>
                         {photo.classes && (
-                          <p className="text-xs opacity-75 mt-1 truncate">
+                          <p className="text-ds-tiny opacity-75 mt-1 truncate">
                             {photo.classes.name}
                           </p>
                         )}
                         {photo.students && (
-                          <p className="text-xs opacity-75 mt-1 truncate">
+                          <p className="text-ds-tiny opacity-75 mt-1 truncate">
                             {photo.students.first_name} {photo.students.last_name}
                           </p>
                         )}

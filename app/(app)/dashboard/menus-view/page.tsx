@@ -485,10 +485,10 @@ export default function MenusViewPage() {
 
   if (loading && !user && isSigningIn) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      <div className="min-h-screen bg-mint-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
         <div className="mx-auto max-w-5xl px-4 py-8 md:px-6">
-          <div className="mb-6 mt-14">
-            <div className="h-10 w-20 animate-pulse bg-slate-200 dark:bg-slate-700 rounded-lg"></div>
+          <div className="mb-ds-md mt-14">
+            <div className="h-10 w-20 animate-pulse bg-mint-200 dark:bg-slate-700 rounded-ds-md"></div>
           </div>
           <LoadingSkeleton type="cards" rows={3} />
         </div>
@@ -501,46 +501,46 @@ export default function MenusViewPage() {
   // menuForDate removed; we use menusForDate list
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <div className="min-h-screen bg-mint-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
 
         {/* Main Content */}
         <main className="mx-auto max-w-5xl px-4 py-8 md:px-6">
-          <div className="mb-6 flex items-center gap-3 mt-14">
+          <div className="mb-ds-md flex items-center gap-ds-sm mt-14">
             <button
               onClick={() => router.back()}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 px-4 py-2 text-sm hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              className="inline-flex items-center gap-2 rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
             >
               <ArrowLeft className="h-4 w-4" /> {lang === 'is' ? 'Til baka' : 'Back'}
             </button>
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+            <h1 className="text-ds-h1 font-semibold tracking-tight text-slate-900 dark:text-slate-100">
               {t.menu}
             </h1>
           </div>
           {/* Date Selector */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+          <div className="mb-ds-md">
+            <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-2">
               {t.select_date}
             </label>
             <input
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-full sm:w-auto rounded-lg border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+              className="w-full sm:w-auto rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
             />
           </div>
 
           {/* Menu Display */}
           {error ? (
-            <div className="rounded-2xl border border-red-200 bg-red-50 p-6 shadow-sm dark:border-red-800 dark:bg-red-900/20">
-              <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+            <div className="rounded-ds-lg border border-red-200 bg-red-50 p-ds-md shadow-ds-card dark:border-red-800 dark:bg-red-900/20">
+              <p className="text-ds-small text-red-700 dark:text-red-300">{error}</p>
             </div>
           ) : menusForDate.length === 0 ? (
-            <div className="rounded-2xl border border-slate-200 bg-white p-12 shadow-sm dark:border-slate-700 dark:bg-slate-800 text-center">
-              <Utensils className="w-16 h-16 mx-auto text-slate-400 dark:text-slate-500 mb-4" />
-              <p className="text-sm text-slate-500 dark:text-slate-400">{t.empty_menu}</p>
+            <div className="rounded-ds-lg border border-slate-200 bg-white p-12 shadow-ds-card dark:border-slate-700 dark:bg-slate-800 text-center">
+              <Utensils className="w-16 h-16 mx-auto text-mint-400 dark:text-slate-500 mb-4" />
+              <p className="text-ds-small text-slate-500 dark:text-slate-400">{t.empty_menu}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-ds-sm">
               {menusForDate
                 .slice()
                 .sort((a, b) => {
@@ -549,54 +549,54 @@ export default function MenusViewPage() {
                   if (an < bn) return -1; if (an > bn) return 1; return 0;
                 })
                 .map((entry, idx) => (
-                <div key={idx} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+                <div key={idx} className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
                   {entry.className && (
-                    <div className="mb-3 text-sm font-medium text-slate-700 dark:text-slate-300">{entry.className}</div>
+                    <div className="mb-ds-sm text-ds-small font-medium text-slate-700 dark:text-slate-300">{entry.className}</div>
                   )}
                   <div className="space-y-4">
                     {entry.menu.breakfast && (
-                      <div className="flex items-start gap-4 p-4 rounded-lg bg-amber-50 border border-amber-200 dark:bg-amber-900/20 dark:border-amber-800">
+                      <div className="flex items-start gap-4 p-4 rounded-ds-md bg-amber-50 border border-amber-200 dark:bg-amber-900/20 dark:border-amber-800">
                         <div className="flex-shrink-0 mt-1">
-                          <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                          <div className="w-3 h-3 rounded-ds-full bg-amber-500"></div>
                         </div>
                         <div className="flex-1">
-                          <div className="text-sm font-semibold text-amber-900 dark:text-amber-100 mb-1">
+                          <div className="text-ds-small font-semibold text-amber-900 dark:text-amber-100 mb-1">
                             08:30 - {t.breakfast}
                           </div>
-                          <div className="text-sm text-amber-700 dark:text-amber-300">{entry.menu.breakfast}</div>
+                          <div className="text-ds-small text-amber-700 dark:text-amber-300">{entry.menu.breakfast}</div>
                         </div>
                       </div>
                     )}
                     {entry.menu.lunch && (
-                      <div className="flex items-start gap-4 p-4 rounded-lg bg-blue-50 border border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
+                      <div className="flex items-start gap-4 p-4 rounded-ds-md bg-pale-blue border border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
                         <div className="flex-shrink-0 mt-1">
-                          <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                          <div className="w-3 h-3 rounded-ds-full bg-blue-500"></div>
                         </div>
                         <div className="flex-1">
-                          <div className="text-sm font-semibold text-blue-900 dark:text-blue-100 mb-1">
+                          <div className="text-ds-small font-semibold text-blue-900 dark:text-blue-100 mb-1">
                             12:00 - {t.lunch}
                           </div>
-                          <div className="text-sm text-blue-700 dark:text-blue-300">{entry.menu.lunch}</div>
+                          <div className="text-ds-small text-blue-700 dark:text-blue-300">{entry.menu.lunch}</div>
                         </div>
                       </div>
                     )}
                     {entry.menu.snack && (
-                      <div className="flex items-start gap-4 p-4 rounded-lg bg-green-50 border border-green-200 dark:bg-green-900/20 dark:border-green-800">
+                      <div className="flex items-start gap-4 p-4 rounded-ds-md bg-mint-50 border border-mint-200 dark:bg-green-900/20 dark:border-green-800">
                         <div className="flex-shrink-0 mt-1">
-                          <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                          <div className="w-3 h-3 rounded-ds-full bg-mint-500"></div>
                         </div>
                         <div className="flex-1">
-                          <div className="text-sm font-semibold text-green-900 dark:text-green-100 mb-1">
+                          <div className="text-ds-small font-semibold text-mint-900 dark:text-green-100 mb-1">
                             14:00 - {t.snack}
                           </div>
-                          <div className="text-sm text-green-700 dark:text-green-300">{entry.menu.snack}</div>
+                          <div className="text-ds-small text-mint-700 dark:text-green-300">{entry.menu.snack}</div>
                         </div>
                       </div>
                     )}
                     {entry.menu.notes && (
-                      <div className="mt-4 p-4 rounded-lg bg-slate-50 border border-slate-200 dark:bg-slate-700 dark:border-slate-600">
-                        <div className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-2">{t.notes}</div>
-                        <div className="text-sm text-slate-700 dark:text-slate-300">{entry.menu.notes}</div>
+                      <div className="mt-4 p-4 rounded-ds-md bg-slate-50 border border-slate-200 dark:bg-slate-700 dark:border-slate-600">
+                        <div className="text-ds-tiny font-medium text-slate-500 dark:text-slate-400 mb-2">{t.notes}</div>
+                        <div className="text-ds-small text-slate-700 dark:text-slate-300">{entry.menu.notes}</div>
                       </div>
                     )}
                   </div>

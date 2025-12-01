@@ -31,16 +31,16 @@ export const StudentAttendanceCard = React.memo<StudentAttendanceCardProps>(
     return (
       <label
         className={clsx(
-          'flex cursor-pointer items-center justify-between rounded-xl border p-3 transition',
+          'flex cursor-pointer items-center justify-between rounded-ds-md border p-3 transition-colors',
           isPresent
-            ? 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300'
+            ? 'border-mint-200 bg-mint-50 text-mint-800 dark:border-mint-600 dark:bg-mint-900/20 dark:text-mint-300'
             : 'border-slate-200 bg-white text-slate-700 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300'
         )}
       >
         <div className="flex flex-col">
           <span className="font-medium">{studentName}</span>
           {classId && (
-            <span className="text-xs text-slate-500 dark:text-slate-400">
+            <span className="text-ds-tiny text-slate-500 dark:text-slate-400">
               {className}
             </span>
           )}
@@ -50,7 +50,7 @@ export const StudentAttendanceCard = React.memo<StudentAttendanceCardProps>(
           checked={isPresent}
           onChange={(e) => onToggle(student.id, e.target.checked)}
           disabled={disabled}
-          className="h-4 w-4 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="h-4 w-4 accent-mint-500 disabled:opacity-50 disabled:cursor-not-allowed"
         />
       </label>
     );

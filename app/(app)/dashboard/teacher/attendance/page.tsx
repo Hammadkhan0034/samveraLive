@@ -35,24 +35,24 @@ function AttendancePageHeader({
   const { sidebarRef } = useTeacherPageLayout();
 
   return (
-    <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-      <div className="flex items-center gap-3">
+    <div className="mb-ds-sm flex flex-col gap-ds-sm md:flex-row md:items-center md:justify-between">
+      <div className="flex items-center gap-ds-sm">
         {/* Mobile menu button */}
         <button
           onClick={() => sidebarRef.current?.open()}
-          className="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
+          className="md:hidden p-2 rounded-ds-md hover:bg-mint-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
           aria-label="Toggle sidebar"
         >
           <Menu className="h-5 w-5" />
         </button>
-        <h2 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+        <h2 className="text-ds-h2 font-semibold tracking-tight text-slate-900 dark:text-slate-100">
           {title}
         </h2>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-ds-sm">
         <ProfileSwitcher />
         {/* Desktop stats */}
-        <div className="hidden md:flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+        <div className="hidden md:flex items-center gap-2 text-ds-small text-slate-600 dark:text-slate-400">
           <Users className="h-4 w-4" />
           <span>
             {label}: <span className="font-medium">{kidsIn}</span> / {total}
@@ -62,7 +62,7 @@ function AttendancePageHeader({
           <span>{todayHint}</span>
         </div>
         {/* Mobile stats */}
-        <div className="md:hidden flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+        <div className="md:hidden flex items-center gap-2 text-ds-small text-slate-600 dark:text-slate-400">
           <Users className="h-4 w-4" />
           <span>
             {label}: <span className="font-medium">{kidsIn}</span> / {total}
@@ -233,9 +233,9 @@ const AttendancePanel = React.memo<AttendancePanelProps>(function AttendancePane
   );
 
     return (
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-700 dark:bg-slate-800">
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
-          <div className="flex items-center gap-3">
+      <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+        <div className="mb-4 flex flex-col gap-ds-sm sm:flex-row sm:items-center sm:justify-end">
+          <div className="flex items-center gap-ds-sm">
             <AttendanceFilters
               classes={teacherClasses}
               selectedClassId={selectedClassId}

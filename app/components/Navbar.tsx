@@ -49,13 +49,13 @@ export default function Navbar({ variant = 'fixed' }: NavbarProps) {
   }, [isLangDropdownOpen]);
 
   const positionClass = variant === 'fixed' ? 'fixed top-0 left-0 w-full' : 'relative w-full';
-  
+
   return (
-    <nav className={`${positionClass} z-50 border-b border-slate-200 bg-slate-50 dark:bg-slate-900 backdrop-blur dark:border-slate-900 dark:supports-[backdrop-filter]:bg-slate-900/80`}>
+    <nav className={`${positionClass} z-50 bg-white dark:bg-slate-900 shadow-ds-sm backdrop-blur dark:supports-[backdrop-filter]:bg-slate-900/80`}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
         {variant === 'fixed' && (
-          <div className="flex items-center gap-1 font-semibold text-slate-900 dark:text-slate-100">
-            <span className="inline-block rounded-md bg-slate-900 dark:bg-white text-white dark:text-slate-900 py-0.5 px-2.5">S</span>
+          <div className="flex items-center gap-2 font-semibold text-slate-900 dark:text-slate-100">
+            <span className="inline-block rounded-ds-sm bg-mint-500 text-white py-0.5 px-2.5">S</span>
             <span>Samvera</span>
           </div>
         )}
@@ -64,14 +64,14 @@ export default function Navbar({ variant = 'fixed' }: NavbarProps) {
           <button
             type="button"
             aria-label={
-              theme === 'light' 
-                ? "Switch to dark mode" 
-                : theme === 'dark' 
-                ? "Switch to system mode" 
+              theme === 'light'
+                ? "Switch to dark mode"
+                : theme === 'dark'
+                ? "Switch to system mode"
                 : "Switch to light mode"
             }
             onClick={toggleTheme}
-            className="inline-flex items-center gap-2 rounded-md border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+            className="inline-flex items-center gap-2 rounded-ds-md border border-slate-200 dark:border-slate-700 px-3 py-2 text-ds-small text-slate-700 hover:bg-mint-100 dark:text-slate-200 dark:hover:bg-slate-800 transition-colors duration-200"
             suppressHydrationWarning
           >
             {!mounted ? (
@@ -85,27 +85,27 @@ export default function Navbar({ variant = 'fixed' }: NavbarProps) {
             )}
             {/* <span className="hidden sm:inline">{isDark ? t.light : t.dark}</span> */}
           </button>
-          
+
           {showNotifications && <NotificationDropdown />}
-          
+
           <div className="relative language-dropdown">
             <button
               onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
-              className="flex items-center gap-2 rounded-md border border-slate-300 dark:border-slate-700 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+              className="flex items-center gap-2 rounded-ds-md border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-ds-small text-slate-700 hover:bg-mint-100 dark:text-slate-200 dark:hover:bg-slate-800 transition-colors duration-200"
             >
               <Globe className="h-4 w-4" />
               <span className="hidden sm:inline">{lang === 'is' ? 'Íslenska' : 'English'}</span>
               <ChevronDown className={`h-4 w-4 transition-transform ${isLangDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
-            
+
             {isLangDropdownOpen && (
-              <div className="absolute right-0 top-full mt-1 w-40 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg z-50">
+              <div className="absolute right-0 top-full mt-1 w-40 rounded-ds-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-ds-md z-50">
                 <button
                   onClick={() => {
                     setLang('en');
                     setIsLangDropdownOpen(false);
                   }}
-                  className={`w-full px-3 py-2 text-sm text-left hover:bg-slate-50 dark:hover:bg-slate-700 first:rounded-t-lg ${lang === 'en' ? 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100' : 'text-slate-700 dark:text-slate-300'}`}
+                  className={`w-full px-3 py-2 text-ds-small text-left hover:bg-mint-100 dark:hover:bg-slate-700 first:rounded-t-ds-md ${lang === 'en' ? 'bg-mint-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100' : 'text-slate-700 dark:text-slate-300'}`}
                 >
                   English
                 </button>
@@ -114,7 +114,7 @@ export default function Navbar({ variant = 'fixed' }: NavbarProps) {
                     setLang('is');
                     setIsLangDropdownOpen(false);
                   }}
-                  className={`w-full px-3 py-2 text-sm text-left hover:bg-slate-50 dark:hover:bg-slate-700 last:rounded-b-lg ${lang === 'is' ? 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100' : 'text-slate-700 dark:text-slate-300'}`}
+                  className={`w-full px-3 py-2 text-ds-small text-left hover:bg-mint-100 dark:hover:bg-slate-700 last:rounded-b-ds-md ${lang === 'is' ? 'bg-mint-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100' : 'text-slate-700 dark:text-slate-300'}`}
                 >
                   Íslenska
                 </button>
@@ -131,7 +131,7 @@ export default function Navbar({ variant = 'fixed' }: NavbarProps) {
                 router.replace('/signin');
               }
             }}
-            className="inline-flex items-center gap-2 rounded-md border border-slate-300 dark:border-slate-700 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+            className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 text-white px-3 py-1.5 text-ds-small hover:bg-mint-600 transition-colors duration-200"
           >
             {lang === 'is' ? 'Útskrá' : 'Sign out'}
           </button>

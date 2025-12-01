@@ -15,10 +15,10 @@ export default function GuardianMessagesPage() {
 
   if (!user && loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+      <div className="min-h-screen bg-mint-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
         <main className="mx-auto max-w-6xl px-4 py-8 md:px-6 mt-10">
-          <div className="mb-6">
-            <div className="h-10 w-20 animate-pulse bg-slate-200 dark:bg-slate-700 rounded-lg"></div>
+          <div className="mb-ds-md">
+            <div className="h-10 w-20 animate-pulse bg-mint-200 dark:bg-slate-700 rounded-ds-md"></div>
           </div>
           <LoadingSkeleton type="default" rows={8} />
         </main>
@@ -29,17 +29,17 @@ export default function GuardianMessagesPage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sand-50 via-sand-100 to-sand-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
+    <div className="min-h-screen bg-mint-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       <main className="mx-auto max-w-6xl px-4 py-8 md:px-6">
-        <div className="mb-6">
-          <div className="flex items-center gap-4 mt-14">
+        <div className="mb-ds-md">
+          <div className="flex items-center gap-ds-sm mt-14">
             <button
               onClick={() => router.back()}
-              className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+              className="inline-flex items-center gap-2 rounded-ds-md border border-slate-300 bg-white px-3 py-2 text-ds-small font-medium text-slate-700 hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
             >
               <ArrowLeft className="h-4 w-4" /> {lang === 'is' ? 'Til baka' : 'Back'}
             </button>
-            <h1 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+            <h1 className="text-ds-h2 font-semibold tracking-tight text-slate-900 dark:text-slate-100">
               {t.messages_title || 'Messages'}
             </h1>
           </div>

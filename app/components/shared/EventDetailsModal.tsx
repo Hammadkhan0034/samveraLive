@@ -63,15 +63,15 @@ export function EventDetailsModal({
     : null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-800 p-6 shadow-xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="w-full max-w-2xl rounded-ds-lg bg-white dark:bg-slate-800 p-ds-md shadow-ds-lg max-h-[90vh] overflow-y-auto">
         <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+          <h3 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">
             {t.event_details}
           </h3>
           <button
             onClick={onClose}
-            className="rounded-lg p-1 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400"
+            className="rounded-ds-md p-1 hover:bg-mint-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400"
           >
             <X className="h-5 w-5" />
           </button>
@@ -80,19 +80,19 @@ export function EventDetailsModal({
         <div className="space-y-4">
           {/* Title */}
           <div>
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+            <h2 className="text-ds-h1 font-bold text-slate-900 dark:text-slate-100">
               {event.title}
             </h2>
           </div>
 
           {/* Date/Time */}
           <div className="flex items-start gap-3">
-            <Calendar className="h-5 w-5 text-slate-500 dark:text-slate-400 mt-0.5" />
+            <Calendar className="h-5 w-5 text-mint-500 dark:text-mint-400 mt-0.5" />
             <div>
-              <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              <div className="text-ds-small font-medium text-slate-700 dark:text-slate-300">
                 {formatDate(startDate)}
               </div>
-              <div className="text-sm text-slate-600 dark:text-slate-400">
+              <div className="text-ds-small text-slate-600 dark:text-slate-400">
                 {formatTime(startDate)}
                 {endDate && ` - ${formatTime(endDate)}`}
               </div>
@@ -102,8 +102,8 @@ export function EventDetailsModal({
           {/* Location */}
           {event.location && (
             <div className="flex items-start gap-3">
-              <MapPin className="h-5 w-5 text-slate-500 dark:text-slate-400 mt-0.5" />
-              <div className="text-sm text-slate-700 dark:text-slate-300">
+              <MapPin className="h-5 w-5 text-mint-500 dark:text-mint-400 mt-0.5" />
+              <div className="text-ds-small text-slate-700 dark:text-slate-300">
                 {event.location}
               </div>
             </div>
@@ -111,9 +111,9 @@ export function EventDetailsModal({
 
           {/* Class/Scope */}
           <div className="flex items-start gap-3">
-            <Users className="h-5 w-5 text-slate-500 dark:text-slate-400 mt-0.5" />
+            <Users className="h-5 w-5 text-mint-500 dark:text-mint-400 mt-0.5" />
             <div>
-              <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
+              <div className="text-ds-small font-medium text-slate-700 dark:text-slate-300">
                 {classInfo ? `${t.event_scope_class}: ${classInfo.name}` : t.event_scope_org_wide}
               </div>
             </div>
@@ -122,10 +122,10 @@ export function EventDetailsModal({
           {/* Description */}
           {event.description && (
             <div>
-              <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              <h4 className="text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-2">
                 {t.event_description}
               </h4>
-              <p className="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-wrap">
+              <p className="text-ds-small text-slate-600 dark:text-slate-400 whitespace-pre-wrap">
                 {event.description}
               </p>
             </div>
@@ -137,7 +137,7 @@ export function EventDetailsModal({
               {canEdit && onEdit && (
                 <button
                   onClick={onEdit}
-                  className="flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                  className="flex items-center gap-2 rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small text-slate-700 hover:bg-mint-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 transition-colors"
                 >
                   <Edit className="h-4 w-4" />
                   {t.edit}
@@ -146,7 +146,7 @@ export function EventDetailsModal({
               {canDelete && onDelete && (
                 <button
                   onClick={onDelete}
-                  className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600"
+                  className="flex items-center gap-2 rounded-ds-md bg-red-600 px-4 py-2 text-ds-small text-white hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 transition-colors"
                 >
                   <Trash2 className="h-4 w-4" />
                   {t.delete_event}
