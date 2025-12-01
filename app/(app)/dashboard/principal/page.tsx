@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
-import { Menu, Users, School, ChartBar as BarChart3, FileText, Megaphone, MessageSquare, Camera, CalendarDays, Utensils, AlertCircle } from 'lucide-react';
+import { Menu, Users, School, ChartBar as BarChart3, Utensils, AlertCircle } from 'lucide-react';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import { useRouter } from 'next/navigation';
 import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
@@ -14,7 +14,6 @@ import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 interface PrincipalDashboardContentProps {
   t: any;
   kpis: KPICard[];
-  calendarEventsCount: number;
   isLoading?: boolean;
   error?: string | null;
   onRetry?: () => void;
@@ -23,7 +22,6 @@ interface PrincipalDashboardContentProps {
 function PrincipalDashboardContent({
   t,
   kpis,
-  calendarEventsCount,
   isLoading = false,
   error = null,
   onRetry,
@@ -75,10 +73,10 @@ function PrincipalDashboardContent({
       {/* KPIs Section */}
       <section className="mb-ds-lg">
         {isLoading ? (
-          <KPICardSkeleton count={11} />
+          <KPICardSkeleton count={4} />
         ) : (
           <div className="grid grid-cols-1 gap-ds-md sm:grid-cols-2 lg:grid-cols-3">
-            {kpis.map(({ label, value, icon: Icon, onClick }, i) => {
+            {kpis.map(({ label, value, icon: Icon }, i) => {
               // Cycle through tinted backgrounds: pale-blue, pale-yellow, pale-peach
               const bgColors = [
                 'bg-pale-blue dark:bg-slate-800',
@@ -90,8 +88,7 @@ function PrincipalDashboardContent({
               return (
                 <div
                   key={i}
-                  className={`cursor-pointer rounded-ds-lg ${bgColor} p-ds-md shadow-ds-card transition-all duration-200 hover:shadow-ds-md`}
-                  onClick={onClick}
+                  className={`rounded-ds-lg ${bgColor} p-ds-md shadow-ds-card`}
                 >
                   <div className="text-ds-small text-ds-text-secondary dark:text-slate-400 mb-2">{label}</div>
                   <div className="flex items-center justify-between">
@@ -103,32 +100,6 @@ function PrincipalDashboardContent({
                 </div>
               );
             })}
-            {/* Calendar KPI Card */}
-            {(() => {
-              const bgColors = [
-                'bg-pale-blue dark:bg-slate-800',
-                'bg-pale-yellow dark:bg-slate-800',
-                'bg-pale-peach dark:bg-slate-800',
-              ];
-              const bgColor = bgColors[kpis.length % 3];
-
-              return (
-                <div
-                  onClick={() => router.push('/dashboard/principal/calendar')}
-                  className={`cursor-pointer rounded-ds-lg ${bgColor} p-ds-md shadow-ds-card transition-all duration-200 hover:shadow-ds-md`}
-                >
-                  <div className="text-ds-small text-ds-text-secondary dark:text-slate-400 mb-2">{t.tile_calendar || 'Calendar'}</div>
-                  <div className="flex items-center justify-between">
-                    <div className="text-ds-h2 font-bold text-ds-text-primary dark:text-slate-100">
-                      {calendarEventsCount}
-                    </div>
-                    <span className="rounded-ds-md bg-white/50 dark:bg-slate-700/50 p-2">
-                      <CalendarDays className="h-5 w-5 text-ds-text-primary dark:text-slate-300" />
-                    </span>
-                  </div>
-                </div>
-              );
-            })()}
           </div>
         )}
       </section>
@@ -147,13 +118,7 @@ function PrincipalDashboardPageContent() {
   const [studentsCount, setStudentsCount] = useState(0);
   const [staffCount, setStaffCount] = useState(0);
   const [classesCount, setClassesCount] = useState(0);
-  const [guardiansCount, setGuardiansCount] = useState(0);
   const [menusCount, setMenusCount] = useState(0);
-  const [storiesCount, setStoriesCount] = useState(0);
-  const [announcementsCount, setAnnouncementsCount] = useState(0);
-  const [messagesCount, setMessagesCount] = useState(0);
-  const [photosCount, setPhotosCount] = useState(0);
-  const [calendarEventsCount, setCalendarEventsCount] = useState(0);
 
   // Loading and error states
   const [isLoading, setIsLoading] = useState(true);
@@ -206,13 +171,7 @@ function PrincipalDashboardPageContent() {
       setStudentsCount(data.studentsCount || 0);
       setStaffCount(data.staffCount || 0);
       setClassesCount(data.classesCount || 0);
-      setGuardiansCount(data.guardiansCount || 0);
       setMenusCount(data.menusCount || 0);
-      setStoriesCount(data.storiesCount || 0);
-      setAnnouncementsCount(data.announcementsCount || 0);
-      setMessagesCount(data.messagesCount || 0);
-      setPhotosCount(data.photosCount || 0);
-      setCalendarEventsCount(data.calendarEventsCount || 0);
     } catch (err: unknown) {
       if (signal.aborted) {
         return;
@@ -260,10 +219,6 @@ function PrincipalDashboardPageContent() {
     School,
     BarChart3,
     Utensils,
-    FileText,
-    Megaphone,
-    MessageSquare,
-    Camera,
   }), []);
 
   // Memoize KPIs array with stable references
@@ -272,70 +227,29 @@ function PrincipalDashboardPageContent() {
       label: t.kpi_students || 'Students',
       value: studentsCount,
       icon: icons.Users,
-      onClick: () => router.push('/dashboard/principal/students'),
     },
     {
       label: t.kpi_staff || 'Staff',
       value: staffCount,
       icon: icons.School,
-      onClick: () => router.push('/dashboard/principal/staff'),
     },
     {
       label: t.kpi_classes || 'Classes',
       value: classesCount,
       icon: icons.BarChart3,
-      onClick: () => router.push('/dashboard/principal/classes'),
-    },
-    {
-      label: t.kpi_guardians || 'Guardians',
-      value: guardiansCount,
-      icon: icons.Users,
-      onClick: () => router.push('/dashboard/guardians'),
     },
     {
       label: t.kpi_menus || 'Menus',
       value: menusCount,
       icon: icons.Utensils,
-      onClick: () => router.push('/dashboard/menus-list'),
     },
-    {
-      label: t.kpi_stories || 'Stories',
-      value: storiesCount,
-      icon: icons.FileText,
-      onClick: () => router.push('/dashboard/stories'),
-    },
-    {
-      label: t.kpi_announcements || 'Announcements',
-      value: announcementsCount,
-      icon: icons.Megaphone,
-      onClick: () => router.push('/dashboard/announcements'),
-    },
-    {
-      label: t.kpi_messages || 'Messages',
-      value: messagesCount,
-      icon: icons.MessageSquare,
-      onClick: () => router.push('/dashboard/principal/messages'),
-    },
-    {
-      label: t.kpi_photos || 'Photos',
-      value: photosCount,
-      icon: icons.Camera,
-      onClick: () => router.push('/dashboard/principal/photos'),
-    },
-    {
-      label: t.kpi_link_student || 'Link Student',
-      value: 0,
-      icon: icons.Users,
-      onClick: () => router.push('/dashboard/link-student'),
-    },
-  ], [t, studentsCount, staffCount, classesCount, guardiansCount, menusCount, storiesCount, announcementsCount, messagesCount, photosCount, icons, router]);
+  ], [t, studentsCount, staffCount, classesCount, menusCount, icons]);
 
   return (
-    <PrincipalPageLayout messagesBadge={messagesCount > 0 ? messagesCount : undefined}>
+    <PrincipalPageLayout>
       <PrincipalDashboardContent 
         t={t} 
         kpis={kpis} 
-        calendarEventsCount={calendarEventsCount}
         isLoading={isLoading}
         error={error}
         onRetry={handleRetry}
@@ -349,7 +263,7 @@ export default function PrincipalDashboardPage() {
     <Suspense fallback={
       <PrincipalPageLayout>
         <div className="flex items-center justify-center min-h-[400px]">
-          <KPICardSkeleton count={11} />
+          <KPICardSkeleton count={4} />
         </div>
       </PrincipalPageLayout>
     }>

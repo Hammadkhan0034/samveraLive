@@ -5,7 +5,7 @@ export interface KPICard {
   label: string;
   value: number;
   icon: ComponentType<{ className?: string }>;
-  onClick: () => void;
+  onClick?: () => void;
 }
 
 export interface TeacherDashboardContentProps {
