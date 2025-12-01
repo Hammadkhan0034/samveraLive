@@ -1,13 +1,15 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { Menu, Trash2, AlertTriangle, X, UserPlus, Users, Search, CheckCircle2, Check } from 'lucide-react';
+import { Menu, Trash2, AlertTriangle, UserPlus, Users } from 'lucide-react';
 import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
-import Loading from '@/app/components/shared/Loading';
+import { StudentAssignmentModal } from '@/app/components/principal/classes/StudentAssignmentModal';
+import { TeacherAssignmentModal } from '@/app/components/principal/classes/TeacherAssignmentModal';
+import type { TranslationStrings } from '@/app/components/principal/classes/types';
 
 type Lang = 'is' | 'en';
 
@@ -68,20 +70,6 @@ function ClassDetailsPageContent() {
   const [deletingTeacher, setDeletingTeacher] = useState(false);
   const [deletingStudent, setDeletingStudent] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
-  const [isAssignTeacherModalOpen, setIsAssignTeacherModalOpen] = useState(false);
-  const [availableStudents, setAvailableStudents] = useState<any[]>([]);
-  const [availableTeachers, setAvailableTeachers] = useState<any[]>([]);
-  const [loadingStudents, setLoadingStudents] = useState(false);
-  const [loadingTeachers, setLoadingTeachers] = useState(false);
-  const [assigningStudent, setAssigningStudent] = useState(false);
-  const [assigningTeacher, setAssigningTeacher] = useState(false);
-  const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
-  const [selectedTeacherIds, setSelectedTeacherIds] = useState<Set<string>>(new Set());
-  const [studentSearchQuery, setStudentSearchQuery] = useState('');
-  const [teacherSearchQuery, setTeacherSearchQuery] = useState('');
-  const [assignmentError, setAssignmentError] = useState<string | null>(null);
-  const [assignmentSuccess, setAssignmentSuccess] = useState<string | null>(null);
 
   // Get org_id
   const userMetadata = session?.user?.user_metadata || user?.user_metadata;
@@ -257,204 +245,6 @@ function ClassDetailsPageContent() {
     }
   }
 
-  function openAddStudentModal() {
-    setStudentSearchQuery('');
-    setSelectedStudentIds(new Set());
-    setAssignmentError(null);
-    setAssignmentSuccess(null);
-    setIsAddStudentModalOpen(true);
-    loadAvailableStudents();
-  }
-
-  function openAssignTeacherModal() {
-    setTeacherSearchQuery('');
-    setSelectedTeacherIds(new Set());
-    setAssignmentError(null);
-    setAssignmentSuccess(null);
-    setIsAssignTeacherModalOpen(true);
-    loadAvailableTeachers();
-  }
-
-  async function loadAvailableStudents() {
-    if (!classId || !finalOrgId) return;
-    try {
-      setLoadingStudents(true);
-      const response = await fetch(`/api/students?t=${Date.now()}`, { cache: 'no-store' });
-      const data = await response.json();
-      const students = (data.students || []).map((s: any) => ({
-        id: s.id,
-        first_name: s.first_name || s.users?.first_name || '',
-        last_name: s.last_name || s.users?.last_name || '',
-        full_name: `${s.first_name || s.users?.first_name || ''} ${s.last_name || s.users?.last_name || ''}`.trim(),
-        email: s.email || s.users?.email || null,
-        current_class_id: s.class_id,
-        current_class_name: s.class_name || null,
-      }));
-      setAvailableStudents(students);
-    } catch (err: any) {
-      console.error('Error loading students:', err);
-      setAssignmentError(err.message || 'Failed to load students');
-    } finally {
-      setLoadingStudents(false);
-    }
-  }
-
-  async function loadAvailableTeachers() {
-    if (!classId || !finalOrgId) return;
-    try {
-      setLoadingTeachers(true);
-      const response = await fetch(`/api/staff-management?role=teacher&t=${Date.now()}`, { cache: 'no-store' });
-      const data = await response.json();
-      const teachers = (data.staff || []).map((t: any) => ({
-        id: t.id || t.user_id,
-        first_name: t.first_name || '',
-        last_name: t.last_name || '',
-        full_name: `${t.first_name || ''} ${t.last_name || ''}`.trim(),
-        email: t.email || '',
-        is_assigned: assignedTeachers.some(at => (at.id || at.user_id) === (t.id || t.user_id)),
-      }));
-      setAvailableTeachers(teachers);
-      
-      // Pre-select already assigned teachers
-      const assignedIds = new Set(assignedTeachers.map(t => t.id || t.user_id).filter(Boolean));
-      setSelectedTeacherIds(assignedIds);
-    } catch (err: any) {
-      console.error('Error loading teachers:', err);
-      setAssignmentError(err.message || 'Failed to load teachers');
-    } finally {
-      setLoadingTeachers(false);
-    }
-  }
-
-  function toggleStudentSelection(studentId: string) {
-    setSelectedStudentIds(prev => {
-      const next = new Set(prev);
-      if (next.has(studentId)) {
-        next.delete(studentId);
-      } else {
-        next.add(studentId);
-      }
-      return next;
-    });
-  }
-
-  function toggleTeacherSelection(teacherId: string) {
-    setSelectedTeacherIds(prev => {
-      const next = new Set(prev);
-      if (next.has(teacherId)) {
-        next.delete(teacherId);
-      } else {
-        next.add(teacherId);
-      }
-      return next;
-    });
-  }
-
-  async function assignSelectedStudents() {
-    if (!classId || !finalOrgId || selectedStudentIds.size === 0) return;
-    
-    try {
-      setAssigningStudent(true);
-      setAssignmentError(null);
-
-      const studentIds = Array.from(selectedStudentIds);
-      const assignmentPromises = studentIds.map(async (studentId) => {
-        const student = availableStudents.find(s => s.id === studentId);
-        if (!student) return;
-
-        const response = await fetch('/api/students', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: studentId,
-            first_name: student.first_name || '',
-            last_name: student.last_name || '',
-            class_id: classId,
-            org_id: finalOrgId,
-          }),
-        });
-
-        if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.error || `Failed to assign student ${studentId}`);
-        }
-      });
-
-      await Promise.allSettled(assignmentPromises);
-      await loadClassDetails();
-      
-      setAssignmentSuccess(`${studentIds.length} ${studentIds.length === 1 ? t.student_assigned_success : t.students_assigned_success}`);
-      setSelectedStudentIds(new Set());
-      
-      setTimeout(() => {
-        setIsAddStudentModalOpen(false);
-        setAssignmentSuccess(null);
-      }, 2000);
-    } catch (err: any) {
-      console.error('Error assigning students:', err);
-      setAssignmentError(err.message || 'Failed to assign students');
-    } finally {
-      setAssigningStudent(false);
-    }
-  }
-
-  async function saveTeacherAssignments() {
-    if (!classId || !finalOrgId) return;
-    
-    try {
-      setAssigningTeacher(true);
-      setAssignmentError(null);
-
-      const currentAssignedIds = new Set(assignedTeachers.map(t => t.id || t.user_id).filter(Boolean));
-      const newSelectedIds = new Set(Array.from(selectedTeacherIds).filter(Boolean));
-
-      // Find teachers to add
-      const toAdd = Array.from(newSelectedIds).filter(id => !currentAssignedIds.has(id));
-      // Find teachers to remove
-      const toRemove = Array.from(currentAssignedIds).filter(id => !newSelectedIds.has(id));
-
-      // Add teachers
-      for (const teacherId of toAdd) {
-        const response = await fetch('/api/assign-teacher-class', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: teacherId, classId }),
-        });
-        if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.error || 'Failed to assign teacher');
-        }
-      }
-
-      // Remove teachers
-      for (const teacherId of toRemove) {
-        const response = await fetch('/api/remove-teacher-class', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: teacherId, classId }),
-        });
-        if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.error || 'Failed to remove teacher');
-        }
-      }
-
-      await loadClassDetails();
-      
-      setAssignmentSuccess(t.teachers_updated_success);
-      
-      setTimeout(() => {
-        setIsAssignTeacherModalOpen(false);
-        setSelectedTeacherIds(new Set());
-        setAssignmentSuccess(null);
-      }, 2000);
-    } catch (err: any) {
-      console.error('Error updating teachers:', err);
-      setAssignmentError(err.message || 'Failed to update teachers');
-    } finally {
-      setAssigningTeacher(false);
-    }
-  }
 
   if (error) {
     return (
@@ -528,6 +318,25 @@ function ClassDetailsPageContent() {
           <h2 className="mb-4 text-lg font-medium text-slate-900 dark:text-slate-100">
             {t.assigned_staff || 'Assigned Staff'}
           </h2>
+          <div className="mb-3">
+            <TeacherAssignmentModal
+              classId={classId}
+              className={classData?.name ?? ''}
+              t={t as unknown as TranslationStrings}
+              onCompleted={() => {
+                void loadClassDetails();
+              }}
+              trigger={(open) => (
+                <button
+                  onClick={open}
+                  className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2.5 py-1 text-xs hover:bg-white dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                >
+                  <Users className="h-3.5 w-3.5" />
+                  {t.assign_teacher || 'Assign Teacher'}
+                </button>
+              )}
+            />
+          </div>
           {assignedTeachers.length > 0 || classData ? (
             <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
               <table className="min-w-full text-sm">
@@ -561,19 +370,8 @@ function ClassDetailsPageContent() {
               </table>
             </div>
           ) : (
-            <div className="rounded-lg border border-slate-200 dark:border-slate-700">
-              <div className="p-4">
-                <div className="mb-3">
-                  <button
-                    onClick={openAssignTeacherModal}
-                    className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2.5 py-1 text-xs hover:bg-white dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
-                  >
-                    <Users className="h-3.5 w-3.5" />
-                    {t.assign_teacher || 'Assign Teacher'}
-                  </button>
-                </div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">{t.no_staff_assigned || 'No staff assigned to this class.'}</p>
-              </div>
+            <div className="rounded-lg border border-slate-200 p-4 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+              {t.no_staff_assigned || 'No staff assigned to this class.'}
             </div>
           )}
         </div>
@@ -583,6 +381,25 @@ function ClassDetailsPageContent() {
           <h2 className="mb-4 text-lg font-medium text-slate-900 dark:text-slate-100">
             {t.assigned_students || 'Assigned Students'}
           </h2>
+          <div className="mb-3">
+            <StudentAssignmentModal
+              classId={classId}
+              className={classData?.name ?? ''}
+              t={t as unknown as TranslationStrings}
+              onCompleted={() => {
+                void loadClassDetails();
+              }}
+              trigger={(open) => (
+                <button
+                  onClick={open}
+                  className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2.5 py-1 text-xs hover:bg-white dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                >
+                  <UserPlus className="h-3.5 w-3.5" />
+                  {t.add_student || 'Add Student'}
+                </button>
+              )}
+            />
+          </div>
           {assignedStudents.length > 0 || classData ? (
             <div className="rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
               <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
@@ -630,19 +447,8 @@ function ClassDetailsPageContent() {
               </div>
             </div>
           ) : (
-            <div className="rounded-lg border border-slate-200 dark:border-slate-700">
-              <div className="p-4">
-                <div className="mb-3">
-                  <button
-                    onClick={openAddStudentModal}
-                    className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-2.5 py-1 text-xs hover:bg-white dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
-                  >
-                    <UserPlus className="h-3.5 w-3.5" />
-                    {t.add_student || 'Add Student'}
-                  </button>
-                </div>
-                <p className="text-sm text-slate-500 dark:text-slate-400">{t.no_students_assigned || 'No students assigned to this class.'}</p>
-              </div>
+            <div className="rounded-lg border border-slate-200 p-4 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
+              {t.no_students_assigned || 'No students assigned to this class.'}
             </div>
           )}
         </div>
