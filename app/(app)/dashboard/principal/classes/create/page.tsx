@@ -258,8 +258,8 @@ function CreateClassPageContent() {
   return (
     <>
       {/* Content Header */}
-      <div className="mb-ds-sm flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-3">
+      <div className="mb-ds-sm flex flex-col gap-ds-sm md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-ds-sm">
           {/* Mobile menu button */}
           <button
             onClick={() => sidebarRef.current?.open()}
@@ -277,14 +277,14 @@ function CreateClassPageContent() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-ds-sm">
           <ProfileSwitcher />
         </div>
       </div>
 
         {/* Error Message */}
         {error && (
-          <div className="mb-4 rounded-ds-md bg-red-50 border border-red-200 px-4 py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+          <div className="mb-ds-md rounded-ds-md bg-red-50 border border-red-200 px-ds-md py-ds-sm text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
             {error}
           </div>
         )}
@@ -292,7 +292,7 @@ function CreateClassPageContent() {
         {/* Loading banner removed per requirements */}
 
         {/* Create/Edit Class Form */}
-        <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+        <div className="rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">
           <form onSubmit={handleAddClass} className="space-y-4">
             <div>
               <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
@@ -345,19 +345,19 @@ function CreateClassPageContent() {
               </div>
             )}
 
-            <div className="flex gap-3 pt-4">
+            <div className="flex gap-ds-sm pt-ds-md">
               <button
                 type="button"
                 onClick={() => router.push('/dashboard/principal/classes')}
                 disabled={loadingClass}
-                className="flex-1 rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small hover:bg-mint-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 transition-colors"
+                className="flex-1 rounded-ds-md border border-slate-300 px-ds-md py-ds-sm text-ds-small hover:bg-mint-50 disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 transition-colors"
               >
                 {t.cancel}
               </button>
               <button
                 type="submit"
                 disabled={loadingClass}
-                className="flex-1 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small text-white hover:bg-mint-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+                className="flex-1 rounded-ds-md bg-mint-500 px-ds-md py-ds-sm text-ds-small text-white hover:bg-mint-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
               >
                 {loadingClass ? (
                   <>

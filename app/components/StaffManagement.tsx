@@ -222,8 +222,8 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 md:px-6">
-      <div className="mb-6 flex flex-col gap-3 mt-14 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-4">
+      <div className="mb-ds-lg flex flex-col gap-ds-sm mt-14 md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-ds-md">
           <button
             onClick={() => router.back()}
             className="inline-flex items-center gap-2 rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition-colors"
@@ -235,13 +235,13 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
             <p className="mt-1 text-ds-small text-slate-600 dark:text-slate-400">{t.manage_staff}</p>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-ds-sm">
           <button
             onClick={() => {
               setStaffError(null);
               setIsStaffModalOpen(true);
             }}
-            className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small text-white hover:bg-mint-600 transition-colors"
+            className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-ds-md py-ds-sm text-ds-small text-white hover:bg-mint-600 transition-colors"
           >
             <Users className="h-4 w-4" /> {t.create_staff}
           </button>
@@ -249,13 +249,13 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
       </div>
 
       {staffError && (
-        <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+        <div className="mb-ds-md rounded-ds-md bg-red-50 border border-red-200 px-ds-md py-ds-sm text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
           {staffError}
         </div>
       )}
 
       {/* Active Staff Table */}
-      <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+      <div className="rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">
         <h4 className="text-md font-medium mb-3 text-slate-900 dark:text-slate-100">{t.active_staff_members}</h4>
         {loadingStaff || staff.length === 0 ? (
           <LoadingSkeleton type="table" rows={5} />

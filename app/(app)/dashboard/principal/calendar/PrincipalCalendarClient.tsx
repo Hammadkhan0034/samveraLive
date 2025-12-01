@@ -73,7 +73,7 @@ export function PrincipalCalendarClient({
           >
             <Menu className="h-5 w-5" />
           </button>
-          <h2 className="text-ds-h1 font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+          <h2 className="text-ds-h1 font-bold tracking-tight text-slate-900 dark:text-slate-100">
             {t.tile_calendar || 'Calendar'}
           </h2>
         </div>
@@ -83,7 +83,7 @@ export function PrincipalCalendarClient({
       </div>
 
       {/* Calendar Container */}
-      <div className="rounded-ds-lg bg-white shadow-ds-card dark:bg-slate-800">
+      <div className="rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">
         <Calendar
           orgId={orgId}
           userRole="principal"

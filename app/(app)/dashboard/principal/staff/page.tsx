@@ -24,7 +24,7 @@ function PrincipalStaffPageContent() {
           >
             <Menu className="h-5 w-5" />
           </button>
-          <h2 className="text-ds-h1 font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+          <h2 className="text-ds-h1 font-bold tracking-tight text-slate-900 dark:text-slate-100">
             {t.kpi_staff || 'Staff'}
           </h2>
         </div>

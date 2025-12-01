@@ -64,7 +64,7 @@ export default function PrincipalPageLayout({
               backgroundColor: 'var(--ds-mint)',
             }}
           >
-            <div className="p-4 md:p-6 lg:p-8">
+            <div className="p-ds-lg">
               {children}
             </div>
           </main>

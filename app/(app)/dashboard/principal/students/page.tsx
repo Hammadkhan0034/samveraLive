@@ -306,8 +306,8 @@ function StudentsPageContent() {
   return (
     <>
       {/* Content Header */}
-      <div className="mb-ds-sm flex flex-col gap-ds-sm md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-ds-sm">
+      <div className="mb-ds-md flex flex-col gap-ds-md md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-ds-md">
           {/* Mobile menu button */}
           <button
             onClick={() => sidebarRef.current?.open()}
@@ -317,16 +317,16 @@ function StudentsPageContent() {
             <Menu className="h-5 w-5" />
           </button>
           <div>
-            <h2 className="text-ds-h1 font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.students}</h2>
-            <p className="mt-1 text-ds-small text-slate-600 dark:text-slate-400">{t.add_student_subtitle}</p>
+            <h1 className="text-ds-h1 font-bold tracking-tight text-ds-text-primary dark:text-slate-100">{t.students}</h1>
+            <p className="mt-2 text-ds-small text-ds-text-muted dark:text-slate-400">{t.add_student_subtitle}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-ds-sm">
+        <div className="flex items-center gap-ds-md">
           <ProfileSwitcher />
           <button
             onClick={openCreateStudentModal}
-            className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600"
+            className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-ds-sm py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600"
           >
             <Plus className="h-4 w-4" /> {t.add_student}
           </button>
@@ -334,17 +334,17 @@ function StudentsPageContent() {
       </div>
 
       {/* Students Table */}
-      <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
-        <div className="flex items-center justify-between mb-4 gap-ds-sm">
-          <h2 className="text-ds-h3 font-medium text-slate-900 dark:text-slate-100">{t.students}</h2>
-          <div className="flex items-center gap-2">
+      <div className="rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">
+        <div className="flex items-center justify-between mb-ds-sm gap-ds-md">
+          <h2 className="text-ds-h3 font-semibold text-ds-text-primary dark:text-slate-100">{t.students}</h2>
+          <div className="flex items-center gap-ds-sm">
             <div className="relative">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={'Search students...'}
-                className="pl-3 pr-3 py-1.5 rounded-ds-md border border-slate-300 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 w-64"
+                className="h-14 px-4 rounded-ds-xl bg-white text-ds-body focus:outline-none focus:ring-2 focus:ring-mint-500/20 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 w-64 border-none shadow-ds-sm"
               />
             </div>
             {/* Filter Dropdown */}

@@ -292,9 +292,9 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
         )}
         style={{ scrollBehavior: 'smooth' }}
       >
-        <div className="py-6">
+        <div className="p-ds-md">
           {/* App Logo */}
-          <div className="py-4 mb-6 flex items-center justify-start px-6">
+          <div className="py-ds-sm mb-ds-md flex items-center justify-start">
             <div className="flex items-center gap-2 font-semibold text-slate-900 dark:text-slate-100">
               <span className="inline-block rounded-lg bg-mint-200 dark:bg-mint-500 text-slate-900 dark:text-white py-2 px-4 text-2xl font-bold">S</span>
               <span className="text-2xl ml-2">Samvera</span>
@@ -302,7 +302,7 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
           </div>
 
           {/* Mobile close button */}
-          <div className="mb-4 flex items-center justify-between px-6 md:hidden">
+          <div className="mb-ds-sm flex items-center justify-between md:hidden">
             <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Menu</h2>
             <button
               onClick={handleSidebarClose}
@@ -314,12 +314,12 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
           </div>
 
           {/* Navigation - Design System: Generous spacing, text-based items */}
-          <nav className="space-y-1 px-3">
+          <nav className="space-y-3">
             {/* Dashboard tile - Design System: Text-based nav with mint active state */}
             <button
               onClick={handleDashboardClick}
               className={clsx(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-ds-md text-left transition-all duration-200',
+                'w-full flex items-center gap-3 px-ds-sm py-ds-sm rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
                 isDashboardActive
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
@@ -355,7 +355,7 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
             <button
               onClick={handleStudentsClick}
               className={clsx(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-ds-md text-left transition-all duration-200',
+                'w-full flex items-center gap-3 px-ds-sm py-ds-sm rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
                 isStudentsActive
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
@@ -389,7 +389,7 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
             <button
               onClick={handleStaffClick}
               className={clsx(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-ds-md text-left transition-all duration-200',
+                'w-full flex items-center gap-3 px-ds-sm py-ds-sm rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
                 isStaffActive
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
@@ -423,7 +423,7 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
             <button
               onClick={handleClassesClick}
               className={clsx(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-ds-md text-left transition-all duration-200',
+                'w-full flex items-center gap-3 px-ds-sm py-ds-sm rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
                 isClassesActive
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
@@ -457,7 +457,7 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
             <button
               onClick={handleMessagesClick}
               className={clsx(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-ds-md text-left transition-all duration-200',
+                'w-full flex items-center gap-3 px-ds-sm py-ds-sm rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
                 isMessagesActive
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
@@ -496,7 +496,7 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
             <button
               onClick={handlePhotosClick}
               className={clsx(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-ds-md text-left transition-all duration-200',
+                'w-full flex items-center gap-3 px-ds-sm py-ds-sm rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
                 isPhotosActive
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
@@ -530,7 +530,7 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
             <button
               onClick={handleCalendarClick}
               className={clsx(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-ds-md text-left transition-all duration-200',
+                'w-full flex items-center gap-3 px-ds-sm py-ds-sm rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
                 isCalendarActive
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
@@ -564,7 +564,7 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
             <button
               onClick={handleGuardiansClick}
               className={clsx(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-ds-md text-left transition-all duration-200',
+                'w-full flex items-center gap-3 px-ds-sm py-ds-sm rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
                 isGuardiansActive
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
@@ -598,7 +598,7 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
             <button
               onClick={handleLinkStudentClick}
               className={clsx(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-ds-md text-left transition-all duration-200',
+                'w-full flex items-center gap-3 px-ds-sm py-ds-sm rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
                 isLinkStudentActive
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
@@ -632,7 +632,7 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
             <button
               onClick={handleMenusClick}
               className={clsx(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-ds-md text-left transition-all duration-200',
+                'w-full flex items-center gap-3 px-ds-sm py-ds-sm rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
                 isMenusActive
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
@@ -666,7 +666,7 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
             <button
               onClick={handleStoriesClick}
               className={clsx(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-ds-md text-left transition-all duration-200',
+                'w-full flex items-center gap-3 px-ds-sm py-ds-sm rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
                 isStoriesActive
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
@@ -700,7 +700,7 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
             <button
               onClick={handleAnnouncementsClick}
               className={clsx(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-ds-md text-left transition-all duration-200',
+                'w-full flex items-center gap-3 px-ds-sm py-ds-sm rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
                 isAnnouncementsActive
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'

@@ -132,10 +132,10 @@ export function Calendar({
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
-    <div className="w-full rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+    <div className="w-full rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">
       {/* Calendar Header */}
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="mb-ds-lg flex items-center justify-between">
+        <div className="flex items-center gap-ds-md">
           <button
             onClick={goToPreviousMonth}
             className="rounded-ds-md p-2 hover:bg-mint-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors"

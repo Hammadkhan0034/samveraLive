@@ -245,7 +245,7 @@ function PrincipalPhotosPageContent() {
           >
             <Menu className="h-5 w-5" />
           </button>
-          <h2 className="text-ds-h1 font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+          <h2 className="text-ds-h1 font-bold tracking-tight text-slate-900 dark:text-slate-100">
             {t.photos || 'Photos'}
           </h2>
         </div>
@@ -265,7 +265,7 @@ function PrincipalPhotosPageContent() {
       </div>
 
         {/* Photos Panel */}
-        <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+        <div className="rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">
           {/* Error State */}
           {error && (
             <div className="mb-4 rounded-ds-md bg-red-50 border border-red-200 px-4 py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">

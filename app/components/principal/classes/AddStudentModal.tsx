@@ -71,13 +71,13 @@ export function AddStudentModal({
 
           <div className="mb-4">
             <div className="relative">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <input
                 type="text"
                 value={studentSearchQuery}
                 onChange={(e) => onStudentSearchChange(e.target.value)}
                 placeholder={t.search_students_placeholder}
-                className="w-full pl-9 pr-3 py-2 rounded-ds-md border border-slate-300 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+                className="w-full h-14 pl-10 pr-4 rounded-ds-xl bg-white text-ds-body focus:outline-none focus:ring-2 focus:ring-mint-500/20 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 border-none shadow-ds-sm"
               />
             </div>
           </div>
@@ -153,7 +153,7 @@ export function AddStudentModal({
                     <button
                       onClick={onAssignSelectedStudents}
                       disabled={assigningStudent}
-                      className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 hover:bg-mint-600 px-4 py-2 text-ds-small text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 hover:bg-mint-600 px-ds-md py-ds-sm text-ds-small text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       {assigningStudent ? (
                         <>
@@ -177,7 +177,7 @@ export function AddStudentModal({
         <div className="p-ds-md border-t border-slate-200 dark:border-slate-700 flex justify-end">
           <button
             onClick={onClose}
-            className="rounded-ds-md bg-mint-500 hover:bg-mint-600 px-4 py-2 text-ds-small text-white transition-colors"
+            className="rounded-ds-md bg-mint-500 hover:bg-mint-600 px-ds-md py-ds-sm text-ds-small text-white transition-colors"
           >
             {t.close}
           </button>

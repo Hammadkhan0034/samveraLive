@@ -263,8 +263,8 @@ function ClassesPageContent() {
   return (
     <>
       {/* Content Header */}
-      <div className="mb-ds-sm flex flex-col gap-ds-sm md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-ds-sm">
+      <div className="mb-ds-md flex flex-col gap-ds-md md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-ds-md">
           {/* Mobile menu button */}
           <button
             onClick={() => sidebarRef.current?.open()}
@@ -274,16 +274,16 @@ function ClassesPageContent() {
             <Menu className="h-5 w-5" />
           </button>
           <div>
-            <h2 className="text-ds-h1 font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.departments}</h2>
-            <p className="mt-1 text-ds-small text-slate-600 dark:text-slate-400">{t.overview_hint}</p>
+            <h1 className="text-ds-h1 font-bold tracking-tight text-ds-text-primary dark:text-slate-100">{t.departments}</h1>
+            <p className="mt-2 text-ds-small text-ds-text-muted dark:text-slate-400">{t.overview_hint}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-ds-sm">
+        <div className="flex items-center gap-ds-md">
           <ProfileSwitcher />
           <button
             onClick={() => router.push('/dashboard/principal/classes/create')}
-            className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600"
+            className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-ds-sm py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600"
           >
             <Plus className="h-4 w-4" /> {t.add_class}
           </button>
@@ -291,9 +291,9 @@ function ClassesPageContent() {
       </div>
 
         {/* Departments table */}
-        <div className="mt-4 rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+        <div className="mt-ds-md rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">
           <div className="mb-ds-sm flex items-center justify-between">
-            <h2 className="text-ds-h3 font-medium text-slate-900 dark:text-slate-100">{t.departments}</h2>
+            <h2 className="text-ds-h3 font-semibold text-ds-text-primary dark:text-slate-100">{t.departments}</h2>
             <div className="text-ds-small text-slate-500 dark:text-slate-400">
               {t.overview_hint}
             </div>

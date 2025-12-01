@@ -34,8 +34,8 @@ function PrincipalDashboardContent({
   return (
     <>
       {/* Content Header */}
-      <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-3">
+      <div className="mb-ds-md flex flex-col gap-ds-md md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-ds-md">
           {/* Mobile menu button */}
           <button
             onClick={() => sidebarRef.current?.open()}
@@ -44,18 +44,18 @@ function PrincipalDashboardContent({
           >
             <Menu className="h-5 w-5" />
           </button>
-          <h2 className="text-ds-h1 font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+          <h1 className="text-ds-h1 font-bold tracking-tight text-ds-text-primary dark:text-slate-100">
             {t.title || 'Principal Dashboard'}
-          </h2>
+          </h1>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-ds-md">
           <ProfileSwitcher />
         </div>
       </div>
       {/* Error Message */}
       {error && (
-        <div className="mb-4 rounded-ds-md border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
-          <div className="flex items-center gap-3">
+        <div className="mb-ds-sm rounded-ds-md border border-red-200 bg-red-50 p-ds-sm dark:border-red-800 dark:bg-red-900/20">
+          <div className="flex items-center gap-ds-md">
             <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
             <div className="flex-1">
               <p className="text-ds-small font-medium text-red-800 dark:text-red-200">{error}</p>
@@ -73,41 +73,62 @@ function PrincipalDashboardContent({
       )}
 
       {/* KPIs Section */}
-      <section className="mb-6">
+      <section className="mb-ds-lg">
         {isLoading ? (
           <KPICardSkeleton count={11} />
         ) : (
           <div className="grid grid-cols-1 gap-ds-md sm:grid-cols-2 lg:grid-cols-3">
-            {kpis.map(({ label, value, icon: Icon, onClick }, i) => (
-              <div
-                key={i}
-                className="cursor-pointer rounded-ds-lg border border-slate-200 bg-white p-5 shadow-ds-card transition-all duration-200 hover:border-mint-300 hover:shadow-ds-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-600"
-                onClick={onClick}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="text-ds-small text-slate-600 dark:text-slate-400">{label}</div>
-                  <span className="rounded-ds-md border border-slate-200 p-2 dark:border-slate-600">
-                    <Icon className="h-4 w-4 text-mint-600 dark:text-slate-300" />
-                  </span>
+            {kpis.map(({ label, value, icon: Icon, onClick }, i) => {
+              // Cycle through tinted backgrounds: pale-blue, pale-yellow, pale-peach
+              const bgColors = [
+                'bg-pale-blue dark:bg-slate-800',
+                'bg-pale-yellow dark:bg-slate-800',
+                'bg-pale-peach dark:bg-slate-800',
+              ];
+              const bgColor = bgColors[i % 3];
+
+              return (
+                <div
+                  key={i}
+                  className={`cursor-pointer rounded-ds-lg ${bgColor} p-ds-md shadow-ds-card transition-all duration-200 hover:shadow-ds-md`}
+                  onClick={onClick}
+                >
+                  <div className="text-ds-small text-ds-text-secondary dark:text-slate-400 mb-2">{label}</div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-ds-h2 font-bold text-ds-text-primary dark:text-slate-100">{value}</div>
+                    <span className="rounded-ds-md bg-white/50 dark:bg-slate-700/50 p-2">
+                      <Icon className="h-5 w-5 text-ds-text-primary dark:text-slate-300" />
+                    </span>
+                  </div>
                 </div>
-                <div className="mt-3 text-ds-h1 font-semibold text-slate-900 dark:text-slate-100">{value}</div>
-              </div>
-            ))}
+              );
+            })}
             {/* Calendar KPI Card */}
-            <div
-              onClick={() => router.push('/dashboard/principal/calendar')}
-              className="cursor-pointer rounded-ds-lg border border-slate-200 bg-white p-5 shadow-ds-card transition-all duration-200 hover:border-mint-300 hover:shadow-ds-md dark:border-slate-700 dark:bg-slate-800 dark:hover:border-slate-600"
-            >
-              <div className="flex items-center justify-between">
-                <div className="text-ds-small text-slate-600 dark:text-slate-400">{t.tile_calendar || 'Calendar'}</div>
-                <span className="rounded-ds-md border border-slate-200 p-2 dark:border-slate-600">
-                  <CalendarDays className="h-4 w-4 text-mint-600 dark:text-slate-300" />
-                </span>
-              </div>
-              <div className="mt-3 text-ds-h1 font-semibold text-slate-900 dark:text-slate-100">
-                {calendarEventsCount}
-              </div>
-            </div>
+            {(() => {
+              const bgColors = [
+                'bg-pale-blue dark:bg-slate-800',
+                'bg-pale-yellow dark:bg-slate-800',
+                'bg-pale-peach dark:bg-slate-800',
+              ];
+              const bgColor = bgColors[kpis.length % 3];
+
+              return (
+                <div
+                  onClick={() => router.push('/dashboard/principal/calendar')}
+                  className={`cursor-pointer rounded-ds-lg ${bgColor} p-ds-md shadow-ds-card transition-all duration-200 hover:shadow-ds-md`}
+                >
+                  <div className="text-ds-small text-ds-text-secondary dark:text-slate-400 mb-2">{t.tile_calendar || 'Calendar'}</div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-ds-h2 font-bold text-ds-text-primary dark:text-slate-100">
+                      {calendarEventsCount}
+                    </div>
+                    <span className="rounded-ds-md bg-white/50 dark:bg-slate-700/50 p-2">
+                      <CalendarDays className="h-5 w-5 text-ds-text-primary dark:text-slate-300" />
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
       </section>

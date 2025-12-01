@@ -27,7 +27,7 @@ function PrincipalMessagesPageContent() {
             <Menu className="h-5 w-5" />
           </button>
           <div>
-            <h2 className="text-ds-h1 font-semibold tracking-tight text-slate-900 dark:text-slate-100">
+            <h2 className="text-ds-h1 font-bold tracking-tight text-slate-900 dark:text-slate-100">
               {t.messages_title || 'Messages'}
             </h2>
             <p className="mt-1 text-ds-small text-slate-600 dark:text-slate-400">

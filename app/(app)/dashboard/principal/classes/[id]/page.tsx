@@ -230,8 +230,8 @@ function ClassDetailsPageContent() {
   return (
     <>
       {/* Content Header */}
-      <div className="mb-ds-sm flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-3">
+      <div className="mb-ds-sm flex flex-col gap-ds-sm md:flex-row md:items-center md:justify-between">
+        <div className="flex items-center gap-ds-sm">
           {/* Mobile menu button */}
           <button
             onClick={() => sidebarRef.current?.open()}
@@ -244,14 +244,14 @@ function ClassDetailsPageContent() {
             {t.class_details || 'Class Details'} {classData ? `- ${classData.name}` : ''}
           </h2>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-ds-sm">
           <ProfileSwitcher />
         </div>
       </div>
 
         {/* Class Details Table */}
-        <div className="mb-ds-md rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
-          <h2 className="mb-4 text-ds-h3 font-medium text-slate-900 dark:text-slate-100">
+        <div className="mb-ds-md rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">
+          <h2 className="mb-ds-md text-ds-h3 font-medium text-slate-900 dark:text-slate-100">
             {t.class_details || 'Class Details'}
           </h2>
           {classData ? (
@@ -259,20 +259,20 @@ function ClassDetailsPageContent() {
               <table className="min-w-full text-ds-small">
                 <thead className="bg-mint-500 text-white">
                   <tr>
-                    <th className="px-4 py-2 text-left text-white">{t.col_name || 'Name'}</th>
-                    <th className="px-4 py-2 text-left text-white">{t.col_students || 'Students'}</th>
-                    <th className="px-4 py-2 text-left text-white">{t.col_staff || 'Staff'}</th>
-                    <th className="px-4 py-2 text-left text-white">{t.class_description || 'Description'}</th>
-                    <th className="px-4 py-2 text-left text-white">{t.visible_yes || 'Visible'}</th>
+                    <th className="px-ds-md py-ds-sm text-left text-white">{t.col_name || 'Name'}</th>
+                    <th className="px-ds-md py-ds-sm text-left text-white">{t.col_students || 'Students'}</th>
+                    <th className="px-ds-md py-ds-sm text-left text-white">{t.col_staff || 'Staff'}</th>
+                    <th className="px-ds-md py-ds-sm text-left text-white">{t.class_description || 'Description'}</th>
+                    <th className="px-ds-md py-ds-sm text-left text-white">{t.visible_yes || 'Visible'}</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr className="border-t border-slate-200 dark:border-slate-700">
-                    <td className="px-4 py-2 font-medium text-slate-900 dark:text-slate-100">{classData.name}</td>
-                    <td className="px-4 py-2 text-slate-700 dark:text-slate-300">{assignedStudents.length}</td>
-                    <td className="px-4 py-2 text-slate-700 dark:text-slate-300">{assignedTeachers.length}</td>
-                    <td className="px-4 py-2 text-slate-700 dark:text-slate-300">{classData.code || '-'}</td>
-                    <td className="px-4 py-2">
+                    <td className="px-ds-md py-ds-sm font-medium text-slate-900 dark:text-slate-100">{classData.name}</td>
+                    <td className="px-ds-md py-ds-sm text-slate-700 dark:text-slate-300">{assignedStudents.length}</td>
+                    <td className="px-ds-md py-ds-sm text-slate-700 dark:text-slate-300">{assignedTeachers.length}</td>
+                    <td className="px-ds-md py-ds-sm text-slate-700 dark:text-slate-300">{classData.code || '-'}</td>
+                    <td className="px-ds-md py-ds-sm">
                       <span className="inline-flex items-center gap-1 rounded-ds-full border px-2 py-0.5 text-ds-tiny border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-300">
                         {t.visible_yes || 'Visible'}
                       </span>
@@ -287,11 +287,11 @@ function ClassDetailsPageContent() {
         </div>
 
         {/* Staff Assigned Table */}
-        <div className="mb-ds-md rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
-          <h2 className="mb-4 text-ds-h3 font-medium text-slate-900 dark:text-slate-100">
+        <div className="mb-ds-md rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">
+          <h2 className="mb-ds-md text-ds-h3 font-medium text-slate-900 dark:text-slate-100">
             {t.assigned_staff || 'Assigned Staff'}
           </h2>
-          <div className="mb-3">
+          <div className="mb-ds-sm">
             <TeacherAssignmentModal
               classId={classId ?? ''}
               className={classData?.name ?? ''}
@@ -315,19 +315,19 @@ function ClassDetailsPageContent() {
               <table className="min-w-full text-ds-small">
                 <thead className="bg-mint-500 text-white">
                   <tr>
-                    <th className="px-4 py-2 text-left text-white">{t.first_name || 'First Name'}</th>
-                    <th className="px-4 py-2 text-left text-white">{t.last_name || 'Last Name'}</th>
-                    <th className="px-4 py-2 text-left text-white">{t.email || 'Email'}</th>
-                    <th className="px-4 py-2 text-left text-white">{t.col_actions || 'Actions'}</th>
+                    <th className="px-ds-md py-ds-sm text-left text-white">{t.first_name || 'First Name'}</th>
+                    <th className="px-ds-md py-ds-sm text-left text-white">{t.last_name || 'Last Name'}</th>
+                    <th className="px-ds-md py-ds-sm text-left text-white">{t.email || 'Email'}</th>
+                    <th className="px-ds-md py-ds-sm text-left text-white">{t.col_actions || 'Actions'}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {assignedTeachers.map((teacher: any, index: number) => (
                     <tr key={index} className="border-t border-slate-200 dark:border-slate-700 hover:bg-mint-50 dark:hover:bg-slate-700/50 transition-colors">
-                      <td className="px-4 py-2 text-slate-900 dark:text-slate-100">{teacher.first_name || '-'}</td>
-                      <td className="px-4 py-2 text-slate-900 dark:text-slate-100">{teacher.last_name || '-'}</td>
-                      <td className="px-4 py-2 text-slate-700 dark:text-slate-300">{teacher.email || '-'}</td>
-                      <td className="px-4 py-2">
+                      <td className="px-ds-md py-ds-sm text-slate-900 dark:text-slate-100">{teacher.first_name || '-'}</td>
+                      <td className="px-ds-md py-ds-sm text-slate-900 dark:text-slate-100">{teacher.last_name || '-'}</td>
+                      <td className="px-ds-md py-ds-sm text-slate-700 dark:text-slate-300">{teacher.email || '-'}</td>
+                      <td className="px-ds-md py-ds-sm">
                         <button
                           onClick={() => openDeleteTeacherModal(teacher)}
                           className="inline-flex items-center gap-1 rounded-ds-md px-2 py-1 text-ds-tiny text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors"
@@ -343,18 +343,18 @@ function ClassDetailsPageContent() {
               </table>
             </div>
           ) : (
-            <div className="rounded-ds-md border border-slate-200 p-4 text-ds-small text-slate-500 dark:border-slate-700 dark:text-slate-400">
+            <div className="rounded-ds-md border border-slate-200 p-ds-md text-ds-small text-slate-500 dark:border-slate-700 dark:text-slate-400">
               {t.no_staff_assigned || 'No staff assigned to this class.'}
             </div>
           )}
         </div>
 
         {/* Students Assigned Table */}
-        <div className="mb-ds-md rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
-          <h2 className="mb-4 text-ds-h3 font-medium text-slate-900 dark:text-slate-100">
+        <div className="mb-ds-md rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">
+          <h2 className="mb-ds-md text-ds-h3 font-medium text-slate-900 dark:text-slate-100">
             {t.assigned_students || 'Assigned Students'}
           </h2>
-          <div className="mb-3">
+          <div className="mb-ds-sm">
             <StudentAssignmentModal
               classId={classId ?? ''}
               className={classData?.name ?? ''}
@@ -379,11 +379,11 @@ function ClassDetailsPageContent() {
                 <table className="min-w-full text-ds-small">
                   <thead className="bg-mint-500 text-white sticky top-0">
                     <tr>
-                      <th className="px-4 py-2 text-left text-white">{t.first_name || 'First Name'}</th>
-                      <th className="px-4 py-2 text-left text-white">{t.last_name || 'Last Name'}</th>
-                      <th className="px-4 py-2 text-left text-white">{t.dob || 'Date of Birth'}</th>
-                      <th className="px-4 py-2 text-left text-white">{t.gender || 'Gender'}</th>
-                      <th className="px-4 py-2 text-left text-white">{t.col_actions || 'Actions'}</th>
+                      <th className="px-ds-md py-ds-sm text-left text-white">{t.first_name || 'First Name'}</th>
+                      <th className="px-ds-md py-ds-sm text-left text-white">{t.last_name || 'Last Name'}</th>
+                      <th className="px-ds-md py-ds-sm text-left text-white">{t.dob || 'Date of Birth'}</th>
+                      <th className="px-ds-md py-ds-sm text-left text-white">{t.gender || 'Gender'}</th>
+                      <th className="px-ds-md py-ds-sm text-left text-white">{t.col_actions || 'Actions'}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -392,17 +392,17 @@ function ClassDetailsPageContent() {
                       const gender = student.users?.gender || student.gender;
                       return (
                         <tr key={student.id} className="border-t border-slate-200 dark:border-slate-700 hover:bg-mint-50 dark:hover:bg-slate-700/50 transition-colors">
-                          <td className="px-4 py-2 text-slate-900 dark:text-slate-100">
+                          <td className="px-ds-md py-ds-sm text-slate-900 dark:text-slate-100">
                             {student.first_name || student.users?.first_name || '-'}
                           </td>
-                          <td className="px-4 py-2 text-slate-900 dark:text-slate-100">
+                          <td className="px-ds-md py-ds-sm text-slate-900 dark:text-slate-100">
                             {student.last_name || student.users?.last_name || '-'}
                           </td>
-                          <td className="px-4 py-2 text-slate-700 dark:text-slate-300">
+                          <td className="px-ds-md py-ds-sm text-slate-700 dark:text-slate-300">
                             {dob ? formatDate(dob) : '-'}
                           </td>
-                          <td className="px-4 py-2 text-slate-700 dark:text-slate-300">{gender || '-'}</td>
-                          <td className="px-4 py-2">
+                          <td className="px-ds-md py-ds-sm text-slate-700 dark:text-slate-300">{gender || '-'}</td>
+                          <td className="px-ds-md py-ds-sm">
                             <button
                               onClick={() => openDeleteStudentModal(student)}
                               className="inline-flex items-center gap-1 rounded-ds-md px-2 py-1 text-ds-tiny text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors"
@@ -420,7 +420,7 @@ function ClassDetailsPageContent() {
               </div>
             </div>
           ) : (
-            <div className="rounded-ds-md border border-slate-200 p-4 text-ds-small text-slate-500 dark:border-slate-700 dark:text-slate-400">
+            <div className="rounded-ds-md border border-slate-200 p-ds-md text-ds-small text-slate-500 dark:border-slate-700 dark:text-slate-400">
               {t.no_students_assigned || 'No students assigned to this class.'}
             </div>
           )}
@@ -430,7 +430,7 @@ function ClassDetailsPageContent() {
         {showDeleteTeacherModal && teacherToDelete && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <div className="w-full max-w-md rounded-ds-lg bg-white p-ds-md shadow-ds-lg dark:bg-slate-800">
-              <div className="mb-4 flex items-center gap-3">
+              <div className="mb-ds-md flex items-center gap-ds-sm">
                 <div className="rounded-ds-full bg-red-100 p-2 dark:bg-red-900/20">
                   <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
                 </div>
@@ -445,11 +445,11 @@ function ClassDetailsPageContent() {
                 </div>
               )}
 
-              <p className="mb-4 text-ds-small text-slate-600 dark:text-slate-400">
+              <p className="mb-ds-md text-ds-small text-slate-600 dark:text-slate-400">
                 {t.delete_teacher_message?.replace('{name}', `${teacherToDelete.first_name || ''} ${teacherToDelete.last_name || ''}`.trim() || 'this teacher') || `Are you sure you want to remove this teacher from the class?`}
               </p>
 
-              <div className="flex gap-3">
+              <div className="flex gap-ds-sm">
                 <button
                   onClick={() => {
                     setShowDeleteTeacherModal(false);
@@ -457,14 +457,14 @@ function ClassDetailsPageContent() {
                     setDeleteError(null);
                   }}
                   disabled={deletingTeacher}
-                  className="flex-1 rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small text-slate-700 hover:bg-mint-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="flex-1 rounded-ds-md border border-slate-300 px-ds-md py-ds-sm text-ds-small text-slate-700 hover:bg-mint-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {t.cancel || 'Cancel'}
                 </button>
                 <button
                   onClick={handleDeleteTeacher}
                   disabled={deletingTeacher}
-                  className="flex-1 rounded-ds-md bg-red-600 px-4 py-2 text-ds-small text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+                  className="flex-1 rounded-ds-md bg-red-600 px-ds-md py-ds-sm text-ds-small text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
                 >
                   {deletingTeacher ? (
                     <>
@@ -484,7 +484,7 @@ function ClassDetailsPageContent() {
         {showDeleteStudentModal && studentToDelete && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <div className="w-full max-w-md rounded-ds-lg bg-white p-ds-md shadow-ds-lg dark:bg-slate-800">
-              <div className="mb-4 flex items-center gap-3">
+              <div className="mb-ds-md flex items-center gap-ds-sm">
                 <div className="rounded-ds-full bg-red-100 p-2 dark:bg-red-900/20">
                   <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
                 </div>
@@ -499,11 +499,11 @@ function ClassDetailsPageContent() {
                 </div>
               )}
 
-              <p className="mb-4 text-ds-small text-slate-600 dark:text-slate-400">
+              <p className="mb-ds-md text-ds-small text-slate-600 dark:text-slate-400">
                 {t.delete_student_message?.replace('{name}', `${studentToDelete.first_name || studentToDelete.users?.first_name || ''} ${studentToDelete.last_name || studentToDelete.users?.last_name || ''}`.trim() || 'this student') || `Are you sure you want to remove this student from the class?`}
               </p>
 
-              <div className="flex gap-3">
+              <div className="flex gap-ds-sm">
                 <button
                   onClick={() => {
                     setShowDeleteStudentModal(false);
@@ -511,14 +511,14 @@ function ClassDetailsPageContent() {
                     setDeleteError(null);
                   }}
                   disabled={deletingStudent}
-                  className="flex-1 rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small text-slate-700 hover:bg-mint-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="flex-1 rounded-ds-md border border-slate-300 px-ds-md py-ds-sm text-ds-small text-slate-700 hover:bg-mint-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {t.cancel || 'Cancel'}
                 </button>
                 <button
                   onClick={handleDeleteStudent}
                   disabled={deletingStudent}
-                  className="flex-1 rounded-ds-md bg-red-600 px-4 py-2 text-ds-small text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+                  className="flex-1 rounded-ds-md bg-red-600 px-ds-md py-ds-sm text-ds-small text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
                 >
                   {deletingStudent ? (
                     <>
