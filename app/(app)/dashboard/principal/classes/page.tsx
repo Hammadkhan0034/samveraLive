@@ -1,13 +1,25 @@
 'use client';
 
 import React, { useState, useEffect, useRef, Suspense, useMemo, useCallback } from 'react';
-import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth } from '@/lib/hooks/useAuth';
-import { Menu, Plus, X, Eye, CircleCheck as CheckCircle2, Edit, UserPlus, Users, Search, AlertTriangle, Check, Trash2 } from 'lucide-react';
+import { Menu, Plus, Eye, CircleCheck as CheckCircle2, Edit, UserPlus, Users, X, Trash2 } from 'lucide-react';
+
 import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import Loading from '@/app/components/shared/Loading';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
+import { useAuth } from '@/lib/hooks/useAuth';
+
+import { AddStudentModal } from '@/app/components/principal/classes/AddStudentModal';
+import { AssignTeacherModal } from '@/app/components/principal/classes/AssignTeacherModal';
+import { DeleteClassModal } from '@/app/components/principal/classes/DeleteClassModal';
+import { StudentReassignConfirmModal, type StudentToAssign } from '@/app/components/principal/classes/StudentReassignConfirmModal';
+import type {
+  AvailableStudent,
+  AvailableTeacher,
+  ClassSummary,
+  TranslationStrings,
+} from '@/app/components/principal/classes/types';
 
 function clsx(...xs: Array<string | false | undefined>) {
   return xs.filter(Boolean).join(' ');
@@ -15,7 +27,7 @@ function clsx(...xs: Array<string | false | undefined>) {
 
 function ClassesPageContent() {
   const { t } = useLanguage();
-  const { session } = useAuth?.() || {} as any;
+  const { session } = (useAuth?.() || {}) as { session: { user?: { id?: string } } | null };
   const router = useRouter();
   const searchParams = useSearchParams();
   const { sidebarRef } = usePrincipalPageLayout();
@@ -23,9 +35,9 @@ function ClassesPageContent() {
   // Class management states
   const [isAddStudentModalOpen, setIsAddStudentModalOpen] = useState(false);
   const [isAssignTeacherModalOpen, setIsAssignTeacherModalOpen] = useState(false);
-  const [classForAssignment, setClassForAssignment] = useState<any>(null);
-  const [availableStudents, setAvailableStudents] = useState<Array<{ id: string; first_name: string; last_name: string | null; full_name: string; current_class_id: string | null; current_class_name: string | null; email: string | null; phone: string | null }>>([]);
-  const [availableTeachers, setAvailableTeachers] = useState<Array<{ id: string; first_name: string; last_name: string | null; email: string; full_name: string; is_assigned: boolean }>>([]);
+  const [classForAssignment, setClassForAssignment] = useState<ClassSummary | null>(null);
+  const [availableStudents, setAvailableStudents] = useState<AvailableStudent[]>([]);
+  const [availableTeachers, setAvailableTeachers] = useState<AvailableTeacher[]>([]);
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [loadingTeachers, setLoadingTeachers] = useState(false);
   const [assigningStudent, setAssigningStudent] = useState(false);
@@ -33,7 +45,7 @@ function ClassesPageContent() {
   const [assignmentError, setAssignmentError] = useState<string | null>(null);
   const [studentSearchQuery, setStudentSearchQuery] = useState('');
   const [teacherSearchQuery, setTeacherSearchQuery] = useState('');
-  const [studentToAssign, setStudentToAssign] = useState<{ id: string; name: string; currentClass: string | null } | null>(null);
+  const [studentToAssign, setStudentToAssign] = useState<StudentToAssign | null>(null);
   const [showStudentConfirmModal, setShowStudentConfirmModal] = useState(false);
   const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
   const [selectedTeacherIds, setSelectedTeacherIds] = useState<Set<string>>(new Set());
@@ -41,9 +53,9 @@ function ClassesPageContent() {
   const selectedTeacherIdsRef = useRef<string[]>([]);
   const [assignmentSuccess, setAssignmentSuccess] = useState<string | null>(null);
   const [showDeleteClassModal, setShowDeleteClassModal] = useState(false);
-  const [classToDelete, setClassToDelete] = useState<any>(null);
+  const [classToDelete, setClassToDelete] = useState<ClassSummary | null>(null);
   const [deletingClass, setDeletingClass] = useState(false);
-  const [classes, setClasses] = useState<Array<{ id: string; name: string; code: string | null; assigned_teachers: any[] }>>(() => {
+  const [classes, setClasses] = useState<ClassSummary[]>(() => {
     if (typeof window !== 'undefined' && session?.user?.id) {
       const cached = localStorage.getItem(`classes_cache_${session.user.id}`);
       return cached ? JSON.parse(cached) : [];
@@ -67,6 +79,75 @@ function ClassesPageContent() {
     }
   }, [session?.user?.id]);
 
+  // Load classes data
+  const loadClasses = useCallback(
+    async (showLoading = true) => {
+      try {
+        if (showLoading) setLoadingClass(true);
+        const response = await fetch(`/api/classes`, { cache: 'no-store' });
+        const data = await response.json();
+
+        if (response.ok) {
+          const classesData = Array.isArray(data.classes) ? data.classes : null;
+          if (classesData) {
+            // Normalize to ensure assigned_teachers exists
+            const normalized: ClassSummary[] = classesData.map((cls: any) => ({
+              id: cls.id,
+              name: cls.name,
+              code: cls.code ?? null,
+              assigned_teachers: Array.isArray(cls.assigned_teachers) ? cls.assigned_teachers : [],
+            }));
+            setClasses(normalized);
+            if (typeof window !== 'undefined' && session?.user?.id) {
+              localStorage.setItem(`classes_cache_${session.user.id}`, JSON.stringify(normalized));
+            }
+          }
+        } else {
+          console.error('Error loading classes:', data.error);
+        }
+      } catch (error) {
+        console.error('Error loading classes:', error);
+      } finally {
+        if (showLoading) setLoadingClass(false);
+      }
+    },
+    [session?.user?.id],
+  );
+
+  // Load student counts per class
+  const loadStudentsForCounts = useCallback(
+    async (showLoading = true) => {
+      try {
+        const res = await fetch(`/api/students?t=${Date.now()}`, { cache: 'no-store' });
+        const json = await res.json();
+
+        if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
+
+        const studentsList = json.students || [];
+
+        // Count students per class
+        const counts: Record<string, number> = {};
+        studentsList.forEach((student: any) => {
+          const classId = student.class_id || student.classes?.id || null;
+          if (classId) {
+            counts[classId] = (counts[classId] || 0) + 1;
+          }
+        });
+        setClassStudentCounts(counts);
+
+        if (typeof window !== 'undefined' && session?.user?.id) {
+          localStorage.setItem(
+            `class_student_counts_cache_${session.user.id}`,
+            JSON.stringify(counts),
+          );
+        }
+      } catch (e: any) {
+        console.error('❌ Error loading student counts:', e.message);
+      }
+    },
+    [session?.user?.id],
+  );
+
   // Load classes and student counts when session is available
   useEffect(() => {
     if (session?.user?.id) {
@@ -75,8 +156,7 @@ function ClassesPageContent() {
         loadStudentsForCounts(false)
       ]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.user?.id]);
+  }, [loadClasses, loadStudentsForCounts, session?.user?.id]);
 
   // Listen for student data changes triggered from other pages
   useEffect(() => {
@@ -103,8 +183,7 @@ function ClassesPageContent() {
       window.removeEventListener('storage', onStorage);
       document.removeEventListener('visibilitychange', onVisibility);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.user?.id]);
+  }, [loadClasses, loadStudentsForCounts, session?.user?.id]);
 
   // Listen for classes data refresh from create page
   useEffect(() => {
@@ -137,8 +216,7 @@ function ClassesPageContent() {
       window.removeEventListener('storage', onStorage);
       document.removeEventListener('visibilitychange', onVisibility);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.user?.id]);
+  }, [loadClasses, loadStudentsForCounts, session?.user?.id]);
 
   // Check for success query param and show success message
   useEffect(() => {
@@ -158,178 +236,129 @@ function ClassesPageContent() {
     }
   }, [searchParams, router]);
 
-  // Load classes data
-  async function loadClasses(showLoading = true) {
-    try {
-      if (showLoading) setLoadingClass(true);
-      const response = await fetch(`/api/classes`, { cache: 'no-store' });
-      const data = await response.json();
-
-      if (response.ok) {
-        const classesData = Array.isArray(data.classes) ? data.classes : null;
-        if (classesData) {
-          // Normalize to ensure assigned_teachers exists
-          const normalized = classesData.map((cls: any) => ({
-            ...cls,
-            assigned_teachers: Array.isArray(cls.assigned_teachers) ? cls.assigned_teachers : []
-          }));
-          setClasses(normalized);
-          if (typeof window !== 'undefined') {
-            if (session?.user?.id) {
-              localStorage.setItem(`classes_cache_${session.user.id}`, JSON.stringify(normalized));
-            }
-          }
-        }
-      } else {
-        console.error('Error loading classes:', data.error);
-      }
-    } catch (error) {
-      console.error('Error loading classes:', error);
-    } finally {
-      if (showLoading) setLoadingClass(false);
-    }
-  }
-
-  // Load student counts per class
-  async function loadStudentsForCounts(showLoading = true) {
-    try {
-      const res = await fetch(`/api/students?t=${Date.now()}`, { cache: 'no-store' });
-      const json = await res.json();
-
-      if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
-
-      const studentsList = json.students || [];
-      
-      // Count students per class
-      const counts: Record<string, number> = {};
-      studentsList.forEach((student: any) => {
-        const classId = student.class_id || student.classes?.id || null;
-        if (classId) {
-          counts[classId] = (counts[classId] || 0) + 1;
-        }
-      });
-      setClassStudentCounts(counts);
-      
-      if (typeof window !== 'undefined' && session?.user?.id) {
-        localStorage.setItem(`class_student_counts_cache_${session.user.id}`, JSON.stringify(counts));
-      }
-    } catch (e: any) {
-      console.error('❌ Error loading student counts:', e.message);
-    }
-  }
-
-  const openClassDetailsModal = useCallback((cls: any) => {
+  const openClassDetailsModal = useCallback((cls: ClassSummary) => {
     router.push(`/dashboard/principal/classes/${cls.id}`);
   }, [router]);
 
-  const openDeleteClassModal = useCallback((cls: any) => {
+  const openDeleteClassModal = useCallback((cls: ClassSummary) => {
     setClassToDelete(cls);
     setShowDeleteClassModal(true);
   }, []);
 
-  const openEditClass = useCallback((cls: any) => {
+  const openEditClass = useCallback((cls: ClassSummary) => {
     router.push(`/dashboard/principal/classes/create?id=${encodeURIComponent(cls.id)}`);
   }, [router]);
 
-  const openAddStudentModal = useCallback((cls: any) => {
+  const loadAvailableStudents = useCallback(
+    async (classId: string) => {
+      try {
+        setLoadingStudents(true);
+        const response = await fetch(`/api/students?t=${Date.now()}`, { cache: 'no-store' });
+        const data = await response.json();
+        if (response.ok && data.students) {
+          const allStudents: AvailableStudent[] = data.students
+            .filter((s: any) => s.class_id !== classId)
+            .map((s: any) => {
+              const currentClass = classes.find((c) => c.id === s.class_id);
+              return {
+                id: s.id,
+                first_name: s.first_name || s.users?.first_name || '',
+                last_name: s.last_name || s.users?.last_name || null,
+                full_name: `${s.first_name || s.users?.first_name || ''} ${
+                  s.last_name || s.users?.last_name || ''
+                }`.trim(),
+                current_class_id: s.class_id || null,
+                current_class_name: currentClass?.name || null,
+                email: s.users?.email || null,
+                phone: s.phone || s.users?.phone || null,
+              };
+            });
+          setAvailableStudents(allStudents);
+          setSelectedStudentIds(new Set());
+        }
+      } catch (err: any) {
+        console.error('Error loading students:', err);
+        setAssignmentError(err.message || 'Failed to load students');
+      } finally {
+        setLoadingStudents(false);
+      }
+    },
+    [classes],
+  );
+
+  const loadAvailableTeachers = useCallback(
+    async (classId: string) => {
+      try {
+        setLoadingTeachers(true);
+        const response = await fetch(`/api/staff-management`, { cache: 'no-store' });
+        const data = await response.json();
+        if (response.ok && data.staff) {
+          const classData = classes.find((c) => c.id === classId);
+          const assignedTeacherIds = new Set(
+            (classData?.assigned_teachers || []).map((t: any) => t.id || t.user_id),
+          );
+
+          const allTeachers: AvailableTeacher[] = data.staff.map((s: any) => {
+            const teacherId = s.id || s.user_id;
+            const firstName = s.first_name || '';
+            const lastName = s.last_name || null;
+            const fullName = `${firstName} ${lastName || ''}`.trim() || s.email || 'Unknown';
+            return {
+              id: teacherId,
+              first_name: firstName,
+              last_name: lastName,
+              email: s.email || '',
+              full_name: fullName,
+              is_assigned: assignedTeacherIds.has(teacherId),
+            };
+          });
+          setAvailableTeachers(allTeachers);
+          setSelectedTeacherIds(new Set());
+        }
+      } catch (err: any) {
+        console.error('Error loading teachers:', err);
+        setAssignmentError(err.message || 'Failed to load teachers');
+      } finally {
+        setLoadingTeachers(false);
+      }
+    },
+    [classes],
+  );
+
+  const openAddStudentModal = useCallback(
+    (cls: ClassSummary) => {
     setClassForAssignment(cls);
     setStudentSearchQuery('');
     setSelectedStudentIds(new Set());
     setIsAddStudentModalOpen(true);
     loadAvailableStudents(cls.id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    },
+    [loadAvailableStudents],
+  );
 
-  const openAssignTeacherModal = useCallback((cls: any) => {
-    setClassForAssignment(cls);
-    setTeacherSearchQuery('');
-    setIsAssignTeacherModalOpen(true);
-    
-    // Load currently assigned teachers first
-    if (cls.assigned_teachers && Array.isArray(cls.assigned_teachers)) {
-      const teacherIds = cls.assigned_teachers.map((teacher: any) => teacher.id || teacher.user_id).filter(Boolean);
-      setInitialTeacherIds(teacherIds);
-      setSelectedTeacherIds(new Set(teacherIds));
-      selectedTeacherIdsRef.current = teacherIds;
-    } else {
-      setInitialTeacherIds([]);
-      setSelectedTeacherIds(new Set());
-      selectedTeacherIdsRef.current = [];
-    }
-    
-    // Then load all available teachers
-    loadAvailableTeachers(cls.id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const openAssignTeacherModal = useCallback(
+    (cls: ClassSummary) => {
+      setClassForAssignment(cls);
+      setTeacherSearchQuery('');
+      setIsAssignTeacherModalOpen(true);
 
-  async function loadAvailableStudents(classId: string) {
-    try {
-      setLoadingStudents(true);
-      const response = await fetch(`/api/students?t=${Date.now()}`, { cache: 'no-store' });
-      const data = await response.json();
-      if (response.ok && data.students) {
-        // Show all students, but mark which class they're currently in
-        // Filter out students already in this class
-        const allStudents = data.students
-          .filter((s: any) => s.class_id !== classId) // Don't show students already in this class
-          .map((s: any) => {
-            const currentClass = classes.find(c => c.id === s.class_id);
-            return {
-              id: s.id,
-              first_name: s.first_name || (s.users?.first_name || ''),
-              last_name: s.last_name || (s.users?.last_name || null),
-              full_name: `${s.first_name || s.users?.first_name || ''} ${s.last_name || s.users?.last_name || ''}`.trim(),
-              current_class_id: s.class_id || null,
-              current_class_name: currentClass?.name || null,
-              email: s.users?.email || null,
-              phone: s.phone || s.users?.phone || null
-            };
-          });
-        setAvailableStudents(allStudents);
-        setSelectedStudentIds(new Set()); // Reset selection
+      if (cls.assigned_teachers && Array.isArray(cls.assigned_teachers)) {
+        const teacherIds = cls.assigned_teachers
+          .map((teacher: any) => teacher.id || teacher.user_id)
+          .filter(Boolean);
+        setInitialTeacherIds(teacherIds);
+        setSelectedTeacherIds(new Set(teacherIds));
+        selectedTeacherIdsRef.current = teacherIds;
+      } else {
+        setInitialTeacherIds([]);
+        setSelectedTeacherIds(new Set());
+        selectedTeacherIdsRef.current = [];
       }
-    } catch (err: any) {
-      console.error('Error loading students:', err);
-      setAssignmentError(err.message || 'Failed to load students');
-    } finally {
-      setLoadingStudents(false);
-    }
-  }
 
-  async function loadAvailableTeachers(classId: string) {
-    try {
-      setLoadingTeachers(true);
-      const response = await fetch(`/api/staff-management`, { cache: 'no-store' });
-      const data = await response.json();
-      if (response.ok && data.staff) {
-        // Show all teachers, mark which ones are assigned
-        const classData = classes.find(c => c.id === classId);
-        const assignedTeacherIds = new Set(
-          (classData?.assigned_teachers || []).map((t: any) => t.id || t.user_id)
-        );
-        
-        // Show all teachers with their assignment status
-        const allTeachers = data.staff.map((s: any) => {
-          const teacherId = s.id || s.user_id;
-          return {
-            id: teacherId,
-            first_name: s.first_name || '',
-            last_name: s.last_name || null,
-            email: s.email || '',
-            full_name: `${s.first_name || ''} ${s.last_name || ''}`.trim() || s.email || 'Unknown',
-            is_assigned: assignedTeacherIds.has(teacherId)
-          };
-        });
-        setAvailableTeachers(allTeachers);
-        setSelectedTeacherIds(new Set()); // Reset selection
-      }
-    } catch (err: any) {
-      console.error('Error loading teachers:', err);
-      setAssignmentError(err.message || 'Failed to load teachers');
-    } finally {
-      setLoadingTeachers(false);
-    }
-  }
+      loadAvailableTeachers(cls.id);
+    },
+    [loadAvailableTeachers],
+  );
 
   const toggleStudentSelection = useCallback((studentId: string) => {
     setSelectedStudentIds(prev => {
@@ -842,406 +871,87 @@ function ClassesPageContent() {
           </div>
         )}
 
-        {/* Add Student Modal */}
-        {isAddStudentModalOpen && classForAssignment && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="w-full max-w-2xl rounded-2xl bg-white shadow-xl dark:bg-slate-800 max-h-[90vh] flex flex-col">
-              <div className="p-6 border-b border-slate-200 dark:border-slate-700">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                    {t.add_student_to_class} - {classForAssignment.name}
-                  </h3>
-                  <button
-                  onClick={() => {
-                    setIsAddStudentModalOpen(false);
-                    setClassForAssignment(null);
-                    setAssignmentError(null);
-                    setAssignmentSuccess(null);
-                  }}
-                    className="rounded-lg p-1 text-slate-600 dark:text-slate-400"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
-                </div>
-              </div>
+        <AddStudentModal
+          isOpen={isAddStudentModalOpen && !!classForAssignment}
+          className={classForAssignment?.name ?? ''}
+          t={t as unknown as TranslationStrings}
+          assignmentError={assignmentError}
+          assignmentSuccess={assignmentSuccess}
+          studentSearchQuery={studentSearchQuery}
+          onStudentSearchChange={setStudentSearchQuery}
+          loadingStudents={loadingStudents}
+          filteredStudents={filteredStudents}
+          selectedStudentIds={selectedStudentIds}
+          assigningStudent={assigningStudent}
+          onToggleStudentSelection={toggleStudentSelection}
+          onAssignSelectedStudents={assignSelectedStudents}
+          onClose={() => {
+            setIsAddStudentModalOpen(false);
+            setClassForAssignment(null);
+            setAssignmentError(null);
+            setAssignmentSuccess(null);
+            setSelectedStudentIds(new Set());
+            setStudentSearchQuery('');
+          }}
+        />
 
-              <div className="flex-1 overflow-y-auto p-6">
-                {assignmentError && (
-                  <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
-                    {assignmentError}
-                  </div>
-                )}
+        <AssignTeacherModal
+          isOpen={isAssignTeacherModalOpen && !!classForAssignment}
+          className={classForAssignment?.name ?? ''}
+          t={t as unknown as TranslationStrings}
+          assignmentError={assignmentError}
+          teacherSearchQuery={teacherSearchQuery}
+          onTeacherSearchChange={setTeacherSearchQuery}
+          loadingTeachers={loadingTeachers}
+          filteredTeachers={filteredTeachers}
+          selectedTeacherIds={selectedTeacherIds}
+          assigningTeacher={assigningTeacher}
+          onToggleTeacherSelection={toggleTeacherSelection}
+          onSaveTeacherAssignments={saveTeacherAssignments}
+          onClose={() => {
+            setIsAssignTeacherModalOpen(false);
+            setClassForAssignment(null);
+            setAssignmentError(null);
+            setAssignmentSuccess(null);
+            setInitialTeacherIds([]);
+            setSelectedTeacherIds(new Set());
+            selectedTeacherIdsRef.current = [];
+          }}
+        />
 
-                {assignmentSuccess && (
-                  <div className="mb-4 rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700 dark:bg-emerald-900/20 dark:border-emerald-800 dark:text-emerald-400 flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4" />
-                    {assignmentSuccess}
-                  </div>
-                )}
+        <DeleteClassModal
+          isOpen={showDeleteClassModal && !!classToDelete}
+          t={t as unknown as TranslationStrings}
+          className={classToDelete?.name ?? ''}
+          assignmentError={assignmentError}
+          deletingClass={deletingClass}
+          onCancel={() => {
+            setShowDeleteClassModal(false);
+            setClassToDelete(null);
+            setAssignmentError(null);
+          }}
+          onConfirm={handleDeleteClass}
+        />
 
-                {/* Search Bar */}
-                <div className="mb-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                  <input
-                    type="text"
-                    value={studentSearchQuery}
-                    onChange={(e) => setStudentSearchQuery(e.target.value)}
-                    placeholder={t.search_students_placeholder}
-                    className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-300 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
-                  />
-                </div>
-              </div>
-
-              {loadingStudents ? (
-                <div className="py-8 text-center">
-                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-600 mx-auto mb-4"></div>
-                  <p className="text-slate-600 dark:text-slate-400">{t.loading_students}</p>
-                </div>
-              ) : filteredStudents.length === 0 ? (
-                  <div className="py-8 text-center text-slate-500 dark:text-slate-400">
-                    {t.no_students_available}
-                  </div>
-                ) : (
-                  <>
-                    <div className="space-y-2 max-h-96 overflow-y-auto">
-                      {filteredStudents.map((student) => {
-                        const isSelected = selectedStudentIds.has(student.id);
-                        return (
-                          <button
-                            key={student.id}
-                            onClick={() => toggleStudentSelection(student.id)}
-                            disabled={assigningStudent}
-                            className={`w-full flex items-center justify-between rounded-lg border p-4 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed ${
-                              isSelected
-                                ? 'border-black bg-slate-100 dark:border-slate-400 dark:bg-slate-700'
-                                : student.current_class_id && student.current_class_id !== classForAssignment.id
-                                ? 'border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-900/20'
-                                : 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900'
-                            }`}
-                          >
-                            <div className="flex items-center gap-3 flex-1">
-                              <div className={`flex h-5 w-5 items-center justify-center rounded border ${
-                                isSelected
-                                  ? 'border-black bg-black dark:border-slate-300 dark:bg-slate-300'
-                                  : 'border-slate-300 dark:border-slate-600'
-                              }`}>
-                                {isSelected && <Check className="h-3 w-3 text-white dark:text-slate-900" />}
-                              </div>
-                              <div className="text-left flex-1">
-                                <div className="font-medium text-slate-900 dark:text-slate-100">
-                                  {student.full_name}
-                                </div>
-                                {student.current_class_id && student.current_class_id !== classForAssignment.id && (
-                                  <div className="text-xs text-amber-700 dark:text-amber-300 mt-1 flex items-center gap-1">
-                                    <AlertTriangle className="h-3 w-3" />
-                                    {t.currently_in_class}: {student.current_class_name}
-                                  </div>
-                                )}
-                                {student.email && (
-                                  <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                    {student.email}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                    {selectedStudentIds.size > 0 && (
-                      <div className="mt-4 p-3 rounded-lg bg-slate-50 border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-slate-700 dark:text-slate-300">
-                            {selectedStudentIds.size} {selectedStudentIds.size === 1 ? t.student_selected : t.students_selected}
-                          </span>
-                          <button
-                            onClick={assignSelectedStudents}
-                            disabled={assigningStudent}
-                            className="inline-flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-sm text-white dark:bg-black disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            {assigningStudent ? (
-                              <>
-                                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                                {t.assigning}
-                              </>
-                            ) : (
-                              <>
-                                <UserPlus className="h-4 w-4" />
-                                {t.assign_selected}
-                              </>
-                            )}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </>
-                )}
-
-              </div>
-
-              <div className="p-6 border-t border-slate-200 dark:border-slate-700 flex justify-end">
-                <button
-                  onClick={() => {
-                    setIsAddStudentModalOpen(false);
-                    setClassForAssignment(null);
-                    setAssignmentError(null);
-                    setAssignmentSuccess(null);
-                    setSelectedStudentIds(new Set());
-                    setStudentSearchQuery('');
-                  }}
-                  className="rounded-lg bg-black px-4 py-2 text-sm text-white dark:bg-black"
-                >
-                  {t.close}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Assign Teacher Modal */}
-        {isAssignTeacherModalOpen && classForAssignment && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="w-full max-w-2xl rounded-2xl bg-white shadow-xl dark:bg-slate-800 max-h-[90vh] flex flex-col">
-              <div className="p-6 border-b border-slate-200 dark:border-slate-700">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                    {t.assign_teacher_to_class} - {classForAssignment.name}
-                  </h3>
-                  <button
-                    onClick={() => {
-                      setIsAssignTeacherModalOpen(false);
-                      setClassForAssignment(null);
-                      setAssignmentError(null);
-                      setAssignmentSuccess(null);
-                      setInitialTeacherIds([]);
-                      setSelectedTeacherIds(new Set());
-                      selectedTeacherIdsRef.current = [];
-                    }}
-                    className="rounded-lg p-1 text-slate-600 dark:text-slate-400"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-6">
-                {assignmentError && (
-                  <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
-                    {assignmentError}
-                  </div>
-                )}
-
-                {/* Search Bar */}
-                <div className="mb-4">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                    <input
-                      type="text"
-                      value={teacherSearchQuery}
-                      onChange={(e) => setTeacherSearchQuery(e.target.value)}
-                      placeholder={t.search_teachers_placeholder}
-                      className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-300 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
-                    />
-                  </div>
-                </div>
-
-                {loadingTeachers ? (
-                  <div className="py-8 text-center">
-                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-300 border-t-slate-600 mx-auto mb-4"></div>
-                    <p className="text-slate-600 dark:text-slate-400">{t.loading_teachers}</p>
-                  </div>
-                ) : filteredTeachers.length === 0 ? (
-                    <div className="py-8 text-center text-slate-500 dark:text-slate-400">
-                      {t.no_teachers_available}
-                    </div>
-                  ) : (
-                    <>
-                      <div className="space-y-2 max-h-96 overflow-y-auto">
-                        {filteredTeachers.map((teacher) => {
-                          const isSelected = selectedTeacherIds.has(teacher.id);
-                          return (
-                            <button
-                              key={teacher.id}
-                              onClick={() => toggleTeacherSelection(teacher.id)}
-                              disabled={assigningTeacher}
-                              className={`w-full flex items-center justify-between rounded-lg border p-4 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed ${
-                                isSelected
-                                  ? 'border-black bg-slate-100 dark:border-slate-400 dark:bg-slate-700'
-                                  : 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900'
-                              }`}
-                            >
-                              <div className="flex items-center gap-3 flex-1">
-                                <div className={`flex h-5 w-5 items-center justify-center rounded border ${
-                                  isSelected
-                                    ? 'border-black bg-black dark:border-slate-300 dark:bg-slate-300'
-                                    : 'border-slate-300 dark:border-slate-600'
-                                }`}>
-                                  {isSelected && <Check className="h-3 w-3 text-white dark:text-slate-900" />}
-                                </div>
-                                <div className="text-left flex-1">
-                                  <div className="font-medium text-slate-900 dark:text-slate-100">
-                                    {teacher.full_name}
-                                  </div>
-                                  {teacher.email && (
-                                    <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                      {teacher.email}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </button>
-                          );
-                        })}
-                      </div>
-                      {selectedTeacherIds.size > 0 && (
-                        <div className="mt-4 p-3 rounded-lg bg-slate-50 border border-slate-200 dark:bg-slate-800 dark:border-slate-700">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-slate-700 dark:text-slate-300">
-                              {selectedTeacherIds.size} {selectedTeacherIds.size === 1 ? t.teacher_selected || 'teacher selected' : t.teachers_selected || 'teachers selected'}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </>
-                  )}
-              </div>
-
-              <div className="p-6 border-t border-slate-200 dark:border-slate-700 flex justify-end gap-3">
-                <button
-                  onClick={() => {
-                    setIsAssignTeacherModalOpen(false);
-                    setClassForAssignment(null);
-                    setAssignmentError(null);
-                    setAssignmentSuccess(null);
-                    setInitialTeacherIds([]);
-                    setSelectedTeacherIds(new Set());
-                    selectedTeacherIdsRef.current = [];
-                  }}
-                  className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
-                >
-                  {t.cancel}
-                </button>
-                <button
-                  onClick={saveTeacherAssignments}
-                  disabled={assigningTeacher}
-                  className="rounded-lg bg-black px-4 py-2 text-sm text-white dark:bg-black disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                >
-                  {assigningTeacher ? (
-                    <>
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                      {t.updating_teachers}
-                    </>
-                  ) : (
-                    t.save
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Delete Class Confirmation Modal */}
-        {showDeleteClassModal && classToDelete && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-800">
-              <div className="mb-4 flex items-center gap-3">
-                <div className="rounded-full bg-red-100 p-2 dark:bg-red-900/20">
-                  <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
-                </div>
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                  {t.delete_class || 'Delete Class'}
-                </h3>
-              </div>
-              
-              {assignmentError && (
-                <div className="mb-4 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
-                  {assignmentError}
-                </div>
-              )}
-
-              <p className="mb-4 text-sm text-slate-600 dark:text-slate-400">
-                {t.delete_class_message?.replace('{name}', classToDelete.name) || `Are you sure you want to delete "${classToDelete.name}"? This action cannot be undone.`}
-              </p>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    setShowDeleteClassModal(false);
-                    setClassToDelete(null);
-                    setAssignmentError(null);
-                  }}
-                  disabled={deletingClass}
-                  className="flex-1 rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {t.cancel}
-                </button>
-                <button
-                  onClick={handleDeleteClass}
-                  disabled={deletingClass}
-                  className="flex-1 rounded-lg bg-red-600 px-4 py-2 text-sm text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {deletingClass ? (
-                    <>
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                      {t.deleting || 'Deleting...'}
-                    </>
-                  ) : (
-                    t.delete
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Student Reassignment Confirmation Modal */}
-        {showStudentConfirmModal && studentToAssign && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl dark:bg-slate-800">
-              <div className="mb-4 flex items-center gap-3">
-                <div className="rounded-full bg-amber-100 p-2 dark:bg-amber-900/20">
-                  <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400" />
-                </div>
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-                  {t.reassign_student}
-                </h3>
-              </div>
-              
-              <p className="mb-4 text-sm text-slate-600 dark:text-slate-400">
-                {t.reassign_student_message.replace('{name}', studentToAssign.name).replace('{currentClass}', studentToAssign.currentClass || t.no_class).replace('{newClass}', classForAssignment?.name || '')}
-              </p>
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    setShowStudentConfirmModal(false);
-                    setStudentToAssign(null);
-                  }}
-                  className="flex-1 rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
-                >
-                  {t.cancel}
-                </button>
-                <button
-                  onClick={() => {
-                    if (studentToAssign) {
-                      // If multiple students selected, assign all, otherwise just the one
-                      if (selectedStudentIds.size > 0) {
-                        performMultipleStudentAssignment(Array.from(selectedStudentIds));
-                      } else {
-                        performStudentAssignment(studentToAssign.id);
-                      }
-                    }
-                  }}
-                  disabled={assigningStudent}
-                  className="flex-1 rounded-lg bg-amber-600 px-4 py-2 text-sm text-white hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {assigningStudent ? t.assigning : t.confirm_reassign}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        <StudentReassignConfirmModal
+          isOpen={showStudentConfirmModal && !!studentToAssign && !!classForAssignment}
+          t={t as unknown as TranslationStrings}
+          studentToAssign={studentToAssign}
+          targetClassName={classForAssignment?.name ?? ''}
+          assigningStudent={assigningStudent}
+          onCancel={() => {
+            setShowStudentConfirmModal(false);
+            setStudentToAssign(null);
+          }}
+          onConfirm={() => {
+            if (!studentToAssign) return;
+            if (selectedStudentIds.size > 0) {
+              void performMultipleStudentAssignment(Array.from(selectedStudentIds));
+            } else {
+              void performStudentAssignment(studentToAssign.id);
+            }
+          }}
+        />
     </>
   );
 }

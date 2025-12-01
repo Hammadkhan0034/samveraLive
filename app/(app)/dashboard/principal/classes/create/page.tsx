@@ -15,7 +15,7 @@ type Lang = 'is' | 'en';
 
 function CreateClassPageContent() {
   const { t, lang } = useLanguage();
-  const { session } = useAuth?.() || {} as any;
+  const { user, loading, session } = useAuth?.() || ({} as any);
   const router = useRouter();
   const searchParams = useSearchParams();
   const classId = searchParams.get('id');
