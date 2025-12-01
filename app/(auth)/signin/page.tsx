@@ -15,7 +15,7 @@ type Lang = 'is' | 'en';
 function SignInPageContent() {
   const router = useRouter();
   const qp = useSearchParams();
-  const { signIn, signUp, signInWithOtp, user, loading, isSigningIn } = useAuth();
+  const { signIn, signUp, user, loading, isSigningIn } = useAuth();
   const { isDark, theme, toggleTheme } = useTheme();
 
   // Allow ?role=teacher|principal|parent|admin to pick the demo role for signup
@@ -34,8 +34,6 @@ function SignInPageContent() {
   const [submitting, setSubmitting] = useState(false);
   const [err, setErr] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
-  const [useOtp, setUseOtp] = useState(false);
-  const [otpSent, setOtpSent] = useState(false);
   const [invitationMessage, setInvitationMessage] = useState('');
   const [mounted, setMounted] = useState(false);
 
@@ -52,7 +50,7 @@ function SignInPageContent() {
     }
   }, [qp]);
 
-  // Pre-fill email and password from query params (for magic link flow)
+  // Pre-fill email and password from query params
   useEffect(() => {
     const emailParam = qp?.get('email');
     const passwordParam = qp?.get('password');
@@ -113,11 +111,9 @@ function SignInPageContent() {
       setErr(t.errors.email_invalid);
       return;
     }
-    if (!useOtp) {
-      if (!password) {
-        setErr(t.errors.password_required);
-        return;
-      }
+    if (!password) {
+      setErr(t.errors.password_required);
+      return;
     }
     
     if (isSignUp && !fullName.trim()) {
@@ -128,15 +124,7 @@ function SignInPageContent() {
     setSubmitting(true);
 
     try {
-      if (useOtp) {
-        const { error } = await signInWithOtp(trimmed, initialRole);
-        if (error) {
-          setErr(error.message || 'Failed to send magic link.');
-        } else {
-          setOtpSent(true);
-          setErr(t.success.magic_link_sent);
-        }
-      } else if (isSignUp) {
+      if (isSignUp) {
         console.log('Starting signup process...');
         const { error } = await signUp(trimmed, password, initialRole, fullName.trim());
         if (error) {
@@ -175,8 +163,8 @@ function SignInPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">    
-      <div className="relative flex min-h-screen items-center justify-center px-4 py-10">
+    <div className="min-h-screen bg-mint-200 dark:bg-slate-950">    
+      <div className="relative flex min-h-screen items-center justify-center px-ds-sm py-ds-xl">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -184,113 +172,28 @@ function SignInPageContent() {
           className="w-full max-w-md"
         >
           {/* Header with theme and language controls */}
-          <div className="mb-10 flex items-center justify-between">
-            <motion.div 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="flex items-center gap-3"
-            >
-              <div className="relative">
-                <div className="absolute inset-0 rounded-ds-md blur-sm"></div>
-                <span className="relative inline-flex h-10 w-10 items-center justify-center rounded-ds-md bg-mint-500 text-white font-bold shadow-ds-md">
-                  S
-                </span>
-              </div>
-              <div>
-                <span className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
-                  Samvera
-                </span>
-                <p className="text-xs text-slate-500 dark:text-slate-400">Education Platform</p>
-              </div>
-            </motion.div>
-
-            <motion.div 
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="flex items-center gap-2"
-            >
-              <button
-                type="button"
-                aria-label={
-                  theme === 'light' 
-                    ? "Switch to dark mode" 
-                    : theme === 'dark' 
-                    ? "Switch to system mode" 
-                    : "Switch to light mode"
-                }
-                onClick={toggleTheme}
-                className="inline-flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-1.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-              >
-                {!mounted ? (
-                  <Moon size={16} /> // Default to dark icon during SSR
-                ) : theme === 'light' ? (
-                  <Sun size={16} />
-                ) : theme === 'dark' ? (
-                  <Moon size={16} />
-                ) : (
-                  <Monitor size={16} />
-                )}
-              </button>
-              
-              <div className="relative language-dropdown">
-                <button
-                  onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
-                  className="flex items-center gap-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-1.5 text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-                >
-                  <Globe className="h-4 w-4" />
-                  <span>{lang === 'is' ? 'Íslenska' : 'English'}</span>
-                  <ChevronDown className={`h-4 w-4 transition-transform ${isLangDropdownOpen ? 'rotate-180' : ''}`} />
-                </button>
-                
-                {isLangDropdownOpen && (
-                  <div className="absolute right-0 top-full mt-1 w-40 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-lg z-50">
-                    <button
-                      onClick={() => {
-                        setLang('en');
-                        setIsLangDropdownOpen(false);
-                      }}
-                      className={`w-full px-3 py-2 text-sm text-left hover:bg-slate-50 dark:hover:bg-slate-700 first:rounded-t-lg ${lang === 'en' ? 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100' : 'text-slate-700 dark:text-slate-300'}`}
-                    >
-                      English
-                    </button>
-                    <button
-                      onClick={() => {
-                        setLang('is');
-                        setIsLangDropdownOpen(false);
-                      }}
-                      className={`w-full px-3 py-2 text-sm text-left hover:bg-slate-50 dark:hover:bg-slate-700 last:rounded-b-lg ${lang === 'is' ? 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-slate-100' : 'text-slate-700 dark:text-slate-300'}`}
-                    >
-                      Íslenska
-                    </button>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          </div>
-
+        
           {/* Sign in card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="rounded-ds-lg border border-slate-200 dark:border-slate-700 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm shadow-ds-lg p-ds-lg"
+            className="rounded-ds-xl bg-white dark:bg-slate-800 shadow-ds-card p-ds-lg"
           >
-            <div className="text-center mb-6">
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+            <div className="text-center mb-ds-md">
+              <h1 className="text-ds-h2 font-bold text-ds-text-primary dark:text-slate-100 mb-ds-xs">
                 {isSignUp ? t.title_signup : t.signin_title}
               </h1>
-              <p className="text-slate-600 dark:text-slate-200">
+              <p className="text-ds-body text-ds-text-secondary dark:text-slate-200">
                 {isSignUp ? t.sub_signup : t.signin_sub}
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-              <div className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-ds-md" noValidate>
+              <div className="space-y-ds-md">
                 {isSignUp && (
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+                    <label className="block text-ds-small font-medium text-ds-text-secondary dark:text-slate-300 mb-ds-xs">
                       {t.fullname}
                     </label>
                     <input
@@ -299,14 +202,14 @@ function SignInPageContent() {
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       required={isSignUp}
-                      className="w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2 text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-700 focus:border-transparent transition-all"
+                      className="w-full h-12 rounded-ds-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-ds-sm text-ds-body text-ds-text-primary dark:text-slate-100 placeholder-ds-text-muted dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-mint-500 focus:border-transparent transition-all"
                       placeholder={t.fullname_placeholder}
                     />
                   </div>
                 )}
                 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+                  <label className="block text-ds-small font-medium text-ds-text-secondary dark:text-slate-300 mb-ds-xs">
                     {t.signin_email}
                   </label>
                   <input
@@ -316,74 +219,42 @@ function SignInPageContent() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2 text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-700 focus:border-transparent transition-all"
+                    className="w-full h-12 rounded-ds-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-ds-sm text-ds-body text-ds-text-primary dark:text-slate-100 placeholder-ds-text-muted dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-mint-500 focus:border-transparent transition-all"
                     placeholder="you@school.is"
                   />
                 </div>
 
-                {!useOtp && (
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                      {t.signin_password}
-                    </label>
-                    <div className="relative">
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required={!useOtp}
-                        className="w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2 pr-12 text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-700 focus:border-transparent transition-all"
-                        placeholder="••••••••"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
-                      >
-                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                      </button>
-                    </div>
+                <div>
+                  <label className="block text-ds-small font-medium text-ds-text-secondary dark:text-slate-300 mb-ds-xs">
+                    {t.signin_password}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      className="w-full h-12 rounded-ds-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-ds-sm pr-12 text-ds-body text-ds-text-primary dark:text-slate-100 placeholder-ds-text-muted dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-mint-500 focus:border-transparent transition-all"
+                      placeholder="••••••••"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-ds-sm top-1/2 -translate-y-1/2 text-ds-text-muted dark:text-slate-400 hover:text-ds-text-primary dark:hover:text-slate-200 transition-colors"
+                    >
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
                   </div>
-                )}
-
-                {useOtp && otpSent && (
-                  <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                    <div className="flex items-start">
-                      <div className="flex-shrink-0">
-                        <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                      <div className="ml-3">
-                        <h3 className="text-sm font-medium text-green-800 dark:text-green-200">
-                          Magic link sent!
-                        </h3>
-                        <p className="mt-1 text-sm text-green-700 dark:text-green-300">
-                          {t.otp_instructions}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                </div>
               </div>
 
-              {/* Role info */}
-              <div className="rounded-ds-md bg-mint-50 dark:bg-slate-700/50 px-4 py-3 text-ds-small">
-                <p className="text-slate-600 dark:text-slate-300">
-                  <span className="font-medium">
-                    {isSignUp
-                      ? t.signup_role.replace('{role}', roleLabel(initialRole, lang))
-                      : t.signin_role.replace('{role}', roleLabel(initialRole, lang))
-                    }
-                  </span>
-                </p>
-              </div>
+            
 
               {invitationMessage ? (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="rounded-ds-md bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-4 py-3 text-ds-small text-green-700 dark:text-green-300"
+                  className="rounded-ds-md bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-ds-md py-ds-sm text-ds-small text-green-700 dark:text-green-300"
                   role="alert"
                   aria-live="polite"
                 >
@@ -395,7 +266,7 @@ function SignInPageContent() {
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="rounded-ds-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 text-ds-small text-red-700 dark:text-red-300"
+                  className="rounded-ds-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-ds-md py-ds-sm text-ds-small text-red-700 dark:text-red-300"
                   role="alert"
                   aria-live="polite"
                 >
@@ -406,40 +277,33 @@ function SignInPageContent() {
               <button
                 type="submit"
                 disabled={submitting || isSigningIn}
-                className="w-full rounded-ds-md bg-mint-500 py-2 px-4 font-medium text-white shadow-ds-md hover:shadow-ds-lg hover:bg-mint-600 hover:scale-[1.02] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all duration-200 flex items-center justify-center gap-2"
+                className="w-full rounded-ds-md bg-mint-500 py-ds-sm px-ds-md font-medium text-white shadow-ds-md hover:shadow-ds-lg hover:bg-mint-600 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all duration-200 flex items-center justify-center gap-ds-xs text-ds-body"
               >
                 {submitting ? (
                   <>
                     <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                    {useOtp ? t.signin_sending : isSignUp ? t.signing_up : t.signing_in}
+                    {isSignUp ? t.signing_up : t.signing_in}
                   </>
                 ) : (
                   <>
-                    {useOtp ? t.send_magic_link : isSignUp ? t.signup : t.signin}
+                    {isSignUp ? t.signup : t.signin}
                     <ArrowRight size={18} />
                   </>
                 )}
               </button>
 
-              <div className="text-center space-x-4">
+              <div className="text-center">
                 <button
                   type="button"
                   onClick={() => setIsSignUp(!isSignUp)}
-                  className="text-sm text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
+                  className="text-ds-small text-ds-text-secondary dark:text-slate-400 hover:text-ds-text-primary dark:hover:text-slate-200 transition-colors"
                 >
                   {isSignUp ? t.already_have_account : t.need_account}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setUseOtp(v => !v); setOtpSent(false); setErr(''); }}
-                  className="text-sm text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
-                >
-                  {useOtp ? t.use_password : t.use_magic_link}
                 </button>
               </div>
 
               <div className="text-center">
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                <p className="text-ds-tiny text-ds-text-muted dark:text-slate-400 leading-relaxed">
                   {t.auth_hint}
                 </p>
               </div>
@@ -451,9 +315,9 @@ function SignInPageContent() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.5 }}
-            className="mt-8 text-center"
+            className="mt-ds-lg text-center"
           >
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <p className="text-ds-small text-ds-text-muted dark:text-slate-400">
               © {new Date().getFullYear()} Samvera. All rights reserved.
             </p>
           </motion.div>

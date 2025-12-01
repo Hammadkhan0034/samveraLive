@@ -68,10 +68,10 @@ export default function AuthCallback() {
   }, [router]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-        <p className="mt-4 text-slate-600">Verifying your email...</p>
+    <div className="min-h-screen bg-mint-200 dark:bg-slate-950 flex items-center justify-center px-ds-sm py-ds-xl">
+      <div className="rounded-ds-xl bg-white dark:bg-slate-800 shadow-ds-card p-ds-lg text-center max-w-md w-full">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-mint-500 mx-auto"></div>
+        <p className="mt-ds-md text-ds-body text-ds-text-secondary dark:text-slate-300">Verifying your email...</p>
       </div>
     </div>
   );
