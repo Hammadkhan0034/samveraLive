@@ -294,8 +294,13 @@ export function TeacherAssignmentModal({
                     })}
                   </div>
 
-                  {selectedTeacherIds.size > 0 && (
-                    <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
+                 
+                </>
+              )}
+            </div>
+
+            {selectedTeacherIds.size > 0 && (
+                    <div className="m-4 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-slate-700 dark:text-slate-300">
                           {selectedTeacherIds.size}{' '}
@@ -303,21 +308,7 @@ export function TeacherAssignmentModal({
                             ? t.teacher_selected || 'teacher selected'
                             : t.teachers_selected || 'teachers selected'}
                         </span>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-
-            <div className="flex justify-end gap-3 border-t border-slate-200 p-6 dark:border-slate-700">
-              <button
-                onClick={closeModal}
-                className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
-              >
-                {t.cancel}
-              </button>
-              <button
+                        <button
                 onClick={saveTeacherAssignments}
                 disabled={assigningTeacher}
                 className="flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-sm text-white disabled:cursor-not-allowed disabled:opacity-50 dark:bg-black"
@@ -334,7 +325,10 @@ export function TeacherAssignmentModal({
                   </>
                 )}
               </button>
-            </div>
+                      </div>
+                    </div>
+                  )}
+           
           </div>
         </div>
       )}
