@@ -1,0 +1,247 @@
+{
+    "designSystem": {
+      "name": "Samvera School Dashboard",
+      "version": "1.0.0",
+      "description": "A clean, modern dashboard design system for educational management interfaces",
+      
+      "colorPalette": {
+        "primary": {
+          "mint": "#C5E8D5",
+          "description": "Main background color, soft mint green"
+        },
+        "secondary": {
+          "paleBlue": "#D4E4F7",
+          "paleYellow": "#FFD966",
+          "palePeach": "#F5D5C8"
+        },
+        "text": {
+          "primary": "#1F2937",
+          "secondary": "#4B5563",
+          "muted": "#6B7280"
+        },
+        "surface": {
+          "white": "#FFFFFF",
+          "card": "#F9FAFB"
+        }
+      },
+      
+      "typography": {
+        "fontFamily": {
+          "primary": "system-ui, -apple-system, sans-serif",
+          "fallback": "Arial, Helvetica, sans-serif"
+        },
+        "fontSizes": {
+          "heading1": "32px",
+          "heading2": "24px",
+          "heading3": "20px",
+          "body": "16px",
+          "small": "14px",
+          "tiny": "12px"
+        },
+        "fontWeights": {
+          "regular": 400,
+          "medium": 500,
+          "semibold": 600,
+          "bold": 700
+        },
+        "lineHeights": {
+          "tight": 1.2,
+          "normal": 1.5,
+          "relaxed": 1.75
+        }
+      },
+      
+      "spacing": {
+        "scale": "8px base unit",
+        "values": {
+          "xs": "8px",
+          "sm": "16px",
+          "md": "24px",
+          "lg": "32px",
+          "xl": "48px",
+          "2xl": "64px"
+        }
+      },
+      
+      "borderRadius": {
+        "sm": "8px",
+        "md": "12px",
+        "lg": "16px",
+        "xl": "24px",
+        "full": "9999px"
+      },
+      
+      "shadows": {
+        "sm": "0 1px 2px rgba(0, 0, 0, 0.05)",
+        "md": "0 4px 6px rgba(0, 0, 0, 0.07)",
+        "lg": "0 10px 15px rgba(0, 0, 0, 0.1)",
+        "card": "0 2px 8px rgba(0, 0, 0, 0.06)"
+      },
+      
+      "layout": {
+        "structure": "Sidebar + Main Content",
+        "sidebar": {
+          "width": "280px",
+          "background": "White card with subtle shadow",
+          "position": "Fixed left",
+          "padding": "24px",
+          "borderRadius": "24px (top-right and bottom-right)"
+        },
+        "mainContent": {
+          "background": "Primary mint color",
+          "padding": "32px",
+          "marginLeft": "Sidebar width + gap"
+        },
+        "grid": {
+          "columns": "12-column grid system",
+          "gap": "24px",
+          "responsive": true
+        }
+      },
+      
+      "components": {
+        "card": {
+          "structure": {
+            "background": "White or subtle tinted background",
+            "borderRadius": "16px - 24px",
+            "padding": "24px - 32px",
+            "shadow": "Subtle shadow for depth",
+            "border": "None"
+          },
+          "variants": [
+            {
+              "name": "stat-card",
+              "description": "Colored background cards for key metrics",
+              "background": "Tinted color (blue, yellow, peach)",
+              "size": "Compact, equal height in grid"
+            },
+            {
+              "name": "info-card",
+              "description": "White cards for detailed content",
+              "background": "White",
+              "size": "Variable height based on content"
+            }
+          ]
+        },
+        
+        "navigation": {
+          "structure": {
+            "type": "Vertical sidebar navigation",
+            "items": "Text-based menu items",
+            "hierarchy": "Primary and nested items with indentation",
+            "spacing": "Generous vertical spacing between items"
+          },
+          "styling": {
+            "default": "Dark text, no background",
+            "hover": "Subtle background change",
+            "active": "Highlighted or different font weight",
+            "nested": "Indented 16-24px from parent"
+          }
+        },
+        
+        "statDisplay": {
+          "structure": {
+            "layout": "Label above value",
+            "labelStyle": "Small, muted text",
+            "valueStyle": "Large, bold number or percentage",
+            "spacing": "4-8px between label and value"
+          },
+          "variants": [
+            {
+              "type": "simple",
+              "description": "Number only with label"
+            },
+            {
+              "type": "percentage",
+              "description": "Percentage with % symbol"
+            }
+          ]
+        },
+        
+        "searchBar": {
+          "structure": {
+            "width": "Full width of container or fixed width",
+            "height": "48-56px",
+            "padding": "16px horizontal",
+            "borderRadius": "24px (pill shape)",
+            "background": "White or very light tint",
+            "border": "Subtle or none",
+            "placeholder": "Light gray text"
+          }
+        },
+        
+        "contentSection": {
+          "structure": {
+            "heading": "Bold, dark text, 20-24px",
+            "subheading": "Lighter weight, smaller, muted color",
+            "content": "16px body text, dark gray",
+            "spacing": "8px between heading and subheading, 16px to content"
+          }
+        },
+        
+        "listDisplay": {
+          "structure": {
+            "itemSpacing": "8-12px vertical spacing",
+            "bulletStyle": "Simple bullet • or dash",
+            "textStyle": "Regular body text",
+            "color": "Primary text color"
+          }
+        }
+      },
+      
+      "designPrinciples": {
+        "spaciousness": "Generous padding and margins create breathing room",
+        "softness": "Large border radius on all cards and containers",
+        "hierarchy": "Clear visual hierarchy through size, weight, and color",
+        "colorUsage": "Pastel, muted colors for backgrounds; dark text for readability",
+        "minimalism": "Clean, uncluttered layouts with focus on content",
+        "consistency": "Repeated patterns for similar content types"
+      },
+      
+      "layoutPatterns": {
+        "dashboardGrid": {
+          "topRow": "3-4 stat cards in equal width columns",
+          "middleRow": "2 column layout (larger content left, sidebar right)",
+          "bottomRow": "Full width content sections",
+          "gaps": "24px between all grid items"
+        },
+        
+        "responsiveness": {
+          "desktop": "Multi-column grid layout",
+          "tablet": "2 column grid, collapsible sidebar",
+          "mobile": "Single column stack, hamburger menu"
+        }
+      },
+      
+      "interactionStates": {
+        "hover": {
+          "cards": "Subtle shadow increase or background lightness change",
+          "buttons": "Background color darkens slightly",
+          "links": "Underline or color change"
+        },
+        "active": {
+          "navigation": "Background highlight or left border",
+          "buttons": "Pressed state with slight scale"
+        },
+        "disabled": {
+          "opacity": "0.5 - 0.6",
+          "cursor": "not-allowed"
+        }
+      },
+      
+      "accessibilityGuidelines": {
+        "colorContrast": "Minimum 4.5:1 for body text, 3:1 for large text",
+        "focusStates": "Visible focus indicators on interactive elements",
+        "semanticHTML": "Proper heading hierarchy and landmark regions",
+        "keyboardNav": "All interactive elements keyboard accessible"
+      },
+      
+      "implementationNotes": {
+        "framework": "Works with React, Vue, or vanilla HTML/CSS",
+        "cssApproach": "Utility-first (Tailwind) or component-based styles",
+        "iconography": "Simple, outlined icons preferred",
+        "dataVisualization": "Charts should follow the same color palette",
+        "whitespace": "Prefer more whitespace over cramped layouts"
+      }
+    }
+  }
