@@ -1411,7 +1411,7 @@ export function AdminDashboard() {
                   value={orgForm.name}
                   onChange={(e) => setOrgForm((p) => ({ ...p, name: e.target.value }))}
                   placeholder={t.organization_name_placeholder}
-                  className="w-full rounded-ds-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
+                  className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
                   required
                 />
               </div>
@@ -1425,7 +1425,7 @@ export function AdminDashboard() {
                   value={orgForm.slug}
                   onChange={(e) => setOrgForm((p) => ({ ...p, slug: e.target.value }))}
                   placeholder={t.organization_slug_placeholder}
-                  className="w-full rounded-ds-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
+                  className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
                   required
                 />
               </div>
@@ -1439,7 +1439,7 @@ export function AdminDashboard() {
                   value={orgForm.timezone}
                   onChange={(e) => setOrgForm((p) => ({ ...p, timezone: e.target.value }))}
                   placeholder={t.organization_timezone_placeholder}
-                  className="w-full rounded-ds-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
+                  className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
                 />
               </div>
 
@@ -1521,7 +1521,7 @@ export function AdminDashboard() {
                     value={principalForm.first_name || ''}
                     onChange={(e) => setPrincipalForm((p) => ({ ...p, first_name: e.target.value, full_name: `${e.target.value} ${p.last_name || ''}`.trim() }))}
                     placeholder={t.principal_first_name_placeholder}
-                    className="w-full rounded-ds-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
+                    className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
                     required
                   />
                 </div>
@@ -1534,7 +1534,7 @@ export function AdminDashboard() {
                     value={principalForm.last_name || ''}
                     onChange={(e) => setPrincipalForm((p) => ({ ...p, last_name: e.target.value, full_name: `${p.first_name || ''} ${e.target.value}`.trim() }))}
                     placeholder={t.principal_last_name_placeholder}
-                    className="w-full rounded-ds-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
+                    className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
                     required
                   />
                 </div>
@@ -1549,7 +1549,7 @@ export function AdminDashboard() {
                   value={principalForm.email || ''}
                   onChange={(e) => setPrincipalForm((p) => ({ ...p, email: e.target.value }))}
                   placeholder={t.principal_email_placeholder}
-                  className="w-full rounded-ds-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
+                  className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
                 />
               </div>
 
@@ -1597,7 +1597,7 @@ export function AdminDashboard() {
                 <select
                   value={principalForm.org_id}
                   onChange={(e) => setPrincipalForm((p) => ({ ...p, org_id: e.target.value }))}
-                  className="w-full rounded-ds-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
+                  className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
                   required
                 >
                   <option value="">Select organization</option>
@@ -1614,7 +1614,7 @@ export function AdminDashboard() {
                 <select
                   value={principalForm.is_active ? 'true' : 'false'}
                   onChange={(e) => setPrincipalForm((p) => ({ ...p, is_active: e.target.value === 'true' }))}
-                  className="w-full rounded-ds-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
+                  className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
                 >
                   <option value="true">Active</option>
                   <option value="false">Inactive</option>
@@ -1905,7 +1905,7 @@ export function AdminDashboard() {
                   value={studentForm.medical_notes}
                   onChange={(e) => setStudentForm(prev => ({ ...prev, medical_notes: e.target.value }))}
                   placeholder={t.student_medical_notes_placeholder}
-                  className="w-full rounded-ds-md border border-slate-300 dark:border-slate-600 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+                  className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
                   rows={3}
                 />
               </div>
@@ -1918,7 +1918,7 @@ export function AdminDashboard() {
                   value={studentForm.allergies}
                   onChange={(e) => setStudentForm(prev => ({ ...prev, allergies: e.target.value }))}
                   placeholder={t.student_allergies_placeholder}
-                  className="w-full rounded-ds-md border border-slate-300 dark:border-slate-600 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+                  className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
                   rows={2}
                 />
               </div>
@@ -1931,7 +1931,7 @@ export function AdminDashboard() {
                   value={studentForm.emergency_contact}
                   onChange={(e) => setStudentForm(prev => ({ ...prev, emergency_contact: e.target.value }))}
                   placeholder={t.student_emergency_contact_placeholder}
-                  className="w-full rounded-ds-md border border-slate-300 dark:border-slate-600 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+                  className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
                   rows={2}
                 />
               </div>

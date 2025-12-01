@@ -203,7 +203,7 @@ export default function LinkStudentGuardian({ lang = 'en' }: { lang?: Lang }) {
               value={qGuardian}
               onChange={(e) => setQGuardian(e.target.value)}
               placeholder={modeGuardian === 'email' ? t.placeholderEmail : t.placeholderName}
-              className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              className="w-full rounded-lg border border-[#D8EBD8] bg-[#F5FFF7] py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </div>
           {!qGuardian && (
@@ -261,7 +261,7 @@ export default function LinkStudentGuardian({ lang = 'en' }: { lang?: Lang }) {
               value={qStudent}
               onChange={(e) => setQStudent(e.target.value)}
               placeholder={modeStudent === 'email' ? t.placeholderEmail : t.placeholderName}
-              className="w-full rounded-lg border border-slate-300 bg-white py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              className="w-full rounded-lg border border-[#D8EBD8] bg-[#F5FFF7] py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
             />
           </div>
           {!qStudent && (

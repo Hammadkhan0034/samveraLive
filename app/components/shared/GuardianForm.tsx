@@ -151,7 +151,7 @@ export function GuardianForm({
                 type="text"
                 value={formData.first_name}
                 onChange={(e) => setFormData(prev => ({ ...prev, first_name: e.target.value }))}
-                className="w-full rounded-ds-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
+                className="w-full rounded-ds-md border border-[#D8EBD8] dark:border-slate-600 bg-[#F5FFF7] dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
                 required
                 placeholder={t.first_name_placeholder || 'Enter first name'}
               />
@@ -164,7 +164,7 @@ export function GuardianForm({
                 type="text"
                 value={formData.last_name}
                 onChange={(e) => setFormData(prev => ({ ...prev, last_name: e.target.value }))}
-                className="w-full rounded-ds-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
+                className="w-full rounded-ds-md border border-[#D8EBD8] dark:border-slate-600 bg-[#F5FFF7] dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
                 required
                 placeholder={t.last_name_placeholder || 'Enter last name'}
               />
@@ -179,7 +179,7 @@ export function GuardianForm({
               type="email"
               value={formData.email}
               onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-              className="w-full rounded-ds-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
+              className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
               required
               placeholder={t.email_placeholder}
             />
@@ -194,7 +194,7 @@ export function GuardianForm({
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                className="w-full rounded-ds-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
+                className="w-full rounded-ds-md border border-[#D8EBD8] dark:border-slate-600 bg-[#F5FFF7] dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
                 placeholder={t.phone_placeholder}
               />
             </div>
@@ -206,7 +206,7 @@ export function GuardianForm({
                 type="text"
                 value={formData.ssn || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, ssn: e.target.value }))}
-                className="w-full rounded-ds-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
+                className="w-full rounded-ds-md border border-[#D8EBD8] dark:border-slate-600 bg-[#F5FFF7] dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
                 placeholder={t.ssn_placeholder || '000000-0000'}
               />
             </div>
@@ -220,7 +220,7 @@ export function GuardianForm({
               type="text"
               value={formData.address || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
-              className="w-full rounded-ds-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
+              className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
               placeholder={t.address_placeholder || 'Enter address'}
             />
           </div>
@@ -238,7 +238,7 @@ export function GuardianForm({
             <select
               value={formData.is_active ? 'true' : 'false'}
               onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.value === 'true' }))}
-              className="w-full rounded-ds-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
+              className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
             >
               <option value="true">{t.active}</option>
               <option value="false">{t.inactive}</option>

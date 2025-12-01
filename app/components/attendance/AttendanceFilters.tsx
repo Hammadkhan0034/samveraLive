@@ -29,7 +29,7 @@ export const AttendanceFilters = React.memo<AttendanceFiltersProps>(
           <select
             value={selectedClassId}
             onChange={(e) => onClassChange(e.target.value)}
-            className="rounded-ds-md border border-slate-300 bg-white px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+            className="rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
           >
             <option value="all">{t.all_classes || 'All Classes'}</option>
             {classes.map((cls) => (

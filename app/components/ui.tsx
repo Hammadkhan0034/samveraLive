@@ -19,7 +19,7 @@ export function Input(props: React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
       {...props}
-      className={`w-full border border-slate-200 dark:border-slate-600 rounded-ds-md px-4 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-mint-500 focus:border-transparent transition-all duration-200 ${props.className || ""}`}
+      className={`w-full border border-[#D8EBD8] dark:border-slate-600 rounded-ds-md px-4 py-2 bg-[#F5FFF7] dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-mint-500 focus:border-transparent transition-all duration-200 ${props.className || ""}`}
     />
   );
 }
@@ -28,7 +28,7 @@ export function Textarea(props: React.TextareaHTMLAttributes<HTMLTextAreaElement
   return (
     <textarea
       {...props}
-      className={`w-full border border-slate-200 dark:border-slate-600 rounded-ds-md px-4 py-2 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-mint-500 focus:border-transparent transition-all duration-200 ${props.className || ""}`}
+      className={`w-full border border-[#D8EBD8] dark:border-slate-600 rounded-ds-md px-4 py-2 bg-[#F5FFF7] dark:bg-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-mint-500 focus:border-transparent transition-all duration-200 ${props.className || ""}`}
     />
   );
 }

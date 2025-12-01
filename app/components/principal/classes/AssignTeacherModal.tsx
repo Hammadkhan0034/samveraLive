@@ -68,7 +68,7 @@ export function AssignTeacherModal({
                 value={teacherSearchQuery}
                 onChange={(e) => onTeacherSearchChange(e.target.value)}
                 placeholder={t.search_teachers_placeholder}
-                className="w-full h-14 pl-10 pr-4 rounded-ds-xl bg-white text-ds-body focus:outline-none focus:ring-2 focus:ring-mint-500/20 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 border-none shadow-ds-sm"
+                className="w-full h-14 pl-10 pr-4 rounded-ds-xl bg-[#F5FFF7] border border-[#D8EBD8] text-ds-body focus:outline-none focus:ring-2 focus:ring-mint-500/20 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 shadow-ds-sm"
               />
             </div>
           </div>

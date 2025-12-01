@@ -19,6 +19,10 @@
   --ds-surface-white: #FFFFFF;
   --ds-surface-card: #F9FAFB;
 
+  /* Input Colors */
+  --ds-input-fill: #F5FFF7;
+  --ds-input-stroke: #D8EBD8;
+
   /* Spacing Scale (8px base) */
   --ds-space-xs: 8px;
   --ds-space-sm: 16px;
@@ -138,8 +142,8 @@ body {
     padding-left: var(--ds-space-sm);
     padding-right: var(--ds-space-sm);
     border-radius: var(--ds-radius-full);
-    background-color: var(--ds-surface-white);
-    border: none;
+    background-color: var(--ds-input-fill);
+    border: 1px solid var(--ds-input-stroke);
   }
 
   .ds-search-bar:focus {

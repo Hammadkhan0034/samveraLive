@@ -126,7 +126,7 @@ function StudentSearchDropdownWrapper({
                 setIsOpen(true);
               }}
               onFocus={() => setIsOpen(true)}
-              className="mt-1 w-full rounded-ds-md border border-slate-300 p-2 pr-8 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+              className="mt-1 w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] p-2 pr-8 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
               placeholder={isLoading ? 'Loading students...' : placeholder}
               required={required}
             />
@@ -347,7 +347,7 @@ export function HealthLogFormModal({
             <select
               value={formData.type}
               onChange={(e) => setFormData({ ...formData, type: e.target.value as HealthLogType })}
-              className="w-full rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+              className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
               required
             >
               {HEALTH_LOG_TYPES.map((type) => (
@@ -366,7 +366,7 @@ export function HealthLogFormModal({
               type="datetime-local"
               value={formData.recorded_at}
               onChange={(e) => setFormData({ ...formData, recorded_at: e.target.value })}
-              className="w-full rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+              className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
               required
             />
           </div>
@@ -388,7 +388,7 @@ export function HealthLogFormModal({
                     temperature_celsius: e.target.value ? parseFloat(e.target.value) : null,
                   })
                 }
-                className="w-full rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                 placeholder="36.5"
               />
             </div>
@@ -410,7 +410,7 @@ export function HealthLogFormModal({
                     severity: e.target.value ? parseInt(e.target.value, 10) : null,
                   })
                 }
-                className="w-full rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                 placeholder="1-5"
               />
             </div>
@@ -424,7 +424,7 @@ export function HealthLogFormModal({
               value={formData.notes || ''}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               rows={3}
-              className="w-full rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+              className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
               placeholder={t.di_notes_ph || 'Optional notes…'}
             />
           </div>

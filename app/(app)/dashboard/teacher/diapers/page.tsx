@@ -270,7 +270,7 @@ function DiaperPanel({ t }: { t: typeof enText | typeof isText }) {
           <select
             value={selectedFilterType}
             onChange={(e) => setSelectedFilterType(e.target.value)}
-            className="rounded-ds-md border border-slate-300 bg-white px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+            className="rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
           >
             <option value="all">{lang === 'is' ? 'Allt' : 'All'}</option>
             {Object.entries(HEALTH_LOG_TYPE_LABELS).map(([type, labels]) => (

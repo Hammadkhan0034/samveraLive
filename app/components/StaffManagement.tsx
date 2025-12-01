@@ -380,20 +380,20 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.first_name || 'First name'}</label>
-                  <input type="text" value={newStaff.first_name} onChange={(e) => setNewStaff((prev) => ({ ...prev, first_name: e.target.value }))} placeholder={t.first_name || 'First name'} className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" required />
+                  <input type="text" value={newStaff.first_name} onChange={(e) => setNewStaff((prev) => ({ ...prev, first_name: e.target.value }))} placeholder={t.first_name || 'First name'} className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" required />
                 </div>
                 <div>
                   <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.last_name || 'Last name'}</label>
-                  <input type="text" value={newStaff.last_name} onChange={(e) => setNewStaff((prev) => ({ ...prev, last_name: e.target.value }))} placeholder={t.last_name || 'Last name'} className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
+                  <input type="text" value={newStaff.last_name} onChange={(e) => setNewStaff((prev) => ({ ...prev, last_name: e.target.value }))} placeholder={t.last_name || 'Last name'} className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
                 </div>
               </div>
               <div>
                 <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_email}</label>
-                <input type="email" value={newStaff.email} onChange={(e) => setNewStaff((prev) => ({ ...prev, email: e.target.value }))} placeholder={t.staff_email_placeholder} className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" required />
+                <input type="email" value={newStaff.email} onChange={(e) => setNewStaff((prev) => ({ ...prev, email: e.target.value }))} placeholder={t.staff_email_placeholder} className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" required />
               </div>
               <div>
                 <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_address || 'Address'}</label>
-                <input type="text" value={newStaff.address} onChange={(e) => setNewStaff((prev) => ({ ...prev, address: e.target.value }))} placeholder={t.staff_address_placeholder || 'Enter address'} className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
+                <input type="text" value={newStaff.address} onChange={(e) => setNewStaff((prev) => ({ ...prev, address: e.target.value }))} placeholder={t.staff_address_placeholder || 'Enter address'} className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
@@ -414,7 +414,7 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
                       }
                     }}
                     placeholder={t.staff_phone_placeholder}
-                    className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+                    className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
                   />
                   {phoneError && (
                     <p className="mt-1 text-ds-tiny text-red-600 dark:text-red-400">{phoneError}</p>
@@ -422,11 +422,11 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
                 </div>
                 <div>
                   <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_ssn || 'SSN'}</label>
-                  <input type="text" value={newStaff.ssn} onChange={(e) => setNewStaff((prev) => ({ ...prev, ssn: e.target.value }))} placeholder={'000000-0000'} className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
+                  <input type="text" value={newStaff.ssn} onChange={(e) => setNewStaff((prev) => ({ ...prev, ssn: e.target.value }))} placeholder={'000000-0000'} className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
                 </div>
                 <div>
                   <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_education_level || 'Education Level'}</label>
-                  <input type="text" value={newStaff.education_level} onChange={(e) => setNewStaff((prev) => ({ ...prev, education_level: e.target.value }))} placeholder={t.staff_education_level_placeholder || 'e.g. B.Ed, M.Ed'} className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
+                  <input type="text" value={newStaff.education_level} onChange={(e) => setNewStaff((prev) => ({ ...prev, education_level: e.target.value }))} placeholder={t.staff_education_level_placeholder || 'e.g. B.Ed, M.Ed'} className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -483,34 +483,34 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.first_name || 'First Name'}</label>
-                  <input type="text" value={editingStaff.first_name} onChange={(e) => setEditingStaff({ ...editingStaff, first_name: e.target.value })} className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" required />
+                  <input type="text" value={editingStaff.first_name} onChange={(e) => setEditingStaff({ ...editingStaff, first_name: e.target.value })} className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" required />
                 </div>
                 <div>
                   <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.last_name || 'Last Name'}</label>
-                  <input type="text" value={editingStaff.last_name} onChange={(e) => setEditingStaff({ ...editingStaff, last_name: e.target.value })} className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
+                  <input type="text" value={editingStaff.last_name} onChange={(e) => setEditingStaff({ ...editingStaff, last_name: e.target.value })} className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
                 </div>
               </div>
               <div>
                 <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.email}</label>
-                <input type="email" value={editingStaff.email} onChange={(e) => setEditingStaff({ ...editingStaff, email: e.target.value })} className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" required />
+                <input type="email" value={editingStaff.email} onChange={(e) => setEditingStaff({ ...editingStaff, email: e.target.value })} className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" required />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_phone || 'Phone'}</label>
-                  <input type="tel" value={editingStaff.phone} onChange={(e) => setEditingStaff({ ...editingStaff, phone: e.target.value })} className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
+                  <input type="tel" value={editingStaff.phone} onChange={(e) => setEditingStaff({ ...editingStaff, phone: e.target.value })} className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
                 </div>
                 <div>
                   <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_ssn || 'SSN'}</label>
-                  <input type="text" value={editingStaff.ssn} onChange={(e) => setEditingStaff({ ...editingStaff, ssn: e.target.value })} className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
+                  <input type="text" value={editingStaff.ssn} onChange={(e) => setEditingStaff({ ...editingStaff, ssn: e.target.value })} className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
                 </div>
                 <div>
                   <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_education_level || 'Education Level'}</label>
-                  <input type="text" value={editingStaff.education_level} onChange={(e) => setEditingStaff({ ...editingStaff, education_level: e.target.value })} placeholder={t.staff_education_level_placeholder || 'e.g. B.Ed, M.Ed'} className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
+                  <input type="text" value={editingStaff.education_level} onChange={(e) => setEditingStaff({ ...editingStaff, education_level: e.target.value })} placeholder={t.staff_education_level_placeholder || 'e.g. B.Ed, M.Ed'} className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
                 </div>
               </div>
               <div>
                 <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_address || 'Address'}</label>
-                <input type="text" value={editingStaff.address} onChange={(e) => setEditingStaff({ ...editingStaff, address: e.target.value })} placeholder={t.staff_address_placeholder || 'Enter address'} className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
+                <input type="text" value={editingStaff.address} onChange={(e) => setEditingStaff({ ...editingStaff, address: e.target.value })} placeholder={t.staff_address_placeholder || 'Enter address'} className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
               </div>
               {/* Role selection */}
               <div>

@@ -207,7 +207,7 @@ export default function AnnouncementForm({
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-3 py-2 text-md border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-black dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+            className="w-full px-3 py-2 text-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-black dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
             placeholder={t.title_placeholder}
             required
           />
@@ -221,7 +221,7 @@ export default function AnnouncementForm({
             value={body}
             onChange={(e) => setBody(e.target.value)}
             rows={2}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-black dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+            className="w-full px-3 py-2 border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-black dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
             placeholder={t.message_placeholder}
             required
           />

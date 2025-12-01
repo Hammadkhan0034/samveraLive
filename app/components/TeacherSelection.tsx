@@ -180,7 +180,7 @@ export default function TeacherSelection({
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder={t.placeholder}
-            className="w-full rounded-ds-md border border-slate-300 bg-white py-2 pl-9 pr-3 text-ds-small text-slate-900 placeholder:text-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
+            className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] py-2 pl-9 pr-3 text-ds-small text-slate-900 placeholder:text-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100"
           />
         </div>
         {!q && (

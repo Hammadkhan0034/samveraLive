@@ -1200,7 +1200,7 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
                 <select
                   value={recipientId}
                   onChange={(e) => setRecipientId(e.target.value)}
-                  className="mt-1 w-full rounded-ds-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1.5 text-ds-small dark:text-slate-200 focus:border-mint-500 focus:ring-mint-500"
+                  className="mt-1 w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-2 py-1.5 text-ds-small dark:text-slate-200 focus:border-mint-500 focus:ring-mint-500"
                 >
                   <option value="">{t.select_recipient}</option>
                   {role === 'principal' && (
@@ -1298,7 +1298,7 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
                   rows={2}
                   value={messageBody}
                   onChange={(e) => setMessageBody(e.target.value)}
-                  className="mt-1 w-full rounded-ds-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-2 py-1.5 text-ds-small dark:text-slate-200 dark:placeholder-slate-400 resize-none focus:border-mint-500 focus:ring-mint-500"
+                  className="mt-1 w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-2 py-1.5 text-ds-small dark:text-slate-200 dark:placeholder-slate-400 resize-none focus:border-mint-500 focus:ring-mint-500"
                   placeholder={t.msg_ph}
                 />
               </label>
@@ -1314,7 +1314,7 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
           )}
 
           {/* Search Bar */}
-          <div className="flex items-center gap-2 bg-white dark:bg-slate-800 rounded-ds-md border border-slate-200 dark:border-slate-700 px-3 py-2">
+          <div className="flex items-center gap-2 bg-[#F5FFF7] dark:bg-slate-800 rounded-ds-md border border-[#D8EBD8] dark:border-slate-700 px-3 py-2">
             <Search className="h-4 w-4 text-slate-400" />
             <input
               type="text"
@@ -1484,7 +1484,7 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
                     }}
                     placeholder={t.msg_ph}
                     rows={1}
-                    className="w-full rounded-ds-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-4 py-2 pr-12 text-ds-small dark:text-slate-200 dark:placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-mint-500 focus:border-transparent max-h-[120px] overflow-y-auto"
+                    className="w-full rounded-ds-md border border-[#D8EBD8] dark:border-slate-600 bg-[#F5FFF7] dark:bg-slate-900 px-4 py-2 pr-12 text-ds-small dark:text-slate-200 dark:placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-mint-500 focus:border-transparent max-h-[120px] overflow-y-auto"
                   />
                 </div>
                 <button

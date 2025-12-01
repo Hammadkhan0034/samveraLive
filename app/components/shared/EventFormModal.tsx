@@ -136,7 +136,7 @@ export function EventFormModal({
               required
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
+              className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-3 py-2 text-ds-small text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
               placeholder={t.event_title_placeholder}
             />
           </div>
@@ -150,7 +150,7 @@ export function EventFormModal({
               <select
                 value={formData.class_id || ''}
                 onChange={(e) => setFormData({ ...formData, class_id: e.target.value || null })}
-                className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
+                className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-3 py-2 text-ds-small text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
               >
                 <option value="">{t.event_scope_org_wide}</option>
                 {classes.map(cls => (
@@ -172,7 +172,7 @@ export function EventFormModal({
               required
               value={formData.start_at}
               onChange={(e) => setFormData({ ...formData, start_at: e.target.value })}
-              className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
+              className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-3 py-2 text-ds-small text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
             />
           </div>
 
@@ -186,7 +186,7 @@ export function EventFormModal({
               value={formData.end_at || ''}
               onChange={(e) => setFormData({ ...formData, end_at: e.target.value || null })}
               min={formData.start_at}
-              className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
+              className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-3 py-2 text-ds-small text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
             />
           </div>
 
@@ -199,7 +199,7 @@ export function EventFormModal({
               type="text"
               value={formData.location || ''}
               onChange={(e) => setFormData({ ...formData, location: e.target.value || null })}
-              className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
+              className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-3 py-2 text-ds-small text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
               placeholder={t.event_location_placeholder}
             />
           </div>
@@ -213,7 +213,7 @@ export function EventFormModal({
               value={formData.description || ''}
               onChange={(e) => setFormData({ ...formData, description: e.target.value || null })}
               rows={4}
-              className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
+              className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-3 py-2 text-ds-small text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
               placeholder={t.event_description_placeholder}
             />
           </div>
