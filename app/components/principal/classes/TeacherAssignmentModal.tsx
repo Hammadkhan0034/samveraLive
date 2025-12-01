@@ -204,7 +204,7 @@ export function TeacherAssignmentModal({
 
       {!isOpen ? null : (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="flex max-h-[90vh] w-full max-w-2xl flex-col rounded-2xl bg-white shadow-xl dark:bg-slate-800">
+          <div className="flex h-[700px] w-full max-w-2xl flex-col rounded-2xl bg-white shadow-xl dark:bg-slate-800">
             <div className="border-b border-slate-200 p-6 dark:border-slate-700">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
@@ -220,7 +220,7 @@ export function TeacherAssignmentModal({
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-6 min-h-0">
               {assignmentError && (
                 <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
                   {assignmentError}
@@ -251,7 +251,7 @@ export function TeacherAssignmentModal({
                 </div>
               ) : (
                 <>
-                  <div className="max-h-96 space-y-2 overflow-y-auto">
+                  <div className="h-[400px] space-y-2 overflow-y-auto">
                     {filteredTeachers.map((teacher) => {
                       const isSelected = selectedTeacherIds.has(teacher.id);
 
