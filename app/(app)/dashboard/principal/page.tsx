@@ -75,15 +75,16 @@ function PrincipalDashboardContent({
         {isLoading ? (
           <KPICardSkeleton count={4} />
         ) : (
-          <div className="grid grid-cols-1 gap-ds-md sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-ds-md sm:grid-cols-2 lg:grid-cols-4">
             {kpis.map(({ label, value, icon: Icon }, i) => {
-              // Cycle through tinted backgrounds: pale-blue, pale-yellow, pale-peach
+              // Cycle through tinted backgrounds: pale-blue, pale-yellow, pale-peach, pale-green
               const bgColors = [
                 'bg-pale-blue dark:bg-slate-800',
                 'bg-pale-yellow dark:bg-slate-800',
                 'bg-pale-peach dark:bg-slate-800',
+                'bg-pale-green dark:bg-slate-800',
               ];
-              const bgColor = bgColors[i % 3];
+              const bgColor = bgColors[i % 4];
 
               return (
                 <div

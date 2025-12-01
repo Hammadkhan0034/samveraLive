@@ -22,6 +22,7 @@ const config: Config = {
         'pale-blue': '#D4E4F7',
         'pale-yellow': '#FFD966',
         'pale-peach': '#F5D5C8',
+        'pale-green': '#D4F4E7',
         // Design System: Text colors
         'ds-text': {
           primary: '#1F2937',
