@@ -421,8 +421,13 @@ export function StudentAssignmentModal({
                     })}
                   </div>
 
-                  {selectedStudentIds.size > 0 && (
-                    <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
+               
+                </>
+              )}
+            </div>
+
+            {selectedStudentIds.size > 0 && (
+                    <div className="m-4 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-800">
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-slate-700 dark:text-slate-300">
                           {selectedStudentIds.size}{' '}
@@ -450,18 +455,6 @@ export function StudentAssignmentModal({
                       </div>
                     </div>
                   )}
-                </>
-              )}
-            </div>
-
-            <div className="flex justify-end border-t border-slate-200 p-6 dark:border-slate-700">
-              <button
-                onClick={closeModal}
-                className="rounded-lg bg-black px-4 py-2 text-sm text-white dark:bg-black"
-              >
-                {t.close}
-              </button>
-            </div>
           </div>
         </div>
       )}
