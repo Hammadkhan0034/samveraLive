@@ -26,7 +26,7 @@
       "input": {
         "fill": "#F5FFF7",
         "stroke": "#D8EBD8",
-        "description": "Text field background and border colors"
+        "description": "Text field background and border colors. Input fill (#F5FFF7) can also be used for other UI elements requiring a very light mint green background."
       }
     },
     

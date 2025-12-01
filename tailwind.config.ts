@@ -33,6 +33,11 @@ const config: Config = {
           white: '#FFFFFF',
           card: '#F9FAFB',
         },
+        // Design System: Input colors
+        'input': {
+          fill: '#F5FFF7', // Very light mint green - input background
+          stroke: '#D8EBD8', // Soft sage green - input border
+        },
         // Legacy colors (kept for backward compatibility)
         coral: {
           50: '#fef7f4',

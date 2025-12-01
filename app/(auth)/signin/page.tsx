@@ -110,9 +110,9 @@ function SignInPageContent() {
 
   return (
     <div className="min-h-screen bg-mint-200 dark:bg-slate-950 rounded-tl-[48px] rounded-br-[48px]">
-      <div className="min-h-screen flex flex-col md:flex-row bg-white dark:bg-slate-800">
+      <div className="min-h-screen flex flex-col md:flex-row bg-input-fill dark:bg-slate-800">
         {/* Welcome Section - Left Side (Hidden on mobile) */}
-        <motion.div
+        {/* <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.6 }}
@@ -126,12 +126,47 @@ function SignInPageContent() {
               <p className="text-ds-body font-bold text-ds-text-primary dark:text-slate-100 mb-ds-sm">
                 For principals, teachers & parents
               </p>
-              <p className="text-ds-small text-ds-text-muted dark:text-slate-400">
-                Use this space for a short value statement or onboarding copy.
-              </p>
+              <ul className="text-ds-small text-ds-text-muted dark:text-slate-400 space-y-ds-xs list-none pl-0">
+                <li className="flex items-start gap-ds-xs">
+                  <span className="text-mint-500 dark:text-mint-400 mt-1">•</span>
+                  <span>Private messaging and announcements with read receipts</span>
+                </li>
+                <li className="flex items-start gap-ds-xs">
+                  <span className="text-mint-500 dark:text-mint-400 mt-1">•</span>
+                  <span>Attendance tracking and daily check-in summaries</span>
+                </li>
+                <li className="flex items-start gap-ds-xs">
+                  <span className="text-mint-500 dark:text-mint-400 mt-1">•</span>
+                  <span>Calendars, menus, and event management</span>
+                </li>
+                <li className="flex items-start gap-ds-xs">
+                  <span className="text-mint-500 dark:text-mint-400 mt-1">•</span>
+                  <span>Photos, stories, and 24-hour classroom updates</span>
+                </li>
+                <li className="flex items-start gap-ds-xs">
+                  <span className="text-mint-500 dark:text-mint-400 mt-1">•</span>
+                  <span>Diaper changes, health logs, and medication tracking</span>
+                </li>
+                <li className="flex items-start gap-ds-xs">
+                  <span className="text-mint-500 dark:text-mint-400 mt-1">•</span>
+                  <span>24-hour classroom stories visible only to enrolled guardians</span>
+                </li>
+                <li className="flex items-start gap-ds-xs">
+                  <span className="text-mint-500 dark:text-mint-400 mt-1">•</span>
+                  <span>Push notifications for real-time updates</span>
+                </li>
+                <li className="flex items-start gap-ds-xs">
+                  <span className="text-mint-500 dark:text-mint-400 mt-1">•</span>
+                  <span>Secure, role-based access with audit trails</span>
+                </li>
+                <li className="flex items-start gap-ds-xs">
+                  <span className="text-mint-500 dark:text-mint-400 mt-1">•</span>
+                  <span>GDPR-compliant cloud hosting in Europe</span>
+                </li>
+              </ul>
             </div>
           </div>
-        </motion.div>
+        </motion.div> */}
 
         {/* Sign In Form - Right Side */}
         <div className="flex-1 flex items-center justify-center px-ds-sm py-ds-xl md:px-ds-xl">
