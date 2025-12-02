@@ -1,4 +1,3 @@
-import { Request } from 'next/server';
 import { withAuthRoute } from '@/lib/server-helpers';
 import { handlePostStudentRequestsTable } from '@/lib/handlers/student_requests_handler';
 
