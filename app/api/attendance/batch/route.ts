@@ -37,8 +37,11 @@ export async function POST(request: Request) {
     let orgId: string;
     let userId: string;
     try {
-      const { user, orgId: resolvedOrgId } = await getAuthUserWithOrg();
-      orgId = resolvedOrgId;
+      const user = await getAuthUserWithOrg();
+      orgId = user.user_metadata?.org_id;
+      if (!orgId) {
+        throw new MissingOrgIdError();
+      }
       userId = user.id;
     } catch (err) {
       return mapAuthErrorToResponse(err);

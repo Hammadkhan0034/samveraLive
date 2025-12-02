@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireServerAuth } from './supabaseServer';
 import { supabaseAdmin } from './supabaseClient';
-import type { User } from '@supabase/supabase-js';
-import { type UserMetadata } from './types/auth';
+import { type AuthUser, type UserMetadata } from './types/auth';
 
 /**
  * Custom error class for missing organization ID
@@ -14,16 +13,7 @@ export class MissingOrgIdError extends Error {
   }
 }
 
-/**
- * Get the current authenticated user's organization ID.
- * Checks user_metadata first, then falls back to database query.
- * Throws MissingOrgIdError if org_id cannot be found after both checks.
- * 
- * @param user - Optional user object. If not provided, will get from requireServerAuth()
- * @returns Promise<string> - The organization ID
- * @throws MissingOrgIdError - If org_id is not found in metadata or database
- */
-export async function getCurrentUserOrgId(user?: User): Promise<string> {
+export async function getCurrentUserOrgId(user?: AuthUser): Promise<string> {
   // Get user from parameter or auth
   const targetUser = user ?? (await requireServerAuth()).user;
   
@@ -53,19 +43,13 @@ export async function getCurrentUserOrgId(user?: User): Promise<string> {
   return data.org_id;
 }
 
-export type AuthContext = {
-  user: User;
-  orgId: string;
-};
-
 /**
  * Convenience helper to get the authenticated user and their organization ID.
  * Wraps requireServerAuth + getCurrentUserOrgId so route handlers can stay concise.
  */
-export async function getAuthUserWithOrg(): Promise<AuthContext> {
+export async function getAuthUserWithOrg(): Promise<AuthUser> {
   const { user } = await requireServerAuth();
-  const orgId = await getCurrentUserOrgId(user);
-  return { user, orgId };
+  return user;
 }
 
 /**

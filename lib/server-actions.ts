@@ -25,7 +25,7 @@ import {
   type DeviceTokenProvider,
 } from './services/deviceTokens';
 import { createEventSchema, updateEventSchema } from './validation';
-import { getAuthUserWithOrg } from './server-helpers';
+import { getAuthUserWithOrg, MissingOrgIdError } from './server-helpers';
 
 // Example server actions with role gating
 
@@ -1018,7 +1018,11 @@ export async function getEvents(options?: {
   endDate?: string;
 }) {
   // Get authenticated user and orgId from server-side auth
-  const { user, orgId } = await getAuthUserWithOrg();
+  const user = await getAuthUserWithOrg();
+  const orgId = user.user_metadata?.org_id;
+  if (!orgId) {
+    throw new MissingOrgIdError();
+  }
   
   const supabase = supabaseAdmin ?? await createSupabaseServer();
   

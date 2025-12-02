@@ -11,11 +11,14 @@ export async function GET(request: Request) {
     }
 
     // Get authenticated user and orgId from server-side auth (no query params needed)
-    let user, orgId: string;
+    let orgId: string;
+    let user;
     try {
-      const authContext = await getAuthUserWithOrg();
-      user = authContext.user;
-      orgId = authContext.orgId;
+      user = await getAuthUserWithOrg();
+      orgId = user.user_metadata?.org_id;
+      if (!orgId) {
+        throw new MissingOrgIdError();
+      }
     } catch (err) {
       if (err instanceof MissingOrgIdError) {
         return mapAuthErrorToResponse(err);

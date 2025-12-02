@@ -7,8 +7,9 @@ import { PrincipalCalendarClient } from './PrincipalCalendarClient';
 
 async function fetchCalendarData() {
   try {
-    // Get auth context for orgId
-    const { orgId } = await getAuthUserWithOrg();
+    // Get authenticated user and derive orgId from metadata
+    const user = await getAuthUserWithOrg();
+    const orgId = user.user_metadata?.org_id || '';
     
     if (!supabaseAdmin) {
       console.error('❌ Supabase admin client not configured');

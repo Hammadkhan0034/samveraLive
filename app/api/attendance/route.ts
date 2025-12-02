@@ -35,8 +35,11 @@ export async function GET(request: Request) {
   // Authenticate user and derive orgId from server-side context
   let orgId: string
   try {
-    const { orgId: resolvedOrgId } = await getAuthUserWithOrg()
-    orgId = resolvedOrgId
+    const user = await getAuthUserWithOrg()
+    orgId = user.user_metadata?.org_id
+    if (!orgId) {
+      throw new MissingOrgIdError()
+    }
   } catch (err: unknown) {
     return mapAuthErrorToResponse(err)
   }
@@ -88,9 +91,12 @@ export async function POST(request: Request) {
   let orgId: string
   let userId: string
   try {
-    const { user, orgId: resolvedOrgId } = await getAuthUserWithOrg()
+    const user = await getAuthUserWithOrg()
     userId = user.id
-    orgId = resolvedOrgId
+    orgId = user.user_metadata?.org_id
+    if (!orgId) {
+      throw new MissingOrgIdError()
+    }
   } catch (err: unknown) {
     return mapAuthErrorToResponse(err)
   }
@@ -136,7 +142,7 @@ export async function PUT(request: Request) {
   // Authenticate user (used to ensure only authenticated users can update attendance)
   let userId: string
   try {
-    const { user } = await getAuthUserWithOrg()
+    const user = await getAuthUserWithOrg()
     userId = user.id
   } catch (err: unknown) {
     return mapAuthErrorToResponse(err)
@@ -183,8 +189,11 @@ export async function DELETE(request: Request) {
   // Authenticate user and derive orgId to scope deletion
   let orgId: string
   try {
-    const { orgId: resolvedOrgId } = await getAuthUserWithOrg()
-    orgId = resolvedOrgId
+    const user = await getAuthUserWithOrg()
+    orgId = user.user_metadata?.org_id
+    if (!orgId) {
+      throw new MissingOrgIdError()
+    }
   } catch (err: unknown) {
     return mapAuthErrorToResponse(err)
   }

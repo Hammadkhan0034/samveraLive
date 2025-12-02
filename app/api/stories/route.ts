@@ -5,7 +5,7 @@ import { requireServerAuth } from '@/lib/supabaseServer'
 import { getAuthUserWithOrg, MissingOrgIdError, mapAuthErrorToResponse } from '@/lib/server-helpers'
 import { z } from 'zod'
 import { validateQuery, validateBody, classIdSchema, userIdSchema, titleSchema, captionSchema, futureDateSchema, uuidSchema, storyIdSchema, isoDateTimeSchema, positiveNumberSchema } from '@/lib/validation'
-import type { User } from '@supabase/supabase-js'
+import type { AuthUser } from '@/lib/types/auth'
 
 // GET query parameter schema - orgId removed, now fetched server-side
 const getStoriesQuerySchema = z.object({
@@ -28,15 +28,17 @@ const getStoriesQuerySchema = z.object({
 
 export async function GET(request: Request) {
   // Declare variables at function scope to ensure proper initialization
-  let user: User | null = null;
+  let user: AuthUser | null = null;
   let orgId: string | null = null;
 
   try {
     // Get authenticated user and orgId from server-side auth (no query params needed)
     try {
-      const authContext = await getAuthUserWithOrg();
-      user = authContext.user;
-      orgId = authContext.orgId;
+      user = await getAuthUserWithOrg();
+      orgId = user.user_metadata?.org_id || null;
+      if (!orgId) {
+        throw new MissingOrgIdError();
+      }
     } catch (err) {
       if (err instanceof MissingOrgIdError) {
         return mapAuthErrorToResponse(err);
@@ -378,7 +380,7 @@ const postStoryBodySchema = z.object({
 
 export async function POST(request: Request) {
   // Declare variables at function scope to ensure proper initialization
-  let user: User | null = null;
+  let user: AuthUser | null = null;
   let orgId: string | null = null;
 
   // Get authenticated user and orgId from server-side auth
@@ -595,7 +597,7 @@ const putStoryBodySchema = z.object({
 
 export async function PUT(request: Request) {
   // Declare variables at function scope to ensure proper initialization
-  let user: User | null = null;
+  let user: AuthUser | null = null;
   let orgId: string | null = null;
 
   // Get authenticated user and orgId from server-side auth

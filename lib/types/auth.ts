@@ -10,7 +10,7 @@ export interface AuthUser {
   id: string;                    // UUID
   aud: string;                   // audience, usually "authenticated"
   role: string;                  // role (e.g. "authenticated")
-  email?: string;
+  email: string;
 
   user_metadata: UserMetadata;
 

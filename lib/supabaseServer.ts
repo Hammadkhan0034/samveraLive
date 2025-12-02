@@ -1,6 +1,8 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import type { Session } from '@supabase/supabase-js';
 import { type SamveraRole, type UserMetadata } from './auth';
+import type { AuthUser } from './types/auth';
 
 export const createSupabaseServer = async () => {
   const cookieStore = await cookies();
@@ -28,8 +30,20 @@ export const createSupabaseServer = async () => {
   );
 };
 
+export type ServerAuthError = ({ isNetworkError?: boolean } & {
+  message: string;
+  name?: string;
+  status?: number;
+}) | null;
+
+export type ServerAuthResult = {
+  user: AuthUser | null;
+  session: Session | null;
+  error: ServerAuthError;
+};
+
 // Server-side role validation helpers
-export async function getServerUser() {
+export async function getServerUser(): Promise<ServerAuthResult> {
   const supabase = await createSupabaseServer();
   const { data: { user }, error } = await supabase.auth.getUser();
   
@@ -44,29 +58,48 @@ export async function getServerUser() {
       // For network errors, try to get session from cookies as fallback
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        return { user: session.user, session, error: null };
+        return { user: session.user as unknown as AuthUser, session, error: null };
       }
       // If session also fails, return network error
-      return { user: null, session: null, error: { ...error, isNetworkError: true } };
+      return {
+        user: null,
+        session: null,
+        error: {
+          message: error.message,
+          name: error.name,
+          status: (error as any).status,
+          isNetworkError: true,
+        },
+      };
     }
   }
   
   if (error || !user) {
-    return { user: null, session: null, error };
+    return error
+      ? {
+          user: null,
+          session: null,
+          error: {
+            message: error.message,
+            name: error.name,
+            status: (error as any).status,
+          },
+        }
+      : { user: null, session: null, error: null };
   }
   
   // User is authenticated via getUser() - session is not needed for authentication
   // If session is required downstream, it can be fetched separately
-  return { user, session: null, error: null };
+  return { user: user as unknown as AuthUser, session: null, error: null };
 }
 
-export async function requireServerAuth() {
+export async function requireServerAuth(): Promise<{ user: AuthUser; session: Session | null }> {
   const { user, session, error } = await getServerUser();
   
   if (error) {
     // If it's a network error, don't throw - allow request to continue
     // Client-side will handle retry
-    if ((error as any).isNetworkError) {
+    if (error.isNetworkError) {
       throw new Error('Network error - please retry');
     }
     throw new Error('Authentication required');

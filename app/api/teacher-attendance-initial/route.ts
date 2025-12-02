@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseClient';
 import { getUserDataCacheHeaders } from '@/lib/cacheConfig';
-import { getAuthUserWithOrg, mapAuthErrorToResponse } from '@/lib/server-helpers';
+import { getAuthUserWithOrg, MissingOrgIdError, mapAuthErrorToResponse } from '@/lib/server-helpers';
 
 /**
  * Unified endpoint that returns all data needed for teacher attendance page
@@ -20,9 +20,12 @@ export async function GET(request: NextRequest) {
     let userId: string;
     let orgId: string | null = null;
     try {
-      const { user, orgId: resolvedOrgId } = await getAuthUserWithOrg();
+      const user = await getAuthUserWithOrg();
       userId = user.id;
-      orgId = resolvedOrgId;
+      orgId = user.user_metadata?.org_id || null;
+      if (!orgId) {
+        throw new MissingOrgIdError();
+      }
     } catch (err) {
       return mapAuthErrorToResponse(err);
     }
