@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { Users, Plus, Search, Edit, Trash2, Menu, CalendarDays } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
-import { useTeacherOrgId } from '@/lib/hooks/useTeacherOrgId';
 import { enText } from '@/lib/translations/en';
 import { isText } from '@/lib/translations/is';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
@@ -362,7 +361,6 @@ export default function TeacherStudentsPage() {
   const { t } = useLanguage();
   const { session } = useAuth();
   const router = useRouter();
-  const { orgId: finalOrgId } = useTeacherOrgId();
 
   // Teacher classes
   const [teacherClasses, setTeacherClasses] = useState<TeacherClass[]>([]);
@@ -424,13 +422,6 @@ export default function TeacherStudentsPage() {
 
       // Get teacher's assigned classes first
       if (teacherClasses.length === 0) {
-        setStudents([]);
-        setHasLoadedOnce(true);
-        return;
-      }
-
-      // Validate orgId before making requests
-      if (!finalOrgId) {
         setStudents([]);
         setHasLoadedOnce(true);
         return;
@@ -513,7 +504,7 @@ export default function TeacherStudentsPage() {
     } finally {
       if (showLoading) setLoadingStudents(false);
     }
-  }, [teacherClasses, finalOrgId]);
+  }, [teacherClasses]);
 
   // Create table if needed
   const createTableIfNeeded = useCallback(async () => {
@@ -528,7 +519,7 @@ export default function TeacherStudentsPage() {
 
   // Load data on mount and when dependencies change
   useEffect(() => {
-    if (!session?.user?.id || !finalOrgId) return;
+    if (!session?.user?.id) return;
 
     const loadAllData = async () => {
       // Load cached data first for instant display
@@ -559,11 +550,11 @@ export default function TeacherStudentsPage() {
     };
     
     loadAllData();
-  }, [session?.user?.id, finalOrgId, loadTeacherClasses]);
+  }, [session?.user?.id, loadTeacherClasses]);
 
   // Load students when teacher classes are loaded
   useEffect(() => {
-    if (!session?.user?.id || !finalOrgId) return;
+    if (!session?.user?.id) return;
 
     if (teacherClasses.length > 0) {
       createTableIfNeeded();
@@ -571,7 +562,7 @@ export default function TeacherStudentsPage() {
     } else if (!loadingClasses) {
       loadTeacherClasses(false);
     }
-  }, [teacherClasses.length, session?.user?.id, finalOrgId, loadingClasses, loadStudents, loadTeacherClasses, createTableIfNeeded]);
+  }, [teacherClasses.length, session?.user?.id, loadingClasses, loadStudents, loadTeacherClasses, createTableIfNeeded]);
 
   // Map student to StudentFormData
   const mapStudentToFormData = useCallback((student: Student): StudentFormData => {
@@ -586,7 +577,6 @@ export default function TeacherStudentsPage() {
       medical_notes: student.medical_notes_encrypted || '',
       allergies: student.allergies_encrypted || '',
       emergency_contact: student.emergency_contact_encrypted || '',
-      org_id: finalOrgId || '',
       guardian_ids: [],
       phone: '',
       address: '',
@@ -596,7 +586,7 @@ export default function TeacherStudentsPage() {
       student_language: 'english',
       social_security_number: ''
     };
-  }, [finalOrgId]);
+  }, []);
 
   // Edit and Delete handlers
   const openEditStudentModal = useCallback((student: Student) => {
@@ -617,8 +607,7 @@ export default function TeacherStudentsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: editingStudent.id,
-          ...formData,
-          org_id: finalOrgId
+          ...formData
         })
       });
 
@@ -637,7 +626,7 @@ export default function TeacherStudentsPage() {
     } finally {
       setUpdatingStudent(false);
     }
-  }, [editingStudent, finalOrgId, loadStudents]);
+  }, [editingStudent, loadStudents]);
 
   const openDeleteConfirm = useCallback((studentId: string) => {
     setDeletingStudentId(studentId);
@@ -761,7 +750,6 @@ export default function TeacherStudentsPage() {
           error={updateError}
           guardians={[]}
           classes={teacherClasses}
-          orgId={finalOrgId || ''}
           translations={studentFormTranslations}
         />
       )}

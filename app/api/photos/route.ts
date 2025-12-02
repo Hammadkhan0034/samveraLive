@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabaseClient';
 import { getNoCacheHeaders } from '@/lib/cacheConfig';
 import { z } from 'zod';
 import { validateQuery } from '@/lib/validation';
-import { getAuthUserWithOrg, MissingOrgIdError, mapAuthErrorToResponse } from '@/lib/server-helpers';
+import { getAuthUserWithOrg, getCurrentUserOrgId, MissingOrgIdError, mapAuthErrorToResponse } from '@/lib/server-helpers';
 
 // GET query parameter schema - orgId removed, now fetched server-side
 const getPhotosQuerySchema = z.object({

@@ -4,7 +4,6 @@ import React, { useEffect, useState, Suspense, useRef } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useRequireAuth } from '@/lib/hooks/useAuth';
-import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { StudentForm, type StudentFormData } from '@/app/components/shared/StudentForm';
 import Loading from '@/app/components/shared/Loading';
@@ -15,8 +14,6 @@ function AddStudentPageContent() {
   const { user, loading, isSigningIn } = useRequireAuth();
   const { t } = useLanguage();
 
-  // Use universal hook to get org_id (checks metadata first, then API, handles logout if missing)
-  const { orgId: finalOrgId } = useCurrentUserOrgId();
   // All users (teachers and principals) create students directly with approved status
   const defaultStatus: 'pending' | 'approved' = 'approved';
 
@@ -30,7 +27,7 @@ function AddStudentPageContent() {
   useEffect(() => {
     loadGuardians();
     loadClasses();
-  }, [finalOrgId]);
+  }, []);
 
   // Load a single student for editing if id is present
   useEffect(() => {
@@ -65,7 +62,6 @@ function AddStudentPageContent() {
             allergies: s.allergies_encrypted || '',
             emergency_contact: s.emergency_contact_encrypted || '',
             guardian_ids: guardianIds,
-            org_id: finalOrgId || ''
           };
           setEditingStudent(mapped);
         }
@@ -74,11 +70,9 @@ function AddStudentPageContent() {
       }
     };
     loadStudent();
-  }, [searchParams, finalOrgId]);
+  }, [searchParams]);
 
   async function loadGuardians() {
-    const oid = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
-    if (!oid) return;
     try {
       const res = await fetch(`/api/guardians?t=${Date.now()}`, { cache: 'no-store' });
       const json = await res.json();
@@ -90,8 +84,6 @@ function AddStudentPageContent() {
   }
 
   async function loadClasses() {
-    const oid = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
-    if (!oid) return;
     try {
       const response = await fetch(`/api/classes`, { cache: 'no-store' });
       const data = await response.json();
@@ -193,7 +185,7 @@ function AddStudentPageContent() {
             error={error}
             guardians={guardians}
             classes={classes}
-            orgId={finalOrgId || ''}
+         
             translations={{
               create_student: t.create_student,
               edit_student: t.edit_student,
