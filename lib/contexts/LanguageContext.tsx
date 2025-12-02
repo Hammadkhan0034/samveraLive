@@ -27,8 +27,8 @@ interface LanguageProviderProps {
   children: ReactNode;
 }
 
-// Default language: 'en'
-const DEFAULT_LANG: Lang = 'en';
+// Default language: 'is'
+const DEFAULT_LANG: Lang = 'is';
 
 export const LanguageProvider = ({ children }: LanguageProviderProps) => {
   const { user } = useAuth();
@@ -36,7 +36,7 @@ export const LanguageProvider = ({ children }: LanguageProviderProps) => {
   const [isLoading, setIsLoading] = useState(true);
 
   // Always start with default to prevent hydration mismatch
-  // Server and client both start with 'en'
+  // Server and client both start with 'is'
   const [lang, setLangState] = useState<Lang>(DEFAULT_LANG);
 
   // Initialize from localStorage after mount (if not logged in)

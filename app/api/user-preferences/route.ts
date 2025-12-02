@@ -22,7 +22,7 @@ export async function GET() {
     
     return NextResponse.json({
       theme: (data?.theme as 'light' | 'dark' | 'system') || 'system',
-      language: (data?.language as 'en' | 'is') || 'en',
+      language: (data?.language as 'en' | 'is') || 'is',
     });
   } catch (error) {
     return NextResponse.json(

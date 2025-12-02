@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   return (
 
-    <html lang="en" suppressHydrationWarning>
+    <html lang="is" suppressHydrationWarning>
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -55,7 +55,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   if (savedLang === 'is' || savedLang === 'en') {
                     document.documentElement.setAttribute('lang', savedLang);
                   } else {
-                    document.documentElement.setAttribute('lang', 'en');
+                    document.documentElement.setAttribute('lang', 'is');
                   }
                 } catch (e) {}
               })();

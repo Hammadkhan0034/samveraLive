@@ -112,7 +112,7 @@ CREATE TABLE IF NOT EXISTS users (
   is_staff boolean NOT NULL DEFAULT true,
   dob date,
   theme text DEFAULT 'system' CHECK (theme IN ('light','dark','system')),
-  language text DEFAULT 'en' CHECK (language IN ('en','is')),
+  language text DEFAULT 'is' CHECK (language IN ('en','is')),
   deleted_at timestamptz NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
