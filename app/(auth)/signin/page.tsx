@@ -294,11 +294,11 @@ function SignInPageContent() {
                   )}
                 </button>
 
-                <div className="text-center">
+                {/* <div className="text-center">
                   <p className="text-ds-small text-ds-text-muted dark:text-slate-400">
                     {t.no_account_yet}
                   </p>
-                </div>
+                </div> */}
               </form>
             </div>
 
