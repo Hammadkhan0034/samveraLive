@@ -6,6 +6,22 @@ export type SamveraRole = 'teacher' | 'principal' | 'parent' | 'admin';
  * Standardized interface for Supabase user_metadata
  * This ensures consistency across all user registration and update operations
  */
+export interface AuthUser {
+  id: string;                    // UUID
+  aud: string;                   // audience, usually "authenticated"
+  role: string;                  // role (e.g. "authenticated")
+  email?: string;
+
+  user_metadata: UserMetadata;
+
+  created_at: string;            // ISO timestamp
+  updated_at?: string | null;    // ISO timestamp
+  confirmed_at?: string | null;
+  email_confirmed_at?: string | null;
+  last_sign_in_at?: string | null;
+
+}
+
 export interface UserMetadata {
   /** Array of roles assigned to the user */
   roles: SamveraRole[];
