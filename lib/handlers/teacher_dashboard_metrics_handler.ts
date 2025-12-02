@@ -8,7 +8,7 @@ import { z } from 'zod';
 
 // GET query parameter schema
 const getMetricsQuerySchema = z.object({
-  userRole: z.enum(['parent', 'guardian', 'teacher', 'principal', 'admin']).optional(),
+  userRole: z.enum(['guardian', 'teacher', 'principal', 'admin']).optional(),
 });
 
 export async function handleGetTeacherDashboardMetrics(

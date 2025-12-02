@@ -794,7 +794,7 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
           shouldAdd = true;
         } else if (otherParticipant.role === 'teacher') {
           shouldAdd = true;
-        } else if (otherParticipant.role === 'guardian' || otherParticipant.role === 'parent' || !otherParticipant.role) {
+        } else if (otherParticipant.role === 'guardian' || !otherParticipant.role) {
           // Show all guardian threads - if thread exists, it means conversation already started
           shouldAdd = true;
         } else {
@@ -837,7 +837,7 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
       const beforeCount = filtered.length;
       const guardianThreads = filtered.filter(t => {
         const op = t.other_participant;
-        return op && (op.role === 'guardian' || op.role === 'parent' || !op.role);
+        return op && (op.role === 'guardian' || !op.role);
       });
       
       filtered = filtered.filter((thread: MessageThreadWithParticipants) => {
@@ -863,7 +863,7 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
       
       const guardianThreadsShown = filtered.filter(t => {
         const op = t.other_participant;
-        return op && (op.role === 'guardian' || op.role === 'parent' || !op.role);
+        return op && (op.role === 'guardian' || !op.role);
       }).length;
       
       if (beforeCount !== filtered.length || guardianThreads.length > 0) {

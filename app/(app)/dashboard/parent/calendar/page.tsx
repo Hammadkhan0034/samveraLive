@@ -183,7 +183,7 @@ export default function ParentCalendarPage() {
             <Calendar
               orgId={(session?.user?.user_metadata as any)?.org_id || ''}
               classId={derivedClassId}
-              userRole="parent"
+              userRole="guardian"
               canEdit={false}
               events={calendarEvents}
               onEventClick={(event) => {

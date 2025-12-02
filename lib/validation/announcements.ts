@@ -16,7 +16,7 @@ export const getAnnouncementsQuerySchema = z.object({
   ),
   userId: userIdSchema.optional(),
   userRole: z
-    .enum(['parent', 'guardian', 'teacher', 'principal', 'admin'])
+    .enum(['guardian', 'teacher', 'principal', 'admin'])
     .optional(),
 });
 

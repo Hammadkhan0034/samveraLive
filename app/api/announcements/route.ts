@@ -5,7 +5,7 @@ export async function GET(request: Request) {
   return withAuthRoute(
     request,
     {
-      allowedRoles: ['principal', 'admin', 'teacher', 'parent'],
+      allowedRoles: ['principal', 'admin', 'teacher', 'guardian'],
     },
     (user, adminClient) => handleGetAnnouncements(request, user, adminClient)
   )

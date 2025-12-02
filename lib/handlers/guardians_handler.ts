@@ -107,8 +107,8 @@ export async function handlePostGuardian(
   if (!existingAuthUser) {
     const defaultPassword = 'test123456';
     const userMetadata: UserMetadata = {
-      roles: ['parent'],
-      activeRole: 'parent',
+      roles: ['guardian'],
+      activeRole: 'guardian',
       org_id: orgId,
     };
     
@@ -181,8 +181,8 @@ export async function handlePostGuardian(
   // Update auth user metadata with org
   try {
     const userMetadata: UserMetadata = {
-      roles: ['parent'],
-      activeRole: 'parent',
+      roles: ['guardian'],
+      activeRole: 'guardian',
       org_id: orgId,
     };
     

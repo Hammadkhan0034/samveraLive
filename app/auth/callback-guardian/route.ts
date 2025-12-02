@@ -51,8 +51,8 @@ export async function GET(request: Request) {
           throw new Error('org_id is required but not provided')
         }
         const userMetadata: UserMetadata = {
-          roles: ['parent'],
-          activeRole: 'parent',
+          roles: ['guardian'],
+          activeRole: 'guardian',
           org_id: actualOrgId,
         };
         

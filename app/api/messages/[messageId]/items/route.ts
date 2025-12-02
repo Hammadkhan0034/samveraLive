@@ -23,7 +23,7 @@ export async function GET(
     request,
     {
       requireOrg: true,
-      allowedRoles: ['principal', 'admin', 'teacher', 'parent', 'guardian'],
+      allowedRoles: ['principal', 'admin', 'teacher', 'guardian'],
     },
     (user, adminClient) => handleGetMessageItems(request, user, adminClient, messageId)
   );
@@ -44,7 +44,7 @@ export async function POST(
     request,
     {
       requireOrg: true,
-      allowedRoles: ['principal', 'admin', 'teacher', 'parent', 'guardian'],
+      allowedRoles: ['principal', 'admin', 'teacher', 'guardian'],
     },
     (user, adminClient) => handlePostMessageItem(request, user, adminClient, messageId)
   );

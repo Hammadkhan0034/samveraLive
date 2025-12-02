@@ -9,7 +9,7 @@ import MessagesPanel from '@/app/components/shared/MessagesPanel';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 
 export default function GuardianMessagesPage() {
-  const { user, loading } = useRequireAuth('parent');
+  const { user, loading } = useRequireAuth('guardian');
   const { t, lang } = useLanguage();
   const router = useRouter();
 

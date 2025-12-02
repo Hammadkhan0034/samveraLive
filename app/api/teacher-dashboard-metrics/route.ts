@@ -6,7 +6,7 @@ export async function GET(request: Request) {
     request,
     {
       requireOrg: true,
-      allowedRoles: ['teacher', 'principal', 'admin', 'parent', 'guardian'],
+      allowedRoles: ['teacher', 'principal', 'admin', 'guardian'],
     },
     (user, adminClient) => handleGetTeacherDashboardMetrics(request, user, adminClient)
   );

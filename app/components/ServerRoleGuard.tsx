@@ -123,7 +123,7 @@ export async function UserPermissionsDisplay() {
     isAdmin: await hasPermission('admin'),
     isPrincipal: await hasPermission('principal'),
     isTeacher: await hasPermission('teacher'),
-    isParent: await hasPermission('parent'),
+    isGuardian: await hasPermission('guardian'),
     canManageUsers: await hasAnyPermission(['admin', 'principal']),
     canCreateContent: await hasMinimumPermission('teacher'),
   };
@@ -156,8 +156,8 @@ export async function UserPermissionsDisplay() {
           <li className={permissions.isTeacher ? 'text-green-600' : 'text-gray-400'}>
             ✓ Teacher Access: {permissions.isTeacher ? 'Yes' : 'No'}
           </li>
-          <li className={permissions.isParent ? 'text-green-600' : 'text-gray-400'}>
-            ✓ Parent Access: {permissions.isParent ? 'Yes' : 'No'}
+          <li className={permissions.isGuardian ? 'text-green-600' : 'text-gray-400'}>
+            ✓ Guardian Access: {permissions.isGuardian ? 'Yes' : 'No'}
           </li>
           <li className={permissions.canManageUsers ? 'text-green-600' : 'text-gray-400'}>
             ✓ Can Manage Users: {permissions.canManageUsers ? 'Yes' : 'No'}

@@ -6,7 +6,7 @@ import { type UserMetadata, type SamveraRole } from './types/auth';
 export async function createTestUser(
   email: string, 
   password: string, 
-  role: SamveraRole = 'parent',
+  role: SamveraRole = 'guardian',
   fullName?: string
 ) {
   if (!supabaseAdmin) {
@@ -49,11 +49,11 @@ export async function createTestUser(
 
 // Pre-configured test credentials for roles
 export const TEST_USERS = {
-  parent: {
-    email: 'parent@samvera.test',
-    password: 'parent123456',
-    role: 'parent' as const,
-    fullName: 'Parent Test',
+  guardian: {
+    email: 'guardian@samvera.test',
+    password: 'guardian123456',
+    role: 'guardian' as const,
+    fullName: 'Guardian Test',
   },
   teacher: {
     email: 'teacher@samvera.test',
@@ -76,7 +76,7 @@ export const TEST_USERS = {
 } as const;
 
 export async function createDefaultTestUser() {
-  const u = TEST_USERS.parent;
+  const u = TEST_USERS.guardian;
   return createTestUser(u.email, u.password, u.role, u.fullName);
 }
 
@@ -85,8 +85,8 @@ export async function createAdminUser() {
   return createTestUser(u.email, u.password, u.role, u.fullName);
 }
 
-export async function createParentUser() {
-  const u = TEST_USERS.parent;
+export async function createGuardianUser() {
+  const u = TEST_USERS.guardian;
   return createTestUser(u.email, u.password, u.role, u.fullName);
 }
 

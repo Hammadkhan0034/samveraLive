@@ -6,7 +6,7 @@ import { type UserMetadata, type SamveraRole } from '@/lib/types/auth';
 export async function createUserAuthEntry (
   email: string, 
   password: string, 
-  role: SamveraRole = 'parent',
+  role: SamveraRole = 'guardian',
   fullName?: string
 ) {
   if (!supabaseAdmin) {

@@ -32,9 +32,9 @@ export default function ParentDashboard() {
     router.prefetch('/dashboard/menus-view');
     router.prefetch('/dashboard/stories');
     router.prefetch('/dashboard/attendance');
-    router.prefetch('/dashboard/parent/messages');
-    router.prefetch('/dashboard/parent/calendar');
-    router.prefetch('/dashboard/parent/diapers');
+    router.prefetch('/dashboard/guardian/messages');
+    router.prefetch('/dashboard/guardian/calendar');
+    router.prefetch('/dashboard/guardian/diapers');
   }, [router]);
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
@@ -481,8 +481,8 @@ export default function ParentDashboard() {
 
   const items: FeatureItem[] = [
     { href: '/notices', title: t.notices, desc: t.notices_desc, Icon: Bell },
-    { href: '/dashboard/parent/messages', title: t.messages, desc: t.messages_desc, Icon: MessageSquare, badge: messagesCount > 0 ? messagesCount : undefined },
-    { href: '/dashboard/parent/media', title: t.media, desc: t.media_desc, Icon: Camera },
+    { href: '/dashboard/guardian/messages', title: t.messages, desc: t.messages_desc, Icon: MessageSquare, badge: messagesCount > 0 ? messagesCount : undefined },
+    { href: '/dashboard/guardian/media', title: t.media, desc: t.media_desc, Icon: Camera },
     { href: '#', title: t.stories, desc: t.stories_desc, Icon: FileText },
     { href: '#', title: t.menu, desc: t.menu_desc, Icon: Utensils },
     { href: '#', title: t.attendance, desc: t.attendance_desc, Icon: ClipboardCheck },
@@ -515,7 +515,7 @@ export default function ParentDashboard() {
         lang={lang}
         orgId={(session?.user?.user_metadata as any)?.org_id}
         userId={session?.user?.id}
-        userRole="parent"
+        userRole="guardian"
         parentClassIds={linkedStudents.map(s => s.class_id).filter(Boolean) as string[]}
       />
 
@@ -525,8 +525,8 @@ export default function ParentDashboard() {
           {/* Calendar Card - Same design as Teacher Dashboard KPI */}
           <button
             onClick={() => {
-              router.prefetch('/dashboard/parent/calendar');
-              router.push('/dashboard/parent/calendar');
+              router.prefetch('/dashboard/guardian/calendar');
+              router.push('/dashboard/guardian/calendar');
             }}
             className="block rounded-ds-lg p-ds-md shadow-ds-card hover:shadow-ds-lg transition-all duration-200 bg-pale-blue dark:bg-slate-800 text-left w-full cursor-pointer"
           >
@@ -552,7 +552,7 @@ export default function ParentDashboard() {
                 if (item.title === t.menu) return '/dashboard/menus-view';
                 if (item.title === t.stories) return '/dashboard/stories';
                 if (item.title === t.attendance) return '/dashboard/attendance';
-                if (item.title === (t.di_title || 'Diapers & Health')) return '/dashboard/parent/diapers';
+                if (item.title === (t.di_title || 'Diapers & Health')) return '/dashboard/guardian/diapers';
                 return '#';
               };
               return (
@@ -570,8 +570,8 @@ export default function ParentDashboard() {
                       router.prefetch('/dashboard/attendance');
                       router.push('/dashboard/attendance');
                     } else if (item.title === (t.di_title || 'Diapers & Health')) {
-                      router.prefetch('/dashboard/parent/diapers');
-                      router.push('/dashboard/parent/diapers');
+                      router.prefetch('/dashboard/guardian/diapers');
+                      router.push('/dashboard/guardian/diapers');
                     }
                   }}
                   className={`block rounded-ds-lg p-ds-md shadow-ds-card hover:shadow-ds-lg transition-all duration-200 ${bgColor} text-left w-full cursor-pointer`}
@@ -646,7 +646,7 @@ export default function ParentDashboard() {
               classId={(session?.user?.user_metadata as any)?.class_id}
               orgId={(session?.user?.user_metadata as any)?.org_id}
               userId={session?.user?.id}
-              userRole={(session?.user?.user_metadata as any)?.role || (session?.user?.user_metadata as any)?.activeRole || 'parent'}
+              userRole={(session?.user?.user_metadata as any)?.role || (session?.user?.user_metadata as any)?.activeRole || 'guardian'}
               showAuthor={false}
               limit={3}
               lang={lang}

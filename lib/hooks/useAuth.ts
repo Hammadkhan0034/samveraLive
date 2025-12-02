@@ -66,7 +66,7 @@ export function useRequireAuth(requiredRole?: SamveraRole | SamveraRole[]) {
               ? '/dashboard/teacher'
               : defaultRole === 'admin'
               ? '/dashboard/admin'
-              : '/dashboard/parent';
+              : '/dashboard/guardian';
             router.push(path);
             return;
           }

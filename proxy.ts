@@ -5,7 +5,7 @@ import { type SamveraRole, type UserMetadata } from '@/lib/auth';
 const ROLE_PATHS: Record<SamveraRole, string> = {
   teacher: '/dashboard/teacher',
   principal: '/dashboard/principal',
-  parent: '/dashboard/parent',
+  guardian: '/dashboard/guardian',
   admin: '/dashboard/admin',
 };
 
@@ -14,7 +14,7 @@ const ROLE_HIERARCHY: Record<SamveraRole, number> = {
   admin: 4,
   principal: 3,
   teacher: 2,
-  parent: 1,
+  guardian: 1,
 };
 
 // Protected routes and their required roles
@@ -22,7 +22,7 @@ const PROTECTED_ROUTES = [
   { path: '/dashboard/teacher', roles: ['teacher', 'principal', 'admin'] },
   { path: '/dashboard/principal/students', roles: ['principal'] },
   { path: '/dashboard/principal', roles: ['principal', 'admin'] },
-  { path: '/dashboard/parent', roles: ['parent'] },
+  { path: '/dashboard/guardian', roles: ['guardian'] },
   { path: '/dashboard/admin', roles: ['admin'] },
 ] as const;
 
@@ -84,7 +84,7 @@ export async function proxy(req: NextRequest) {
             ? activeRole
             : userRoles.length > 0
             ? userRoles[0]
-            : 'parent'; // fallback
+            : 'guardian'; // fallback
           
           const url = req.nextUrl.clone();
           url.pathname = ROLE_PATHS[preferredRole];

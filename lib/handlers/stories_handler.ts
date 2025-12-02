@@ -23,7 +23,7 @@ const getStoriesQuerySchema = z.object({
   classId: classIdSchema.optional(),
   includeDeleted: z.coerce.boolean().optional(),
   onlyPublic: z.coerce.boolean().optional(),
-  audience: z.enum(['principal', 'teacher', 'parent']).optional(),
+  audience: z.enum(['principal', 'teacher', 'guardian']).optional(),
   teacherClassId: uuidSchema.nullable().optional(),
   teacherClassIds: z.string().optional(), // comma-separated class ids
   teacherAuthorId: userIdSchema.optional(),
@@ -120,7 +120,7 @@ export async function handleGetStories(
         console.log('⚠️ No teacher class IDs provided, showing org-wide stories only');
         query = query.is('class_id', null);
       }
-    } else if (audience === 'parent') {
+    } else if (audience === 'guardian') {
       // Parents should see:
       // 1. ALL org-wide stories (principal's stories) - not just public ones
       // 2. Class-specific stories for their children (teacher's class stories)
@@ -164,7 +164,7 @@ export async function handleGetStories(
             }
           }
         } catch (e) {
-          console.error('Error fetching parent class IDs:', e);
+          console.error('Error fetching guardian class IDs:', e);
         }
       }
 
@@ -198,7 +198,7 @@ export async function handleGetStories(
     // Note: Organization-wide stories (class_id is null) are visible to:
     // - Principal (who created them)
     // - All Teachers (via audience=teacher filter)
-    // - All Parents (via audience=parent filter)
+    // - All Guardians (via audience=guardian filter)
     //
     // Class-specific stories are visible to:
     // - Principal (who created them, via principalAuthorId filter)

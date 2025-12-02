@@ -473,7 +473,7 @@ export async function switchUserRole(newRole: SamveraRole) {
   const rolePaths = {
     teacher: '/dashboard/teacher',
     principal: '/dashboard/principal',
-    parent: '/dashboard/parent',
+    guardian: '/dashboard/guardian',
     admin: '/dashboard/admin',
   };
   
@@ -1040,8 +1040,8 @@ export async function getEvents(options?: {
   const userMetadata = user.user_metadata as UserMetadata | undefined;
   const role = userMetadata?.activeRole || userMetadata?.roles?.[0];
   
-  if (role === 'parent') {
-    // Parents: only events for their child's class or org-wide
+  if (role === 'guardian') {
+    // Guardians: only events for their child's class or org-wide
     if (options?.classId) {
       query = query.or(`class_id.eq.${options.classId},class_id.is.null`);
     } else {

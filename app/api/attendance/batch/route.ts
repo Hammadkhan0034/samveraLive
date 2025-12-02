@@ -10,7 +10,7 @@ export async function POST(request: Request) {
     request,
     {
       requireOrg: true,
-      allowedRoles: ['principal', 'admin', 'teacher', 'parent'],
+      allowedRoles: ['principal', 'admin', 'teacher', 'guardian'],
     },
     (user, adminClient) =>
       handlePostBatchAttendance(request, user, adminClient),

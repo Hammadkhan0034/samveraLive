@@ -9,7 +9,7 @@ import Loading from '@/app/components/shared/Loading';
 
 export default function ParentDashboardPage() {
   const router = useRouter();
-  const { user, loading, isSigningIn } = useRequireAuth('parent');
+  const { user, loading, isSigningIn } = useRequireAuth('guardian');
 
   // Only show loading if we're actually loading and don't have a user yet
   if (loading && !user) {

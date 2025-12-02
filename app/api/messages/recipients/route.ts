@@ -6,7 +6,7 @@ export async function GET(request: Request) {
     request,
     {
       requireOrg: true,
-      allowedRoles: ['principal', 'admin', 'teacher', 'parent', 'guardian'],
+      allowedRoles: ['principal', 'admin', 'teacher', 'guardian'],
     },
     (user, adminClient) => handleGetRecipients(request, user, adminClient)
   );

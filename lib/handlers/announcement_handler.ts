@@ -84,7 +84,7 @@ export async function handleGetAnnouncements(
   let principalIdsSet = new Set<string>(); // For use in post-processing
   let finalTeacherIds: string[] = []; // For use in post-processing
 
-  if (userId && (userRole === 'parent' || userRole === 'guardian')) {
+  if (userId && userRole === 'guardian') {
     isGuardian = true;
     try {
       // Get all students linked to this guardian

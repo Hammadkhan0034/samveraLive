@@ -23,7 +23,7 @@ export async function GET(
     request,
     {
       requireOrg: true,
-      allowedRoles: ['principal', 'admin', 'teacher', 'parent'],
+      allowedRoles: ['principal', 'admin', 'teacher', 'guardian'],
     },
     (user, adminClient) => handleGetStory(request, user, adminClient, storyId)
   )

@@ -127,7 +127,7 @@ export default function Navbar({ variant = 'fixed' }: NavbarProps) {
             onClick={async () => {
               await signOut();
               // Don't redirect to signin if we're on parent dashboard
-              if (!pathname?.startsWith('/dashboard/parent')) {
+              if (!pathname?.startsWith('/dashboard/guardian')) {
                 router.replace('/signin');
               }
             }}

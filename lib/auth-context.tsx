@@ -231,7 +231,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUser(null);
             setLoading(false);
             // Only redirect if we're not already on signin page and not on parent dashboard
-            if (typeof window !== 'undefined' && window.location.pathname !== '/signin' && !window.location.pathname.startsWith('/dashboard/parent')) {
+            if (typeof window !== 'undefined' && window.location.pathname !== '/signin' && !window.location.pathname.startsWith('/dashboard/guardian')) {
               window.location.replace('/signin');
             }
             return;
@@ -611,7 +611,7 @@ function getRolePath(role: SamveraRole): string {
   const rolePaths = {
     teacher: '/dashboard/teacher',
     principal: '/dashboard/principal',
-    parent: '/dashboard/parent',
+    guardian: '/dashboard/guardian',
     admin: '/dashboard/admin',
   };
   return rolePaths[role];

@@ -104,13 +104,8 @@ export async function handleGetMessages(
       ? (Array.isArray(otherParticipant.users) ? otherParticipant.users[0] : otherParticipant.users)
       : null;
 
-    // Determine role with normalization
+    // Determine role
     let participantRole = otherParticipantData?.role || (otherParticipant ? otherParticipant.role : null);
-    
-    // Normalize 'parent' role to 'guardian' for consistent display
-    if (participantRole === 'parent') {
-      participantRole = 'guardian';
-    }
 
     threadMap.set(message.id, {
       ...message,
@@ -357,7 +352,7 @@ export async function handleGetRecipients(
     allowedRoles = ['teacher', 'guardian', 'principal'];
   } else if (userRole === 'teacher') {
     allowedRoles = ['principal', 'guardian', 'teacher'];
-  } else if (userRole === 'guardian' || userRole === 'parent') {
+  } else if (userRole === 'guardian') {
     allowedRoles = ['teacher', 'principal'];
   }
 

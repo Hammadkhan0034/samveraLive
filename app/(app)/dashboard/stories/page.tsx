@@ -56,7 +56,7 @@ function StoriesPageContent() {
     userMetadata?.role || userMetadata?.user_type || userMetadata?.account_type || userMetadata?.type || userMetadata?.activeRole || ''
   ).toLowerCase();
   const isTeacher = /teacher/.test(roleRaw);
-  const isParent = /parent|guardian/.test(roleRaw);
+  const isGuardian = /guardian/.test(roleRaw);
   const isPrincipal = /principal|admin|head/.test(roleRaw);
   const canCreateStory = isTeacher || isPrincipal;
 
@@ -261,7 +261,7 @@ function StoriesPageContent() {
         userMetadata?.role || userMetadata?.user_type || userMetadata?.account_type || userMetadata?.type || userMetadata?.activeRole || ''
       ).toLowerCase();
       const isTeacher = /teacher/.test(roleRaw);
-      const isParent = /parent|guardian/.test(roleRaw);
+      const isGuardian = /guardian/.test(roleRaw);
       const isPrincipal = /principal|admin|head/.test(roleRaw);
 
       const params = new URLSearchParams({ orgId });
@@ -274,8 +274,8 @@ function StoriesPageContent() {
           // Fallback to metadata class_id if teacher classes not loaded yet
           params.set('teacherClassIds', classId);
         }
-      } else if (isParent) {
-        params.set('audience', 'parent');
+      } else if (isGuardian) {
+        params.set('audience', 'guardian');
         params.set('parentUserId', user?.id || '');
         // try to gather potential class ids from metadata (fallback)
         const parentClassIds: string[] = ([] as string[])

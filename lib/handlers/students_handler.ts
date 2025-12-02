@@ -125,7 +125,7 @@ export async function handleGetStudents(
 ): Promise<NextResponse> {
   const metadata = user.user_metadata as UserMetadata | undefined;
   const roles = (metadata?.roles ?? []) as SamveraRole[];
-  const activeRole = metadata?.activeRole || metadata?.role;
+  const activeRole = metadata?.activeRole;
   const orgId = metadata?.org_id;
 
   if (!orgId) {
@@ -140,9 +140,7 @@ export async function handleGetStudents(
     ['principal', 'admin', 'teacher'].includes(role),
   );
   const isParentGuardian =
-    activeRole === 'parent' ||
     activeRole === 'guardian' ||
-    roles.includes('parent') ||
     roles.includes('guardian');
 
   if (!isPrincipalAdminTeacher && !isParentGuardian) {

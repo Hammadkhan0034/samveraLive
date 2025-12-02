@@ -23,7 +23,7 @@ export default function AuthCallback() {
         if (user) {
           // User is authenticated, redirect based on role
           const userMetadata = user.user_metadata as UserMetadata | undefined;
-          const userRole: 'teacher' | 'principal' | 'parent' | 'admin' = (userMetadata?.activeRole || userMetadata?.roles?.[0] || 'teacher') as 'teacher' | 'principal' | 'parent' | 'admin';
+          const userRole: 'teacher' | 'principal' | 'guardian' | 'admin' = (userMetadata?.activeRole || userMetadata?.roles?.[0] || 'teacher') as 'teacher' | 'principal' | 'guardian' | 'admin';
           
           // Update user as active in public.users table
           const response = await fetch('/api/staff/verify', {

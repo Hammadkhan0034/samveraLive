@@ -88,8 +88,8 @@ export async function GET(request: Request) {
     // Update auth metadata
     try {
       const userMetadata: UserMetadata = {
-        roles: ['parent'],
-        activeRole: 'parent',
+        roles: ['guardian'],
+        activeRole: 'guardian',
         org_id: org_id!, // Already validated above
       };
       
@@ -100,7 +100,7 @@ export async function GET(request: Request) {
 
     // Redirect to signin with message
     const origin = new URL(request.url).origin
-    return NextResponse.redirect(`${origin}/signin?message=invitation_accepted&role=parent`)
+    return NextResponse.redirect(`${origin}/signin?message=invitation_accepted&role=guardian`)
   } catch (err: any) {
     return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 })
   }

@@ -8,7 +8,7 @@ import { getAuth, switchRole, type SamveraRole } from '@/lib/auth';
 const roleToPath: Record<SamveraRole, string> = {
   teacher: '/dashboard/teacher',
   principal: '/dashboard/principal',
-  parent: '/dashboard/parent',
+  guardian: '/dashboard/guardian',
   admin: '/dashboard/admin',
 };
 

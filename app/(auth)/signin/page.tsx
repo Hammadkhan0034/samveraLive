@@ -49,7 +49,7 @@ function SignInPageContent() {
           ? '/dashboard/teacher'
           : userRole === 'admin'
           ? '/dashboard/admin'
-          : '/dashboard/parent';
+          : '/dashboard/guardian';
         router.replace(path);
       }
     }

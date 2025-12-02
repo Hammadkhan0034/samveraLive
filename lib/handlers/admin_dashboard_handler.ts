@@ -54,11 +54,11 @@ export async function handleGetAdminDashboard(
       // Continue with count = 0
     }
 
-    // Total guardians/parents (count where role='guardian' or role='parent')
+    // Total guardians (count where role='guardian')
     const { count: totalGuardiansCount, error: guardiansCountError } = await adminClient
       .from('users')
       .select('*', { count: 'exact', head: true })
-      .in('role', ['guardian', 'parent'])
+      .eq('role', 'guardian')
       .is('deleted_at', null);
 
     if (guardiansCountError) {
@@ -170,7 +170,7 @@ export async function handleGetAdminDashboard(
     const { data: guardiansData, error: guardiansError } = await adminClient
       .from('users')
       .select('id,email,phone,first_name,last_name,org_id,role,is_active,created_at')
-      .in('role', ['guardian', 'parent'])
+      .eq('role', 'guardian')
       .is('deleted_at', null)
       .order('created_at', { ascending: false });
 

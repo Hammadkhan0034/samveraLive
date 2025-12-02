@@ -38,7 +38,7 @@ interface StoryColumnProps {
   lang?: 'en' | 'is';
   orgId?: string | null;
   userId?: string | null;
-  userRole?: 'principal' | 'teacher' | 'parent';
+  userRole?: 'principal' | 'teacher' | 'guardian';
   teacherClassIds?: string[];
   parentClassIds?: string[];
 }
@@ -94,8 +94,8 @@ export default function StoryColumn({
     ).toLowerCase();
     if (/principal|admin|head/.test(roleRaw)) return 'principal';
     if (/teacher/.test(roleRaw)) return 'teacher';
-    if (/parent|guardian/.test(roleRaw)) return 'parent';
-    return 'parent'; // default
+    if (/guardian/.test(roleRaw)) return 'guardian';
+    return 'guardian'; // default
   }, [userRole, session]);
 
   // Hydrate from cache instantly on mount
@@ -183,8 +183,8 @@ export default function StoryColumn({
           } else {
             console.log('⚠️ StoryColumn: No teacherClassIds provided, using teacherAuthorId only');
           }
-        } else if (effectiveUserRole === 'parent') {
-          params.set('audience', 'parent');
+        } else if (effectiveUserRole === 'guardian') {
+          params.set('audience', 'guardian');
           if (effectiveUserId) {
             params.set('parentUserId', effectiveUserId);
           }

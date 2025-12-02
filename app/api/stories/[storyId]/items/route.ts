@@ -23,7 +23,7 @@ export async function POST(
     request,
     {
       requireOrg: true,
-      allowedRoles: ['principal', 'admin', 'teacher', 'parent'],
+      allowedRoles: ['principal', 'admin', 'teacher', 'guardian'],
     },
     (user, adminClient) => handlePostStoryItems(request, user, adminClient, storyId)
   )
@@ -44,7 +44,7 @@ export async function DELETE(
     request,
     {
       requireOrg: true,
-      allowedRoles: ['principal', 'admin', 'teacher', 'parent'],
+      allowedRoles: ['principal', 'admin', 'teacher', 'guardian'],
     },
     (user, adminClient) => handleDeleteStoryItems(request, user, adminClient, storyId)
   )

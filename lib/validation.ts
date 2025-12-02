@@ -83,8 +83,8 @@ export const nonNegativeIntSchema = z.number().int().nonnegative({ message: 'Mus
 /**
  * Role enum
  */
-export const roleSchema = z.enum(['admin', 'principal', 'teacher', 'guardian', 'parent', 'student'], {
-  errorMap: () => ({ message: 'Invalid role. Must be one of: admin, principal, teacher, guardian, parent, student' })
+export const roleSchema = z.enum(['admin', 'principal', 'teacher', 'guardian', 'student'], {
+  errorMap: () => ({ message: 'Invalid role. Must be one of: admin, principal, teacher, guardian, student' })
 });
 
 /**

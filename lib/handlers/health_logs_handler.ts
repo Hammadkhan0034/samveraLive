@@ -119,16 +119,16 @@ export async function handleGetHealthLogs(
 
     // Role-based filtering:
     // - Teachers: only their own logs (recorded_by)
-    // - Parents: all logs for their linked students (not just ones they recorded)
+    // - Guardians: all logs for their linked students (not just ones they recorded)
     // - Admins/Principals: all logs in their org
     const isAdminOrPrincipal = roles.some((role) =>
       ['admin', 'principal'].includes(role),
     );
-    const isParent = roles.some((role) => role === 'parent');
+    const isGuardian = roles.some((role) => role === 'guardian');
     const isTeacher = roles.some((role) => role === 'teacher');
 
-    if (isParent) {
-      // For parents, fetch linked students and filter by student_id
+    if (isGuardian) {
+      // For guardians, fetch linked students and filter by student_id
       const { data: relationships, error: relError } = await adminClient
         .from('guardian_students')
         .select('student_id')

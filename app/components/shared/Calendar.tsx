@@ -22,7 +22,7 @@ export interface CalendarEvent {
 export interface CalendarProps {
   orgId: string;
   classId?: string | null;
-  userRole: 'principal' | 'teacher' | 'parent';
+  userRole: 'principal' | 'teacher' | 'guardian';
   canEdit: boolean;
   events: CalendarEvent[];
   onEventClick?: (event: CalendarEvent) => void;

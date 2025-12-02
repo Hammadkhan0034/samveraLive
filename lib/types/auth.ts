@@ -1,6 +1,6 @@
 // Authentication and user types for Supabase integration
 
-export type SamveraRole = 'teacher' | 'principal' | 'parent' | 'admin';
+export type SamveraRole = 'teacher' | 'principal' | 'admin' | 'guardian';
 
 /**
  * Standardized interface for Supabase user_metadata
@@ -89,7 +89,7 @@ export interface AuthState {
 export const ROLE_MAPPING = {
   teacher: 2,    // staff role
   principal: 1,  // admin role  
-  parent: 3      // guardian role
+  guardian: 3    // guardian role
 } as const;
 
 // Role permissions
@@ -118,7 +118,7 @@ export const ROLE_PERMISSIONS = {
     'messages:read',
     'messages:write'
   ],
-  parent: [
+  guardian: [
     'children:read_own',
     'attendance:read_own',
     'media:read_own',

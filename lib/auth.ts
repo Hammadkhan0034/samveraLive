@@ -1,5 +1,5 @@
 // /lib/auth.ts
-export type SamveraRole = 'teacher' | 'principal' | 'parent' | 'admin';
+export type SamveraRole = 'teacher' | 'principal' | 'admin' | 'guardian';
 
 // Re-export UserMetadata from types
 export type { UserMetadata } from './types/auth';
@@ -48,7 +48,7 @@ export function signOut() {
 export const ROLE_PATHS = {
   teacher: '/dashboard/teacher',
   principal: '/dashboard/principal',
-  parent: '/dashboard/parent',
+  guardian: '/dashboard/guardian',
   admin: '/dashboard/admin',
 } as const;
 

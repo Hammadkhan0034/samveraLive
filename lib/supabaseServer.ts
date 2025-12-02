@@ -133,12 +133,12 @@ export async function requireServerRoles(requiredRoles: SamveraRole[]) {
   return { user, roles: userRoles, activeRole };
 }
 
-// Role hierarchy validation (admin > principal > teacher > parent)
+// Role hierarchy validation (admin > principal > teacher > guardian)
 const ROLE_HIERARCHY: Record<SamveraRole, number> = {
   admin: 4,
   principal: 3,
   teacher: 2,
-  parent: 1,
+  guardian: 1,
 };
 
 export async function requireServerRoleLevel(minimumRole: SamveraRole) {

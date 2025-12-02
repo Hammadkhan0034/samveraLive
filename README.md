@@ -1,7 +1,7 @@
 ## Samvera
 
 Samvera is a role‑based school communication and administration dashboard built with **Next.js 16 (App Router)**, **TypeScript**, **Tailwind CSS**, **Supabase**, and **Firebase Cloud Messaging**.  
-It supports multiple roles (`teacher`, `principal`, `parent`, `admin`) with separate dashboards, announcements, attendance, menus, notifications, and push messaging.
+It supports multiple roles (`teacher`, `principal`, `guardian`, `admin`) with separate dashboards, announcements, attendance, menus, notifications, and push messaging.
 
 ---
 
@@ -70,7 +70,7 @@ npm run serve
 - **`npm run lint`**: Run Next.js/ESLint
 - **`npm run create:admin`**: Create an initial admin user (`lib/createAdminUser.ts`)
 - **`npm run create:user`**: Create a user via helper script (expects CLI arguments; see script source)
-- **`npm run create:test:all`**: Seed test users (teachers, principals, parents) for development
+- **`npm run create:test:all`**: Seed test users (teachers, principals, guardians) for development
 - **`npm run test:otp`**: Test Supabase OTP email sending
 - **`npm run fix:principal-org`**: Fix principal org mapping in data
 - **`npm run test:invitation`**: Test invitation acceptance flow
@@ -206,15 +206,15 @@ Samvera is role-based, aligned with `SamveraRole` from `lib/auth.ts`:
 
 - **teacher** → `/dashboard/teacher`
 - **principal** → `/dashboard/principal`
-- **parent** → `/dashboard/parent`
+- **guardian** → `/dashboard/guardian`
 - **admin** → `/dashboard/admin`
 
 User metadata in Supabase is expected to include:
 
 ```ts
 {
-  roles: ('teacher' | 'principal' | 'parent' | 'admin')[];
-  activeRole: 'teacher' | 'principal' | 'parent' | 'admin';
+  roles: ('teacher' | 'principal' | 'guardian' | 'admin')[];
+  activeRole: 'teacher' | 'principal' | 'guardian' | 'admin';
   org_id: string;
 }
 ```
