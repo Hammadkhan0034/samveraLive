@@ -18,11 +18,7 @@ export const getAttendanceQuerySchema = z.object({
   date: dateSchema.optional(),
 });
 
-/**
- * Request body for POST /api/attendance
- *
- * Note: All field names are kept in snake_case to match the existing API surface.
- */
+
 export const postAttendanceBodySchema = z.object({
   class_id: classIdSchema.optional(),
   student_id: studentIdSchema,

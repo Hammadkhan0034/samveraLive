@@ -7,7 +7,7 @@ export async function GET(request: Request) {
     {
       allowedRoles: ['principal', 'admin', 'teacher', 'parent'],
     },
-    (user) => handleGetAnnouncements(request, user)
+    (user, adminClient) => handleGetAnnouncements(request, user, adminClient)
   )
 }
 

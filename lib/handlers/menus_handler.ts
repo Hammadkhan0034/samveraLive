@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { getStableDataCacheHeaders } from '@/lib/cacheConfig';
-import { supabaseAdmin } from '@/lib/supabaseClient';
 import {
   classIdSchema,
   dateSchema,
@@ -13,6 +12,7 @@ import {
   validateQuery,
 } from '@/lib/validation';
 import type { AuthUser, SamveraRole, UserMetadata } from '@/lib/types/auth';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 type UpsertMenuPayload = {
   class_id?: string | null;
@@ -42,17 +42,11 @@ type FetchMenusArgs = {
   day?: string;
 };
 
-export async function handleGetMenus(request: Request, user: AuthUser) {
-  if (!supabaseAdmin) {
-    return NextResponse.json(
-      {
-        error:
-          'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local',
-      },
-      { status: 500 },
-    );
-  }
-
+export async function handleGetMenus(
+  request: Request,
+  user: AuthUser,
+  adminClient: SupabaseClient,
+) {
   const metadata = user.user_metadata as UserMetadata | undefined;
   const roles = (metadata?.roles ?? []) as SamveraRole[];
   const orgId = metadata?.org_id;
@@ -83,7 +77,7 @@ export async function handleGetMenus(request: Request, user: AuthUser) {
   const classId = rawClassId ?? undefined;
 
   try {
-    const menus = await fetchMenus({
+    const menus = await fetchMenus(adminClient, {
       orgId,
       userId: user.id,
       isTeacher,
@@ -113,17 +107,11 @@ export async function handleGetMenus(request: Request, user: AuthUser) {
   }
 }
 
-export async function handlePostMenu(request: Request, user: AuthUser) {
-  if (!supabaseAdmin) {
-    return NextResponse.json(
-      {
-        error:
-          'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local',
-      },
-      { status: 500 },
-    );
-  }
-
+export async function handlePostMenu(
+  request: Request,
+  user: AuthUser,
+  adminClient: SupabaseClient,
+) {
   const metadata = user.user_metadata as UserMetadata | undefined;
   const orgId = metadata?.org_id;
 
@@ -145,7 +133,7 @@ export async function handlePostMenu(request: Request, user: AuthUser) {
   }
 
   try {
-    const result = await upsertMenu(orgId, user.id, bodyValidation.data);
+    const result = await upsertMenu(adminClient, orgId, user.id, bodyValidation.data);
 
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
@@ -160,17 +148,10 @@ export async function handlePostMenu(request: Request, user: AuthUser) {
   }
 }
 
-export async function handlePutMenu(request: Request) {
-  if (!supabaseAdmin) {
-    return NextResponse.json(
-      {
-        error:
-          'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local',
-      },
-      { status: 500 },
-    );
-  }
-
+export async function handlePutMenu(
+  request: Request,
+  adminClient: SupabaseClient,
+) {
   const body = await request.json();
   const putMenuBodySchema = z.object({
     id: uuidSchema,
@@ -187,7 +168,7 @@ export async function handlePutMenu(request: Request) {
   }
 
   try {
-    const updated = await updateMenu(bodyValidation.data);
+    const updated = await updateMenu(adminClient, bodyValidation.data);
 
     return NextResponse.json(
       {
@@ -208,17 +189,10 @@ export async function handlePutMenu(request: Request) {
   }
 }
 
-export async function handleDeleteMenu(request: Request) {
-  if (!supabaseAdmin) {
-    return NextResponse.json(
-      {
-        error:
-          'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local',
-      },
-      { status: 500 },
-    );
-  }
-
+export async function handleDeleteMenu(
+  request: Request,
+  adminClient: SupabaseClient,
+) {
   const { searchParams } = new URL(request.url);
   const deleteMenuQuerySchema = z.object({
     id: uuidSchema,
@@ -232,7 +206,7 @@ export async function handleDeleteMenu(request: Request) {
   const { id } = queryValidation.data;
 
   try {
-    await softDeleteMenu(id);
+    await softDeleteMenu(adminClient, id);
 
     return NextResponse.json(
       {
@@ -263,26 +237,17 @@ class MenusServiceError extends Error {
   }
 }
 
-async function fetchMenus({
+async function fetchMenus(
+  adminClient: SupabaseClient,
+  {
   orgId,
   userId,
   isTeacher,
   classId,
   day,
 }: FetchMenusArgs) {
-  if (!supabaseAdmin) {
-    throw new MenusServiceError(
-      'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local',
-      500,
-      {
-        error:
-          'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local',
-      },
-    );
-  }
-
   try {
-    let query = supabaseAdmin
+    let query = adminClient
       .from('menus')
       .select(
         'id,org_id,class_id,day,breakfast,lunch,snack,notes,is_public,created_by,created_at,updated_at',
@@ -323,21 +288,11 @@ async function fetchMenus({
 }
 
 async function upsertMenu(
+  adminClient: SupabaseClient,
   orgId: string | undefined,
   userId: string,
   payload: UpsertMenuPayload,
 ) {
-  if (!supabaseAdmin) {
-    throw new MenusServiceError(
-      'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local',
-      500,
-      {
-        error:
-          'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local',
-      },
-    );
-  }
-
   if (!orgId) {
     throw new MenusServiceError('Organization not found for user', 400, {
       error: 'Organization not found for user',
@@ -351,7 +306,7 @@ async function upsertMenu(
     class_id && class_id.trim() !== '' ? class_id : null;
 
   try {
-    let query = supabaseAdmin
+    let query = adminClient
       .from('menus')
       .select('id')
       .eq('org_id', orgId)
@@ -410,7 +365,7 @@ async function upsertMenu(
         updatePayload.is_public = is_public;
       }
 
-      const { data: updated, error: updateError } = await supabaseAdmin
+      const { data: updated, error: updateError } = await adminClient
         .from('menus')
         .update(updatePayload)
         .eq('id', existing.id)
@@ -446,7 +401,7 @@ async function upsertMenu(
 
       result = updated;
     } else {
-      const { data: inserted, error: insertError } = await supabaseAdmin
+      const { data: inserted, error: insertError } = await adminClient
         .from('menus')
         .insert({
           org_id: orgId,
@@ -511,22 +466,14 @@ async function upsertMenu(
   }
 }
 
-async function updateMenu(payload: UpdateMenuPayload) {
-  if (!supabaseAdmin) {
-    throw new MenusServiceError(
-      'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local',
-      500,
-      {
-        error:
-          'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local',
-      },
-    );
-  }
-
+async function updateMenu(
+  adminClient: SupabaseClient,
+  payload: UpdateMenuPayload,
+) {
   const { id, breakfast, lunch, snack, notes, is_public } = payload;
 
   try {
-    const { data: updated, error } = await supabaseAdmin
+    const { data: updated, error } = await adminClient
       .from('menus')
       .update({
         breakfast: typeof breakfast !== 'undefined' ? breakfast : null,
@@ -571,20 +518,12 @@ async function updateMenu(payload: UpdateMenuPayload) {
   }
 }
 
-async function softDeleteMenu(id: string) {
-  if (!supabaseAdmin) {
-    throw new MenusServiceError(
-      'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local',
-      500,
-      {
-        error:
-          'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local',
-      },
-    );
-  }
-
+async function softDeleteMenu(
+  adminClient: SupabaseClient,
+  id: string,
+) {
   try {
-    const { error } = await supabaseAdmin
+    const { error } = await adminClient
       .from('menus')
       .update({ deleted_at: new Date().toISOString() })
       .eq('id', id);

@@ -13,7 +13,7 @@ export async function GET(request: Request) {
       requireOrg: true,
       allowedRoles: ['principal', 'admin', 'teacher', 'parent'],
     },
-    (user) => handleGetMenus(request, user)
+    (user, adminClient) => handleGetMenus(request, user, adminClient)
   )
 }
 
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
       requireOrg: true,
       allowedRoles: ['principal', 'admin', 'teacher', 'parent'],
     },
-    (user) => handlePostMenu(request, user)
+    (user, adminClient) => handlePostMenu(request, user, adminClient)
   )
 }
 
@@ -35,7 +35,7 @@ export async function PUT(request: Request) {
       requireOrg: true,
       allowedRoles: ['principal', 'admin', 'teacher', 'parent'],
     },
-    () => handlePutMenu(request)
+    (_user, adminClient) => handlePutMenu(request, adminClient)
   )
 }
 
@@ -46,7 +46,7 @@ export async function DELETE(request: Request) {
       requireOrg: true,
       allowedRoles: ['principal', 'admin', 'teacher', 'parent'],
     },
-    () => handleDeleteMenu(request)
+    (_user, adminClient) => handleDeleteMenu(request, adminClient)
   )
 }
 

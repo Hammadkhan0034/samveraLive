@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 
-import { supabaseAdmin } from '@/lib/supabaseClient';
 import { getStableDataCacheHeaders } from '@/lib/cacheConfig';
 import {
   validateQuery,
@@ -10,6 +9,7 @@ import {
 } from '@/lib/validation';
 import { z } from 'zod';
 import type { AuthUser } from '@/lib/types/auth';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 /**
  * Handle fetching announcements with role-aware filtering.
@@ -19,15 +19,9 @@ import type { AuthUser } from '@/lib/types/auth';
  */
 export async function handleGetAnnouncements(
   request: Request,
-  _user: AuthUser
+  _user: AuthUser,
+  adminClient: SupabaseClient
 ) {
-  if (!supabaseAdmin) {
-    return NextResponse.json(
-      { error: 'Admin client not configured' },
-      { status: 500 }
-    );
-  }
-
   const { searchParams } = new URL(request.url);
 
   const getAnnouncementsQuerySchema = z.object({
@@ -63,7 +57,7 @@ export async function handleGetAnnouncements(
 
   // If id is provided, fetch single announcement
   if (id) {
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await adminClient
       .from('announcements')
       .select('id,title,body,created_at,author_id,class_id,classes(id,name)')
       .eq('id', id)
@@ -116,7 +110,7 @@ export async function handleGetAnnouncements(
     isGuardian = true;
     try {
       // Get all students linked to this guardian
-      const { data: relationships, error: relError } = await supabaseAdmin
+      const { data: relationships, error: relError } = await adminClient
         .from('guardian_students')
         .select('student_id')
         .eq('guardian_id', userId);
@@ -126,7 +120,7 @@ export async function handleGetAnnouncements(
 
         if (studentIds.length > 0) {
           // Get class_ids for these students
-          const { data: students, error: studentsError } = await supabaseAdmin
+          const { data: students, error: studentsError } = await adminClient
             .from('students')
             .select('class_id')
             .in('id', studentIds)
@@ -147,7 +141,7 @@ export async function handleGetAnnouncements(
   }
 
   // Include class name in query
-  let query = supabaseAdmin
+  let query = adminClient
     .from('announcements')
     .select('id,title,body,created_at,author_id,class_id,classes(id,name)')
     .eq('is_public', true)
@@ -164,7 +158,7 @@ export async function handleGetAnnouncements(
 
     // Method 1: Check users table with role = 'teacher'
     try {
-      const { data: roleBasedTeachers } = await supabaseAdmin
+      const { data: roleBasedTeachers } = await adminClient
         .from('users')
         .select('id')
         .in('role', ['teacher']);
@@ -180,7 +174,7 @@ export async function handleGetAnnouncements(
 
     // Method 2: Check class_memberships with membership_role = 'teacher'
     try {
-      const { data: membershipTeachers } = await supabaseAdmin
+      const { data: membershipTeachers } = await adminClient
         .from('class_memberships')
         .select('user_id')
         .eq('membership_role', 'teacher');
@@ -196,7 +190,7 @@ export async function handleGetAnnouncements(
 
     // Method 3: Check users with metadata->>roles containing 'teacher'
     try {
-      const { data: metadataTeachers } = await supabaseAdmin
+      const { data: metadataTeachers } = await adminClient
         .from('users')
         .select('id')
         .contains('metadata', { roles: ['teacher'] });
@@ -209,7 +203,7 @@ export async function handleGetAnnouncements(
     } catch (e) {
       // Try alternative JSON query
       try {
-        const { data: altTeachers } = await supabaseAdmin
+        const { data: altTeachers } = await adminClient
           .from('users')
           .select('id, metadata');
 
@@ -234,7 +228,7 @@ export async function handleGetAnnouncements(
 
     // Method 1: Check users table with role = 'principal' or 'admin'
     try {
-      const { data: roleBasedPrincipals } = await supabaseAdmin
+      const { data: roleBasedPrincipals } = await adminClient
         .from('users')
         .select('id')
         .in('role', ['principal', 'admin']);
@@ -250,7 +244,7 @@ export async function handleGetAnnouncements(
 
     // Method 2: Check users with metadata->>activeRole = 'principal' or metadata->>roles containing 'principal'
     try {
-      const { data: metadataPrincipals } = await supabaseAdmin
+      const { data: metadataPrincipals } = await adminClient
         .from('users')
         .select('id, metadata');
 
@@ -393,7 +387,7 @@ export async function handleGetAnnouncements(
 
     // Get teacher IDs from multiple sources
     try {
-      const { data: membershipTeachers } = await supabaseAdmin
+      const { data: membershipTeachers } = await adminClient
         .from('class_membersments')
         .select('user_id')
         .eq('membership_role', 'teacher');
@@ -408,7 +402,7 @@ export async function handleGetAnnouncements(
     }
 
     try {
-      const { data: roleBasedTeachers } = await supabaseAdmin
+      const { data: roleBasedTeachers } = await adminClient
         .from('users')
         .select('id')
         .in('role', ['teacher']);

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireServerAuth } from './supabaseServer';
 import { supabaseAdmin } from './supabaseClient';
 import { type AuthUser, type UserMetadata, type SamveraRole } from './types/auth';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { AuthRequiredError, ForbiddenError, NetworkAuthError } from './auth-errors';
 
 /**
@@ -140,11 +141,25 @@ export function mapAuthErrorToResponse(err: unknown) {
 export async function withAuthRoute(
   _request: Request,
   options: AuthOptions,
-  handler: (user: AuthUser) => Promise<ReturnType<typeof NextResponse.json>>
+  handler: (
+    user: AuthUser,
+    adminClient: SupabaseClient
+  ) => Promise<ReturnType<typeof NextResponse.json>>
 ) {
   try {
     const { user } = await getRequestAuthContext(options);
-    return await handler(user);
+
+    if (!supabaseAdmin) {
+      return NextResponse.json(
+        {
+          error:
+            'Admin client not configured. Please add SUPABASE_SERVICE_ROLE_KEY to .env.local',
+        },
+        { status: 500 }
+      );
+    }
+
+    return await handler(user, supabaseAdmin);
   } catch (err) {
     return mapAuthErrorToResponse(err);
   }
