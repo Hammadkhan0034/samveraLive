@@ -140,11 +140,11 @@ export function mapAuthErrorToResponse(err: unknown) {
 export async function withAuthRoute(
   _request: Request,
   options: AuthOptions,
-  handler: (ctx: { user: AuthUser }) => Promise<ReturnType<typeof NextResponse.json>>
+  handler: (user: AuthUser) => Promise<ReturnType<typeof NextResponse.json>>
 ) {
   try {
-    const auth = await getRequestAuthContext(options);
-    return await handler(auth);
+    const { user } = await getRequestAuthContext(options);
+    return await handler(user);
   } catch (err) {
     return mapAuthErrorToResponse(err);
   }
