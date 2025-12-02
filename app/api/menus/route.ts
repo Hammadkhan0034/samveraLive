@@ -35,7 +35,7 @@ export async function PUT(request: Request) {
       requireOrg: true,
       allowedRoles: ['principal', 'admin', 'teacher', 'guardian'],
     },
-    (_user, adminClient) => handlePutMenu(request, adminClient)
+    (user, adminClient) => handlePutMenu(request, user, adminClient)
   )
 }
 

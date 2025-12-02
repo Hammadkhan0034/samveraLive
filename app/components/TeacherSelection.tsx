@@ -15,7 +15,6 @@ type TeacherResult = {
 };
 
 interface TeacherSelectionProps {
-  orgId: string;
   onSelectionChange: (teacherIds: string[]) => void;
   excludeTeacherIds?: string[];
   lang?: Lang;
@@ -64,7 +63,6 @@ function useDebounced<T>(value: T, delayMs: number) {
 }
 
 export default function TeacherSelection({
-  orgId,
   onSelectionChange,
   excludeTeacherIds = [],
   lang = 'en',
@@ -96,7 +94,7 @@ export default function TeacherSelection({
   useEffect(() => {
     let ignore = false;
     async function run() {
-      if (!orgId || !dq) {
+      if (!dq) {
         setTeacherResults([]);
         return;
       }
@@ -105,7 +103,6 @@ export default function TeacherSelection({
         const excludeIdsParam = excludeIdsKey;
         const params = new URLSearchParams({
           q: dq,
-          orgId: orgId,
           mode: 'any',
           limit: '25',
         });
@@ -128,7 +125,7 @@ export default function TeacherSelection({
     return () => {
       ignore = true;
     };
-  }, [dq, orgId, excludeIdsKey]);
+  }, [dq, excludeIdsKey]);
 
   // Notify parent of selection changes
   useEffect(() => {

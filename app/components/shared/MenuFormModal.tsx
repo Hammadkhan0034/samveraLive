@@ -6,7 +6,6 @@ import { useLanguage } from '@/lib/contexts/LanguageContext';
 import type { Menu } from '@/lib/types/menus';
 
 export interface MenuFormData {
-  org_id: string;
   class_id?: string | null;
   day: string;
   breakfast?: string | null;
@@ -19,11 +18,9 @@ export interface MenuFormData {
 export interface MenuFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: MenuFormData & { id?: string; created_by?: string | null }) => Promise<void>;
+  onSubmit: (data: MenuFormData & { id?: string }) => Promise<void>;
   initialData?: Menu | null;
-  orgId: string;
   classes: Array<{ id: string; name: string }>;
-  userId: string;
   loading?: boolean;
   error?: string | null;
 }
@@ -33,15 +30,12 @@ export function MenuFormModal({
   onClose,
   onSubmit,
   initialData,
-  orgId,
   classes,
-  userId,
   loading = false,
   error: externalError,
 }: MenuFormModalProps) {
   const { t } = useLanguage();
   const [formData, setFormData] = useState<MenuFormData>({
-    org_id: orgId,
     class_id: null,
     day: new Date().toISOString().split('T')[0],
     breakfast: '',
@@ -57,7 +51,6 @@ export function MenuFormModal({
     if (isOpen) {
       if (initialData) {
         setFormData({
-          org_id: initialData.org_id,
           class_id: initialData.class_id || null,
           day: initialData.day,
           breakfast: initialData.breakfast || '',
@@ -69,7 +62,6 @@ export function MenuFormModal({
       } else {
         // Reset to defaults for new menu
         setFormData({
-          org_id: orgId,
           class_id: null,
           day: new Date().toISOString().split('T')[0],
           breakfast: '',
@@ -81,12 +73,12 @@ export function MenuFormModal({
       }
       setError(null);
     }
-  }, [isOpen, initialData, orgId]);
+  }, [isOpen, initialData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!orgId || !formData.day) {
+    if (!formData.day) {
       setError(t.missing_fields || 'Missing required fields');
       return;
     }
@@ -99,7 +91,7 @@ export function MenuFormModal({
       
       const submitData = initialData
         ? { id: initialData.id, ...formData, class_id: finalClassId }
-        : { ...formData, class_id: finalClassId, created_by: userId };
+        : { ...formData, class_id: finalClassId };
       
       await onSubmit(submitData);
     } catch (err) {

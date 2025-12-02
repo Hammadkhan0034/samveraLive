@@ -14,7 +14,6 @@ interface AnnouncementModalProps {
     body: string;
     classId?: string;
   };
-  orgId?: string;
   classId?: string;
   lang?: 'is' | 'en';
   showClassSelector?: boolean;
@@ -25,7 +24,6 @@ export function AnnouncementModal({
   onClose,
   mode,
   initialData,
-  orgId,
   classId,
   lang = 'en',
   showClassSelector = false,
@@ -87,16 +85,13 @@ export function AnnouncementModal({
           </button>
         </div>
 
-        {orgId && (
-          <AnnouncementForm
-            mode={mode}
-            initialData={initialData}
-            orgId={orgId}
-            classId={classId}
-            onSuccess={handleSuccess}
-            showClassSelector={showClassSelector}
-          />
-        )}
+        <AnnouncementForm
+          mode={mode}
+          initialData={initialData}
+          classId={classId}
+          onSuccess={handleSuccess}
+          showClassSelector={showClassSelector}
+        />
       </div>
     </div>
   );

@@ -49,7 +49,6 @@ export interface GuardianFormData {
   phone: string;
   ssn?: string;
   address?: string;
-  org_id: string;
   is_active?: boolean;
 }
 
@@ -77,7 +76,6 @@ export function GuardianForm({
       phone: '',
       ssn: '',
       address: '',
-      org_id: orgs.length > 0 ? orgs[0].id : '',
       is_active: true
     };
   });
@@ -95,7 +93,6 @@ export function GuardianForm({
           phone: '',
           ssn: '',
           address: '',
-          org_id: orgs.length > 0 ? orgs[0].id : '',
           is_active: true
         });
       }
@@ -116,7 +113,6 @@ export function GuardianForm({
       phone: '',
       ssn: '',
       address: '',
-      org_id: orgs.length > 0 ? orgs[0].id : '',
       is_active: true
     });
     onClose();
@@ -225,11 +221,7 @@ export function GuardianForm({
             />
           </div>
 
-          {/* Organization is automatically assigned - no user input needed */}
-          <input
-            type="hidden"
-            value={formData.org_id}
-          />
+         
 
           <div>
             <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">

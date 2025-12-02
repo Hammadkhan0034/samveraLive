@@ -275,7 +275,7 @@ export default function TeacherMenusPage() {
     setMenuError(null);
   }
 
-  async function handleMenuSubmit(data: MenuFormData & { id?: string; created_by?: string | null }) {
+  async function handleMenuSubmit(data: MenuFormData & { id?: string }) {
     if (!session?.user?.id) {
       setMenuError('Missing user information');
       return;
@@ -288,6 +288,7 @@ export default function TeacherMenusPage() {
       const url = '/api/menus';
       const method = editingMenu ? 'PUT' : 'POST';
       
+      // Server will get org_id and user_id from AuthUser, so we don't send them
       const res = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -451,7 +452,6 @@ export default function TeacherMenusPage() {
                     onSubmit={handleMenuSubmit}
                     initialData={editingMenu}
                     classes={teacherClasses.map(c => ({ id: c.id, name: c.name }))}
-                    userId={session.user.id}
                     loading={submittingMenu}
                     error={menuError}
                   />

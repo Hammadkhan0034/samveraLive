@@ -16,7 +16,6 @@ async function fetchCalendarData() {
       return {
         events: [],
         classes: [],
-        orgId,
       };
     }
     
@@ -40,27 +39,24 @@ async function fetchCalendarData() {
     return {
       events: (events || []) as any[],
       classes,
-      orgId,
     };
   } catch (error) {
     console.error('❌ Error fetching calendar data:', error);
     return {
       events: [],
       classes: [],
-      orgId: '',
     };
   }
 }
 
 export default async function PrincipalCalendarPage() {
-  const { events, classes, orgId } = await fetchCalendarData();
+  const { events, classes } = await fetchCalendarData();
 
   return (
     <PrincipalPageLayout>
       <PrincipalCalendarClient
         initialEvents={events}
         initialClasses={classes}
-        orgId={orgId}
       />
     </PrincipalPageLayout>
   );

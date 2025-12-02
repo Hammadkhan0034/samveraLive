@@ -223,8 +223,6 @@ function PrincipalPhotosPageContent() {
     }
   };
 
-  const userId = session?.user?.id || '';
-
   return (
     <>
       {/* Content Header */}
@@ -353,7 +351,6 @@ function PrincipalPhotosPageContent() {
           onSuccess={handleUploadSuccess}
           classes={classes}
           students={students}
-          userId={userId}
         />
 
         {/* Delete Confirmation Modal */}

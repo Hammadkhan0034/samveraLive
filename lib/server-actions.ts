@@ -25,6 +25,7 @@ import {
   type DeviceTokenProvider,
 } from './services/deviceTokens';
 import { createEventSchema, updateEventSchema } from './validation';
+import type { z } from 'zod';
 import { getAuthUserWithOrg, MissingOrgIdError } from './server-helpers';
 
 // Example server actions with role gating
@@ -33,15 +34,14 @@ export async function createAnnouncement(data: {
   title: string;
   body: string;
   classId?: string;
-  orgId?: string;
 }) {
   // Only teachers, principals, and admins can create announcements
   const { user } = await requireServerRoles(['teacher', 'principal', 'admin']);
   
   const supabase = supabaseAdmin ?? await createSupabaseServer();
-  // Priority: explicit orgId -> user metadata -> admin users table -> class fallback
+  // Priority: user metadata -> admin users table -> class fallback
   const userMetadata = user.user_metadata as UserMetadata | undefined;
-  let orgId = data.orgId || userMetadata?.org_id;
+  let orgId = userMetadata?.org_id;
   if (!orgId && supabaseAdmin) {
     const { data: userRow } = await supabaseAdmin
       .from('users')
@@ -719,17 +719,16 @@ export async function deleteAllNotifications() {
 // Event Server Actions
 // ============================================================================
 
-export async function createEvent(data: {
-  org_id: string;
-  class_id?: string | null;
-  title: string;
-  description?: string | null;
-  start_at: string;
-  end_at?: string | null;
-  location?: string | null;
-}) {
+export async function createEvent(data: z.infer<typeof createEventSchema>) {
   // Only principals and teachers can create events
   const { user } = await requireServerRoles(['principal', 'teacher']);
+  
+  // Get orgId from user metadata
+  const userMetadata = user.user_metadata as UserMetadata | undefined;
+  const orgId = userMetadata?.org_id;
+  if (!orgId) {
+    throw new MissingOrgIdError();
+  }
   
   const supabase = supabaseAdmin ?? await createSupabaseServer();
   
@@ -740,21 +739,6 @@ export async function createEvent(data: {
   }
   
   const validatedData = validation.data;
-  
-  // Get org_id from user if not provided
-  const userMetadata = user.user_metadata as UserMetadata | undefined;
-  let orgId = validatedData.org_id || userMetadata?.org_id;
-  if (!orgId && supabaseAdmin) {
-    const { data: userRow } = await supabaseAdmin
-      .from('users')
-      .select('org_id')
-      .eq('id', user.id)
-      .maybeSingle();
-    orgId = (userRow as any)?.org_id as string | undefined;
-  }
-  if (!orgId) {
-    throw new Error('Organization ID is required');
-  }
   
   // For teachers, ensure they can only create class-based events for their assigned classes
   if (userMetadata?.activeRole === 'teacher' || userMetadata?.roles?.includes('teacher')) {

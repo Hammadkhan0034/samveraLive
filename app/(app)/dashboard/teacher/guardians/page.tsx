@@ -117,7 +117,7 @@ export default function TeacherGuardiansPage() {
   }
 
   function openCreateGuardianModal() {
-    setGuardianForm({ first_name: '', last_name: '', email: '', phone: '', org_id: finalOrgId || '', is_active: true });
+    setGuardianForm({ first_name: '', last_name: '', email: '', phone: '', is_active: true });
     setIsGuardianModalOpen(true);
   }
 

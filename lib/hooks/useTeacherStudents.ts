@@ -15,7 +15,7 @@ interface CacheData {
  * Hook to fetch and manage students from teacher's assigned classes
  * Optimized to fetch all classes in parallel instead of sequentially
  */
-export function useTeacherStudents(classes: TeacherClass[], orgId: string | null) {
+export function useTeacherStudents(classes: TeacherClass[]) {
   const [students, setStudents] = useState<Student[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,11 +62,10 @@ export function useTeacherStudents(classes: TeacherClass[], orgId: string | null
   // Fetch students for a single class
   const fetchStudentsForClass = useCallback(async (
     classId: string,
-    orgId: string,
     teacherClasses: TeacherClass[]
   ): Promise<Student[]> => {
     try {
-      const url = `/api/students?orgId=${orgId}&classId=${classId}&t=${Date.now()}`;
+      const url = `/api/students?classId=${classId}&t=${Date.now()}`;
       const response = await fetch(url, {
         cache: 'no-store',
         credentials: 'include',
@@ -122,22 +121,16 @@ export function useTeacherStudents(classes: TeacherClass[], orgId: string | null
       return [];
     }
 
-    if (!orgId) {
-      console.warn('⚠️ No orgId available, skipping students load');
-      setStudents([]);
-      return [];
-    }
-
     try {
       if (showLoading) setIsLoading(true);
       setError(null);
 
       const classIds = classes.map(cls => cls.id);
-      console.log('Loading students for classes:', classIds, 'Org ID:', orgId);
+      console.log('Loading students for classes:', classIds);
 
       // Fetch all classes in parallel
       const fetchPromises = classIds.map(classId =>
-        fetchStudentsForClass(classId, orgId, classes)
+        fetchStudentsForClass(classId, classes)
       );
 
       const results = await Promise.allSettled(fetchPromises);
@@ -173,16 +166,16 @@ export function useTeacherStudents(classes: TeacherClass[], orgId: string | null
     } finally {
       if (showLoading) setIsLoading(false);
     }
-  }, [classes, orgId, fetchStudentsForClass, saveToCache, loadFromCache]);
+  }, [classes, fetchStudentsForClass, saveToCache, loadFromCache]);
 
   // Refetch function
   const refetch = useCallback(async () => {
     return fetchStudents(true);
   }, [fetchStudents]);
 
-  // Load students when classes or orgId change
+  // Load students when classes change
   useEffect(() => {
-    if (classes.length === 0 || !orgId) {
+    if (classes.length === 0) {
       setStudents([]);
       return;
     }
@@ -195,7 +188,7 @@ export function useTeacherStudents(classes: TeacherClass[], orgId: string | null
 
     // Always fetch fresh data in background
     fetchStudents(false);
-  }, [classes.length, orgId, loadFromCache, fetchStudents]);
+  }, [classes.length, loadFromCache, fetchStudents]);
 
   return {
     students,

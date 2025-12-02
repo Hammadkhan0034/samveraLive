@@ -20,8 +20,6 @@ export interface CalendarEvent {
 }
 
 export interface CalendarProps {
-  orgId: string;
-  classId?: string | null;
   userRole: 'principal' | 'teacher' | 'guardian';
   canEdit: boolean;
   events: CalendarEvent[];
@@ -32,8 +30,6 @@ export interface CalendarProps {
 }
 
 export function Calendar({
-  orgId,
-  classId,
   userRole,
   canEdit,
   events,

@@ -33,7 +33,7 @@ export default function GuardiansPage() {
   const [submittingGuardian, setSubmittingGuardian] = useState(false);
   const [deletingGuardian, setDeletingGuardian] = useState(false);
   const [guardianError, setGuardianError] = useState<string | null>(null);
-  const [guardianForm, setGuardianForm] = useState<GuardianFormData>({ first_name: '', last_name: '', email: '', phone: '', org_id: '', is_active: true });
+  const [guardianForm, setGuardianForm] = useState<GuardianFormData>({ first_name: '', last_name: '', email: '', phone: '', is_active: true });
   const [isGuardianModalOpen, setIsGuardianModalOpen] = useState(false);
   const [isDeleteGuardianModalOpen, setIsDeleteGuardianModalOpen] = useState(false);
   const [guardianToDelete, setGuardianToDelete] = useState<string | null>(null);

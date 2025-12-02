@@ -11,10 +11,8 @@ export interface PhotoUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
-  orgId: string;
   classes: Array<{ id: string; name: string }>;
   students: Student[];
-  userId: string;
 }
 
 interface PreviewFile {
@@ -27,10 +25,8 @@ export function PhotoUploadModal({
   isOpen,
   onClose,
   onSuccess,
-  orgId,
   classes,
   students,
-  userId,
 }: PhotoUploadModalProps) {
   const { t } = useLanguage();
   const [uploadMode, setUploadMode] = useState<UploadMode>('org');
@@ -184,12 +180,10 @@ export function PhotoUploadModal({
       });
 
       // Add metadata
-      formData.append('org_id', orgId);
       formData.append('class_id', uploadMode === 'org' ? '' : (selectedClassId || ''));
       formData.append('student_id', uploadMode === 'student' ? (selectedStudentId || '') : '');
       formData.append('caption', caption);
       formData.append('is_public', isPublic ? 'true' : 'false');
-      formData.append('author_id', userId);
 
       const response = await fetch('/api/photos', {
         method: 'POST',

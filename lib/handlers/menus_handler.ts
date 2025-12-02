@@ -108,6 +108,7 @@ export async function handlePostMenu(
 
 export async function handlePutMenu(
   request: Request,
+  user: AuthUser,
   adminClient: SupabaseClient,
 ) {
   const body = await request.json();

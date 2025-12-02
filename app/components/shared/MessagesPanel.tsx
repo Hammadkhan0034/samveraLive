@@ -734,8 +734,6 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
   const threadIds = useMemo(() => threads.map(t => t.id), [threads]);
   
   useMessagesRealtime({
-    userId: session?.user?.id || '',
-    orgId: orgId || '',
     threadIds,
     onNewMessage: (newMessage) => {
       // If the new message is for the currently selected thread, add it to messages

@@ -14,13 +14,11 @@ import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 interface PrincipalCalendarClientProps {
   initialEvents: CalendarEvent[];
   initialClasses: Array<{ id: string; name: string }>;
-  orgId: string;
 }
 
 export function PrincipalCalendarClient({
   initialEvents,
   initialClasses,
-  orgId,
 }: PrincipalCalendarClientProps) {
   const router = useRouter();
   const { t } = useLanguage();
@@ -85,7 +83,6 @@ export function PrincipalCalendarClient({
       {/* Calendar Container */}
       <div className="rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">
         <Calendar
-          orgId={orgId}
           userRole="principal"
           canEdit={true}
           events={calendarEvents}

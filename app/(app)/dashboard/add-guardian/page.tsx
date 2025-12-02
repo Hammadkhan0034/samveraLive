@@ -52,7 +52,6 @@ function AddGuardianPageContent() {
             phone: g.phone || '',
             ssn: g.ssn || '',
             address: g.address || '',
-            org_id: g.org_id || '',
             is_active: g.is_active ?? true,
           });
         }

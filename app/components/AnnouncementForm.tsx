@@ -7,7 +7,6 @@ import { useLanguage } from '@/lib/contexts/LanguageContext';
 
 interface AnnouncementFormProps {
   classId?: string;
-  orgId: string;
   onSuccess?: () => void;
   showClassSelector?: boolean; // New prop to show class selector
   mode?: 'create' | 'edit';
@@ -60,10 +59,8 @@ export default function AnnouncementForm({
           const roleLower = role?.toString().toLowerCase() || '';
           const isPrincipal = roleLower === 'principal' || roleLower === 'admin';
           
-          // Get orgId
-          
           let response;
-          if (isPrincipal && effectiveOrgId) {
+          if (isPrincipal) {
             // For principals/admins: load all organization classes
             response = await fetch(`/api/classes?t=${Date.now()}`, { cache: 'no-store' });
             const data = await response.json();
@@ -73,7 +70,7 @@ export default function AnnouncementForm({
             }
           } else {
             // For teachers: load only their assigned classes
-            response = await fetch(`/api/teacher-classes?userId=${user.id}&t=${Date.now()}`, { cache: 'no-store' });
+            response = await fetch(`/api/teacher-classes?t=${Date.now()}`, { cache: 'no-store' });
             const data = await response.json();
 
             if (response.ok && data.classes) {
@@ -89,7 +86,7 @@ export default function AnnouncementForm({
 
       fetchClasses();
     }
-  }, [showClassSelector, user?.id, orgId]);
+  }, [showClassSelector, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,7 +112,6 @@ export default function AnnouncementForm({
         setSuccess(t.announcement_updated);
       } else {
         // Create new announcement
-        const effectiveOrgId = orgId || (user?.user_metadata as any)?.org_id || (user?.user_metadata as any)?.organization_id;
         const payload: any = {
           title: title.trim(),
           body: body.trim(),
@@ -128,7 +124,6 @@ export default function AnnouncementForm({
         // Always set classId (null for org-wide, or the class ID for class-specific)
         // This allows createAnnouncement to distinguish between "not provided" and "explicitly org-wide"
         payload.classId = finalClassId;
-        if (effectiveOrgId) payload.orgId = effectiveOrgId;
 
         await createAnnouncement(payload);
 

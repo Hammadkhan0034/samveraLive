@@ -181,8 +181,6 @@ export default function ParentCalendarPage() {
         ) : (
           <div className="rounded-ds-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-ds-card">
             <Calendar
-              orgId={(session?.user?.user_metadata as any)?.org_id || ''}
-              classId={derivedClassId}
               userRole="guardian"
               canEdit={false}
               events={calendarEvents}

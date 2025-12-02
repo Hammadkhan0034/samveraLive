@@ -413,7 +413,6 @@ export default function TeacherMessagesPage() {
   }, [selectedThread]);
   
   useMessagesRealtime({
-    userId: session?.user?.id || '',
     threadIds,
     onNewMessage: handleNewMessage,
     onUpdatedParticipant: handleUpdatedParticipant,

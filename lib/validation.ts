@@ -230,7 +230,6 @@ export const eventEndAtSchema = isoDateTimeSchema.nullable().optional();
  * Create event schema
  */
 export const createEventSchema = z.object({
-  org_id: orgIdSchema,
   class_id: classIdSchema.optional(),
   title: eventTitleSchema,
   description: eventDescriptionSchema,

@@ -178,8 +178,6 @@ export default function TeacherMediaPage() {
     }
   };
 
-  const userId = session?.user?.id || '';
-
   return (
     <TeacherPageLayout mediaBadge={photos.length > 0 ? photos.length : undefined}>
       {/* Media Panel */}
@@ -293,7 +291,6 @@ export default function TeacherMediaPage() {
         onSuccess={handleUploadSuccess}
         classes={classes}
         students={students}
-        userId={userId}
       />
 
       {/* Delete Confirmation Modal */}

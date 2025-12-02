@@ -6,8 +6,6 @@ import { MessageItem, MessageThreadWithParticipants, MessageParticipant } from '
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 interface UseMessagesRealtimeOptions {
-  userId: string;
-  orgId: string;
   threadIds: string[];
   onNewMessage?: (message: MessageItem) => void;
   onUpdatedParticipant?: (participant: MessageParticipant) => void;
@@ -16,8 +14,6 @@ interface UseMessagesRealtimeOptions {
 }
 
 export function useMessagesRealtime({
-  userId,
-  orgId,
   threadIds,
   onNewMessage,
   onUpdatedParticipant,
@@ -27,6 +23,8 @@ export function useMessagesRealtime({
   const channelRef = useRef<any>(null);
   // Convert ref to state to avoid accessing refs during render
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [orgId, setOrgId] = useState<string | null>(null);
 
   const cleanup = useCallback(() => {
     if (channelRef.current) {
@@ -34,6 +32,28 @@ export function useMessagesRealtime({
       channelRef.current = null;
       setIsSubscribed(false);
     }
+  }, []);
+
+  // Fetch userId and orgId from server endpoint
+  useEffect(() => {
+    async function fetchUserContext() {
+      try {
+        const response = await fetch('/api/auth/user-context', { cache: 'no-store' });
+        if (!response.ok) {
+          console.error('Failed to fetch user context:', response.statusText);
+          return;
+        }
+        const data = await response.json();
+        if (data.userId && data.orgId) {
+          setUserId(data.userId);
+          setOrgId(data.orgId);
+        }
+      } catch (error) {
+        console.error('Error fetching user context:', error);
+      }
+    }
+
+    fetchUserContext();
   }, []);
 
   useEffect(() => {
