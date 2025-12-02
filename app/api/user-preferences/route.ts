@@ -1,34 +1,13 @@
-import { NextResponse } from 'next/server';
-import { createSupabaseServer } from '@/lib/supabaseServer';
-import { requireServerAuth } from '@/lib/supabaseServer';
+import { withAuthRoute } from '@/lib/server-helpers';
+import { handleGetUserPreferences } from '@/lib/handlers/user_preferences_handler';
 
-export async function GET() {
-  try {
-    const { user } = await requireServerAuth();
-    const supabase = await createSupabaseServer();
-    
-    const { data, error } = await supabase
-      .from('users')
-      .select('theme, language')
-      .eq('id', user.id)
-      .maybeSingle();
-    
-    if (error) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 500 }
-      );
-    }
-    
-    return NextResponse.json({
-      theme: (data?.theme as 'light' | 'dark' | 'system') || 'system',
-      language: (data?.language as 'en' | 'is') || 'is',
-    });
-  } catch (error) {
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Unauthorized' },
-      { status: 401 }
-    );
-  }
+export async function GET(request: Request) {
+  return withAuthRoute(
+    request,
+    {
+      requireOrg: false,
+    },
+    (user, adminClient) => handleGetUserPreferences(request, user, adminClient)
+  );
 }
 
