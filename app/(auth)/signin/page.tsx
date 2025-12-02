@@ -177,7 +177,7 @@ function SignInPageContent() {
             className="w-full max-w-md"
           >
             {/* Sign in card */}
-            <div className="rounded-ds-xl bg-white dark:bg-slate-800 shadow-ds-card p-ds-lg">
+            <div className="rounded-ds-xl bg-white dark:bg-slate-700 shadow-ds-card p-ds-lg">
               <div className="mb-ds-md">
                 <h1 className="text-ds-h2 font-bold text-ds-text-primary dark:text-slate-100 mb-ds-xs">
                   {t.signin_login_title}
