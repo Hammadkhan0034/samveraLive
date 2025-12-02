@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server'
 
 import { getNoCacheHeaders } from '@/lib/cacheConfig'
-import { getAuthUserWithOrg, mapAuthErrorToResponse } from '@/lib/server-helpers'
+import {
+  getAuthUserWithOrg,
+  mapAuthErrorToResponse,
+  MissingOrgIdError,
+} from '@/lib/server-helpers'
 import { validateBody, validateQuery } from '@/lib/validation'
 import {
   deleteAttendanceQuerySchema,

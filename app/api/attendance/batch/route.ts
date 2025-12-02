@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabaseClient';
-import { getNoCacheHeaders } from '@/lib/cacheConfig';
 import { z } from 'zod';
+
+import { getNoCacheHeaders } from '@/lib/cacheConfig';
 import { validateBody, studentIdSchema, dateSchema, attendanceStatusSchema, classIdSchema, notesSchema } from '@/lib/validation';
-import { getAuthUserWithOrg, mapAuthErrorToResponse } from '@/lib/server-helpers';
+import { getAuthUserWithOrg, mapAuthErrorToResponse, MissingOrgIdError } from '@/lib/server-helpers';
+import { supabaseAdmin } from '@/lib/supabaseClient';
 
 // POST body schema
 const postBatchAttendanceBodySchema = z.object({

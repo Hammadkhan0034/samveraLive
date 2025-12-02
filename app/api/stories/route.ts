@@ -1,11 +1,28 @@
 import { NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabaseClient'
+import { z } from 'zod'
+
 import { getStableDataCacheHeaders } from '@/lib/cacheConfig'
 import { requireServerAuth } from '@/lib/supabaseServer'
-import { getAuthUserWithOrg, MissingOrgIdError, mapAuthErrorToResponse } from '@/lib/server-helpers'
-import { z } from 'zod'
-import { validateQuery, validateBody, classIdSchema, userIdSchema, titleSchema, captionSchema, futureDateSchema, uuidSchema, storyIdSchema, isoDateTimeSchema, positiveNumberSchema } from '@/lib/validation'
-import type { AuthUser } from '@/lib/types/auth'
+import {
+  getAuthUserWithOrg,
+  MissingOrgIdError,
+  mapAuthErrorToResponse,
+} from '@/lib/server-helpers'
+import {
+  validateQuery,
+  validateBody,
+  classIdSchema,
+  userIdSchema,
+  titleSchema,
+  captionSchema,
+  futureDateSchema,
+  uuidSchema,
+  storyIdSchema,
+  isoDateTimeSchema,
+  positiveNumberSchema,
+} from '@/lib/validation'
+import { supabaseAdmin } from '@/lib/supabaseClient'
+import type { AuthUser, UserMetadata } from '@/lib/types/auth'
 
 // GET query parameter schema - orgId removed, now fetched server-side
 const getStoriesQuerySchema = z.object({
@@ -385,9 +402,12 @@ export async function POST(request: Request) {
 
   // Get authenticated user and orgId from server-side auth
   try {
-    const authContext = await getAuthUserWithOrg();
-    user = authContext.user;
-    orgId = authContext.orgId;
+    user = await getAuthUserWithOrg();
+    const metadata = user.user_metadata as UserMetadata | undefined;
+    orgId = metadata?.org_id || null;
+    if (!orgId) {
+      throw new MissingOrgIdError();
+    }
   } catch (err) {
     if (err instanceof MissingOrgIdError) {
       return mapAuthErrorToResponse(err);
@@ -602,9 +622,12 @@ export async function PUT(request: Request) {
 
   // Get authenticated user and orgId from server-side auth
   try {
-    const authContext = await getAuthUserWithOrg();
-    user = authContext.user;
-    orgId = authContext.orgId;
+    user = await getAuthUserWithOrg();
+    const metadata = user.user_metadata as UserMetadata | undefined;
+    orgId = metadata?.org_id || null;
+    if (!orgId) {
+      throw new MissingOrgIdError();
+    }
   } catch (err) {
     if (err instanceof MissingOrgIdError) {
       return mapAuthErrorToResponse(err);
