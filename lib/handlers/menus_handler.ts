@@ -8,36 +8,13 @@ import {
   postMenuBodySchema,
   putMenuBodySchema,
 } from '@/lib/validation/menus';
+import type {
+  FetchMenusArgs,
+  UpdateMenuPayload,
+  UpsertMenuPayload,
+} from '@/lib/types/menus';
 import type { AuthUser, SamveraRole, UserMetadata } from '@/lib/types/auth';
 import type { SupabaseClient } from '@supabase/supabase-js';
-
-type UpsertMenuPayload = {
-  class_id?: string | null;
-  day: string;
-  breakfast?: string | null;
-  lunch?: string | null;
-  snack?: string | null;
-  notes?: string | null;
-  is_public?: boolean;
-  created_by?: string;
-};
-
-type UpdateMenuPayload = {
-  id: string;
-  breakfast?: string | null;
-  lunch?: string | null;
-  snack?: string | null;
-  notes?: string | null;
-  is_public?: boolean;
-};
-
-type FetchMenusArgs = {
-  orgId: string;
-  userId: string;
-  isTeacher: boolean;
-  classId?: string;
-  day?: string;
-};
 
 export async function handleGetMenus(
   request: Request,

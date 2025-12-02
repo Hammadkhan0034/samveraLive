@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { getStableDataCacheHeaders } from '@/lib/cacheConfig';
 import { validateQuery } from '@/lib/validation';
 import { getAnnouncementsQuerySchema } from '@/lib/validation/announcements';
+import type { Announcement } from '@/lib/types/announcements';
 import type { AuthUser } from '@/lib/types/auth';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -55,7 +56,7 @@ export async function handleGetAnnouncements(
           ? data.classes
           : null;
 
-    const transformed = {
+    const transformed: Announcement = {
       id: data.id,
       title: data.title,
       body: data.body,
@@ -416,7 +417,7 @@ export async function handleGetAnnouncements(
   }
 
   // Transform data to include class name
-  const transformedData = (data || []).map((ann: any) => {
+  const transformedData: Announcement[] = (data || []).map((ann: any) => {
     const classData =
       Array.isArray(ann.classes) && ann.classes.length > 0
         ? ann.classes[0]
