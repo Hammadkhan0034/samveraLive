@@ -5,7 +5,6 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Timer, Users, Bell, MessageSquare, Camera, Link as LinkIcon, Utensils, Plus, Eye, Edit, Trash2 } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
@@ -21,9 +20,6 @@ export default function TeacherStoriesPage() {
   const { t, lang } = useLanguage();
   const { session } = useAuth();
   const router = useRouter();
-
-  // Use universal hook to get org_id (checks metadata first, then API, handles logout if missing)
-  const { orgId: finalOrgId } = useCurrentUserOrgId();
 
   // Teacher classes
   const [teacherClasses, setTeacherClasses] = useState<any[]>([]);
@@ -78,7 +74,7 @@ export default function TeacherStoriesPage() {
 
   // Load stories
   useEffect(() => {
-    if (!finalOrgId || !session?.user?.id) return;
+    if (!session?.user?.id) return;
     
     const loadStories = async () => {
       try {
@@ -86,7 +82,7 @@ export default function TeacherStoriesPage() {
         const userId = session.user.id;
         const teacherClassIds = teacherClasses.map(c => c.id).filter(Boolean);
         
-        const params = new URLSearchParams({ orgId: finalOrgId });
+        const params = new URLSearchParams();
         params.set('audience', 'teacher');
         params.set('teacherAuthorId', userId || '');
         if (teacherClassIds.length > 0) {
@@ -136,7 +132,7 @@ export default function TeacherStoriesPage() {
     };
     
     loadStories();
-  }, [finalOrgId, teacherClasses, session?.user?.id]);
+  }, [teacherClasses, session?.user?.id]);
 
   function closeViewer(e?: React.MouseEvent) {
     if (e) {
@@ -236,7 +232,7 @@ export default function TeacherStoriesPage() {
       setActiveIndex(0);
       setProgress(0);
       
-      const res = await fetch(`/api/story-items?storyId=${story.id}${finalOrgId ? `&orgId=${finalOrgId}` : ''}`, { 
+      const res = await fetch(`/api/story-items?storyId=${story.id}`, { 
         cache: 'no-store',
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',

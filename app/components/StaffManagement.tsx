@@ -4,7 +4,6 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { Edit, Trash2, Users, X, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
@@ -23,9 +22,6 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
   const { session } = useAuth?.() || ({} as any);
   const { t, lang: contextLang } = useLanguage();
   // Use lang prop if provided, otherwise use current language from context
-
-  // Use universal hook to get org_id (checks metadata first, then API, handles logout if missing)
-  const { orgId: finalOrgId } = useCurrentUserOrgId();
 
   // Classes dropdown
   const [classesForDropdown, setClassesForDropdown] = useState<Array<{ id: string; name: string; code: string | null }>>([]);
@@ -49,16 +45,15 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
 
   // Load initial lists
   useEffect(() => {
-    if (finalOrgId) {
+    if (session?.user?.id) {
       loadClassesForDropdown();
       loadStaff();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [finalOrgId, session?.user?.id]);
+  }, [session?.user?.id]);
 
   async function loadClassesForDropdown() {
     try {
-      if (!finalOrgId) return;
       const res = await fetch(`/api/classes?t=${Date.now()}`, { cache: 'no-store' });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
@@ -70,7 +65,6 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
   }
 
   async function loadStaff(showLoading = true) {
-    if (!finalOrgId) return;
     if (loadingStaff && showLoading) return;
     try {
       if (showLoading) setLoadingStaff(true);

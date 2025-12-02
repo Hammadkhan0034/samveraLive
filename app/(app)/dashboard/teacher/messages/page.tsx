@@ -6,7 +6,6 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { MessageThreadWithParticipants, MessageItem } from '@/lib/types/messages';
 import { useMessagesRealtime } from '@/lib/hooks/useMessagesRealtime';
-import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import TeacherPageLayout, { useTeacherPageLayout } from '@/app/components/shared/TeacherPageLayout';
@@ -76,7 +75,6 @@ function filterTeacherThreads(
 export default function TeacherMessagesPage() {
   const { t } = useLanguage();
   const { session } = useAuth();
-  const { orgId } = useCurrentUserOrgId();
 
   // Messages state
   const [threads, setThreads] = useState<MessageThreadWithParticipants[]>([]);
@@ -416,7 +414,6 @@ export default function TeacherMessagesPage() {
   
   useMessagesRealtime({
     userId: session?.user?.id || '',
-    orgId: orgId || '',
     threadIds,
     onNewMessage: handleNewMessage,
     onUpdatedParticipant: handleUpdatedParticipant,

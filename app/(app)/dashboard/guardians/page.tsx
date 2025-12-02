@@ -5,7 +5,6 @@ import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { Plus, ArrowLeft, Menu } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useRequireAuth } from '@/lib/hooks/useAuth';
-import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 import { type GuardianFormData } from '@/app/components/shared/GuardianForm';
 import { GuardianTable } from '@/app/components/shared/GuardianTable';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
@@ -21,8 +20,6 @@ export default function GuardiansPage() {
   const { user, loading, isSigningIn, session } = useRequireAuth();
   const router = useRouter();
 
-  // Use universal hook to get org_id (checks metadata first, then API, handles logout if missing)
-  const { orgId: finalOrgId } = useCurrentUserOrgId();
 
   // Guardian states - initialize with cached data
   const [guardians, setGuardians] = useState<Array<any>>(() => {
@@ -57,18 +54,16 @@ export default function GuardiansPage() {
     loadOrgs();
   }, []);
 
-  // Also load when user and orgId are available
+  // Also load when user is available
   useEffect(() => {
-    if (user?.id && finalOrgId) {
+    if (user?.id) {
       loadGuardians(false);
       loadOrgs(false);
     }
-  }, [user?.id, finalOrgId]);
+  }, [user?.id]);
 
   // Load guardians
   async function loadGuardians(showLoading = true) {
-    const orgId = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
-    if (!orgId) return;
 
     try {
       if (showLoading) {
@@ -155,7 +150,7 @@ export default function GuardiansPage() {
 
       // Close modal and reset form
       setIsGuardianModalOpen(false);
-      setGuardianForm({ first_name: '', last_name: '', email: '', phone: '', org_id: finalOrgId || '', is_active: true });
+      setGuardianForm({ first_name: '', last_name: '', email: '', phone: '', is_active: true });
 
       // Refresh guardians list
       await loadGuardians(false);

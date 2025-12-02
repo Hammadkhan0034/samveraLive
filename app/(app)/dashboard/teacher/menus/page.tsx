@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { Utensils, Plus, Edit, Trash2 } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
-import { useTeacherOrgId } from '@/lib/hooks/useTeacherOrgId';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import { MenuFormModal, type MenuFormData } from '@/app/components/shared/MenuFormModal';
@@ -37,7 +36,6 @@ export default function TeacherMenusPage() {
   const { lang, t } = useLanguage();
   const { session } = useAuth();
   const router = useRouter();
-  const { orgId: finalOrgId } = useTeacherOrgId();
 
   const [menus, setMenus] = useState<MenuWithClass[]>([]);
   const [loadingMenus, setLoadingMenus] = useState(false);
@@ -88,12 +86,11 @@ export default function TeacherMenusPage() {
   }, []);
 
   const fetchMenus = useCallback(async (
-    orgId: string, 
     userId: string, 
     classes: TeacherClass[]
   ): Promise<MenuWithClass[]> => {
     try {
-      const res = await fetch(`/api/menus?orgId=${orgId}&createdBy=${userId}`, { 
+      const res = await fetch(`/api/menus?createdBy=${userId}`, { 
         cache: 'no-store' 
       });
       const json = await res.json();
@@ -128,7 +125,7 @@ export default function TeacherMenusPage() {
   }, []);
 
   const loadMenus = useCallback(async () => {
-    if (!finalOrgId || !session?.user?.id) return;
+    if (!session?.user?.id) return;
     
     const cached = loadCachedData();
     if (cached.menus && Array.isArray(cached.menus)) {
@@ -150,7 +147,7 @@ export default function TeacherMenusPage() {
         }
       }
       
-      const allMenus = await fetchMenus(finalOrgId, session.user.id, classes);
+      const allMenus = await fetchMenus(session.user.id, classes);
       setMenus(allMenus);
     } catch (error) {
       console.error('❌ Error loading menus:', error);
@@ -162,13 +159,13 @@ export default function TeacherMenusPage() {
     } finally {
       setLoadingMenus(false);
     }
-  }, [finalOrgId, session?.user?.id, loadCachedData, fetchTeacherClasses, fetchMenus]);
+  }, [session?.user?.id, loadCachedData, fetchTeacherClasses, fetchMenus]);
 
   useEffect(() => {
-    if (finalOrgId && session?.user?.id) {
+    if (session?.user?.id) {
       loadMenus();
     }
-  }, [finalOrgId, session?.user?.id, loadMenus]);
+  }, [session?.user?.id, loadMenus]);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -177,7 +174,7 @@ export default function TeacherMenusPage() {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('teacher_menus_cache');
       }
-      if (finalOrgId && session?.user?.id) {
+      if (session?.user?.id) {
         loadMenus();
       }
     };
@@ -195,7 +192,7 @@ export default function TeacherMenusPage() {
     return () => {
       window.removeEventListener('menu-updated', handleMenuUpdate);
     };
-  }, [finalOrgId, session?.user?.id, loadMenus]);
+  }, [session?.user?.id, loadMenus]);
 
   function openDeleteModal(menuId: string) {
     setMenuToDelete(menuId);
@@ -279,8 +276,8 @@ export default function TeacherMenusPage() {
   }
 
   async function handleMenuSubmit(data: MenuFormData & { id?: string; created_by?: string | null }) {
-    if (!finalOrgId || !session?.user?.id) {
-      setMenuError('Missing organization or user information');
+    if (!session?.user?.id) {
+      setMenuError('Missing user information');
       return;
     }
 
@@ -310,7 +307,7 @@ export default function TeacherMenusPage() {
       }
 
       // Refresh menus list
-      if (finalOrgId && session.user.id) {
+      if (session.user.id) {
         await loadMenus();
       }
 
@@ -447,13 +444,12 @@ export default function TeacherMenusPage() {
                   cancelButtonText={t.cancel || 'Cancel'}
                 />
 
-                {finalOrgId && session?.user?.id && (
+                {session?.user?.id && (
                   <MenuFormModal
                     isOpen={isMenuModalOpen}
                     onClose={closeMenuModal}
                     onSubmit={handleMenuSubmit}
                     initialData={editingMenu}
-                    orgId={finalOrgId}
                     classes={teacherClasses.map(c => ({ id: c.id, name: c.name }))}
                     userId={session.user.id}
                     loading={submittingMenu}

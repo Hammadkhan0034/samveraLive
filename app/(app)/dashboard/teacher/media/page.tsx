@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { Camera, Plus, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
-import { useTeacherOrgId } from '@/lib/hooks/useTeacherOrgId';
 import { useTeacherClasses } from '@/lib/hooks/useTeacherClasses';
 import { useTeacherStudents } from '@/lib/hooks/useTeacherStudents';
 import TeacherPageLayout from '@/app/components/shared/TeacherPageLayout';
@@ -57,10 +56,9 @@ export default function TeacherMediaPage() {
   const { session } = useAuth();
   const router = useRouter();
 
-  // Get org, classes, and students
-  const { orgId } = useTeacherOrgId();
+  // Get classes and students
   const { classes } = useTeacherClasses();
-  const { students } = useTeacherStudents(classes, orgId);
+  const { students } = useTeacherStudents(classes);
 
   // State
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -74,8 +72,6 @@ export default function TeacherMediaPage() {
 
   // Fetch photos
   const fetchPhotos = async () => {
-    if (!orgId) return;
-
     try {
       setIsLoading(true);
       setError(null);
@@ -135,12 +131,10 @@ export default function TeacherMediaPage() {
     }
   };
 
-  // Fetch photos on mount and when orgId or classes change
+  // Fetch photos on mount and when classes change
   useEffect(() => {
-    if (orgId) {
-      fetchPhotos();
-    }
-  }, [orgId, classes]);
+    fetchPhotos();
+  }, [classes]);
 
   // Handle successful upload
   const handleUploadSuccess = () => {
@@ -194,15 +188,13 @@ export default function TeacherMediaPage() {
           <h2 className="text-ds-h3 font-medium text-slate-900 dark:text-slate-100">
             {t.media_title || 'Media'}
           </h2>
-          {orgId && (
-            <button
-              onClick={() => setIsModalOpen(true)}
+          <button
+            onClick={() => setIsModalOpen(true)}
               className="inline-flex items-center gap-2 rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
             >
               <Plus className="h-4 w-4" />
               {(t as any).upload_photo || t.upload || 'Upload Photo'}
             </button>
-          )}
         </div>
 
         {/* Error State */}
@@ -295,17 +287,14 @@ export default function TeacherMediaPage() {
       </div>
 
       {/* Photo Upload Modal */}
-      {orgId && (
-        <PhotoUploadModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onSuccess={handleUploadSuccess}
-          orgId={orgId}
-          classes={classes}
-          students={students}
-          userId={userId}
-        />
-      )}
+      <PhotoUploadModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={handleUploadSuccess}
+        classes={classes}
+        students={students}
+        userId={userId}
+      />
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmationModal

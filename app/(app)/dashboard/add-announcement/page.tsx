@@ -4,7 +4,6 @@ import React, { useEffect, useState, Suspense } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
-import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import AnnouncementForm from '@/app/components/AnnouncementForm';
 import Loading from '@/app/components/shared/Loading';
@@ -15,8 +14,6 @@ function AddAnnouncementContent() {
   const { user, loading, isSigningIn } = useRequireAuth();
   const { t } = useLanguage();
 
-  // Use universal hook to get org_id (checks metadata first, then API, handles logout if missing)
-  const { orgId: finalOrgId } = useCurrentUserOrgId();
 
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -112,7 +109,6 @@ function AddAnnouncementContent() {
           <AnnouncementForm
             mode={editingAnnouncement?.id ? 'edit' : 'create'}
             initialData={editingAnnouncement || undefined}
-            orgId={finalOrgId as string}
             onSuccess={handleSuccess}
             showClassSelector={true}
           />

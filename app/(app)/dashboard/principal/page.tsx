@@ -9,7 +9,6 @@ import { useLanguage } from '@/lib/contexts/LanguageContext';
 import KPICardSkeleton from '@/app/components/loading-skeletons/KPICardSkeleton';
 import type { KPICard } from '@/lib/types/dashboard';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 
 interface PrincipalDashboardContentProps {
   t: any;
@@ -111,7 +110,6 @@ function PrincipalDashboardContent({
 function PrincipalDashboardPageContent() {
   const { t } = useLanguage();
   const { session } = useAuth?.() || {} as any;
-  const { orgId: finalOrgId } = useCurrentUserOrgId();
 
 
   // KPI data states - simplified initialization
@@ -190,7 +188,7 @@ function PrincipalDashboardPageContent() {
 
   // Main effect: Load metrics on mount
   useEffect(() => {
-    if (!session?.user?.id || !finalOrgId) return;
+    if (!session?.user?.id) return;
 
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
@@ -200,7 +198,7 @@ function PrincipalDashboardPageContent() {
     return () => {
       abortController.abort();
     };
-  }, [session?.user?.id, finalOrgId, fetchMetrics]);
+  }, [session?.user?.id, fetchMetrics]);
 
   // Retry function
   const handleRetry = useCallback(() => {

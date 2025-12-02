@@ -4,8 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createEvent } from '@/lib/server-actions';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { useTeacherOrgId } from '@/lib/hooks/useTeacherOrgId';
-import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 import { useTeacherClasses } from '@/lib/hooks/useTeacherClasses';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import type { EventFormData } from '@/app/components/shared/EventFormModal';
@@ -24,11 +22,9 @@ export function AddEventPage({ userRole, calendarRoute }: AddEventPageProps) {
   const { session } = useAuth();
   
   // Teacher-specific hooks
-  const { orgId: teacherOrgId } = useTeacherOrgId();
   const { classes: teacherClasses } = useTeacherClasses();
   
   // Principal-specific state
-  const { orgId: principalOrgId } = useCurrentUserOrgId();
   const [principalClasses, setPrincipalClasses] = useState<Array<{ id: string; name: string }>>([]);
   
   const [formData, setFormData] = useState<EventFormData>({
@@ -42,13 +38,11 @@ export function AddEventPage({ userRole, calendarRoute }: AddEventPageProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Get orgId based on role
-  const orgId = userRole === 'teacher' ? teacherOrgId : principalOrgId;
   const classes = userRole === 'teacher' ? teacherClasses : principalClasses;
 
   // Principal: Load classes
   useEffect(() => {
-    if (userRole === 'principal' && principalOrgId) {
+    if (userRole === 'principal') {
       fetch(`/api/classes?t=${Date.now()}`, { cache: 'no-store', credentials: 'include' })
         .then(res => res.json())
         .then(data => {
@@ -58,7 +52,7 @@ export function AddEventPage({ userRole, calendarRoute }: AddEventPageProps) {
         })
         .catch(err => console.error('Failed to fetch classes:', err));
     }
-  }, [userRole, principalOrgId]);
+  }, [userRole]);
 
   // Initialize default start time
   useEffect(() => {
@@ -78,11 +72,6 @@ export function AddEventPage({ userRole, calendarRoute }: AddEventPageProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!orgId) {
-      setError('Organization ID is required');
-      return;
-    }
 
     // Teachers can only create class-based events
     if (userRole === 'teacher' && !formData.class_id) {
@@ -106,7 +95,6 @@ export function AddEventPage({ userRole, calendarRoute }: AddEventPageProps) {
       }
 
       await createEvent({
-        org_id: orgId,
         class_id: formData.class_id,
         title: formData.title,
         description: formData.description || null,

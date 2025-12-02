@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { Plus, X } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
-import { useTeacherOrgId } from '@/lib/hooks/useTeacherOrgId';
 import AnnouncementForm from '@/app/components/AnnouncementForm';
 import AnnouncementList from '@/app/components/AnnouncementList';
 import TeacherPageLayout from '@/app/components/shared/TeacherPageLayout';
@@ -17,7 +16,6 @@ interface TeacherClass {
 export default function TeacherAnnouncementsPage() {
   const { t, lang } = useLanguage();
   const { session } = useAuth();
-  const { orgId: finalOrgId } = useTeacherOrgId();
 
   // Teacher classes
   const [teacherClasses, setTeacherClasses] = useState<TeacherClass[]>([]);
@@ -72,7 +70,6 @@ export default function TeacherAnnouncementsPage() {
           </div>
           <AnnouncementList
             teacherClassIds={teacherClassIds}
-            orgId={finalOrgId as string}
             lang={lang}
           />
         </div>
@@ -100,7 +97,6 @@ export default function TeacherAnnouncementsPage() {
             <div className="p-ds-md">
               <AnnouncementForm
                 classId={classId}
-                orgId={finalOrgId as string}
                 showClassSelector={true}
                 onSuccess={() => {
                   // Trigger refresh event instead of reload

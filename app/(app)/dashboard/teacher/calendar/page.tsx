@@ -7,7 +7,6 @@ import { EventDetailsModal } from '@/app/components/shared/EventDetailsModal';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import { deleteEvent, getEvents } from '@/lib/server-actions';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { useTeacherOrgId } from '@/lib/hooks/useTeacherOrgId';
 import { useTeacherClasses } from '@/lib/hooks/useTeacherClasses';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import TeacherPageLayout from '@/app/components/shared/TeacherPageLayout';
@@ -16,7 +15,6 @@ export default function TeacherCalendarPage() {
   const router = useRouter();
   const { t } = useLanguage();
   const { session } = useAuth();
-  const { orgId } = useTeacherOrgId();
   const { classes: teacherClasses } = useTeacherClasses();
   
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([]);
@@ -29,13 +27,10 @@ export default function TeacherCalendarPage() {
 
   // Load calendar events
   useEffect(() => {
-    if (orgId) {
-      loadCalendarEvents();
-    }
-  }, [orgId]);
+    loadCalendarEvents();
+  }, []);
 
   const loadCalendarEvents = async () => {
-    if (!orgId) return;
     
     try {
       setLoadingEvents(true);
@@ -115,7 +110,6 @@ export default function TeacherCalendarPage() {
         ) : (
           <div className="rounded-ds-lg bg-white shadow-ds-card dark:bg-slate-800">
           <Calendar
-            orgId={orgId || ''}
             userRole="teacher"
             canEdit={true}
             events={calendarEvents}

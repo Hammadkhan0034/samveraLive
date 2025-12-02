@@ -4,7 +4,6 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Plus } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
-import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 import { GuardianTable } from '@/app/components/shared/GuardianTable';
 import { GuardianForm, type GuardianFormData } from '@/app/components/shared/GuardianForm';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
@@ -41,9 +40,6 @@ export default function TeacherGuardiansPage() {
   const { lang, t } = useLanguage();
   const { session } = useAuth();
 
-  // Use universal hook to get org_id (checks metadata first, then API, handles logout if missing)
-  const { orgId: finalOrgId } = useCurrentUserOrgId();
-
   // Guardian state
   const [guardians, setGuardians] = useState<Array<any>>([]);
   const [loadingGuardians, setLoadingGuardians] = useState(false);
@@ -58,7 +54,6 @@ export default function TeacherGuardiansPage() {
     last_name: '', 
     email: '', 
     phone: '', 
-    org_id: finalOrgId || '', 
     is_active: true 
   });
   const [orgs, setOrgs] = useState<Array<{ id: string; name: string; slug: string; timezone: string }>>([]);
@@ -67,7 +62,6 @@ export default function TeacherGuardiansPage() {
   const itemsPerPage = 20;
 
   const loadGuardians = useCallback(async () => {
-    if (!finalOrgId) return;
     try {
       setLoadingGuardians(true);
       setGuardianError(null);
@@ -81,7 +75,7 @@ export default function TeacherGuardiansPage() {
     } finally {
       setLoadingGuardians(false);
     }
-  }, [finalOrgId]);
+  }, []);
 
   const loadOrgs = useCallback(async () => {
     try {
@@ -96,11 +90,9 @@ export default function TeacherGuardiansPage() {
 
   // Load guardians and orgs
   useEffect(() => {
-    if (finalOrgId) {
-      loadGuardians();
-      loadOrgs();
-    }
-  }, [finalOrgId, loadGuardians, loadOrgs]);
+    loadGuardians();
+    loadOrgs();
+  }, [loadGuardians, loadOrgs]);
 
   async function submitGuardian(data: GuardianFormData) {
     try {
@@ -114,7 +106,7 @@ export default function TeacherGuardiansPage() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
       setIsGuardianModalOpen(false);
-      setGuardianForm({ first_name: '', last_name: '', email: '', phone: '', org_id: finalOrgId || '', is_active: true });
+      setGuardianForm({ first_name: '', last_name: '', email: '', phone: '', is_active: true });
       await loadGuardians();
     } catch (e: any) {
       console.error('❌ Error submitting guardian:', e.message);
@@ -137,7 +129,6 @@ export default function TeacherGuardiansPage() {
       last_name,
       email: guardian.email ?? '',
       phone: guardian.phone ?? '',
-      org_id: guardian.org_id || finalOrgId || '',
       is_active: guardian.is_active ?? true
     });
     setIsGuardianModalOpen(true);

@@ -4,7 +4,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { X, Save, ChevronDown } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 import { useTeacherClasses } from '@/lib/hooks/useTeacherClasses';
 import { useTeacherStudents } from '@/lib/hooks/useTeacherStudents';
 import type { HealthLog, HealthLogFormData, HealthLogType } from '@/lib/types/health-logs';
@@ -212,9 +211,8 @@ export function HealthLogFormModal({
   error: externalError,
 }: HealthLogFormModalProps) {
   const { t, lang } = useLanguage();
-  const { orgId } = useCurrentUserOrgId();
   const { classes, isLoading: isLoadingClasses } = useTeacherClasses();
-  const { students, isLoading: isLoadingStudents } = useTeacherStudents(classes, orgId);
+  const { students, isLoading: isLoadingStudents } = useTeacherStudents(classes);
 
   const [formData, setFormData] = useState<HealthLogFormData>({
     student_id: '',

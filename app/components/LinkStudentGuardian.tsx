@@ -3,7 +3,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Search, Link as LinkIcon, X, Check, UserSearch, GraduationCap } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 import EmptyState from './EmptyState';
 
 type Lang = 'en' | 'is';
@@ -87,8 +86,6 @@ function useDebounced<T>(value: T, delayMs: number) {
 export default function LinkStudentGuardian({ lang = 'en' }: { lang?: Lang }) {
   const { user } = useAuth();
   const t = useMemo(() => TEXTS[lang] || TEXTS.en, [lang]);
-  // Use universal hook to get org_id (checks metadata first, then API, handles logout if missing)
-  const { orgId: resolvedOrgId } = useCurrentUserOrgId();
 
   const [modeGuardian, setModeGuardian] = useState<'email' | 'name'>('any' as any);
   const [modeStudent, setModeStudent] = useState<'email' | 'name'>('any' as any);
@@ -112,13 +109,13 @@ export default function LinkStudentGuardian({ lang = 'en' }: { lang?: Lang }) {
   useEffect(() => {
     let ignore = false;
     async function run() {
-      if (!resolvedOrgId || !dqGuardian) {
+      if (!dqGuardian) {
         setGuardianResults([]);
         return;
       }
       setLoadingGuardian(true);
       try {
-        const params = new URLSearchParams({ q: dqGuardian, orgId: resolvedOrgId, role: 'guardian', mode: (modeGuardian || 'any') as any, limit: '10' });
+        const params = new URLSearchParams({ q: dqGuardian, role: 'guardian', mode: (modeGuardian || 'any') as any, limit: '10' });
         const res = await fetch(`/api/search-people?${params.toString()}`);
         const json = await res.json();
         if (!ignore) setGuardianResults(json.results || []);
@@ -132,18 +129,18 @@ export default function LinkStudentGuardian({ lang = 'en' }: { lang?: Lang }) {
     return () => {
       ignore = true;
     };
-  }, [dqGuardian, modeGuardian, resolvedOrgId]);
+  }, [dqGuardian, modeGuardian]);
 
   useEffect(() => {
     let ignore = false;
     async function run() {
-      if (!resolvedOrgId || !dqStudent) {
+      if (!dqStudent) {
         setStudentResults([]);
         return;
       }
       setLoadingStudent(true);
       try {
-        const params = new URLSearchParams({ q: dqStudent, orgId: resolvedOrgId, role: 'student', mode: (modeStudent || 'any') as any, limit: '10' });
+        const params = new URLSearchParams({ q: dqStudent, role: 'student', mode: (modeStudent || 'any') as any, limit: '10' });
         const res = await fetch(`/api/search-people?${params.toString()}`);
         const json = await res.json();
         if (!ignore) setStudentResults(json.results || []);
@@ -157,7 +154,7 @@ export default function LinkStudentGuardian({ lang = 'en' }: { lang?: Lang }) {
     return () => {
       ignore = true;
     };
-  }, [dqStudent, modeStudent, resolvedOrgId]);
+  }, [dqStudent, modeStudent]);
 
   async function onConfirmLink() {
     if (!selectedGuardian?.guardian_id || !selectedStudent?.student_id) return;

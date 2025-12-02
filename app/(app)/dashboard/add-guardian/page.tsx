@@ -4,7 +4,6 @@ import React, { useEffect, useState, Suspense } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, useRequireAuth } from '@/lib/hooks/useAuth';
-import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { GuardianForm, type GuardianFormData } from '@/app/components/shared/GuardianForm';
 import Loading from '@/app/components/shared/Loading';
@@ -15,8 +14,6 @@ function AddGuardianPageContent() {
   const { user, loading, isSigningIn } = useRequireAuth();
   const { t } = useLanguage();
 
-  // Use universal hook to get org_id (checks metadata first, then API, handles logout if missing)
-  const { orgId: finalOrgId } = useCurrentUserOrgId();
 
   // orgs (for validation/display if needed)
   const [orgs, setOrgs] = useState<Array<{ id: string; name: string }>>([]);
@@ -55,7 +52,7 @@ function AddGuardianPageContent() {
             phone: g.phone || '',
             ssn: g.ssn || '',
             address: g.address || '',
-            org_id: g.org_id || finalOrgId,
+            org_id: g.org_id || '',
             is_active: g.is_active ?? true,
           });
         }
@@ -64,7 +61,7 @@ function AddGuardianPageContent() {
       }
     };
     loadGuardian();
-  }, [searchParams, finalOrgId]);
+  }, [searchParams]);
 
   async function submitGuardian(data: GuardianFormData) {
     try {
@@ -128,7 +125,7 @@ function AddGuardianPageContent() {
             onClose={() => router.back()}
             onSubmit={submitGuardian}
             initialData={editingGuardian || {
-              first_name: '', last_name: '', email: '', phone: '', ssn: '', address: '', org_id: finalOrgId || '', is_active: true
+              first_name: '', last_name: '', email: '', phone: '', ssn: '', address: '', is_active: true
             }}
             loading={loadingSubmit}
             error={error}

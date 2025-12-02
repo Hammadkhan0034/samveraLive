@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 import { Menu, Users } from 'lucide-react';
 import TeacherSelection from '@/app/components/TeacherSelection';
 import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
@@ -22,33 +21,23 @@ function CreateClassPageContent() {
   const isEditMode = !!classId;
   const { sidebarRef } = usePrincipalPageLayout();
 
-  // Use universal hook to get org_id (checks metadata first, then API, handles logout if missing)
-  const { orgId: finalOrgId } = useCurrentUserOrgId();
-
   // Form state
-  const [newClass, setNewClass] = useState({ name: '', description: '', capacity: '', org_id: '' });
+  const [newClass, setNewClass] = useState({ name: '', description: '', capacity: '' });
   const [loadingClass, setLoadingClass] = useState(false);
   const [loadingClassData, setLoadingClassData] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const selectedTeacherIdsRef = useRef<string[]>([]);
   const [initialTeacherIds, setInitialTeacherIds] = useState<string[]>([]);
 
-  // Initialize org_id in form when available
-  useEffect(() => {
-    if (finalOrgId) {
-      setNewClass(prev => ({ ...prev, org_id: finalOrgId || '' }));
-    }
-  }, [finalOrgId]);
-
   // Load class data when editing
   useEffect(() => {
-    if (classId && finalOrgId) {
+    if (classId) {
       loadClassData();
     }
-  }, [classId, finalOrgId]);
+  }, [classId]);
 
   async function loadClassData() {
-    if (!classId || !finalOrgId) return;
+    if (!classId) return;
     
     try {
       setLoadingClassData(true);
@@ -68,8 +57,7 @@ function CreateClassPageContent() {
         setNewClass({
           name: classData.name || '',
           description: classData.code || '',
-          capacity: '',
-          org_id: classData.org_id || finalOrgId || ''
+          capacity: ''
         });
         
         // Set selected teachers
@@ -194,8 +182,7 @@ function CreateClassPageContent() {
           body: JSON.stringify({
             name: newClass.name,
             code: newClass.description || null,
-            created_by: userId,
-            org_id: newClass.org_id || finalOrgId
+            created_by: userId
           }),
         });
 
@@ -335,10 +322,9 @@ function CreateClassPageContent() {
               />
             </div>
 
-            {finalOrgId && !isEditMode && (
+            {!isEditMode && (
               <div>
                 <TeacherSelection
-                  orgId={finalOrgId}
                   onSelectionChange={(ids) => { selectedTeacherIdsRef.current = ids; }}
                   lang={lang}
                 />

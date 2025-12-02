@@ -4,8 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { updateEvent, getEvents } from '@/lib/server-actions';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { useTeacherOrgId } from '@/lib/hooks/useTeacherOrgId';
-import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 import { useTeacherClasses } from '@/lib/hooks/useTeacherClasses';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import Loading from '@/app/components/shared/Loading';
@@ -27,11 +25,9 @@ export function EditEventPage({ userRole, calendarRoute, eventId }: EditEventPag
   const { session } = useAuth();
   
   // Teacher-specific hooks
-  const { orgId: teacherOrgId } = useTeacherOrgId();
   const { classes: teacherClasses } = useTeacherClasses();
   
   // Principal-specific state
-  const { orgId: principalOrgId } = useCurrentUserOrgId();
   const [principalClasses, setPrincipalClasses] = useState<Array<{ id: string; name: string }>>([]);
   
   const [event, setEvent] = useState<CalendarEvent | null>(null);
@@ -47,13 +43,11 @@ export function EditEventPage({ userRole, calendarRoute, eventId }: EditEventPag
   const [loadingEvent, setLoadingEvent] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Get orgId based on role
-  const orgId = userRole === 'teacher' ? teacherOrgId : principalOrgId;
   const classes = userRole === 'teacher' ? teacherClasses : principalClasses;
 
   // Principal: Load classes
   useEffect(() => {
-    if (userRole === 'principal' && principalOrgId) {
+    if (userRole === 'principal') {
       fetch(`/api/classes?t=${Date.now()}`, { cache: 'no-store', credentials: 'include' })
         .then(res => res.json())
         .then(data => {
@@ -63,17 +57,17 @@ export function EditEventPage({ userRole, calendarRoute, eventId }: EditEventPag
         })
         .catch(err => console.error('Failed to fetch classes:', err));
     }
-  }, [userRole, principalOrgId]);
+  }, [userRole]);
 
   // Load event data
   useEffect(() => {
-    if (orgId && eventId) {
+    if (eventId) {
       loadEvent();
     }
-  }, [orgId, eventId]);
+  }, [eventId]);
 
   const loadEvent = async () => {
-    if (!orgId || !eventId) return;
+    if (!eventId) return;
     
     try {
       setLoadingEvent(true);

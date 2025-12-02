@@ -21,7 +21,6 @@ interface AnnouncementFormProps {
 
 export default function AnnouncementForm({ 
   classId: propClassId, 
-  orgId, 
   onSuccess, 
   showClassSelector = false,
   mode = 'create',
@@ -62,7 +61,6 @@ export default function AnnouncementForm({
           const isPrincipal = roleLower === 'principal' || roleLower === 'admin';
           
           // Get orgId
-          const effectiveOrgId = orgId || userMetadata?.org_id || userMetadata?.organization_id;
           
           let response;
           if (isPrincipal && effectiveOrgId) {

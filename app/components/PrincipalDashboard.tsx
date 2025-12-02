@@ -4,7 +4,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Users, School, ChartBar as BarChart3, FileText, Plus, ListFilter as Filter, Search, CircleCheck as CheckCircle2, Circle as XCircle, Eye, EyeOff, Settings, Bell, Utensils, Megaphone, MessageSquare, CalendarDays, Camera } from 'lucide-react';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 import AnnouncementList from './AnnouncementList';
 import { useRouter } from 'next/navigation';
 import StoryColumn from './shared/StoryColumn';
@@ -21,19 +20,15 @@ export default function PrincipalDashboard() {
   const { session } = useAuth?.() || {} as any;
   const router = useRouter();
 
-  // Use universal hook to get org_id (checks metadata first, then API, handles logout if missing)
-  const { orgId: finalOrgId } = useCurrentUserOrgId();
-
   // Get user metadata from session
   const userMetadata = session?.user?.user_metadata;
 
-  // Store user and org IDs in sessionStorage for cache lookup in menus-list
+  // Store user ID in sessionStorage for cache lookup in menus-list
   useEffect(() => {
-    if (session?.user?.id && finalOrgId && typeof window !== 'undefined') {
+    if (session?.user?.id && typeof window !== 'undefined') {
       sessionStorage.setItem('current_user_id', session.user.id);
-      sessionStorage.setItem('current_org_id', finalOrgId);
     }
-  }, [session?.user?.id, finalOrgId]);
+  }, [session?.user?.id]);
 
   // Load cached data immediately on mount - but only for current user
   useEffect(() => {
@@ -84,10 +79,10 @@ export default function PrincipalDashboard() {
       }
   }, []);
 
-  // Load fresh data once when session and orgId are available - only once, no refresh
+  // Load fresh data once when session is available - only once, no refresh
   useEffect(() => {
-    // Only load if we have session and orgId, and only once
-    if (session?.user?.id && finalOrgId) {
+    // Only load if we have session, and only once
+    if (session?.user?.id) {
       // Load fresh data in background without showing loading
       Promise.allSettled([
         loadOrgs(false),
@@ -113,7 +108,7 @@ export default function PrincipalDashboard() {
         });
       });
     }
-  }, [session?.user?.id, finalOrgId]);
+  }, [session?.user?.id]);
 
   // Check on mount if stories were just updated (when returning from add-story page)
   useEffect(() => {
@@ -124,7 +119,7 @@ export default function PrincipalDashboard() {
         loadStoriesForKPI();
       }
     }
-  }, [session?.user?.id, finalOrgId]);
+  }, [session?.user?.id]);
 
   // Listen for student data changes triggered from other pages (e.g., Add Student)
   useEffect(() => {
@@ -177,11 +172,8 @@ export default function PrincipalDashboard() {
 
   // Load menus count for KPI
   async function loadMenusForKPI(showLoading = true) {
-    const orgId = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
-    if (!orgId) return;
-
     try {
-      const res = await fetch(`/api/menus?orgId=${orgId}&t=${Date.now()}`, { cache: 'no-store', credentials: 'include' });
+      const res = await fetch(`/api/menus?t=${Date.now()}`, { cache: 'no-store', credentials: 'include' });
       const json = await res.json();
 
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
@@ -199,8 +191,6 @@ export default function PrincipalDashboard() {
   }
 
   async function loadStoriesForKPI() {
-    const orgId = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
-    if (!orgId) return;
     try {
       const res = await fetch(`/api/stories?t=${Date.now()}`, { cache: 'no-store', credentials: 'include' });
       const json = await res.json();
@@ -216,8 +206,7 @@ export default function PrincipalDashboard() {
   }
 
   async function loadAnnouncementsForKPI() {
-    const orgId = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
-    if (!orgId || !session?.user?.id) return;
+    if (!session?.user?.id) return;
     try {
       const params = new URLSearchParams();
       params.set('userId', session.user.id);
@@ -238,8 +227,7 @@ export default function PrincipalDashboard() {
   }
 
   async function loadMessagesForKPI(showLoading = true) {
-    const orgId = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
-    if (!orgId || !session?.user?.id) return;
+    if (!session?.user?.id) return;
     try {
       const res = await fetch(`/api/messages?t=${Date.now()}`, { cache: 'no-store', credentials: 'include' });
       const json = await res.json();
@@ -257,8 +245,6 @@ export default function PrincipalDashboard() {
   }
 
   async function loadPhotosForKPI(showLoading = true) {
-    const orgId = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
-    if (!orgId) return;
     try {
       const res = await fetch(`/api/photos?limit=100&t=${Date.now()}`, { cache: 'no-store', credentials: 'include' });
       const json = await res.json();
@@ -279,9 +265,6 @@ export default function PrincipalDashboard() {
   // Load calendar events for KPI count
   useEffect(() => {
     const loadCalendarEventsForKPI = async () => {
-      const orgId = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
-      if (!orgId) return;
-      
       try {
         const events = await getEvents();
         
@@ -299,17 +282,14 @@ export default function PrincipalDashboard() {
       }
     };
 
-    if (finalOrgId && session?.user?.id) {
+    if (session?.user?.id) {
       loadCalendarEventsForKPI();
     }
-  }, [finalOrgId, session?.user?.id]);
+  }, [session?.user?.id]);
 
   // Listen for stories refresh event
   useEffect(() => {
     const handleStoriesRefresh = () => {
-      const orgId = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
-      if (!orgId) return;
-      
       // Fetch and update stories count immediately
       fetch(`/api/stories?t=${Date.now()}`, { cache: 'no-store', credentials: 'include' })
         .then(res => res.json())
@@ -333,7 +313,7 @@ export default function PrincipalDashboard() {
         window.removeEventListener('stories-refresh', handleStoriesRefresh);
       };
     }
-  }, [finalOrgId, session?.user?.id]);
+  }, [session?.user?.id]);
 
   // Listen for announcements refresh event
   useEffect(() => {
@@ -347,7 +327,7 @@ export default function PrincipalDashboard() {
         window.removeEventListener('announcements-refresh', handleAnnouncementsRefresh);
       };
     }
-  }, [finalOrgId, session?.user?.id, userMetadata]);
+  }, [session?.user?.id, userMetadata]);
 
   // Listen for photos refresh event
   useEffect(() => {
@@ -361,7 +341,7 @@ export default function PrincipalDashboard() {
         window.removeEventListener('photos-refresh', handlePhotosRefresh);
       };
     }
-  }, [finalOrgId, session?.user?.id]);
+  }, [session?.user?.id]);
 
   // Refresh all data function for real-time updates
   const refreshAllData = async () => {
@@ -536,9 +516,6 @@ export default function PrincipalDashboard() {
 
   // Load classes count for KPI (simplified, just count)
   async function loadClassesForKPI(showLoading = true) {
-    const orgId = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
-    if (!orgId) return;
-
     try {
       const res = await fetch(`/api/classes?t=${Date.now()}`, { cache: 'no-store', credentials: 'include' });
       const json = await res.json();
@@ -561,9 +538,6 @@ export default function PrincipalDashboard() {
 
   // Load staff count for KPI (fast, just count)
   async function loadStaffForKPI(showLoading = true) {
-    const orgId = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
-    if (!orgId) return;
-
     try {
       const res = await fetch(`/api/staff-management?t=${Date.now()}`, { cache: 'no-store', credentials: 'include' });
       const json = await res.json();
@@ -584,7 +558,6 @@ export default function PrincipalDashboard() {
 
   // Load staff members
   async function loadStaff(showLoading = true) {
-    if (!finalOrgId) return;
     if (loadingStaff && showLoading) return;
     try {
       if (showLoading) setLoadingStaff(true);
@@ -606,9 +579,6 @@ export default function PrincipalDashboard() {
 
   // Guardian functions (simplified for KPI counts only)
   async function loadGuardiansForKPI(showLoading = true) {
-    const orgId = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
-    if (!orgId) return;
-
     try {
       const res = await fetch(`/api/guardians?t=${Date.now()}`, { cache: 'no-store', credentials: 'include' });
       const json = await res.json();
@@ -630,9 +600,6 @@ export default function PrincipalDashboard() {
 
   // Student functions (simplified for KPI counts only)
   async function loadStudentsForKPI(showLoading = true) {
-    const orgId = finalOrgId || process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
-    if (!orgId) return;
-
     try {
       const res = await fetch(`/api/students?t=${Date.now()}`, { cache: 'no-store', credentials: 'include' });
       const json = await res.json();
@@ -689,7 +656,6 @@ export default function PrincipalDashboard() {
       {/* Stories Column */}
       <StoryColumn
         lang={lang}
-        orgId={finalOrgId}
         userId={session?.user?.id}
         userRole="principal"
       />
@@ -761,7 +727,6 @@ export default function PrincipalDashboard() {
             <h3 className="text-ds-h3 font-medium text-slate-900 dark:text-slate-100">{t.announcements_list}</h3>
           </div>
           <AnnouncementList
-            orgId={finalOrgId as string}
             userId={session?.user?.id}
             userRole={(userMetadata?.role || userMetadata?.activeRole || 'principal') as string}
             showAuthor={true}

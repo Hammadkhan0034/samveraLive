@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { Menu, Plus, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
-import { useCurrentUserOrgId } from '@/lib/hooks/useCurrentUserOrgId';
 import { PhotoUploadModal } from '@/app/components/shared/PhotoUploadModal';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
@@ -54,7 +53,6 @@ function PrincipalPhotosPageContent() {
   const { t, lang } = useLanguage();
   const { session } = useAuth();
   const router = useRouter();
-  const { orgId } = useCurrentUserOrgId();
   const { sidebarRef } = usePrincipalPageLayout();
 
   // State
@@ -75,7 +73,6 @@ function PrincipalPhotosPageContent() {
 
   // Fetch classes
   const fetchClasses = async () => {
-    if (!orgId) return;
 
     try {
       setLoadingClasses(true);
@@ -97,7 +94,6 @@ function PrincipalPhotosPageContent() {
 
   // Fetch students
   const fetchStudents = async () => {
-    if (!orgId) return;
 
     try {
       setLoadingStudents(true);
@@ -145,7 +141,6 @@ function PrincipalPhotosPageContent() {
 
   // Fetch photos
   const fetchPhotos = async () => {
-    if (!orgId) return;
 
     try {
       setIsLoading(true);
@@ -170,14 +165,12 @@ function PrincipalPhotosPageContent() {
     }
   };
 
-  // Fetch data on mount and when orgId changes
+  // Fetch data on mount
   useEffect(() => {
-    if (orgId) {
-      fetchPhotos();
-      fetchClasses();
-      fetchStudents();
-    }
-  }, [orgId]);
+    fetchPhotos();
+    fetchClasses();
+    fetchStudents();
+  }, []);
 
   // Handle successful upload
   const handleUploadSuccess = () => {
@@ -252,15 +245,13 @@ function PrincipalPhotosPageContent() {
 
         <div className="flex items-center gap-ds-sm">
           <ProfileSwitcher />
-          {orgId && (
-            <button
-              onClick={() => setIsModalOpen(true)}
+          <button
+            onClick={() => setIsModalOpen(true)}
               className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600"
             >
               <Plus className="h-4 w-4" />
               {t.upload_photo || 'Upload Photo'}
             </button>
-          )}
         </div>
       </div>
 
@@ -356,17 +347,14 @@ function PrincipalPhotosPageContent() {
         </div>
 
         {/* Photo Upload Modal */}
-        {orgId && (
-          <PhotoUploadModal
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-            onSuccess={handleUploadSuccess}
-            orgId={orgId}
-            classes={classes}
-            students={students}
-            userId={userId}
-          />
-        )}
+        <PhotoUploadModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSuccess={handleUploadSuccess}
+          classes={classes}
+          students={students}
+          userId={userId}
+        />
 
         {/* Delete Confirmation Modal */}
         <DeleteConfirmationModal

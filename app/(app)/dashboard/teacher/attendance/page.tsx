@@ -4,7 +4,6 @@ import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Users, Menu, CalendarDays } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
-import { useTeacherOrgId } from '@/lib/hooks/useTeacherOrgId';
 import { useTeacherClasses } from '@/lib/hooks/useTeacherClasses';
 import { useTeacherStudents } from '@/lib/hooks/useTeacherStudents';
 import { useAttendance } from '@/lib/hooks/useAttendance';
@@ -75,11 +74,9 @@ function AttendancePageHeader({
 
 export default function TeacherAttendancePage() {
   const { t, lang } = useLanguage();
-  const { orgId } = useTeacherOrgId();
   const { classes: teacherClasses, isLoading: loadingClasses } = useTeacherClasses();
   const { students, isLoading: loadingStudents, error: studentError } = useTeacherStudents(
-    teacherClasses,
-    orgId
+    teacherClasses
   );
   const {
     attendance,
