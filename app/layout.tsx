@@ -22,8 +22,20 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               (function() {
                 try {
                   const savedTheme = localStorage.getItem('theme');
-                  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                  const shouldUseDark = savedTheme ? savedTheme === 'dark' : prefersDark;
+                  let shouldUseDark = true; // Default to dark (matching ThemeProvider DEFAULT_THEME)
+                  
+                  if (savedTheme === 'light') {
+                    shouldUseDark = false;
+                  } else if (savedTheme === 'dark') {
+                    shouldUseDark = true;
+                  } else if (savedTheme === 'system') {
+                    // Check system preference when theme is 'system'
+                    shouldUseDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  } else {
+                    // No saved theme, default to dark (matching ThemeProvider behavior)
+                    shouldUseDark = true;
+                  }
+                  
                   if (shouldUseDark) {
                     document.documentElement.classList.add('dark');
                   } else {

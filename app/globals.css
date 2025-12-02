@@ -69,6 +69,8 @@
   --ds-text-muted: #94a3b8;
   --ds-surface-white: #1e293b;
   --ds-surface-card: #0f172a;
+  --ds-input-fill: #1e293b;
+  --ds-input-stroke: #334155;
   --foreground-rgb: 241, 245, 249;
   --background-start-rgb: 15, 23, 42;
   --background-end-rgb: 15, 23, 42;

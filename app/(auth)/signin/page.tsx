@@ -197,7 +197,7 @@ function SignInPageContent() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      className="w-full h-12 rounded-ds-xl border border-[#D8EBD8] bg-[#F5FFF7] dark:bg-mint-300/30 px-ds-sm text-ds-body text-ds-text-primary dark:text-slate-100 placeholder-ds-text-muted dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-mint-500 transition-all"
+                      className="w-full h-12 rounded-ds-xl border border-[#D8EBD8] dark:border-slate-600 bg-[#F5FFF7] dark:bg-slate-700 px-ds-sm text-ds-body text-ds-text-primary dark:text-slate-100 placeholder-ds-text-muted dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-mint-500 transition-all"
                       placeholder="you@example.com"
                     />
                   </div>
@@ -212,7 +212,7 @@ function SignInPageContent() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                        className="w-full h-12 rounded-ds-xl border border-[#D8EBD8] bg-[#F5FFF7] dark:bg-mint-300/30 px-ds-sm pr-28 text-ds-body text-ds-text-primary dark:text-slate-100 placeholder-ds-text-muted dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-mint-500 transition-all"
+                        className="w-full h-12 rounded-ds-xl border border-[#D8EBD8] dark:border-slate-600 bg-[#F5FFF7] dark:bg-slate-700 px-ds-sm pr-28 text-ds-body text-ds-text-primary dark:text-slate-100 placeholder-ds-text-muted dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-mint-500 transition-all"
                         placeholder="••••••••"
                       />
                       <div className="absolute right-ds-sm top-1/2 -translate-y-1/2 flex items-center gap-ds-sm">
