@@ -11,9 +11,7 @@ export interface AuthUser {
   aud: string;                   // audience, usually "authenticated"
   role: string;                  // role (e.g. "authenticated")
   email: string;
-
   user_metadata: UserMetadata;
-
   created_at: string;            // ISO timestamp
   updated_at?: string | null;    // ISO timestamp
   confirmed_at?: string | null;
@@ -23,11 +21,8 @@ export interface AuthUser {
 }
 
 export interface UserMetadata {
-  /** Array of roles assigned to the user */
   roles: SamveraRole[];
-  /** Currently active role for the user */
   activeRole: SamveraRole;
-  /** Organization ID the user belongs to */
   org_id: string;
 }
 

@@ -114,7 +114,7 @@ export async function ConditionalServerContent() {
 
 // Server component that shows user's current permissions
 export async function UserPermissionsDisplay() {
-  const { user, session } = await requireServerAuth();
+  const { user } = await requireServerAuth();
   
   const userRoles = user.user_metadata?.roles || [];
   const activeRole = user.user_metadata?.activeRole;

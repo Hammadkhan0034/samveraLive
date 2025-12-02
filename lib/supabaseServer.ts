@@ -1,8 +1,8 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import type { Session } from '@supabase/supabase-js';
 import { type SamveraRole, type UserMetadata } from './auth';
 import type { AuthUser } from './types/auth';
+import { AuthRequiredError, NetworkAuthError } from './auth-errors';
 
 export const createSupabaseServer = async () => {
   const cookieStore = await cookies();
@@ -38,7 +38,6 @@ export type ServerAuthError = ({ isNetworkError?: boolean } & {
 
 export type ServerAuthResult = {
   user: AuthUser | null;
-  session: Session | null;
   error: ServerAuthError;
 };
 
@@ -55,15 +54,10 @@ export async function getServerUser(): Promise<ServerAuthResult> {
                            error.status === 0;
     
     if (isNetworkError) {
-      // For network errors, try to get session from cookies as fallback
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        return { user: session.user as unknown as AuthUser, session, error: null };
-      }
-      // If session also fails, return network error
+      // For network errors, we currently surface a structured error so callers
+      // can distinguish retryable auth failures from regular auth errors.
       return {
         user: null,
-        session: null,
         error: {
           message: error.message,
           name: error.name,
@@ -78,42 +72,39 @@ export async function getServerUser(): Promise<ServerAuthResult> {
     return error
       ? {
           user: null,
-          session: null,
           error: {
             message: error.message,
             name: error.name,
             status: (error as any).status,
           },
         }
-      : { user: null, session: null, error: null };
+      : { user: null, error: null };
   }
   
   // User is authenticated via getUser() - session is not needed for authentication
   // If session is required downstream, it can be fetched separately
-  return { user: user as unknown as AuthUser, session: null, error: null };
+  return { user: user as unknown as AuthUser, error: null };
 }
 
-export async function requireServerAuth(): Promise<{ user: AuthUser; session: Session | null }> {
-  const { user, session, error } = await getServerUser();
+export async function requireServerAuth(): Promise<{ user: AuthUser }> {
+  const { user, error } = await getServerUser();
   
   if (error) {
-    // If it's a network error, don't throw - allow request to continue
-    // Client-side will handle retry
     if (error.isNetworkError) {
-      throw new Error('Network error - please retry');
+      throw new NetworkAuthError();
     }
-    throw new Error('Authentication required');
+    throw new AuthRequiredError();
   }
   
   if (!user) {
-    throw new Error('Authentication required');
+    throw new AuthRequiredError();
   }
   
-  return { user, session };
+  return { user };
 }
 
 export async function requireServerRole(requiredRole: SamveraRole) {
-  const { user, session } = await requireServerAuth();
+  const { user } = await requireServerAuth();
   
   const userMetadata = user.user_metadata as UserMetadata | undefined;
   const userRoles = userMetadata?.roles || [];
@@ -123,11 +114,11 @@ export async function requireServerRole(requiredRole: SamveraRole) {
     throw new Error(`Role '${requiredRole}' required. User has roles: ${userRoles.join(', ')}`);
   }
   
-  return { user, session, role: requiredRole, activeRole };
+  return { user, role: requiredRole, activeRole };
 }
 
 export async function requireServerRoles(requiredRoles: SamveraRole[]) {
-  const { user, session } = await requireServerAuth();
+  const { user } = await requireServerAuth();
   
   const userMetadata = user.user_metadata as UserMetadata | undefined;
   const userRoles = userMetadata?.roles || [];
@@ -139,7 +130,7 @@ export async function requireServerRoles(requiredRoles: SamveraRole[]) {
     throw new Error(`One of roles [${requiredRoles.join(', ')}] required. User has roles: ${userRoles.join(', ')}`);
   }
   
-  return { user, session, roles: userRoles, activeRole };
+  return { user, roles: userRoles, activeRole };
 }
 
 // Role hierarchy validation (admin > principal > teacher > parent)
@@ -151,7 +142,7 @@ const ROLE_HIERARCHY: Record<SamveraRole, number> = {
 };
 
 export async function requireServerRoleLevel(minimumRole: SamveraRole) {
-  const { user, session } = await requireServerAuth();
+  const { user } = await requireServerAuth();
   
   const userMetadata = user.user_metadata as UserMetadata | undefined;
   const userRoles = userMetadata?.roles || [];
@@ -164,12 +155,12 @@ export async function requireServerRoleLevel(minimumRole: SamveraRole) {
     throw new Error(`Minimum role level '${minimumRole}' required. User max level: ${userMaxLevel}`);
   }
   
-  return { user, session, roles: userRoles, activeRole, level: userMaxLevel };
+  return { user, roles: userRoles, activeRole, level: userMaxLevel };
 }
 
 // Organization/class scoped access
 export async function requireServerOrgAccess(orgId: string) {
-  const { user, session } = await requireServerAuth();
+  const { user } = await requireServerAuth();
   
   const userMetadata = user.user_metadata as UserMetadata | undefined;
   const userOrgId = userMetadata?.org_id;
@@ -178,11 +169,11 @@ export async function requireServerOrgAccess(orgId: string) {
     throw new Error(`Access denied to organization ${orgId}`);
   }
   
-  return { user, session, orgId };
+  return { user, orgId };
 }
 
 export async function requireServerClassAccess(classId: string) {
-  const { user, session } = await requireServerAuth();
+  const { user } = await requireServerAuth();
   
   const userMetadata = user.user_metadata as UserMetadata | undefined;
   // class_id is no longer in UserMetadata, access it directly from user_metadata if needed
@@ -197,7 +188,7 @@ export async function requireServerClassAccess(classId: string) {
     throw new Error(`Access denied to class ${classId}`);
   }
   
-  return { user, session, classId, orgId: userOrgId };
+  return { user, classId, orgId: userOrgId };
 }
 
 

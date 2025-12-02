@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { requireServerAuth } from './supabaseServer';
 import { supabaseAdmin } from './supabaseClient';
-import { type AuthUser, type UserMetadata } from './types/auth';
+import { type AuthUser, type UserMetadata, type SamveraRole } from './types/auth';
+import { AuthRequiredError, ForbiddenError, NetworkAuthError } from './auth-errors';
 
 /**
  * Custom error class for missing organization ID
@@ -11,6 +12,34 @@ export class MissingOrgIdError extends Error {
     super('User organization ID not found. Please contact support.');
     this.name = 'MissingOrgIdError';
   }
+}
+
+export type AuthOptions = {
+  requireOrg?: boolean;
+  allowedRoles?: SamveraRole[];
+};
+
+export async function getRequestAuthContext(
+  options: AuthOptions = {}
+): Promise<{ user: AuthUser }> {
+  const { user } = await requireServerAuth();
+  const metadata = user.user_metadata as UserMetadata | undefined;
+
+  const roles = (metadata?.roles ?? []) as SamveraRole[];
+  const orgId = metadata?.org_id;
+
+  if (options.allowedRoles && options.allowedRoles.length > 0) {
+    const hasAccess = roles.some((role) => options.allowedRoles!.includes(role));
+    if (!hasAccess) {
+      throw new ForbiddenError();
+    }
+  }
+
+  if (options.requireOrg && !orgId) {
+    throw new MissingOrgIdError();
+  }
+
+  return { user };
 }
 
 export async function getCurrentUserOrgId(user?: AuthUser): Promise<string> {
@@ -43,19 +72,13 @@ export async function getCurrentUserOrgId(user?: AuthUser): Promise<string> {
   return data.org_id;
 }
 
-/**
- * Convenience helper to get the authenticated user and their organization ID.
- * Wraps requireServerAuth + getCurrentUserOrgId so route handlers can stay concise.
- */
+
 export async function getAuthUserWithOrg(): Promise<AuthUser> {
   const { user } = await requireServerAuth();
   return user;
 }
 
-/**
- * Map common authentication / org resolution errors to HTTP responses.
- * Centralizes how we treat MissingOrgIdError and transient network issues.
- */
+
 export function mapAuthErrorToResponse(err: unknown) {
   if (err instanceof MissingOrgIdError) {
     return NextResponse.json(
@@ -67,11 +90,36 @@ export function mapAuthErrorToResponse(err: unknown) {
     );
   }
 
+  if (err instanceof AuthRequiredError) {
+    return NextResponse.json(
+      { error: err.message || 'Authentication required' },
+      { status: 401 }
+    );
+  }
+
+  if (err instanceof ForbiddenError) {
+    return NextResponse.json(
+      { error: err.message || 'Access denied. Valid role required.' },
+      { status: 403 }
+    );
+  }
+
+  if (err instanceof NetworkAuthError) {
+    return NextResponse.json(
+      {
+        error: 'Authentication service unavailable. Please try again.',
+        retryable: true,
+      },
+      { status: 503 }
+    );
+  }
+
   const message = err instanceof Error ? err.message : String(err);
   const isNetworkError =
     message.includes('Network error') ||
     message.includes('fetch failed') ||
-    message.includes('timeout');
+    message.includes('timeout') ||
+    message.includes('Connect Timeout');
 
   if (isNetworkError) {
     return NextResponse.json(
@@ -87,5 +135,18 @@ export function mapAuthErrorToResponse(err: unknown) {
     { error: 'Authentication required' },
     { status: 401 }
   );
+}
+
+export async function withAuthRoute(
+  _request: Request,
+  options: AuthOptions,
+  handler: (ctx: { user: AuthUser }) => Promise<ReturnType<typeof NextResponse.json>>
+) {
+  try {
+    const auth = await getRequestAuthContext(options);
+    return await handler(auth);
+  } catch (err) {
+    return mapAuthErrorToResponse(err);
+  }
 }
 

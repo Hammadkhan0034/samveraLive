@@ -36,7 +36,7 @@ export async function createAnnouncement(data: {
   orgId?: string;
 }) {
   // Only teachers, principals, and admins can create announcements
-  const { user, session } = await requireServerRoles(['teacher', 'principal', 'admin']);
+  const { user } = await requireServerRoles(['teacher', 'principal', 'admin']);
   
   const supabase = supabaseAdmin ?? await createSupabaseServer();
   // Priority: explicit orgId -> user metadata -> admin users table -> class fallback
@@ -370,7 +370,7 @@ export async function deleteAnnouncement(announcementId: string) {
 
 export async function getClassData(classId: string) {
   // Teachers, principals, and admins can access class data
-  const { user, session } = await requireServerClassAccess(classId);
+  const { user } = await requireServerClassAccess(classId);
   
   const supabase = await createSupabaseServer();
   
@@ -449,7 +449,7 @@ export async function getOrgUsers(orgId: string) {
 
 export async function switchUserRole(newRole: SamveraRole) {
   // Users can only switch to roles they have
-  const { user, session } = await requireServerAuth();
+  const { user } = await requireServerAuth();
   
   const userRoles = user.user_metadata?.roles || [];
   
@@ -729,7 +729,7 @@ export async function createEvent(data: {
   location?: string | null;
 }) {
   // Only principals and teachers can create events
-  const { user, session } = await requireServerRoles(['principal', 'teacher']);
+  const { user } = await requireServerRoles(['principal', 'teacher']);
   
   const supabase = supabaseAdmin ?? await createSupabaseServer();
   

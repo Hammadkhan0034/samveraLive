@@ -36,8 +36,8 @@ const getHealthLogsQuerySchema = z.object({
 export async function GET(request: Request) {
   let user: any;
   try {
-    const authResult = await requireServerAuth();
-    user = authResult.user;
+    const { user: authenticatedUser } = await requireServerAuth();
+    user = authenticatedUser;
 
     // Check if user has a valid role (principal, admin, teacher, or parent)
     const userRoles = user.user_metadata?.roles || [];
@@ -224,8 +224,8 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   let user: any;
   try {
-    const authResult = await requireServerAuth();
-    user = authResult.user;
+    const { user: authenticatedUser } = await requireServerAuth();
+    user = authenticatedUser;
     const userRoles = user.user_metadata?.roles || [];
     const hasAccess = userRoles.some((role: string) =>
       ['principal', 'admin', 'teacher'].includes(role)
@@ -365,8 +365,8 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   let user: any;
   try {
-    const authResult = await requireServerAuth();
-    user = authResult.user;
+    const { user: authenticatedUser } = await requireServerAuth();
+    user = authenticatedUser;
     const userRoles = user.user_metadata?.roles || [];
     const hasAccess = userRoles.some((role: string) =>
       ['principal', 'admin', 'teacher'].includes(role)
@@ -508,8 +508,8 @@ export async function PUT(request: Request) {
 export async function DELETE(request: Request) {
   let user: any;
   try {
-    const authResult = await requireServerAuth();
-    user = authResult.user;
+    const { user: authenticatedUser } = await requireServerAuth();
+    user = authenticatedUser;
     const userRoles = user.user_metadata?.roles || [];
     const hasAccess = userRoles.some((role: string) =>
       ['principal', 'admin', 'teacher'].includes(role)
