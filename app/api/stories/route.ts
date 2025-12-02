@@ -5,6 +5,7 @@ import { requireServerAuth } from '@/lib/supabaseServer'
 import { getAuthUserWithOrg, MissingOrgIdError, mapAuthErrorToResponse } from '@/lib/server-helpers'
 import { z } from 'zod'
 import { validateQuery, validateBody, classIdSchema, userIdSchema, titleSchema, captionSchema, futureDateSchema, uuidSchema, storyIdSchema, isoDateTimeSchema, positiveNumberSchema } from '@/lib/validation'
+import type { User } from '@supabase/supabase-js'
 
 // GET query parameter schema - orgId removed, now fetched server-side
 const getStoriesQuerySchema = z.object({
@@ -26,9 +27,12 @@ const getStoriesQuerySchema = z.object({
 }, { message: 'For teacher audience, either teacherClassIds or teacherAuthorId must be provided' });
 
 export async function GET(request: Request) {
+  // Declare variables at function scope to ensure proper initialization
+  let user: User | null = null;
+  let orgId: string | null = null;
+
   try {
     // Get authenticated user and orgId from server-side auth (no query params needed)
-    let user, orgId: string;
     try {
       const authContext = await getAuthUserWithOrg();
       user = authContext.user;
@@ -41,6 +45,15 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: message }, { status: 401 });
     }
     
+    // Validate that user and orgId are properly initialized
+    if (!user || !orgId) {
+      console.error('❌ Stories API: User or orgId is null after authentication', {
+        hasUser: !!user,
+        hasOrgId: !!orgId
+      });
+      return NextResponse.json({ error: 'Authentication failed' }, { status: 401 });
+    }
+    
     // Check if user has a valid role (principal, admin, teacher, or parent)
     const userRoles = user.user_metadata?.roles || [];
     const hasAccess = userRoles.some((role: string) => ['principal', 'admin', 'teacher', 'parent'].includes(role));
@@ -51,6 +64,10 @@ export async function GET(request: Request) {
       }, { status: 403 });
     }
   } catch (authError: any) {
+    console.error('❌ Stories API: Authentication error', {
+      message: authError.message,
+      error: authError
+    });
     if (authError.message === 'Authentication required') {
       return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
     }
@@ -58,7 +75,17 @@ export async function GET(request: Request) {
   }
 
   try {
+    // Validate user and orgId before using them
+    if (!user || !orgId) {
+      console.error('❌ Stories API: User or orgId is null in query section', {
+        hasUser: !!user,
+        hasOrgId: !!orgId
+      });
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    }
+
     if (!supabaseAdmin) {
+      console.error('❌ Stories API: Supabase admin client not configured');
       return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 })
     }
 
@@ -72,6 +99,15 @@ export async function GET(request: Request) {
     // Use authenticated user's ID for parentUserId and principalAuthorId if not provided
     const parentUserId = user.id; // Always use authenticated user
     const finalPrincipalAuthorId = principalAuthorId || user.id; // Use provided or authenticated user
+    
+    // Validate finalPrincipalAuthorId
+    if (!finalPrincipalAuthorId) {
+      console.error('❌ Stories API: finalPrincipalAuthorId is null or undefined', {
+        principalAuthorId,
+        userId: user.id
+      });
+      return NextResponse.json({ error: 'Invalid author ID' }, { status: 400 });
+    }
 
     const nowIso = new Date().toISOString()
 
@@ -180,6 +216,18 @@ export async function GET(request: Request) {
       // 1. All org-wide stories they created (class_id is null)
       // 2. All class-specific stories they created (for any class)
       // Use authenticated user's ID or provided principalAuthorId
+      if (!finalPrincipalAuthorId) {
+        console.error('❌ Stories API: Cannot filter by principal - finalPrincipalAuthorId is null', {
+          principalAuthorId,
+          userId: user.id
+        });
+        return NextResponse.json({ error: 'Invalid principal author ID' }, { status: 400 });
+      }
+      console.log('🔍 Principal story filtering:', {
+        finalPrincipalAuthorId,
+        userId: user.id,
+        principalAuthorId
+      });
       query = query.eq('author_id', finalPrincipalAuthorId)
     }
     
@@ -195,7 +243,16 @@ export async function GET(request: Request) {
 
     let { data, error } = await query
     if (error) {
-      console.error('❌ Error fetching stories:', error)
+      console.error('❌ Error fetching stories:', {
+        error: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        audience,
+        orgId,
+        userId: user.id,
+        finalPrincipalAuthorId: audience === 'principal' ? (principalAuthorId || user.id) : undefined
+      });
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
@@ -294,6 +351,11 @@ export async function GET(request: Request) {
       headers: getStableDataCacheHeaders()
     })
   } catch (e: any) {
+    console.error('❌ Stories API: Unexpected error in GET handler', {
+      message: e.message,
+      stack: e.stack,
+      error: e
+    });
     return NextResponse.json({ error: e.message || 'Unknown error' }, { status: 500 })
   }
 }
@@ -315,8 +377,11 @@ const postStoryBodySchema = z.object({
 });
 
 export async function POST(request: Request) {
+  // Declare variables at function scope to ensure proper initialization
+  let user: User | null = null;
+  let orgId: string | null = null;
+
   // Get authenticated user and orgId from server-side auth
-  let user, orgId: string;
   try {
     const authContext = await getAuthUserWithOrg();
     user = authContext.user;
@@ -329,8 +394,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: message }, { status: 401 });
   }
 
+  // Validate that user and orgId are properly initialized
+  if (!user || !orgId) {
+    console.error('❌ Stories API POST: User or orgId is null after authentication', {
+      hasUser: !!user,
+      hasOrgId: !!orgId
+    });
+    return NextResponse.json({ error: 'Authentication failed' }, { status: 401 });
+  }
+
   try {
     if (!supabaseAdmin) {
+      console.error('❌ Stories API POST: Supabase admin client not configured');
       return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 })
     }
 
@@ -461,22 +536,22 @@ export async function POST(request: Request) {
       if (finalClassId) {
         // Class-specific story: notify students and their parents
         notificationType = 'story_class';
-        targetUserIds = await getClassNotificationTargets(finalClassId, org_id);
+        targetUserIds = await getClassNotificationTargets(finalClassId, orgId);
       } else {
         // Organization-wide story: notify all teachers and all parents
         notificationType = 'story_org';
-        targetUserIds = await getOrgNotificationTargets(org_id);
+        targetUserIds = await getOrgNotificationTargets(orgId);
       }
       
       // Exclude the author from receiving notifications about their own story
-      if (author_id) {
-        targetUserIds = targetUserIds.filter(id => id !== author_id);
+      if (user.id) {
+        targetUserIds = targetUserIds.filter(id => id !== user.id);
       }
       
       // Only create notifications if there are target users
       if (targetUserIds.length > 0 && data) {
         await createBulkNotifications(
-          org_id,
+          orgId,
           targetUserIds,
           notificationType,
           title || 'New story',
@@ -484,7 +559,7 @@ export async function POST(request: Request) {
           {
             story_id: data.id,
             class_id: finalClassId,
-            author_id: author_id || null,
+            author_id: user.id || null,
           }
         );
       }
@@ -495,6 +570,11 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ story: data, items: insertedItems }, { status: 201 })
   } catch (e: any) {
+    console.error('❌ Stories API: Unexpected error in POST handler', {
+      message: e.message,
+      stack: e.stack,
+      error: e
+    });
     return NextResponse.json({ error: e.message || 'Unknown error' }, { status: 500 })
   }
 }
@@ -514,8 +594,11 @@ const putStoryBodySchema = z.object({
 });
 
 export async function PUT(request: Request) {
+  // Declare variables at function scope to ensure proper initialization
+  let user: User | null = null;
+  let orgId: string | null = null;
+
   // Get authenticated user and orgId from server-side auth
-  let user, orgId: string;
   try {
     const authContext = await getAuthUserWithOrg();
     user = authContext.user;
@@ -528,8 +611,18 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: message }, { status: 401 });
   }
 
+  // Validate that user and orgId are properly initialized
+  if (!user || !orgId) {
+    console.error('❌ Stories API PUT: User or orgId is null after authentication', {
+      hasUser: !!user,
+      hasOrgId: !!orgId
+    });
+    return NextResponse.json({ error: 'Authentication failed' }, { status: 401 });
+  }
+
   try {
     if (!supabaseAdmin) {
+      console.error('❌ Stories API PUT: Supabase admin client not configured');
       return NextResponse.json({ error: 'Admin client not configured' }, { status: 500 })
     }
 
