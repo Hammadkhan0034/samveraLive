@@ -1,16 +1,13 @@
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
 
 import { getStableDataCacheHeaders } from '@/lib/cacheConfig';
+import { validateBody, validateQuery } from '@/lib/validation';
 import {
-  classIdSchema,
-  dateSchema,
-  notesSchema,
-  userIdSchema,
-  uuidSchema,
-  validateBody,
-  validateQuery,
-} from '@/lib/validation';
+  deleteMenuQuerySchema,
+  getMenusQuerySchema,
+  postMenuBodySchema,
+  putMenuBodySchema,
+} from '@/lib/validation/menus';
 import type { AuthUser, SamveraRole, UserMetadata } from '@/lib/types/auth';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -60,11 +57,6 @@ export async function handleGetMenus(
   }
 
   const { searchParams } = new URL(request.url);
-  const getMenusQuerySchema = z.object({
-    classId: classIdSchema.nullable().optional(),
-    day: dateSchema.optional(),
-  });
-
   const queryValidation = validateQuery(getMenusQuerySchema, searchParams);
   if (!queryValidation.success) {
     return queryValidation.error;
@@ -116,17 +108,6 @@ export async function handlePostMenu(
   const orgId = metadata?.org_id;
 
   const body = await request.json();
-  const postMenuBodySchema = z.object({
-    class_id: classIdSchema.optional(),
-    day: dateSchema,
-    breakfast: z.string().max(1000).nullable().optional(),
-    lunch: z.string().max(1000).nullable().optional(),
-    snack: z.string().max(1000).nullable().optional(),
-    notes: notesSchema,
-    is_public: z.boolean().default(true),
-    created_by: userIdSchema.optional(),
-  });
-
   const bodyValidation = validateBody(postMenuBodySchema, body);
   if (!bodyValidation.success) {
     return bodyValidation.error;
@@ -153,15 +134,6 @@ export async function handlePutMenu(
   adminClient: SupabaseClient,
 ) {
   const body = await request.json();
-  const putMenuBodySchema = z.object({
-    id: uuidSchema,
-    breakfast: z.string().max(1000).nullable().optional(),
-    lunch: z.string().max(1000).nullable().optional(),
-    snack: z.string().max(1000).nullable().optional(),
-    notes: notesSchema,
-    is_public: z.boolean().optional(),
-  });
-
   const bodyValidation = validateBody(putMenuBodySchema, body);
   if (!bodyValidation.success) {
     return bodyValidation.error;
@@ -194,10 +166,6 @@ export async function handleDeleteMenu(
   adminClient: SupabaseClient,
 ) {
   const { searchParams } = new URL(request.url);
-  const deleteMenuQuerySchema = z.object({
-    id: uuidSchema,
-  });
-
   const queryValidation = validateQuery(deleteMenuQuerySchema, searchParams);
   if (!queryValidation.success) {
     return queryValidation.error;

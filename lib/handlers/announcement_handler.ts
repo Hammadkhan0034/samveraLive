@@ -1,13 +1,8 @@
 import { NextResponse } from 'next/server';
 
 import { getStableDataCacheHeaders } from '@/lib/cacheConfig';
-import {
-  validateQuery,
-  uuidSchema,
-  classIdSchema,
-  userIdSchema,
-} from '@/lib/validation';
-import { z } from 'zod';
+import { validateQuery } from '@/lib/validation';
+import { getAnnouncementsQuerySchema } from '@/lib/validation/announcements';
 import type { AuthUser } from '@/lib/types/auth';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -23,24 +18,6 @@ export async function handleGetAnnouncements(
   adminClient: SupabaseClient
 ) {
   const { searchParams } = new URL(request.url);
-
-  const getAnnouncementsQuerySchema = z.object({
-    id: uuidSchema.optional(),
-    classId: classIdSchema.optional(),
-    teacherClassIds: z.string().optional(), // comma-separated
-    limit: z.preprocess(
-      (val) => {
-        if (val === undefined || val === null) return 10;
-        const num = Number(val);
-        return Number.isNaN(num) ? 10 : num;
-      },
-      z.number()
-    ),
-    userId: userIdSchema.optional(),
-    userRole: z
-      .enum(['parent', 'guardian', 'teacher', 'principal', 'admin'])
-      .optional(),
-  });
 
   const queryValidation = validateQuery(getAnnouncementsQuerySchema, searchParams);
   if (!queryValidation.success) {
