@@ -232,18 +232,18 @@ export default function GuardiansPage() {
 
   // Content for teacher layout (with gradient background and back button)
   const teacherContent = (
-      <div className="h-full bg-mint-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 overflow-y-auto">
+      <div className="h-full bg-mint-200 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 overflow-y-auto">
         <div className="mx-auto max-w-6xl px-4 pt-8 pb-36 md:px-6">
           {/* Header with Back button */}
           <div className="mb-ds-md flex items-center gap-3 flex-wrap mt-14">
             <button
               onClick={() => router.back()}
-              className="inline-flex items-center gap-2 rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              className="inline-flex items-center gap-2 rounded-ds-md border border-input-stroke px-4 py-2 text-ds-small hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
             >
               <ArrowLeft className="h-4 w-4" /> {lang === 'is' ? 'Til baka' : 'Back'}
             </button>
-            <h1 className="text-ds-h1 font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.guardians}</h1>
-            <div className="flex items-center gap-2 ml-auto">
+            <h1 className="text-ds-h1 font-semibold tracking-tight text-ds-text-primary dark:text-slate-100">{t.guardians}</h1>
+            <div className="flex items-center gap-ds-xs ml-auto">
               <button
                 onClick={openCreateGuardianModal}
                 className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 hover:bg-mint-600 px-4 py-2 text-ds-small text-white transition-colors"
@@ -254,16 +254,16 @@ export default function GuardiansPage() {
           </div>
 
       {/* Guardians Table */}
-      <div className="rounded-ds-lg border border-slate-200 bg-white pt-6 px-6 pb-0 shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
-        <div className="flex items-center justify-between mb-4 gap-3">
-          <h2 className="text-ds-h3 font-medium text-slate-900 dark:text-slate-100">{t.guardians}</h2>
+      <div className="rounded-ds-lg border border-slate-200 bg-white pt-6 px-ds-md pb-0 shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+        <div className="flex items-center justify-between mb-ds-sm gap-3">
+          <h2 className="text-ds-h3 font-medium text-ds-text-primary dark:text-slate-100">{t.guardians}</h2>
           <div className="relative">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
               placeholder={'Search guardians...'}
-              className="pl-3 pr-3 py-1.5 rounded-ds-md border border-slate-300 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 w-64"
+              className="pl-3 pr-3 py-1.5 rounded-ds-md border border-input-stroke bg-input-fill text-ds-small focus:border-mint-200 focus:outline-none focus:ring-2 focus:ring-mint-200/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 w-64"
             />
           </div>
         </div>
@@ -310,11 +310,11 @@ export default function GuardiansPage() {
           }}
         />
         {/* Pagination controls */}
-        <div className="mt-4 mb-6 w-full flex justify-end gap-2">
+        <div className="mt-ds-sm mb-6 w-full flex justify-end gap-ds-xs">
           <button
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className="inline-flex items-center rounded-ds-md border border-slate-400 px-3 py-1.5 text-ds-small disabled:opacity-50 hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+            className="inline-flex items-center rounded-ds-md border border-input-stroke px-3 py-1.5 text-ds-small disabled:opacity-50 hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
           >
             {'Prev'}
           </button>
@@ -328,7 +328,7 @@ export default function GuardiansPage() {
             <button
               key={idx}
               onClick={() => setCurrentPage(idx + 1)}
-              className={`inline-flex items-center rounded-ds-md px-3 py-1.5 text-ds-small transition-colors ${currentPage === idx + 1 ? 'bg-mint-500 text-white border border-mint-500' : 'border border-slate-400 hover:bg-mint-50 dark:border-slate-600 dark:text-slate-200'}`}
+              className={`inline-flex items-center rounded-ds-md px-3 py-1.5 text-ds-small transition-colors ${currentPage === idx + 1 ? 'bg-mint-500 text-white border border-mint-500' : 'border border-input-stroke hover:bg-mint-50 dark:border-slate-600 dark:text-slate-200'}`}
             >
               {idx + 1}
             </button>
@@ -342,7 +342,7 @@ export default function GuardiansPage() {
               const email = ((g.email || '')).toLowerCase();
               return first.includes(q) || last.includes(q) || `${first} ${last}`.includes(q) || email.includes(q);
             }).length : guardians.length)}
-            className="inline-flex items-center rounded-ds-md border border-slate-400 px-3 py-1.5 text-ds-small disabled:opacity-50 hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+            className="inline-flex items-center rounded-ds-md border border-input-stroke px-3 py-1.5 text-ds-small disabled:opacity-50 hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
           >
             {'Next'}
           </button>
@@ -381,14 +381,14 @@ export default function GuardiansPage() {
             {/* Mobile menu button */}
             <button
               onClick={() => sidebarRef.current?.open()}
-              className="md:hidden p-2 rounded-ds-md hover:bg-mint-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
+              className="md:hidden p-2 rounded-ds-md hover:bg-mint-200 dark:hover:bg-slate-800 text-ds-text-secondary dark:text-slate-300 transition-colors"
               aria-label="Toggle sidebar"
             >
               <Menu className="h-5 w-5" />
             </button>
             <div>
               <h2 className="text-ds-h1 font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.guardians}</h2>
-              <p className="mt-1 text-ds-small text-slate-600 dark:text-slate-400">Manage guardians</p>
+              <p className="mt-1 text-ds-small text-ds-text-secondary dark:text-slate-400">Manage guardians</p>
             </div>
           </div>
 
@@ -406,14 +406,14 @@ export default function GuardiansPage() {
         {/* Guardians Table */}
         <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
           <div className="flex items-center justify-between mb-4 gap-ds-sm">
-            <h2 className="text-ds-h3 font-medium text-slate-900 dark:text-slate-100">{t.guardians}</h2>
+            <h2 className="text-ds-h3 font-medium text-ds-text-primary dark:text-slate-100">{t.guardians}</h2>
             <div className="relative">
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                 placeholder={'Search guardians...'}
-                className="pl-3 pr-3 py-1.5 rounded-ds-md border border-slate-300 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 w-64"
+                className="pl-3 pr-3 py-1.5 rounded-ds-md border border-input-stroke bg-input-fill text-ds-small focus:border-mint-200 focus:outline-none focus:ring-2 focus:ring-mint-200/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 w-64"
               />
             </div>
           </div>
@@ -460,11 +460,11 @@ export default function GuardiansPage() {
             }}
           />
           {/* Pagination controls */}
-          <div className="mt-4 w-full flex justify-end gap-2">
+          <div className="mt-ds-sm w-full flex justify-end gap-ds-xs">
             <button
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="inline-flex items-center rounded-ds-md border border-slate-400 px-3 py-1.5 text-ds-small disabled:opacity-50 hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+              className="inline-flex items-center rounded-ds-md border border-input-stroke px-3 py-1.5 text-ds-small disabled:opacity-50 hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
             >
               {'Prev'}
             </button>
@@ -478,7 +478,7 @@ export default function GuardiansPage() {
               <button
                 key={idx}
                 onClick={() => setCurrentPage(idx + 1)}
-                className={`inline-flex items-center rounded-ds-md px-3 py-1.5 text-ds-small transition-colors ${currentPage === idx + 1 ? 'bg-mint-500 text-white border border-mint-500' : 'border border-slate-400 hover:bg-mint-50 dark:border-slate-600 dark:text-slate-200'}`}
+                className={`inline-flex items-center rounded-ds-md px-3 py-1.5 text-ds-small transition-colors ${currentPage === idx + 1 ? 'bg-mint-500 text-white border border-mint-500' : 'border border-input-stroke hover:bg-mint-50 dark:border-slate-600 dark:text-slate-200'}`}
               >
                 {idx + 1}
               </button>
@@ -492,7 +492,7 @@ export default function GuardiansPage() {
                 const email = ((g.email || '')).toLowerCase();
                 return first.includes(q) || last.includes(q) || `${first} ${last}`.includes(q) || email.includes(q);
               }).length : guardians.length)}
-              className="inline-flex items-center rounded-ds-md border border-slate-400 px-3 py-1.5 text-ds-small disabled:opacity-50 hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+              className="inline-flex items-center rounded-ds-md border border-input-stroke px-3 py-1.5 text-ds-small disabled:opacity-50 hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
             >
               {'Next'}
             </button>

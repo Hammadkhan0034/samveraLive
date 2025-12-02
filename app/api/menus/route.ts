@@ -7,44 +7,32 @@ import { z } from 'zod'
 import { validateQuery, validateBody, classIdSchema, userIdSchema, dateSchema, notesSchema, uuidSchema } from '@/lib/validation'
 
 export async function GET(request: Request) {
+  // Get authenticated user and orgId from server-side auth (no query params needed)
+  let user, orgId: string;
   try {
-    // Get authenticated user and orgId from server-side auth (no query params needed)
-    let user, orgId: string;
-    try {
-      const authContext = await getAuthUserWithOrg();
-      user = authContext.user;
-      orgId = authContext.orgId;
-    } catch (err) {
-      if (err instanceof MissingOrgIdError) {
-        return mapAuthErrorToResponse(err);
-      }
-      const message = err instanceof Error ? err.message : 'Authentication required';
-      return NextResponse.json({ error: message }, { status: 401 });
+    const authContext = await getAuthUserWithOrg();
+    user = authContext.user;
+    orgId = authContext.orgId;
+  } catch (err) {
+    if (err instanceof MissingOrgIdError) {
+      return mapAuthErrorToResponse(err);
     }
-    
-    // Check if user has a valid role (principal, admin, teacher, or parent)
-    const userRoles = user.user_metadata?.roles || [];
-    const hasAccess = userRoles.some((role: string) => ['principal', 'admin', 'teacher', 'parent'].includes(role));
-    
-    if (!hasAccess) {
-      return NextResponse.json({ 
-        error: 'Access denied. Valid role required.' 
-      }, { status: 403 });
-    }
-  } catch (authError: any) {
-    if (authError.message === 'Authentication required') {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
-    }
-    if (authError.message === 'Network error - please retry') {
-      // For network errors, allow request to continue - client will retry
-      // Return empty data instead of error
-      return NextResponse.json({ menus: [], total_menus: 0 }, {
-        status: 200,
-        headers: getStableDataCacheHeaders()
-      })
-    }
-    throw authError
+    const message = err instanceof Error ? err.message : 'Authentication required';
+    return NextResponse.json({ error: message }, { status: 401 });
   }
+  
+  // Check if user has a valid role (principal, admin, teacher, or parent)
+  const userRoles = user.user_metadata?.roles || [];
+  const hasAccess = userRoles.some((role: string) => ['principal', 'admin', 'teacher', 'parent'].includes(role));
+  
+  if (!hasAccess) {
+    return NextResponse.json({ 
+      error: 'Access denied. Valid role required.' 
+    }, { status: 403 });
+  }
+
+  // Check if user is a teacher - teachers should only see menus they created
+  const isTeacher = userRoles.some((role: string) => role === 'teacher');
 
   try {
     if (!supabaseAdmin) {
@@ -54,18 +42,17 @@ export async function GET(request: Request) {
     }
     
     const { searchParams } = new URL(request.url)
-    // GET query parameter schema - orgId removed, now fetched server-side
+    // GET query parameter schema - orgId and createdBy removed, now fetched server-side
     const getMenusQuerySchema = z.object({
       classId: classIdSchema.optional(),
       day: dateSchema.optional(),
-      createdBy: userIdSchema.optional(),
     });
     
     const queryValidation = validateQuery(getMenusQuerySchema, searchParams)
     if (!queryValidation.success) {
       return queryValidation.error
     }
-    const { classId, day, createdBy } = queryValidation.data
+    const { classId, day } = queryValidation.data
 
     let query = supabaseAdmin
       .from('menus')
@@ -80,9 +67,9 @@ export async function GET(request: Request) {
     }
     // If no classId, don't filter - show all menus for the org
 
-    // Filter by created_by if provided (for teachers to see only their menus)
-    if (createdBy) {
-      query = query.eq('created_by', createdBy)
+    // For teachers, automatically filter by created_by to show only their menus
+    if (isTeacher) {
+      query = query.eq('created_by', user.id)
     }
 
     if (day) {

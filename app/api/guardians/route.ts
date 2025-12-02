@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabaseClient'
 import { getUserDataCacheHeaders } from '@/lib/cacheConfig'
-import { requireServerAuth } from '@/lib/supabaseServer'
 import { getAuthUserWithOrg, MissingOrgIdError, mapAuthErrorToResponse } from '@/lib/server-helpers'
 import { z } from 'zod'
 import { validateQuery, validateBody, userIdSchema, firstNameSchema, lastNameSchema, emailSchema, phoneSchema, addressSchema, ssnSchema } from '@/lib/validation'
@@ -12,14 +11,19 @@ const GUARDIAN_ROLE_ID = 10
 
 export async function GET(request: Request) {
   try {
-    // Authenticate and get user
-    const { user } = await requireServerAuth()
-    
-    // Get org_id from server side (user metadata or database)
-    const orgId = await getCurrentUserOrgId(user)
-    
-    // Get user_id from authenticated user
-    const userId = user.id
+    // Get authenticated user and orgId from server-side auth (no query params needed)
+    let user, orgId: string;
+    try {
+      const authContext = await getAuthUserWithOrg();
+      user = authContext.user;
+      orgId = authContext.orgId;
+    } catch (err) {
+      if (err instanceof MissingOrgIdError) {
+        return mapAuthErrorToResponse(err);
+      }
+      const message = err instanceof Error ? err.message : 'Authentication required';
+      return NextResponse.json({ error: message }, { status: 401 });
+    }
     
     // Check if user has principal, admin, or teacher role
     const userRoles = user.user_metadata?.roles || [];
@@ -57,15 +61,18 @@ export async function GET(request: Request) {
       headers: getUserDataCacheHeaders()
     })
 
-  } catch (err: unknown) {
+  } catch (authError: any) {
+    if (authError.message === 'Authentication required') {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
     // Handle authentication/org ID errors
-    const authErrorResponse = mapAuthErrorToResponse(err);
+    const authErrorResponse = mapAuthErrorToResponse(authError);
     if (authErrorResponse) {
       return authErrorResponse;
     }
     
     // Handle other errors
-    const message = err instanceof Error ? err.message : 'Unknown error';
+    const message = authError instanceof Error ? authError.message : 'Unknown error';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

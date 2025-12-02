@@ -456,6 +456,63 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       document.cookie = `samvera_active_role=; Path=/; Max-Age=0; SameSite=Lax`;
       console.log('✅ Local cookies cleared');
     }
+    
+    // Clear all application cache from localStorage (preserve language preference)
+    if (typeof window !== 'undefined') {
+      const cacheKeysToRemove = [
+        'menus_list',
+        'menus_list_time',
+        'classes_cache',
+        'class_student_counts_cache',
+        'teacher_menus_cache',
+        'teacher_classes_cache',
+        'parent_linked_students',
+        'parent_linked_students_time',
+        'menus_count_cache',
+        'stories_count_cache',
+        'announcements_count_cache',
+        'messages_count_cache',
+        'photos_count_cache',
+        'classes_count_cache',
+        'staff_count_cache',
+        'guardians_count_cache',
+        'guardians_cache',
+        'students_count_cache',
+        'students_cache',
+        'calendar_events_cache',
+        'menu_data_updated',
+        'students_data_changed',
+        'stories_data_updated',
+        'classes_data_updated',
+      ];
+      
+      // Also clear any parent_menus_* keys (with orgId)
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('parent_menus_')) {
+          keysToRemove.push(key);
+        }
+      }
+      
+      cacheKeysToRemove.forEach(key => {
+        try {
+          localStorage.removeItem(key);
+        } catch (e) {
+          // Ignore errors
+        }
+      });
+      
+      keysToRemove.forEach(key => {
+        try {
+          localStorage.removeItem(key);
+        } catch (e) {
+          // Ignore errors
+        }
+      });
+      
+      console.log('✅ Application cache cleared from localStorage');
+    }
   };
 
   const updateProfile = async (updates: { roles?: SamveraRole[]; activeRole?: SamveraRole }) => {

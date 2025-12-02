@@ -52,11 +52,11 @@ export default function TeacherMenusPage() {
   const [submittingMenu, setSubmittingMenu] = useState(false);
   const [menuError, setMenuError] = useState<string | null>(null);
 
-  const loadCachedData = useCallback((userId: string) => {
+  const loadCachedData = useCallback(() => {
     if (typeof window === 'undefined') return { menus: null, classes: null };
     
     try {
-      const cachedMenus = localStorage.getItem(`teacher_menus_cache_${userId}`);
+      const cachedMenus = localStorage.getItem('teacher_menus_cache');
       const cachedClasses = localStorage.getItem('teacher_classes_cache');
       
       return {
@@ -113,7 +113,7 @@ export default function TeacherMenusPage() {
       }));
       
       if (typeof window !== 'undefined') {
-        localStorage.setItem(`teacher_menus_cache_${userId}`, JSON.stringify(allMenus));
+        localStorage.setItem('teacher_menus_cache', JSON.stringify(allMenus));
       }
       
       return allMenus;
@@ -130,7 +130,7 @@ export default function TeacherMenusPage() {
   const loadMenus = useCallback(async () => {
     if (!finalOrgId || !session?.user?.id) return;
     
-    const cached = loadCachedData(session.user.id);
+    const cached = loadCachedData();
     if (cached.menus && Array.isArray(cached.menus)) {
       setMenus(cached.menus);
     }
@@ -174,8 +174,8 @@ export default function TeacherMenusPage() {
     if (typeof window === 'undefined') return;
     
     const handleMenuUpdate = () => {
-      if (session?.user?.id) {
-        localStorage.removeItem(`teacher_menus_cache_${session.user.id}`);
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('teacher_menus_cache');
       }
       if (finalOrgId && session?.user?.id) {
         loadMenus();
@@ -229,8 +229,8 @@ export default function TeacherMenusPage() {
       setMenus(prev => {
         const updated = prev.filter(m => m.id !== menuToDelete);
         
-        if (typeof window !== 'undefined' && session?.user?.id) {
-          localStorage.setItem(`teacher_menus_cache_${session.user.id}`, JSON.stringify(updated));
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('teacher_menus_cache', JSON.stringify(updated));
         }
         
         return updated;

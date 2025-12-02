@@ -20,11 +20,9 @@ interface StaffManagementProps {
 }
 
 export default function StaffManagement({ lang: propLang }: StaffManagementProps) {
-  const router = useRouter();
   const { session } = useAuth?.() || ({} as any);
   const { t, lang: contextLang } = useLanguage();
   // Use lang prop if provided, otherwise use current language from context
-  const lang = propLang || contextLang;
 
   // Use universal hook to get org_id (checks metadata first, then API, handles logout if missing)
   const { orgId: finalOrgId } = useCurrentUserOrgId();
@@ -221,27 +219,21 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
   
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8 md:px-6">
-      <div className="mb-ds-lg flex flex-col gap-ds-sm mt-14 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-ds-md">
-          <button
-            onClick={() => router.back()}
-            className="inline-flex items-center gap-2 rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small hover:bg-white dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" /> {t.back}
-          </button>
+    <main className="mx-auto max-w-6xl px-4 pb-4 md:px-6">
+      <div className="mb-ds-lg flex flex-col gap-ds-sm md:flex-row md:items-center md:justify-between">
+  
           <div>
-            <h1 className="text-ds-h2 font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.staff_management}</h1>
-            <p className="mt-1 text-ds-small text-slate-600 dark:text-slate-400">{t.manage_staff}</p>
+          <h2 className="text-ds-h1 font-bold tracking-tight text-ds-text-primary dark:text-slate-100">
+          {t.staff_management}</h2>
+            <p className="mt-2 text-ds-small text-ds-text-muted dark:text-slate-400">{t.manage_staff}</p>
           </div>
-        </div>
         <div className="flex flex-wrap gap-ds-sm">
           <button
             onClick={() => {
               setStaffError(null);
               setIsStaffModalOpen(true);
             }}
-            className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-ds-md py-ds-sm text-ds-small text-white hover:bg-mint-600 transition-colors"
+            className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-ds-sm py-2 text-ds-small text-white hover:bg-mint-600 transition-colors"
           >
             <Users className="h-4 w-4" /> {t.create_staff}
           </button>
@@ -256,7 +248,9 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
 
       {/* Active Staff Table */}
       <div className="rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">
-        <h4 className="text-md font-medium mb-3 text-slate-900 dark:text-slate-100">{t.active_staff_members}</h4>
+        <h4 className="mb-ds-sm text-ds-h3 font-semibold text-ds-text-primary dark:text-slate-100">
+          {t.active_staff_members}
+        </h4>
         {loadingStaff || staff.length === 0 ? (
           <LoadingSkeleton type="table" rows={5} />
         ) : (
@@ -332,7 +326,7 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
             <button
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="inline-flex items-center rounded-lg border border-slate-400 px-3 py-1.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+              className="inline-flex items-center rounded-ds-md border border-slate-400 px-3 py-1.5 text-ds-small disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
             >
               {t.prev || 'Prev'}
             </button>
@@ -340,10 +334,10 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
               <button
                 key={idx}
                 onClick={() => setCurrentPage(idx + 1)}
-                className={`inline-flex items-center rounded-lg px-3 py-1.5 text-sm ${
+                className={`inline-flex items-center rounded-ds-md px-3 py-1.5 text-ds-small transition-colors ${
                   currentPage === idx + 1
-                    ? 'bg-white text-black border border-slate-400 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600'
-                    : 'border border-slate-400 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700'
+                    ? 'bg-mint-500 text-white border border-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600'
+                    : 'border border-slate-400 dark:border-slate-600 dark:text-slate-200 hover:bg-mint-50'
                 }`}
               >
                 {idx + 1}
@@ -352,7 +346,7 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
             <button
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="inline-flex items-center rounded-lg border border-slate-400 px-3 py-1.5 text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+              className="inline-flex items-center rounded-ds-md border border-slate-400 px-3 py-1.5 text-ds-small disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
             >
               {t.next || 'Next'}
             </button>
@@ -366,7 +360,9 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="w-full max-w-xl rounded-ds-lg bg-white p-ds-md shadow-ds-lg dark:bg-slate-800">
             <div className="mb-2 flex items-center justify-between">
-              <h3 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">{t.create_staff}</h3>
+              <h3 className="text-ds-h3 font-semibold text-ds-text-primary dark:text-slate-100">
+                {t.create_staff}
+              </h3>
               <button onClick={() => setIsStaffModalOpen(false)} className="rounded-ds-md p-1 hover:bg-mint-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-colors">
                 <X className="h-5 w-5" />
               </button>
@@ -471,7 +467,9 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="w-full max-w-xl rounded-ds-lg bg-white p-ds-md shadow-ds-lg dark:bg-slate-800 max-h-[90vh] overflow-y-auto">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">{t.edit_staff || 'Edit Staff Member'}</h3>
+              <h3 className="text-ds-h3 font-semibold text-ds-text-primary dark:text-slate-100">
+                {t.edit_staff || 'Edit Staff Member'}
+              </h3>
               <button onClick={() => { setIsEditStaffModalOpen(false); setEditingStaff(null); }} className="rounded-ds-md p-1 hover:bg-mint-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-colors">
                 <X className="h-5 w-5" />
               </button>

@@ -39,9 +39,9 @@ export default function MenusViewPage() {
   // Initialize from cache immediately if available to avoid loading state
   const [menus, setMenus] = useState<Menu[]>(() => {
     // Load from cache synchronously during initialization
-    if (typeof window !== 'undefined' && user?.id && orgId) {
+    if (typeof window !== 'undefined' && orgId) {
       try {
-        const cacheKey = `parent_menus_${user.id}_${orgId}`;
+        const cacheKey = `parent_menus_${orgId}`;
         const cached = localStorage.getItem(cacheKey);
         const cacheTime = localStorage.getItem(`${cacheKey}_time`);
         if (cached && cacheTime) {
@@ -59,9 +59,9 @@ export default function MenusViewPage() {
   });
   const [hydratedFromCache, setHydratedFromCache] = useState(() => {
     // Check if we loaded from cache during initialization
-    if (typeof window !== 'undefined' && user?.id && orgId) {
+    if (typeof window !== 'undefined' && orgId) {
       try {
-        const cacheKey = `parent_menus_${user.id}_${orgId}`;
+        const cacheKey = `parent_menus_${orgId}`;
         const cached = localStorage.getItem(cacheKey);
         const cacheTime = localStorage.getItem(`${cacheKey}_time`);
         if (cached && cacheTime) {
@@ -119,12 +119,12 @@ export default function MenusViewPage() {
   }, [user?.id, orgId, classId]);
   const [linkedStudents, setLinkedStudents] = useState<Array<{ id: string; class_id: string | null }>>(() => {
     // Load from cache synchronously during initialization
-    if (typeof window !== 'undefined' && user?.id) {
+    if (typeof window !== 'undefined') {
       try {
-        const cached = localStorage.getItem(`parent_linked_students_${user.id}`);
+        const cached = localStorage.getItem('parent_linked_students');
         if (cached) {
           const cachedData = JSON.parse(cached);
-          const cacheTime = localStorage.getItem(`parent_linked_students_time_${user.id}`);
+          const cacheTime = localStorage.getItem('parent_linked_students_time');
           if (cacheTime && Date.now() - parseInt(cacheTime) < 10 * 60 * 1000 && Array.isArray(cachedData)) {
             return cachedData;
           }
@@ -160,8 +160,8 @@ export default function MenusViewPage() {
               setLinkedStudents([]);
             }
             if (typeof window !== 'undefined') {
-              localStorage.setItem(`parent_linked_students_${user.id}`, JSON.stringify([]));
-              localStorage.setItem(`parent_linked_students_time_${user.id}`, Date.now().toString());
+              localStorage.setItem('parent_linked_students', JSON.stringify([]));
+              localStorage.setItem('parent_linked_students_time', Date.now().toString());
             }
             return;
           }
@@ -188,8 +188,8 @@ export default function MenusViewPage() {
           
           // Always update cache
           if (typeof window !== 'undefined') {
-            localStorage.setItem(`parent_linked_students_${user.id}`, JSON.stringify(linked));
-            localStorage.setItem(`parent_linked_students_time_${user.id}`, Date.now().toString());
+            localStorage.setItem('parent_linked_students', JSON.stringify(linked));
+            localStorage.setItem('parent_linked_students_time', Date.now().toString());
           }
         } catch (e) {
           console.error('Error getting linked students:', e);
@@ -217,7 +217,7 @@ export default function MenusViewPage() {
     }
 
     // Check cache first for instant display
-    const cacheKey = `parent_menus_${user.id}_${orgId}`;
+    const cacheKey = `parent_menus_${orgId}`;
     let cachedMenus: Menu[] | null = null;
     let fromCache = false;
     
@@ -345,10 +345,10 @@ export default function MenusViewPage() {
 
   // Hydrate from cache instantly on mount if available - wrap in requestAnimationFrame to avoid synchronous setState
   useEffect(() => {
-    if (orgId && user?.id) {
+    if (orgId) {
       const id = requestAnimationFrame(() => {
         try {
-          const cacheKey = `parent_menus_${user.id}_${orgId}`;
+          const cacheKey = `parent_menus_${orgId}`;
           const cached = localStorage.getItem(cacheKey);
           const cacheTime = localStorage.getItem(`${cacheKey}_time`);
           if (cached && cacheTime) {
@@ -365,14 +365,14 @@ export default function MenusViewPage() {
       });
       return () => cancelAnimationFrame(id);
     }
-  }, [orgId, user?.id]);
+  }, [orgId]);
 
   // Load menus when orgId and user are available - use cache immediately, refresh in background
   // Use a ref to track if we've already loaded menus to prevent duplicate calls
   const menusLoadedRef = useRef(false);
   
   useEffect(() => {
-    if (orgId && user?.id && !menusLoadedRef.current) {
+    if (orgId && !menusLoadedRef.current) {
       menusLoadedRef.current = true;
       // Wrap in requestAnimationFrame to avoid synchronous setState in effect
       const id = requestAnimationFrame(() => {
@@ -380,7 +380,7 @@ export default function MenusViewPage() {
       });
       return () => cancelAnimationFrame(id);
     }
-  }, [orgId, user?.id, loadMenus]); // Added loadMenus back - it's now properly memoized
+  }, [orgId, loadMenus]); // Added loadMenus back - it's now properly memoized
 
   // Listen for menu updates and refresh instantly
   useEffect(() => {

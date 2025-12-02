@@ -37,36 +37,34 @@ export default function PrincipalDashboard() {
 
   // Load cached data immediately on mount - but only for current user
   useEffect(() => {
-      // Only load cached data if we have a session user ID to avoid showing old principal's data
-      if (typeof window !== 'undefined' && session?.user?.id) {
-        const userId = session.user.id;
-        // Use user-specific cache keys to prevent showing old principal's data
-        const cachedGuardiansCount = localStorage.getItem(`guardians_count_cache_${userId}`);
-        const cachedStudentsCount = localStorage.getItem(`students_count_cache_${userId}`);
-        const cachedStaffCount = localStorage.getItem(`staff_count_cache_${userId}`);
-        const cachedClassesCount = localStorage.getItem(`classes_count_cache_${userId}`);
+      // Load cached data
+      if (typeof window !== 'undefined') {
+        const cachedGuardiansCount = localStorage.getItem('guardians_count_cache');
+        const cachedStudentsCount = localStorage.getItem('students_count_cache');
+        const cachedStaffCount = localStorage.getItem('staff_count_cache');
+        const cachedClassesCount = localStorage.getItem('classes_count_cache');
         
         if (cachedGuardiansCount) setGuardiansCount(parseInt(cachedGuardiansCount));
         if (cachedStudentsCount) setStudentsCount(parseInt(cachedStudentsCount));
         if (cachedStaffCount) setStaffCount(parseInt(cachedStaffCount));
         if (cachedClassesCount) setClassesCount(parseInt(cachedClassesCount));
         
-        const cachedMenusCount = localStorage.getItem(`menus_count_cache_${userId}`);
+        const cachedMenusCount = localStorage.getItem('menus_count_cache');
         if (cachedMenusCount) setMenusCount(parseInt(cachedMenusCount));
         
-        const cachedStoriesCount = localStorage.getItem(`stories_count_cache_${userId}`);
+        const cachedStoriesCount = localStorage.getItem('stories_count_cache');
         if (cachedStoriesCount) setStoriesCount(parseInt(cachedStoriesCount));
 
-        const cachedAnnouncementsCount = localStorage.getItem(`announcements_count_cache_${userId}`);
+        const cachedAnnouncementsCount = localStorage.getItem('announcements_count_cache');
         if (cachedAnnouncementsCount) setAnnouncementsCount(parseInt(cachedAnnouncementsCount));
 
-        const cachedMessagesCount = localStorage.getItem(`messages_count_cache_${userId}`);
+        const cachedMessagesCount = localStorage.getItem('messages_count_cache');
         if (cachedMessagesCount) setMessagesCount(parseInt(cachedMessagesCount));
 
-        const cachedPhotosCount = localStorage.getItem(`photos_count_cache_${userId}`);
+        const cachedPhotosCount = localStorage.getItem('photos_count_cache');
         if (cachedPhotosCount) setPhotosCount(parseInt(cachedPhotosCount));
 
-        const cachedCalendarEvents = localStorage.getItem(`calendar_events_cache_${userId}`);
+        const cachedCalendarEvents = localStorage.getItem('calendar_events_cache');
         if (cachedCalendarEvents) setCalendarEvents(JSON.parse(cachedCalendarEvents));
       } else {
         // If no session, clear old cached data to prevent showing old principal's data
@@ -84,7 +82,7 @@ export default function PrincipalDashboard() {
           localStorage.removeItem('photos_count_cache');
         }
       }
-  }, [session?.user?.id]);
+  }, []);
 
   // Load fresh data once when session and orgId are available - only once, no refresh
   useEffect(() => {
@@ -193,9 +191,7 @@ export default function PrincipalDashboard() {
       
       // Cache count for instant loading
       if (typeof window !== 'undefined') {
-        if (session?.user?.id) {
-          localStorage.setItem(`menus_count_cache_${session.user.id}`, menusList.length.toString());
-        }
+        localStorage.setItem('menus_count_cache', menusList.length.toString());
       }
     } catch (e: any) {
       console.error('❌ Error loading menus count:', e.message);
@@ -211,8 +207,8 @@ export default function PrincipalDashboard() {
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
       const list = json.stories || [];
       setStoriesCount(list.length);
-      if (typeof window !== 'undefined' && session?.user?.id) {
-        localStorage.setItem(`stories_count_cache_${session.user.id}`, String(list.length));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('stories_count_cache', String(list.length));
       }
     } catch (e: any) {
       console.error('❌ Error loading stories count:', e.message);
@@ -233,8 +229,8 @@ export default function PrincipalDashboard() {
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
       const list = json.announcements || [];
       setAnnouncementsCount(list.length);
-      if (typeof window !== 'undefined' && session?.user?.id) {
-        localStorage.setItem(`announcements_count_cache_${session.user.id}`, String(list.length));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('announcements_count_cache', String(list.length));
       }
     } catch (e: any) {
       console.error('❌ Error loading announcements count:', e.message);
@@ -252,8 +248,8 @@ export default function PrincipalDashboard() {
       // Count unread threads
       const unreadCount = threads.filter((t: any) => t.unread).length;
       setMessagesCount(unreadCount);
-      if (typeof window !== 'undefined' && session?.user?.id) {
-        localStorage.setItem(`messages_count_cache_${session.user.id}`, String(unreadCount));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('messages_count_cache', String(unreadCount));
       }
     } catch (e: any) {
       console.error('❌ Error loading messages count:', e.message);
@@ -269,8 +265,8 @@ export default function PrincipalDashboard() {
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
       const photosList = json.photos || [];
       setPhotosCount(photosList.length);
-      if (typeof window !== 'undefined' && session?.user?.id) {
-        localStorage.setItem(`photos_count_cache_${session.user.id}`, String(photosList.length));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('photos_count_cache', String(photosList.length));
       }
     } catch (e: any) {
       console.error('❌ Error loading photos count:', e.message);
@@ -321,8 +317,8 @@ export default function PrincipalDashboard() {
           if (json.stories && Array.isArray(json.stories)) {
             const count = json.stories.length;
             setStoriesCount(count);
-            if (typeof window !== 'undefined' && session?.user?.id) {
-              localStorage.setItem(`stories_count_cache_${session.user.id}`, String(count));
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('stories_count_cache', String(count));
             }
           }
         })
@@ -419,40 +415,40 @@ export default function PrincipalDashboard() {
     return 0;
   });
   const [menusCount, setMenusCount] = useState(() => {
-    if (typeof window !== 'undefined' && session?.user?.id) {
-      const cached = localStorage.getItem(`menus_count_cache_${session.user.id}`);
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('menus_count_cache');
       return cached ? parseInt(cached) : 0;
     }
     return 0;
   });
 
   const [storiesCount, setStoriesCount] = useState(() => {
-    if (typeof window !== 'undefined' && session?.user?.id) {
-      const cached = localStorage.getItem(`stories_count_cache_${session.user.id}`);
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('stories_count_cache');
       return cached ? parseInt(cached) : 0;
     }
     return 0;
   });
 
   const [announcementsCount, setAnnouncementsCount] = useState(() => {
-    if (typeof window !== 'undefined' && session?.user?.id) {
-      const cached = localStorage.getItem(`announcements_count_cache_${session.user.id}`);
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('announcements_count_cache');
       return cached ? parseInt(cached) : 0;
     }
     return 0;
   });
 
   const [messagesCount, setMessagesCount] = useState(() => {
-    if (typeof window !== 'undefined' && session?.user?.id) {
-      const cached = localStorage.getItem(`messages_count_cache_${session.user.id}`);
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('messages_count_cache');
       return cached ? parseInt(cached) : 0;
     }
     return 0;
   });
 
   const [photosCount, setPhotosCount] = useState(() => {
-    if (typeof window !== 'undefined' && session?.user?.id) {
-      const cached = localStorage.getItem(`photos_count_cache_${session.user.id}`);
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('photos_count_cache');
       return cached ? parseInt(cached) : 0;
     }
     return 0;
@@ -556,9 +552,7 @@ export default function PrincipalDashboard() {
       
       // Cache count for instant loading
       if (typeof window !== 'undefined') {
-        if (session?.user?.id) {
-          localStorage.setItem(`classes_count_cache_${session.user.id}`, classesList.length.toString());
-        }
+        localStorage.setItem('classes_count_cache', classesList.length.toString());
       }
     } catch (e: any) {
       console.error('❌ Error loading classes count:', e.message);
@@ -581,9 +575,7 @@ export default function PrincipalDashboard() {
       
       // Cache count for instant loading
       if (typeof window !== 'undefined') {
-        if (session?.user?.id) {
-          localStorage.setItem(`staff_count_cache_${session.user.id}`, staffList.length.toString());
-        }
+        localStorage.setItem('staff_count_cache', staffList.length.toString());
       }
     } catch (e: any) {
       console.error('❌ Error loading staff count:', e.message);
@@ -602,8 +594,8 @@ export default function PrincipalDashboard() {
       setStaff(data.staff || []);
       const staffList = data.staff || [];
       setStaffCount(staffList.length);
-      if (typeof window !== 'undefined' && session?.user?.id) {
-        localStorage.setItem(`staff_count_cache_${session.user.id}`, staffList.length.toString());
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('staff_count_cache', staffList.length.toString());
       }
     } catch (error: any) {
       // Keep dashboard resilient; do not surface error toast here
@@ -628,10 +620,8 @@ export default function PrincipalDashboard() {
       
       // Cache both count and full data for instant loading
       if (typeof window !== 'undefined') {
-        if (session?.user?.id) {
-          localStorage.setItem(`guardians_count_cache_${session.user.id}`, guardiansList.length.toString());
-          localStorage.setItem(`guardians_cache_${session.user.id}`, JSON.stringify(guardiansList));
-        }
+        localStorage.setItem('guardians_count_cache', guardiansList.length.toString());
+        localStorage.setItem('guardians_cache', JSON.stringify(guardiansList));
       }
     } catch (e: any) {
       console.error('❌ Error loading guardians count:', e.message);
@@ -656,10 +646,8 @@ export default function PrincipalDashboard() {
       
       // Cache both count and full data for instant loading
       if (typeof window !== 'undefined') {
-        if (session?.user?.id) {
-          localStorage.setItem(`students_count_cache_${session.user.id}`, studentsList.length.toString());
-          localStorage.setItem(`students_cache_${session.user.id}`, JSON.stringify(studentsList));
-        }
+        localStorage.setItem('students_count_cache', studentsList.length.toString());
+        localStorage.setItem('students_cache', JSON.stringify(studentsList));
       }
     } catch (e: any) {
       console.error('❌ Error loading students count:', e.message);

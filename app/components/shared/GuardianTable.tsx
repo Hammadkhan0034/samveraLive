@@ -48,10 +48,8 @@ export function GuardianTable({
   translations: t
 }: GuardianTableProps) {
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-ds-lg pt-6 pb-6 pr-6 ml-6 shadow-ds-card dark:border-slate-700">
-      <div className="flex items-center justify-between">
-        {/* <h3 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">{t.guardians}</h3> */}
-      </div>
+    <div className=" pt-6 pb-6 pr-6 ml-6 ">
+  
 
       {error && (
         <div className="mb-4 rounded-ds-md bg-red-50 border border-red-200 px-4 py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
@@ -59,16 +57,16 @@ export function GuardianTable({
         </div>
       )}
 
-      <div className="rounded-ds-md overflow-hidden border border-slate-200 dark:border-slate-700">
+      <div className="rounded-ds-md overflow-hidden border border-input-stroke dark:border-slate-700">
         <table className="w-full text-ds-small border-collapse">
-          <thead className="sticky top-0 bg-mint-600 text-white dark:bg-mint-700 z-10">
-            <tr className="text-center text-slate-600 dark:text-slate-300">
-              <th className="py-2 pr-1 text-white rounded-tl-ds-md">{t.first_name || 'First Name'}</th>
-              <th className="py-2 pr-1 text-white">{t.last_name || 'Last Name'}</th>
-              <th className="py-2 pr-1 text-white">{t.email}</th>
-              <th className="py-2 pr-1 text-white">{t.phone}</th>
-              <th className="py-2 pr-1 text-white">{t.status}</th>
-              <th className="py-2 pr-1 text-white rounded-tr-ds-md">{t.actions}</th>
+          <thead className="sticky top-0 bg-mint-200 text-ds-text-primary dark:bg-mint-700 dark:text-white z-10">
+            <tr className="text-center">
+              <th className="py-2 pr-1 text-ds-text-primary dark:text-white rounded-tl-ds-md font-semibold">{t.first_name || 'First Name'}</th>
+              <th className="py-2 pr-1 text-ds-text-primary dark:text-white font-semibold">{t.last_name || 'Last Name'}</th>
+              <th className="py-2 pr-1 text-ds-text-primary dark:text-white font-semibold">{t.email}</th>
+              <th className="py-2 pr-1 text-ds-text-primary dark:text-white font-semibold">{t.phone}</th>
+              <th className="py-2 pr-1 text-ds-text-primary dark:text-white font-semibold">{t.status}</th>
+              <th className="py-2 pr-1 text-ds-text-primary dark:text-white rounded-tr-ds-md font-semibold">{t.actions}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
@@ -76,7 +74,7 @@ export function GuardianTable({
               <tr><td colSpan={6} className="py-4 text-ds-small">{t.no_guardians}</td></tr>
             ) : (
               guardians.map((g) => (
-                <tr key={g.id} className="h-12 hover:bg-mint-50 dark:hover:bg-slate-700/30 dark:text-slate-100 text-center">
+                <tr key={g.id} className="h-12 hover:bg-input-fill dark:hover:bg-slate-700/30 dark:text-slate-100 text-center">
                   <td className="py-2 pr-3">{g.first_name}</td>
                   <td className="py-2 pr-3">{g.last_name || '—'}</td>
                   <td className="py-2 pr-3">{g.email || '—'}</td>
@@ -85,17 +83,17 @@ export function GuardianTable({
                   <td className="py-2 pr-3 space-x-2">
                     <button
                       onClick={() => onEdit(g)}
-                      className="inline-flex items-center gap-1 rounded-ds-sm border border-slate-300 dark:border-slate-700 px-2 py-1 hover:bg-mint-50 dark:hover:bg-slate-700 transition-colors"
+                      className="inline-flex items-center gap-1 rounded-ds-sm border border-input-stroke dark:border-slate-700 px-2 py-1 hover:bg-input-fill dark:hover:bg-slate-700 transition-colors"
                     >
                       <Edit className="h-3 w-3" />
-                      <span className="text-slate-900 dark:text-slate-100">{t.edit}</span>
+                      <span className="text-ds-text-primary dark:text-slate-100">{t.edit}</span>
                     </button>
                     <button
                       onClick={() => onDelete(g.id)}
                       className="inline-flex items-center gap-1 rounded-ds-sm border px-2 py-1 hover:bg-red-50 text-red-600 border-red-300 dark:border-red-700 dark:hover:bg-red-900/20 transition-colors"
                     >
                       <Trash2 className="h-3 w-3" />
-                      <span className="text-slate-900 dark:text-slate-100">{t.delete}</span>
+                      <span className="text-ds-text-primary dark:text-slate-100">{t.delete}</span>
                     </button>
                   </td>
                 </tr>

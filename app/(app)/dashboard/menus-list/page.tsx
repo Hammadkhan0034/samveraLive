@@ -33,16 +33,11 @@ export default function MenusListPage() {
   const router = useRouter();
   const pathname = usePathname();
 
-  // Get org_id from user metadata
-  const userMetadataForOrg = user?.user_metadata || session?.user?.user_metadata;
-  const orgId = userMetadataForOrg?.org_id || userMetadataForOrg?.organization_id || userMetadataForOrg?.orgId;
-  const classId = userMetadataForOrg?.class_id;
-
   // Initialize from cache immediately if available to avoid loading state
   const [menus, setMenus] = useState<Menu[]>(() => {
-    if (typeof window !== 'undefined' && user?.id && orgId) {
+    if (typeof window !== 'undefined') {
       try {
-        const cacheKey = `menus_list_${user.id}_${orgId}`;
+        const cacheKey = 'menus_list';
         const cached = localStorage.getItem(cacheKey);
         const cacheTime = localStorage.getItem(`${cacheKey}_time`);
         if (cached && cacheTime) {
@@ -76,12 +71,10 @@ export default function MenusListPage() {
 
 
   const loadMenus = useCallback(async () => {
-    if (!orgId || !user?.id) {
-      return;
-    }
+   
 
     // Check cache first for instant display
-    const cacheKey = `menus_list_${user.id}_${orgId}`;
+    const cacheKey = 'menus_list';
     if (typeof window !== 'undefined') {
       const cached = localStorage.getItem(cacheKey);
       const cacheTime = localStorage.getItem(`${cacheKey}_time`);
@@ -131,9 +124,9 @@ export default function MenusListPage() {
             const classIds = teacherClasses.map((c: any) => c.id);
             console.log('📋 Fetching menus for class IDs:', classIds);
             
-            // Fetch menus for each class - Filter by createdBy to show only menus created by this teacher
+            // Fetch menus for each class - Server will automatically filter by created_by for teachers
             const menuPromises = classIds.map((cid: string) => 
-              fetch(`/api/menus?classId=${cid}&createdBy=${user.id}`, { cache: 'no-store' })
+              fetch(`/api/menus?classId=${cid}`, { cache: 'no-store' })
                 .then(res => res.json())
                 .then(json => {
                   const menus = json.menus || [];
@@ -147,7 +140,7 @@ export default function MenusListPage() {
             );
             // Also get org-wide menus (class_id null) created by this teacher
             menuPromises.push(
-              fetch(`/api/menus?createdBy=${user.id}`, { cache: 'no-store' })
+              fetch(`/api/menus`, { cache: 'no-store' })
                 .then(res => res.json())
                 .then(json => {
                   const orgMenus = (json.menus || []).filter((m: Menu) => !m.class_id);
@@ -172,21 +165,20 @@ export default function MenusListPage() {
             console.log(`📊 Total unique menus after deduplication: ${allMenus.length}`);
           } else {
             // No classes assigned, show org-wide menus created by this teacher only
-            const res = await fetch(`/api/menus?createdBy=${user.id}`, { cache: 'no-store' });
+            const res = await fetch(`/api/menus`, { cache: 'no-store' });
             const json = await res.json();
             allMenus = (json.menus || []).filter((m: Menu) => !m.class_id);
           }
         } catch (e) {
           console.error('❌ Error loading teacher classes for menus:', e);
           // Fallback to org-wide menus created by this teacher
-          const res = await fetch(`/api/menus?createdBy=${user.id}`, { cache: 'no-store' });
+          const res = await fetch(`/api/menus`, { cache: 'no-store' });
           const json = await res.json();
           allMenus = json.menus || [];
         }
       } else {
-        // For principals or others: show all menus
-        const url = `/api/menus${classId ? `?classId=${classId}` : ''}`;
-        const res = await fetch(url, { 
+        // For principals or others: show all menus (server handles org_id from auth)
+        const res = await fetch(`/api/menus`, { 
           cache: 'no-store',
           headers: {
             'Content-Type': 'application/json',
@@ -240,7 +232,7 @@ export default function MenusListPage() {
         setLoadingMenus(false);
       }
     }
-  }, [orgId, classId, user?.id, user?.user_metadata, session?.user?.user_metadata]);
+  }, [user?.id, user?.user_metadata, session?.user?.user_metadata]);
 
   // Listen for menu updates and refresh instantly
   useEffect(() => {
@@ -252,7 +244,7 @@ export default function MenusListPage() {
           // Clear the flag
           localStorage.removeItem('menu_data_updated');
           // Refresh menus instantly
-          if (orgId && user?.id) {
+          if (user?.id) {
             loadMenus();
           }
         }
@@ -283,7 +275,7 @@ export default function MenusListPage() {
         window.removeEventListener('menu-updated', handleCustomEvent);
       };
     }
-  }, [orgId, user?.id, loadMenus]);
+  }, [user?.id, loadMenus]);
 
   // Also listen for pathname changes (when navigating back from edit page)
   useEffect(() => {
@@ -293,24 +285,24 @@ export default function MenusListPage() {
         const menuUpdated = localStorage.getItem('menu_data_updated');
         if (menuUpdated === 'true') {
           localStorage.removeItem('menu_data_updated');
-          if (orgId && user?.id) {
+          if (user?.id) {
             loadMenus();
           }
         }
       }
     }
-  }, [pathname, orgId, user?.id, loadMenus]);
+  }, [pathname, user?.id, loadMenus]);
 
-  // Load menus when orgId is available
+  // Load menus when user is available
   useEffect(() => {
-    if (orgId) {
+    if (user?.id) {
       loadMenus();
     }
-  }, [orgId, loadMenus]);
+  }, [user?.id, loadMenus]);
 
   // Reload menus when returning from add-menu page or when page becomes visible
   useEffect(() => {
-    if (!orgId) return;
+    if (!user?.id) return;
 
     const handleFocus = () => {
       // Check if menu was just created/updated
@@ -355,7 +347,7 @@ export default function MenusListPage() {
       window.removeEventListener('focus', handleFocus);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [orgId, loadMenus]);
+  }, [user?.id, loadMenus]);
 
   function openDeleteMenuModal(id: string) {
     setMenuToDelete(id);

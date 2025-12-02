@@ -36,8 +36,8 @@ function ClassesPageContent() {
   const [classToDelete, setClassToDelete] = useState<ClassSummary | null>(null);
   const [deletingClass, setDeletingClass] = useState(false);
   const [classes, setClasses] = useState<ClassSummary[]>(() => {
-    if (typeof window !== 'undefined' && session?.user?.id) {
-      const cached = localStorage.getItem(`classes_cache_${session.user.id}`);
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem('classes_cache');
       return cached ? JSON.parse(cached) : [];
     }
     return [];
@@ -49,15 +49,14 @@ function ClassesPageContent() {
 
   // Load cached data immediately on mount
   useEffect(() => {
-    if (typeof window !== 'undefined' && session?.user?.id) {
-      const userId = session.user.id;
-      const cachedClasses = localStorage.getItem(`classes_cache_${userId}`);
-      const cachedClassStudentCounts = localStorage.getItem(`class_student_counts_cache_${userId}`);
+    if (typeof window !== 'undefined') {
+      const cachedClasses = localStorage.getItem('classes_cache');
+      const cachedClassStudentCounts = localStorage.getItem('class_student_counts_cache');
       
       if (cachedClasses) setClasses(JSON.parse(cachedClasses));
       if (cachedClassStudentCounts) setClassStudentCounts(JSON.parse(cachedClassStudentCounts));
     }
-  }, [session?.user?.id]);
+  }, []);
 
   // Load classes data
   const loadClasses = useCallback(
@@ -78,8 +77,8 @@ function ClassesPageContent() {
               assigned_teachers: Array.isArray(cls.assigned_teachers) ? cls.assigned_teachers : [],
             }));
             setClasses(normalized);
-            if (typeof window !== 'undefined' && session?.user?.id) {
-              localStorage.setItem(`classes_cache_${session.user.id}`, JSON.stringify(normalized));
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('classes_cache', JSON.stringify(normalized));
             }
           }
         } else {
@@ -115,9 +114,9 @@ function ClassesPageContent() {
         });
         setClassStudentCounts(counts);
 
-        if (typeof window !== 'undefined' && session?.user?.id) {
+        if (typeof window !== 'undefined') {
           localStorage.setItem(
-            `class_student_counts_cache_${session.user.id}`,
+            'class_student_counts_cache',
             JSON.stringify(counts),
           );
         }

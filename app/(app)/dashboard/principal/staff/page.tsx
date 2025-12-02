@@ -24,15 +24,14 @@ function PrincipalStaffPageContent() {
           >
             <Menu className="h-5 w-5" />
           </button>
-          <h2 className="text-ds-h1 font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            {t.kpi_staff || 'Staff'}
-          </h2>
+         
         </div>
         <div className="flex items-center gap-ds-sm">
           <ProfileSwitcher />
         </div>
       </div>
-      <StaffManagement lang={lang} />
+      {/* Pull staff management section slightly closer to the header to match other principal pages */}
+        <StaffManagement lang={lang} />
     </>
   );
 }
