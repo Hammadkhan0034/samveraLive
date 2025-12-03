@@ -235,6 +235,7 @@ export const isText = {
   role_specialist: 'Sérfræðingur',
   invite_staff_btn: 'Senda boð',
   staff_created_success: 'Starfsmaður búinn til:',
+  staff_updated_success: 'Starfsmaður uppfærður',
   invitation_sent: 'Boð hefur verið sent.',
   staff_creation_error: 'Villa við að búa til starfsmann',
   assign_to_class: 'Úthluta til hóps (valfrjálst)',

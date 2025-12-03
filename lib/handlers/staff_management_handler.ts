@@ -575,8 +575,8 @@ export async function handlePostStaff(
     const { error: staffError } = await adminClient.from('staff').insert({
       org_id: org_id,
       user_id: authUser.id,
-      education_level: education_level || null,
-      union_name: union_membership ? 'Yes' : null,
+      education_level: education_level?.trim() || null,
+      union_name: typeof union_membership === 'string' ? union_membership.trim() || null : null,
     });
 
     if (staffError) {
@@ -764,9 +764,9 @@ export async function handlePutStaff(
       };
 
       if (education_level !== undefined)
-        staffUpdateData.education_level = education_level || null;
+        staffUpdateData.education_level = education_level?.trim() || null;
       if (union_membership !== undefined)
-        staffUpdateData.union_name = union_membership ? 'Yes' : null;
+        staffUpdateData.union_name = typeof union_membership === 'string' ? union_membership.trim() || null : null;
 
       const { error: staffUpdateError } = await adminClient
         .from('staff')

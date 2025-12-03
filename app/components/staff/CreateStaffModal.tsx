@@ -149,7 +149,7 @@ export function CreateStaffModal({ isOpen, onClose, onSuccess, initialData }: Cr
       });
       setError(null);
       setPhoneError(null);
-      alert(`✅ ${isEditMode ? (t.staff_updated_success || 'Staff member updated successfully') : t.staff_created_success}`);
+      alert(`✅ ${isEditMode ? t.staff_updated_success : t.staff_created_success}`);
       onClose();
       // Call onSuccess callback if provided
       if (onSuccess) {
@@ -305,18 +305,6 @@ export function CreateStaffModal({ isOpen, onClose, onSuccess, initialData }: Cr
               placeholder={t.staff_union_membership_placeholder}
               className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
             />
-          </div>
-          <div>
-            <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_role || 'Role'}</label>
-            <select
-              value={newStaff.role || 'teacher'}
-              onChange={(e) => setNewStaff((prev) => ({ ...prev, role: e.target.value }))}
-              className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
-            >
-              <option value="teacher">{t.role_teacher || 'Teacher'}</option>
-              <option value="assistant">{t.role_assistant || 'Assistant'}</option>
-              <option value="specialist">{t.role_specialist || 'Specialist'}</option>
-            </select>
           </div>
           <div>
             <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.assign_to_class}</label>

@@ -234,6 +234,7 @@ export const enText = {
   role_specialist: 'Specialist',
   invite_staff_btn: 'Send Invitation',
   staff_created_success: 'Staff member created successfully:',
+  staff_updated_success: 'Staff member updated successfully',
   invitation_sent: 'Invitation has been sent.',
   staff_creation_error: 'Error creating staff member',
   assign_to_class: 'Assign to Class (Optional)',
