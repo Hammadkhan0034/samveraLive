@@ -52,7 +52,6 @@ export default function StaffManagement(_props: StaffManagementProps) {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Failed to load staff');
       setStaff(data.staff || []);
-      // Reset to page 1 when new data is loaded
       setCurrentPage(1);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to load staff';
