@@ -1,28 +1,19 @@
 'use client';
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { Edit, Trash2, Users } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 import { CreateStaffModal } from '@/app/components/staff/CreateStaffModal';
-import type { StaffFormData } from '@/lib/types/staff';
+import type { StaffFormData, StaffMember, StaffManagementProps } from '@/lib/types/staff';
 
-type Lang = 'is' | 'en';
+const ITEMS_PER_PAGE = 20;
 
-function clsx(...xs: Array<string | false | undefined>) {
-  return xs.filter(Boolean).join(' ');
-}
-
-interface StaffManagementProps {
-  lang?: Lang;
-}
-
-export default function StaffManagement({ lang: propLang }: StaffManagementProps) {
-  const { session } = useAuth?.() || ({} as any);
-  const { t, lang: contextLang } = useLanguage();
-  // Use lang prop if provided, otherwise use current language from context
+export default function StaffManagement(_props: StaffManagementProps) {
+  const { session } = useAuth();
+  const { t } = useLanguage();
 
   // Staff management states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -30,40 +21,47 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
   const [staffToDelete, setStaffToDelete] = useState<string | null>(null);
   const [editingStaff, setEditingStaff] = useState<StaffFormData | null>(null);
 
-  const [staff, setStaff] = useState<Array<{ id: string; email: string; first_name: string; last_name: string | null; is_active: boolean; created_at: string }>>([]);
+  const [staff, setStaff] = useState<StaffMember[]>([]);
   const [loadingStaff, setLoadingStaff] = useState(false);
   const [staffError, setStaffError] = useState<string | null>(null);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 20;
+  const loadingRef = useRef(false);
+
+  const loadStaff = useCallback(async (showLoading = true) => {
+    if (loadingRef.current && showLoading) return;
+    try {
+      if (showLoading) {
+        loadingRef.current = true;
+        setLoadingStaff(true);
+      }
+      setStaffError(null);
+      const response = await fetch(`/api/staff-management`, { cache: 'no-store' });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to load staff');
+      setStaff(data.staff || []);
+      // Reset to page 1 when new data is loaded
+      setCurrentPage(1);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load staff';
+      setStaffError(errorMessage);
+    } finally {
+      if (showLoading) {
+        loadingRef.current = false;
+        setLoadingStaff(false);
+      }
+    }
+  }, []);
 
   // Load initial lists
   useEffect(() => {
     if (session?.user?.id) {
       loadStaff();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.user?.id]);
+  }, [session?.user?.id, loadStaff]);
 
-  async function loadStaff(showLoading = true) {
-    if (loadingStaff && showLoading) return;
-    try {
-      if (showLoading) setLoadingStaff(true);
-      setStaffError(null);
-      const response = await fetch(`/api/staff-management`, { cache: 'no-store' });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to load staff');
-      setStaff(data.staff || []);
-    } catch (error: any) {
-      setStaffError(error.message);
-    } finally {
-      if (showLoading) setLoadingStaff(false);
-    }
-  }
-
-
-  async function deleteStaffMember(id: string) {
+  const deleteStaffMember = useCallback(async (id: string) => {
     try {
       setStaffError(null);
       const response = await fetch(`/api/staff-management?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
@@ -72,68 +70,169 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
       setIsDeleteStaffModalOpen(false);
       setStaffToDelete(null);
       await loadStaff();
-    } catch (error: any) {
-      setStaffError(error.message);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to delete staff';
+      setStaffError(errorMessage);
     }
-  }
+  }, [loadStaff]);
 
-  function openDeleteStaffModal(id: string) {
+  const openDeleteStaffModal = useCallback((id: string) => {
     setStaffToDelete(id);
     setIsDeleteStaffModalOpen(true);
-  }
+  }, []);
 
-  function openEditStaffModal(staffMember: any) {
-    // Transform staff data to StaffFormData format
-    // Note: union_name is always a string (null or empty string if no union)
+  const openEditStaffModal = useCallback((staffMember: StaffMember) => {
     const staffFormData: StaffFormData = {
       id: staffMember.id,
       first_name: staffMember.first_name || '',
       last_name: staffMember.last_name || '',
-      email: staffMember.email || '',
-      phone: (staffMember as any).phone || '',
-      address: (staffMember as any).address || '',
-      ssn: (staffMember as any).ssn || '',
-      education_level: (staffMember as any).education_level || '',
-      union_membership: (staffMember as any).union_name || '',
-      class_id: (staffMember as any).class_id || '',
-      role: (staffMember as any).role || 'teacher',
+      email: staffMember.email,
+      phone: staffMember.phone || '',
+      address: staffMember.address || '',
+      ssn: staffMember.ssn || '',
+      education_level: staffMember.education_level || '',
+      union_membership: staffMember.union_name || '',
+      class_id: staffMember.class_id || '',
+      role: staffMember.role || 'teacher',
       is_active: staffMember.is_active ?? true,
     };
     setEditingStaff(staffFormData);
     setIsCreateModalOpen(true);
     setStaffError(null);
-  }
+  }, []);
 
 
   // Pagination logic
-  const totalPages = Math.max(1, Math.ceil(staff.length / itemsPerPage));
+  const totalPages = useMemo(() => Math.max(1, Math.ceil(staff.length / ITEMS_PER_PAGE)), [staff.length]);
   const paginatedStaff = useMemo(() => {
-    const start = (currentPage - 1) * itemsPerPage;
-    return staff.slice(start, start + itemsPerPage);
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return staff.slice(start, start + ITEMS_PER_PAGE);
   }, [staff, currentPage]);
 
-  // Reset to page 1 when staff data changes
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [staff.length]);
+  const handleOpenCreateModal = useCallback(() => {
+    setEditingStaff(null);
+    setIsCreateModalOpen(true);
+  }, []);
 
-  
+  const handleCloseCreateModal = useCallback(() => {
+    setIsCreateModalOpen(false);
+    setEditingStaff(null);
+  }, []);
+
+  const handleCloseDeleteModal = useCallback(() => {
+    setIsDeleteStaffModalOpen(false);
+    setStaffToDelete(null);
+  }, []);
+
+  const handleConfirmDelete = useCallback(() => {
+    if (staffToDelete) {
+      deleteStaffMember(staffToDelete);
+    }
+  }, [staffToDelete, deleteStaffMember]);
+
+  // Memoized table row component
+  const StaffTableRow = React.memo<{
+    staffMember: StaffMember;
+    onEdit: (staffMember: StaffMember) => void;
+    onDelete: (id: string) => void;
+    t: ReturnType<typeof useLanguage>['t'];
+  }>(({ staffMember, onEdit, onDelete, t }) => {
+    const handleRowClick = useCallback((e: React.MouseEvent<HTMLTableRowElement>) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName !== 'BUTTON' && !target.closest('button')) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    }, []);
+
+    const handleEditClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      onEdit(staffMember);
+    }, [staffMember, onEdit]);
+
+    const handleDeleteClick = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      onDelete(staffMember.id);
+    }, [staffMember.id, onDelete]);
+
+    const firstName = useMemo(() => 
+      staffMember.first_name || staffMember.full_name?.split(' ')[0] || '', 
+      [staffMember.first_name, staffMember.full_name]
+    );
+    const lastName = useMemo(() => 
+      staffMember.last_name || (staffMember.full_name ? staffMember.full_name.split(' ').slice(1).join(' ') : ''), 
+      [staffMember.last_name, staffMember.full_name]
+    );
+    const role = staffMember.role || 'teacher';
+    const statusClasses = staffMember.is_active 
+      ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-300'
+      : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
+    const formattedDate = useMemo(() => 
+      new Date(staffMember.created_at).toLocaleDateString(), 
+      [staffMember.created_at]
+    );
+
+    return (
+      <tr
+        className="h-12 hover:bg-mint-50 dark:hover:bg-slate-700/50 transition-colors"
+        onClick={handleRowClick}
+      >
+        <td className="py-2 pr-3 pl-3 text-slate-900 dark:text-slate-100">{firstName}</td>
+        <td className="py-2 pr-3 text-slate-900 dark:text-slate-100">{lastName}</td>
+        <td className="py-2 pr-3 text-slate-700 dark:text-slate-300">{staffMember.email}</td>
+        <td className="py-2 pr-3 text-slate-700 dark:text-slate-300">{role}</td>
+        <td className="py-2 pr-3">
+          <span className={`inline-block rounded-full px-2 py-0.5 text-xs ${statusClasses}`}>
+            {staffMember.is_active ? t.active : t.inactive}
+          </span>
+        </td>
+        <td className="py-2 pr-3 text-slate-700 dark:text-slate-300">{formattedDate}</td>
+        <td className="py-2 pr-3">
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={handleEditClick}
+              className="inline-flex items-center gap-1 rounded-md border px-2 py-1 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-600"
+            >
+              <Edit className="h-3 w-3" /> {t.edit || 'Edit'}
+            </button>
+            <button 
+              onClick={handleDeleteClick}
+              className="inline-flex items-center gap-1 rounded-md border px-2 py-1 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 border-red-300 dark:border-red-600"
+            >
+              <Trash2 className="h-3 w-3" /> {t.delete}
+            </button>
+          </div>
+        </td>
+      </tr>
+    );
+  }, (prevProps, nextProps) => {
+    return (
+      prevProps.staffMember.id === nextProps.staffMember.id &&
+      prevProps.staffMember.first_name === nextProps.staffMember.first_name &&
+      prevProps.staffMember.last_name === nextProps.staffMember.last_name &&
+      prevProps.staffMember.email === nextProps.staffMember.email &&
+      prevProps.staffMember.role === nextProps.staffMember.role &&
+      prevProps.staffMember.is_active === nextProps.staffMember.is_active &&
+      prevProps.staffMember.created_at === nextProps.staffMember.created_at &&
+      prevProps.onEdit === nextProps.onEdit &&
+      prevProps.onDelete === nextProps.onDelete &&
+      prevProps.t === nextProps.t
+    );
+  });
+  StaffTableRow.displayName = 'StaffTableRow';
 
   return (
     <main className="mx-auto max-w-6xl px-4 pb-4 md:px-6">
       <div className="mb-ds-lg flex flex-col gap-ds-sm md:flex-row md:items-center md:justify-between">
-  
-          <div>
+        <div>
           <h2 className="text-ds-h1 font-bold tracking-tight text-ds-text-primary dark:text-slate-100">
-          {t.staff_management}</h2>
-            <p className="mt-2 text-ds-small text-ds-text-muted dark:text-slate-400">{t.manage_staff}</p>
-          </div>
+            {t.staff_management}
+          </h2>
+          <p className="mt-2 text-ds-small text-ds-text-muted dark:text-slate-400">{t.manage_staff}</p>
+        </div>
         <div className="flex flex-wrap gap-ds-sm">
           <button
-            onClick={() => {
-              setEditingStaff(null);
-              setIsCreateModalOpen(true);
-            }}
+            onClick={handleOpenCreateModal}
             className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-ds-sm py-2 text-ds-small text-white hover:bg-mint-600 transition-colors"
           >
             <Users className="h-4 w-4" /> {t.create_staff}
@@ -152,8 +251,12 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
         <h4 className="mb-ds-sm text-ds-h3 font-semibold text-ds-text-primary dark:text-slate-100">
           {t.active_staff_members}
         </h4>
-        {loadingStaff || staff.length === 0 ? (
+        {loadingStaff ? (
           <LoadingSkeleton type="table" rows={5} />
+        ) : staff.length === 0 ? (
+          <div className="py-8 text-center text-ds-small text-slate-500 dark:text-slate-400">
+            {t.no_staff_members || 'No staff members found'}
+          </div>
         ) : (
           <div className="rounded-t-ds-md overflow-hidden border border-slate-200 dark:border-slate-700">
             <table className="w-full text-ds-small">
@@ -170,59 +273,20 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-600">
                 {paginatedStaff.map((s) => (
-                  <tr
+                  <StaffTableRow
                     key={s.id}
-                    className="h-12 hover:bg-mint-50 dark:hover:bg-slate-700/50 transition-colors"
-                    onClick={(e) => {
-                      // Prevent row click from triggering navigation
-                      // Only allow clicks on buttons to work
-                      if ((e.target as HTMLElement).tagName !== 'BUTTON' && 
-                          !(e.target as HTMLElement).closest('button')) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }
-                    }}
-                  >
-                    <td className="py-2 pr-3 pl-3 text-slate-900 dark:text-slate-100">{(s as any).first_name || (s as any).full_name?.split(' ')[0] || ''}</td>
-                    <td className="py-2 pr-3 text-slate-900 dark:text-slate-100">{(s as any).last_name || ((s as any).full_name ? (s as any).full_name.split(' ').slice(1).join(' ') : '')}</td>
-                    <td className="py-2 pr-3 text-slate-700 dark:text-slate-300">{s.email}</td>
-                    <td className="py-2 pr-3 text-slate-700 dark:text-slate-300">{(s as any).role || 'teacher'}</td>
-                    <td className="py-2 pr-3">
-                      <span className={clsx('inline-block rounded-full px-2 py-0.5 text-xs', s.is_active ? 'bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-300' : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300')}>
-                        {s.is_active ? t.active : t.inactive}
-                      </span>
-                    </td>
-                    <td className="py-2 pr-3 text-slate-700 dark:text-slate-300">{new Date(s.created_at).toLocaleDateString()}</td>
-                    <td className="py-2 pr-3">
-                      <div className="flex items-center gap-2">
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openEditStaffModal(s);
-                          }} 
-                          className="inline-flex items-center gap-1 rounded-md border px-2 py-1 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-600"
-                        >
-                          <Edit className="h-3 w-3" /> {t.edit || 'Edit'}
-                        </button>
-                        <button 
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openDeleteStaffModal(s.id);
-                          }} 
-                          className="inline-flex items-center gap-1 rounded-md border px-2 py-1 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 border-red-300 dark:border-red-600"
-                        >
-                          <Trash2 className="h-3 w-3" /> {t.delete}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+                    staffMember={s}
+                    onEdit={openEditStaffModal}
+                    onDelete={openDeleteStaffModal}
+                    t={t}
+                  />
                 ))}
               </tbody>
             </table>
           </div>
         )}
         {/* Pagination controls */}
-        {staff.length > 0 && (
+        {staff.length > 0 && totalPages > 1 && (
           <div className="mt-4 w-full flex justify-end gap-2">
             <button
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
@@ -231,19 +295,23 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
             >
               {t.prev || 'Prev'}
             </button>
-            {Array.from({ length: totalPages }).map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setCurrentPage(idx + 1)}
-                className={`inline-flex items-center rounded-ds-md px-3 py-1.5 text-ds-small transition-colors ${
-                  currentPage === idx + 1
-                    ? 'bg-mint-500 text-white border border-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600'
-                    : 'border border-slate-400 dark:border-slate-600 dark:text-slate-200 hover:bg-mint-50'
-                }`}
-              >
-                {idx + 1}
-              </button>
-            ))}
+            {Array.from({ length: totalPages }, (_, idx) => {
+              const pageNum = idx + 1;
+              const isActive = currentPage === pageNum;
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={`inline-flex items-center rounded-ds-md px-3 py-1.5 text-ds-small transition-colors ${
+                    isActive
+                      ? 'bg-mint-500 text-white border border-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600'
+                      : 'border border-slate-400 dark:border-slate-600 dark:text-slate-200 hover:bg-mint-50'
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
             <button
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
@@ -258,10 +326,7 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
       {/* Create/Edit Staff Modal */}
       <CreateStaffModal
         isOpen={isCreateModalOpen}
-        onClose={() => {
-          setIsCreateModalOpen(false);
-          setEditingStaff(null);
-        }}
+        onClose={handleCloseCreateModal}
         onSuccess={loadStaff}
         initialData={editingStaff || undefined}
       />
@@ -269,17 +334,14 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
       {/* Delete Staff Confirmation Modal */}
       <DeleteConfirmationModal
         isOpen={isDeleteStaffModalOpen}
-        onClose={() => { setIsDeleteStaffModalOpen(false); setStaffToDelete(null); }}
-        onConfirm={() => { if (staffToDelete) deleteStaffMember(staffToDelete); }}
+        onClose={handleCloseDeleteModal}
+        onConfirm={handleConfirmDelete}
         title={t.remove_staff_member}
         message={t.remove_staff_confirm}
         error={staffError}
         confirmButtonText={t.remove}
         cancelButtonText={t.cancel}
       />
-
     </main>
   );
 }
-
-

@@ -20,3 +20,32 @@ export interface StaffFormData {
   is_active?: boolean;
 }
 
+/**
+ * Staff member interface representing a staff member from the API
+ */
+export interface StaffMember {
+  id: string;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  phone?: string | null;
+  address?: string | null;
+  ssn?: string | null;
+  org_id: string;
+  is_active: boolean;
+  created_at: string;
+  role: string;
+  education_level?: string | null;
+  union_name?: string | null;
+  class_id?: string | null;
+  full_name?: string;
+  deleted_at?: string | null;
+}
+
+/**
+ * Props interface for StaffManagement component
+ */
+export interface StaffManagementProps {
+  // Reserved for future props
+}
+
