@@ -435,7 +435,6 @@ export const enText = {
   create: 'Create',
   update: 'Update',
   creating: 'Creating...',
-  updating: 'Updating...',
 
   // Gender options
   gender_unknown: 'Unknown',

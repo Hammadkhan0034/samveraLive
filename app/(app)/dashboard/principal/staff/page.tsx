@@ -8,7 +8,7 @@ import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/sh
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 
 function PrincipalStaffPageContent() {
-  const { lang, t } = useLanguage();
+  const { t } = useLanguage();
   const { sidebarRef } = usePrincipalPageLayout();
 
   return (
@@ -31,7 +31,7 @@ function PrincipalStaffPageContent() {
         </div>
       </div>
       {/* Pull staff management section slightly closer to the header to match other principal pages */}
-        <StaffManagement lang={lang} />
+        <StaffManagement />
     </>
   );
 }

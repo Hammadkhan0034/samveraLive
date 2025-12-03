@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 
@@ -24,7 +23,6 @@ interface AnnouncementListProps {
   lang?: 'is' | 'en';
 }
 
-type Lang = 'is' | 'en';
 
 export default function AnnouncementList({ 
   classId,
@@ -46,8 +44,6 @@ export default function AnnouncementList({
 
   const loadAnnouncements = useCallback(async () => {
     try {
-      // Never show loading skeleton - we always show cached data instantly
-      // Fresh data loads silently in background
       setError('');
 
       // Check if user is authenticated before making request
@@ -154,7 +150,7 @@ export default function AnnouncementList({
     } finally {
       setLoading(false);
     }
-  }, [classId, orgId, userId, userRole, teacherClassIds, limit, t, user]);
+  }, [classId, userRole, teacherClassIds, limit, t, user]);
 
   useEffect(() => {
     // Instant render from cache (no skeleton) and then refresh in background

@@ -513,8 +513,6 @@ export default function ParentDashboard() {
       {/* Stories Column */}
       <StoryColumn
         lang={lang}
-        orgId={(session?.user?.user_metadata as any)?.org_id}
-        userId={session?.user?.id}
         userRole="guardian"
         parentClassIds={linkedStudents.map(s => s.class_id).filter(Boolean) as string[]}
       />

@@ -304,7 +304,6 @@ export const isText = {
   status_end_date_help: 'Ef ekki gefið upp, verður settur sem upphafsdagur',
   delete_staff_member: 'Eyða starfsmanni',
   delete_staff_confirmation: 'Ertu viss um að þú viljir eyða þessum starfsmanni varanlega? Þessa aðgerð er ekki hægt að afturkalla.',
-  updating: 'Uppfæri...',
 
   // Guardian translations
   guardians: 'Forráðamenn',
