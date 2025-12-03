@@ -15,7 +15,6 @@ export interface StaffFormData {
   ssn: string;
   education_level: string;
   union_membership: string;
-  class_id: string;
   role: string;
   is_active?: boolean;
 }
@@ -37,7 +36,6 @@ export interface StaffMember {
   role: string;
   education_level?: string | null;
   union_name?: string | null;
-  class_id?: string | null;
   full_name?: string;
   deleted_at?: string | null;
 }

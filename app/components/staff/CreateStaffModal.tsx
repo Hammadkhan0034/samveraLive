@@ -23,7 +23,6 @@ const DEFAULT_FORM_DATA: StaffFormData = {
   phone: '',
   education_level: '',
   union_membership: '',
-  class_id: '',
   role: 'teacher',
   is_active: true,
 };
@@ -38,25 +37,6 @@ export function CreateStaffModal({ isOpen, onClose, onSuccess, initialData }: Cr
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [classesForDropdown, setClassesForDropdown] = useState<Array<{ id: string; name: string; code: string | null }>>([]);
-
-  const loadClassesForDropdown = useCallback(async () => {
-    try {
-      const res = await fetch(`/api/classes?t=${Date.now()}`, { cache: 'no-store' });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
-      const classesList = json.classes || [];
-      setClassesForDropdown(classesList.map((cls: any) => ({ id: cls.id, name: cls.name, code: cls.code })));
-    } catch (e: any) {
-      console.error('❌ Error loading classes for dropdown:', e.message);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isOpen) {
-      loadClassesForDropdown();
-    }
-  }, [isOpen, loadClassesForDropdown]);
 
   // Initialize form from initialData when provided (edit mode)
   useEffect(() => {
@@ -71,7 +51,6 @@ export function CreateStaffModal({ isOpen, onClose, onSuccess, initialData }: Cr
         ssn: initialData.ssn || '',
         education_level: initialData.education_level || '',
         union_membership: initialData.union_membership || '',
-        class_id: initialData.class_id || '',
         role: initialData.role || 'teacher',
         is_active: initialData.is_active ?? true,
       });
@@ -125,7 +104,6 @@ export function CreateStaffModal({ isOpen, onClose, onSuccess, initialData }: Cr
         last_name: newStaff.last_name.trim() || null,
         email: newStaff.email.trim(),
         phone: newStaff.phone?.trim() || null,
-        class_id: newStaff.class_id?.trim() ? newStaff.class_id : null,
         address: newStaff.address?.trim() || null,
         ssn: newStaff.ssn?.trim() || null,
         education_level: newStaff.education_level?.trim() || null,
@@ -292,22 +270,6 @@ export function CreateStaffModal({ isOpen, onClose, onSuccess, initialData }: Cr
               placeholder={t.staff_union_membership_placeholder}
               className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
             />
-          </div>
-          <div>
-            <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.assign_to_class}</label>
-            <select
-              value={newStaff.class_id}
-              onChange={(e) => setNewStaff((prev) => ({ ...prev, class_id: e.target.value }))}
-              className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
-            >
-              <option value="">{t.no_class_assigned}</option>
-              {classesForDropdown.map((cls) => (
-                <option key={cls.id} value={cls.id}>
-                  {cls.name} {cls.code ? `(${cls.code})` : ''}
-                </option>
-              ))}
-            </select>
-            <p className="mt-1 text-ds-tiny text-slate-500 dark:text-slate-400">{t.class_assignment_note}</p>
           </div>
           <div className="flex gap-3 pt-4">
             <button

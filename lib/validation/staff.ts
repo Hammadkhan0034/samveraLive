@@ -53,7 +53,6 @@ export const createStaffSchema = z.object({
   email: emailSchema,
   role: roleSchema,
   phone: phoneSchema,
-  class_id: classIdSchema.optional(),
   address: addressSchema,
   ssn: ssnSchema,
   education_level: educationLevelSchema,
@@ -73,7 +72,6 @@ export const updateStaffSchema = z.object({
   address: addressSchema,
   ssn: ssnSchema,
   is_active: z.boolean().optional(),
-  class_id: classIdSchema.optional(),
   education_level: educationLevelSchema,
   union_membership: unionMembershipSchema,
 });
@@ -99,7 +97,6 @@ export const staffFormSchema = z.object({
   ssn: ssnSchema.or(z.literal('')),
   education_level: educationLevelSchema.or(z.literal('')),
   union_membership: z.string().max(100).or(z.literal('')),
-  class_id: classIdSchema.or(z.literal('')),
   role: roleSchema,
   is_active: z.boolean().optional(),
 });

@@ -366,14 +366,11 @@ export async function handlePostStaff(
       email,
       role,
       phone,
-      class_id,
       address,
       ssn,
       education_level,
       union_membership,
     } = bodyValidation.data;
-    const normalizedClassId =
-      class_id && String(class_id).trim() !== '' ? class_id : null;
 
     // Check if user already exists in public.users table
     const { data: existingPublicUser } = await adminClient
@@ -391,10 +388,9 @@ export async function handlePostStaff(
       );
     }
 
-    console.log('📋 Creating staff with class assignment:', {
+    console.log('📋 Creating staff:', {
       email,
       org_id,
-      class_id,
     });
 
     // Ensure the creator exists in public.users table
@@ -540,42 +536,6 @@ export async function handlePostStaff(
       console.log('✅ Staff record created successfully');
     }
 
-    // Create class membership only if class_id is a valid UUID
-    const isValidUuid = (v: any) =>
-      typeof v === 'string' &&
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-        v,
-      );
-    if (isValidUuid(normalizedClassId)) {
-      console.log('🔗 Creating class membership for teacher:', {
-        user_id: authUser.id,
-        class_id,
-      });
-
-      const { error: membershipError } = await adminClient
-        .from('class_memberships')
-        .insert({
-          org_id: org_id,
-          user_id: authUser.id,
-          class_id: normalizedClassId,
-          membership_role: 'teacher',
-        });
-
-      if (membershipError) {
-        console.error('❌ Failed to create class membership:', membershipError);
-        // Don't fail the whole request, just log the error
-        console.log(
-          '⚠️ User created but class assignment failed. You can assign manually later.',
-        );
-      } else {
-        console.log('✅ Class membership created successfully');
-      }
-    } else {
-      console.log(
-        'ℹ️ No valid class selected; skipping class membership creation',
-      );
-    }
-
     return NextResponse.json(
       {
         user: {
@@ -616,7 +576,6 @@ export async function handlePutStaff(
       address,
       ssn,
       is_active,
-      class_id,
       education_level,
       union_membership,
     } = bodyValidation.data;

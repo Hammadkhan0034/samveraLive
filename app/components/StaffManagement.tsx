@@ -92,7 +92,6 @@ export default function StaffManagement(_props: StaffManagementProps) {
       ssn: staffMember.ssn || '',
       education_level: staffMember.education_level || '',
       union_membership: staffMember.union_name || '',
-      class_id: staffMember.class_id || '',
       role: staffMember.role || 'teacher',
       is_active: staffMember.is_active ?? true,
     };
