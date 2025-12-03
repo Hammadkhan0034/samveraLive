@@ -229,6 +229,7 @@ export const isText = {
   staff_education_level: 'Menntun',
   staff_education_level_placeholder: 't.d. B.Ed, M.Ed',
   staff_union_membership: 'Stéttarfélagsaðild',
+  staff_union_membership_placeholder: 'Sláðu inn upplýsingar um stéttarfélagsaðild',
   role_teacher: 'Kennari',
   role_assistant: 'Aðstoðarkennari',
   role_specialist: 'Sérfræðingur',

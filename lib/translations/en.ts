@@ -228,6 +228,7 @@ export const enText = {
   staff_education_level: 'Education Level',
   staff_education_level_placeholder: 'e.g. B.Ed, M.Ed',
   staff_union_membership: 'Union Membership',
+  staff_union_membership_placeholder: 'Enter union membership information',
   role_teacher: 'Teacher',
   role_assistant: 'Assistant',
   role_specialist: 'Specialist',

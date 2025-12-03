@@ -24,7 +24,7 @@ export function CreateStaffModal({ isOpen, onClose, onSuccess }: CreateStaffModa
     ssn: '',
     phone: '',
     education_level: '',
-    union_membership: false,
+    union_membership: '',
     class_id: '',
   });
   const [phoneError, setPhoneError] = useState<string | null>(null);
@@ -78,7 +78,7 @@ export function CreateStaffModal({ isOpen, onClose, onSuccess }: CreateStaffModa
           address: newStaff.address || null,
           ssn: newStaff.ssn || null,
           education_level: newStaff.education_level || null,
-          union_membership: !!newStaff.union_membership,
+          union_membership: newStaff.union_membership.trim() || null,
           role: 'teacher'
         }),
       });
@@ -89,7 +89,7 @@ export function CreateStaffModal({ isOpen, onClose, onSuccess }: CreateStaffModa
         throw new Error(errorMsg);
       }
       // Reset form
-      setNewStaff({ first_name: '', last_name: '', email: '', address: '', ssn: '', phone: '', education_level: '', union_membership: false, class_id: '' });
+      setNewStaff({ first_name: '', last_name: '', email: '', address: '', ssn: '', phone: '', education_level: '', union_membership: '', class_id: '' });
       setError(null);
       setPhoneError(null);
       alert(`✅ ${t.staff_created_success}`);
@@ -110,7 +110,7 @@ export function CreateStaffModal({ isOpen, onClose, onSuccess }: CreateStaffModa
   // Reset form when modal closes
   useEffect(() => {
     if (!isOpen) {
-      setNewStaff({ first_name: '', last_name: '', email: '', address: '', ssn: '', phone: '', education_level: '', union_membership: false, class_id: '' });
+      setNewStaff({ first_name: '', last_name: '', email: '', address: '', ssn: '', phone: '', education_level: '', union_membership: '', class_id: '' });
       setError(null);
       setPhoneError(null);
     }
@@ -225,15 +225,15 @@ export function CreateStaffModal({ isOpen, onClose, onSuccess }: CreateStaffModa
               />
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div>
+            <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_union_membership || 'Union Membership'}</label>
             <input
-              id="union_membership"
-              type="checkbox"
-              checked={!!newStaff.union_membership}
-              onChange={(e) => setNewStaff((prev) => ({ ...prev, union_membership: e.target.checked }))}
-              className="h-3 w-3 rounded border-slate-300 text-mint-500 focus:ring-mint-500"
+              type="text"
+              value={newStaff.union_membership}
+              onChange={(e) => setNewStaff((prev) => ({ ...prev, union_membership: e.target.value }))}
+              placeholder={t.staff_union_membership_placeholder}
+              className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
             />
-            <label htmlFor="union_membership" className="text-ds-small text-slate-700 dark:text-slate-300">{t.staff_union_membership || 'Union Membership'}</label>
           </div>
           <div>
             <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.assign_to_class}</label>
