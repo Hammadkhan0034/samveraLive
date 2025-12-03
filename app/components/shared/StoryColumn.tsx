@@ -36,8 +36,6 @@ type StoryItem = {
 
 interface StoryColumnProps {
   lang?: 'en' | 'is';
-  orgId?: string | null;
-  userId?: string | null;
   userRole?: 'principal' | 'teacher' | 'guardian';
   teacherClassIds?: string[];
   parentClassIds?: string[];
@@ -45,8 +43,6 @@ interface StoryColumnProps {
 
 export default function StoryColumn({
   lang = 'en',
-  orgId,
-  userId,
   userRole,
   teacherClassIds = [],
   parentClassIds = [],
@@ -72,18 +68,7 @@ export default function StoryColumn({
   const pausedTimeRef = useRef<number>(0);
   const itemStartTimeRef = useRef<number>(0);
 
-  // Helper to validate UUID format
-  const isValidUUID = (str: string | null | undefined): boolean => {
-    if (!str) return false;
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    return uuidRegex.test(str);
-  };
-
-  // Get effective orgId and userId from session if not provided
-  const rawOrgId = orgId || (session?.user?.user_metadata as any)?.org_id || (session?.user?.user_metadata as any)?.organization_id || (session?.user?.user_metadata as any)?.orgId;
-  // Only use orgId if it's a valid UUID (skip legacy "1" values)
-  const effectiveOrgId = rawOrgId && isValidUUID(rawOrgId) ? rawOrgId : null;
-  const effectiveUserId = userId || session?.user?.id;
+  const effectiveUserId = session?.user?.id || null;
 
   // Determine user role from session if not provided
   const effectiveUserRole = useMemo(() => {
@@ -100,9 +85,9 @@ export default function StoryColumn({
 
   // Hydrate from cache instantly on mount
   useEffect(() => {
-    if (effectiveOrgId && effectiveUserId) {
+    if (effectiveUserId) {
       try {
-        const cacheKey = `stories_column_cache_${effectiveOrgId}_${effectiveUserId}`;
+        const cacheKey = `stories_column_cache_${effectiveUserId}`;
         const cached = localStorage.getItem(cacheKey);
         if (cached) {
           const parsed = JSON.parse(cached) as StoryWithPreview[];
@@ -116,16 +101,10 @@ export default function StoryColumn({
         // Ignore cache errors
       }
     }
-  }, [effectiveOrgId, effectiveUserId]);
+  }, [effectiveUserId]);
 
   // Fetch stories
   useEffect(() => {
-    if (!effectiveOrgId) {
-      setLoading(false);
-      setError(null); // Don't show error for missing/invalid orgId
-      return;
-    }
-
     // For teachers, API requires either teacherClassIds or teacherAuthorId
     // Skip the call if we don't have either (session might not be loaded yet)
     if (effectiveUserRole === 'teacher' && !effectiveUserId && teacherClassIds.length === 0) {
@@ -146,32 +125,25 @@ export default function StoryColumn({
       }
       setError(null);
       try {
-        const params = new URLSearchParams({ orgId: effectiveOrgId });
+        const params = new URLSearchParams();
         
         if (effectiveUserRole === 'teacher') {
           params.set('audience', 'teacher');
           
-          // API requires either teacherClassIds or teacherAuthorId for teachers
-          // Ensure we have at least one before making the call
-          const hasTeacherAuthorId = effectiveUserId && typeof effectiveUserId === 'string' && effectiveUserId.trim() !== '';
+          // Ensure we have at least one class before making the call
           const hasTeacherClassIds = teacherClassIds.length > 0;
           
-          if (!hasTeacherAuthorId && !hasTeacherClassIds) {
-            console.error('❌ StoryColumn: Cannot fetch stories - teacher needs either userId or teacherClassIds', {
-              effectiveUserId,
+          if (!hasTeacherClassIds) {
+            console.error('❌ StoryColumn: Cannot fetch stories - teacher needs teacherClassIds', {
               teacherClassIdsLength: teacherClassIds.length,
-              hasSession: !!session
+              hasSession: !!session,
             });
             setError(null); // Don't show error to user
             setLoading(false);
             return;
           }
-          
-          // Always set teacherAuthorId if available (required by API validation)
-          if (hasTeacherAuthorId) {
-            params.set('teacherAuthorId', effectiveUserId);
-          }
-          // Also include teacherClassIds if available
+
+          // Include teacherClassIds if available
           if (hasTeacherClassIds) {
             const classIdsString = teacherClassIds.join(',');
             params.set('teacherClassIds', classIdsString);
@@ -185,17 +157,11 @@ export default function StoryColumn({
           }
         } else if (effectiveUserRole === 'guardian') {
           params.set('audience', 'guardian');
-          if (effectiveUserId) {
-            params.set('parentUserId', effectiveUserId);
-          }
           if (parentClassIds.length > 0) {
             params.set('parentClassIds', parentClassIds.join(','));
           }
         } else if (effectiveUserRole === 'principal') {
           params.set('audience', 'principal');
-          if (effectiveUserId) {
-            params.set('principalAuthorId', effectiveUserId);
-          }
         }
 
         let res: Response;
@@ -264,7 +230,7 @@ export default function StoryColumn({
         const storiesWithPreviews = await Promise.all(
           storiesList.map(async (story: Story) => {
             try {
-              const itemsRes = await fetch(`/api/story-items?storyId=${story.id}&orgId=${effectiveOrgId}`, { cache: 'no-store' });
+              const itemsRes = await fetch(`/api/story-items?storyId=${story.id}`, { cache: 'no-store' });
               const itemsJson = await itemsRes.json();
               const items = Array.isArray(itemsJson.items) ? itemsJson.items : [];
               
@@ -289,9 +255,9 @@ export default function StoryColumn({
         setStories(storiesWithPreviews);
         
         // Cache stories for instant load next time
-        if (effectiveOrgId && effectiveUserId) {
+        if (effectiveUserId) {
           try {
-            const cacheKey = `stories_column_cache_${effectiveOrgId}_${effectiveUserId}`;
+            const cacheKey = `stories_column_cache_${effectiveUserId}`;
             localStorage.setItem(cacheKey, JSON.stringify(storiesWithPreviews));
           } catch (e) {
             // Ignore cache errors
@@ -307,7 +273,7 @@ export default function StoryColumn({
     }
 
     loadStories();
-  }, [effectiveOrgId, effectiveUserId, effectiveUserRole, teacherClassIds.join(','), parentClassIds.join(','), hydratedFromCache]);
+  }, [effectiveUserId, effectiveUserRole, teacherClassIds, parentClassIds, hydratedFromCache, session]);
 
   const handleStoryClick = (story: StoryWithPreview) => {
     openStoryViewer(story);
@@ -362,7 +328,7 @@ export default function StoryColumn({
       setActiveIndex(0);
       setProgress(0);
       
-      const res = await fetch(`/api/story-items?storyId=${s.id}${effectiveOrgId ? `&orgId=${effectiveOrgId}` : ''}`, { 
+      const res = await fetch(`/api/story-items?storyId=${s.id}`, { 
         cache: 'no-store',
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -593,7 +559,6 @@ export default function StoryColumn({
     return () => {
       document.removeEventListener('keydown', handleEscape);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewerOpen]);
 
   // Prevent body scroll when viewer is open

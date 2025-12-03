@@ -26,16 +26,8 @@ const getStoriesQuerySchema = z.object({
   audience: z.enum(['principal', 'teacher', 'guardian']).optional(),
   teacherClassId: uuidSchema.nullable().optional(),
   teacherClassIds: z.string().optional(), // comma-separated class ids
-  teacherAuthorId: userIdSchema.optional(),
   parentClassIds: z.string().optional(), // comma-separated class ids
-  principalAuthorId: userIdSchema.optional(),
-}).refine((data) => {
-  // If audience is teacher, either teacherClassIds or teacherAuthorId should be provided
-  if (data.audience === 'teacher' && !data.teacherClassIds && !data.teacherAuthorId) {
-    return false;
-  }
-  return true;
-}, { message: 'For teacher audience, either teacherClassIds or teacherAuthorId must be provided' });
+});
 
 export async function handleGetStories(
   request: Request,
@@ -58,20 +50,10 @@ export async function handleGetStories(
     if (!queryValidation.success) {
       return queryValidation.error;
     }
-    const { classId, includeDeleted, onlyPublic, audience, teacherClassIds, teacherAuthorId, parentClassIds, principalAuthorId } = queryValidation.data;
+    const { classId, includeDeleted, onlyPublic, audience, teacherClassIds, parentClassIds } = queryValidation.data;
 
-    // Use authenticated user's ID for parentUserId and principalAuthorId if not provided
-    const parentUserId = user.id; // Always use authenticated user
-    const finalPrincipalAuthorId = principalAuthorId || user.id; // Use provided or authenticated user
-
-    // Validate finalPrincipalAuthorId
-    if (!finalPrincipalAuthorId) {
-      console.error('❌ Stories API: finalPrincipalAuthorId is null or undefined', {
-        principalAuthorId,
-        userId: user.id
-      });
-      return NextResponse.json({ error: 'Invalid author ID' }, { status: 400 });
-    }
+    // Use authenticated user's ID for any author/parent identity on the server side
+    const parentUserId = user.id;
 
     const nowIso = new Date().toISOString();
 
@@ -104,7 +86,6 @@ export async function handleGetStories(
       console.log('🔍 Teacher story filtering:', {
         teacherClassIds,
         teacherClassIdsArray,
-        teacherAuthorId
       });
 
       if (teacherClassIdsArray.length > 0) {
@@ -179,20 +160,11 @@ export async function handleGetStories(
       // Principals should see:
       // 1. All org-wide stories they created (class_id is null)
       // 2. All class-specific stories they created (for any class)
-      // Use authenticated user's ID or provided principalAuthorId
-      if (!finalPrincipalAuthorId) {
-        console.error('❌ Stories API: Cannot filter by principal - finalPrincipalAuthorId is null', {
-          principalAuthorId,
-          userId: user.id
-        });
-        return NextResponse.json({ error: 'Invalid principal author ID' }, { status: 400 });
-      }
+      // Use authenticated user's ID as the principal author
       console.log('🔍 Principal story filtering:', {
-        finalPrincipalAuthorId,
         userId: user.id,
-        principalAuthorId
       });
-      query = query.eq('author_id', finalPrincipalAuthorId);
+      query = query.eq('author_id', user.id);
     }
 
     // Note: Organization-wide stories (class_id is null) are visible to:
@@ -201,7 +173,7 @@ export async function handleGetStories(
     // - All Guardians (via audience=guardian filter)
     //
     // Class-specific stories are visible to:
-    // - Principal (who created them, via principalAuthorId filter)
+    // - Principal (who created them)
     // - Teachers of that class (via teacherClassIds filter)
     // - Guardians of students in that class (via parentClassIds filter)
 
@@ -215,7 +187,7 @@ export async function handleGetStories(
         audience,
         orgId,
         userId: user.id,
-        finalPrincipalAuthorId: audience === 'principal' ? (principalAuthorId || user.id) : undefined
+        finalPrincipalAuthorId: audience === 'principal' ? user.id : undefined
       });
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
