@@ -36,3 +36,26 @@ export interface FilterOption {
   label: string;
 }
 
+/**
+ * Student form data structure used in StudentForm component
+ */
+export interface StudentFormData {
+  id?: string;
+  first_name: string;
+  last_name: string;
+  dob: string;
+  gender: string;
+  class_id: string;
+  medical_notes: string;
+  allergies: string;
+  emergency_contact: string;
+  guardian_ids: string[];
+  phone: string;
+  address: string;
+  registration_time: string;
+  start_date: string;
+  barngildi: number;
+  student_language: string;
+  social_security_number: string;
+}
+

@@ -222,14 +222,14 @@ function StudentsPageContent() {
           {/* Mobile menu button */}
           <button
             onClick={() => sidebarRef.current?.open()}
-            className="md:hidden p-2 rounded-ds-md hover:bg-mint-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
+            className="md:hidden p-2 rounded-ds-md hover:bg-mint-100 dark:hover:bg-slate-800 text-ds-text-primary dark:text-slate-300 transition-colors"
             aria-label="Toggle sidebar"
           >
             <Menu className="h-5 w-5" />
           </button>
           <div>
             <h1 className="text-ds-h1 font-bold tracking-tight text-ds-text-primary dark:text-slate-100">{t.students}</h1>
-            <p className="mt-2 text-ds-small text-ds-text-muted dark:text-slate-400">{t.add_student_subtitle}</p>
+            <p className="mt-ds-xs text-ds-small text-ds-text-muted dark:text-slate-400">{t.add_student_subtitle}</p>
           </div>
         </div>
 
@@ -255,14 +255,14 @@ function StudentsPageContent() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={'Search students...'}
-                className="h-14 px-4 rounded-ds-xl bg-white text-ds-body focus:outline-none focus:ring-2 focus:ring-mint-500/20 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 w-64 border-none shadow-ds-sm"
+                className="h-12 px-ds-sm rounded-ds-xl bg-input-fill border border-input-stroke text-ds-body text-ds-text-primary focus:outline-none focus:border-mint-200 focus:ring-2 focus:ring-mint-200/20 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200 dark:placeholder-slate-400 dark:focus:border-mint-300 w-64"
               />
             </div>
             {/* Filter Dropdown */}
             <div className="relative" ref={filterDropdownRef}>
               <button
                 onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
-                className="flex items-center gap-2 rounded-ds-md bg-transparent border border-slate-300 text-ds-small px-3 py-1.5 text-slate-700 hover:bg-mint-50 transition-colors dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
+                className="flex items-center gap-2 rounded-ds-md bg-input-fill border border-input-stroke text-ds-small px-3 py-1.5 text-ds-text-primary hover:bg-mint-50 hover:border-mint-200 transition-colors dark:text-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:hover:bg-slate-800"
               >
                 <Filter className="h-4 w-4" />
                 <span className="hidden sm:inline">{filterOptions.find(opt => opt.value === selectedClassFilter)?.label || t.all_classes}</span>
@@ -270,7 +270,7 @@ function StudentsPageContent() {
               </button>
 
               {isFilterDropdownOpen && (
-                <div className="absolute right-0 top-full mt-1 w-48 rounded-ds-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-ds-lg z-50">
+                <div className="absolute right-0 top-full mt-1 w-48 rounded-ds-md border border-input-stroke dark:border-slate-700 bg-ds-surface-white dark:bg-slate-800 shadow-ds-lg z-50">
                   {filterOptions.map((option) => (
                     <button
                       key={option.value}
@@ -281,7 +281,7 @@ function StudentsPageContent() {
                       className={`w-full px-3 py-2 text-ds-small text-left hover:bg-mint-50 dark:hover:bg-slate-700 first:rounded-t-ds-md last:rounded-b-ds-md transition-colors ${
                         selectedClassFilter === option.value
                           ? 'bg-mint-100 dark:bg-slate-700 text-mint-700 dark:text-slate-100'
-                          : 'text-gray-700 dark:text-slate-300'
+                          : 'text-ds-text-primary dark:text-slate-300'
                       }`}
                     >
                       {option.label}
@@ -316,11 +316,11 @@ function StudentsPageContent() {
           }}
         />
         {/* Pagination controls */}
-        <div className="mt-4 w-full flex justify-end gap-2">
+        <div className="mt-ds-sm w-full flex justify-end gap-ds-xs">
           <button
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className="inline-flex items-center rounded-ds-md border border-slate-400 px-3 py-1.5 text-ds-small disabled:opacity-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+            className="inline-flex items-center rounded-ds-md border border-input-stroke bg-input-fill px-3 py-1.5 text-ds-small text-ds-text-primary disabled:opacity-60 disabled:cursor-not-allowed hover:bg-mint-50 hover:border-mint-200 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
           >
             {t.prev || 'Prev'}
           </button>
@@ -328,7 +328,7 @@ function StudentsPageContent() {
             <button
               key={idx}
               onClick={() => setCurrentPage(idx + 1)}
-              className={`inline-flex items-center rounded-ds-md px-3 py-1.5 text-ds-small transition-colors ${currentPage === idx + 1 ? 'bg-mint-500 text-white border border-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600' : 'border border-slate-400 dark:border-slate-600 dark:text-slate-200 hover:bg-mint-50'}`}
+              className={`inline-flex items-center rounded-ds-md px-3 py-1.5 text-ds-small transition-colors ${currentPage === idx + 1 ? 'bg-mint-500 text-white border border-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600' : 'border border-input-stroke bg-input-fill text-ds-text-primary dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 hover:bg-mint-50 hover:border-mint-200 dark:hover:bg-slate-800'}`}
             >
               {idx + 1}
             </button>
@@ -336,7 +336,7 @@ function StudentsPageContent() {
           <button
             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
-            className="inline-flex items-center rounded-ds-md border border-slate-400 px-3 py-1.5 text-ds-small disabled:opacity-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+            className="inline-flex items-center rounded-ds-md border border-input-stroke bg-input-fill px-3 py-1.5 text-ds-small text-ds-text-primary disabled:opacity-60 disabled:cursor-not-allowed hover:bg-mint-50 hover:border-mint-200 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
           >
             {t.next || 'Next'}
           </button>

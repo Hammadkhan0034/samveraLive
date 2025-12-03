@@ -22,7 +22,8 @@ import {
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { supabase } from '@/lib/supabaseClient';
 import { useRouter } from 'next/navigation';
-import { StudentForm, type StudentFormData } from './shared/StudentForm';
+import { StudentForm } from './shared/StudentForm';
+import type { StudentFormData } from '@/lib/types/students';
 import { DeleteConfirmationModal } from './shared/DeleteConfirmationModal';
 
 interface AdminStats {
@@ -1714,48 +1715,6 @@ export function AdminDashboard() {
         error={studentError}
         guardians={guardians}
         classes={classes}
-        translations={{
-          create_student: t.create_student,
-          edit_student: t.edit_student,
-          student_first_name: t.student_first_name,
-          student_last_name: t.student_last_name,
-          student_dob: t.student_dob,
-          student_gender: t.student_gender,
-          student_class: t.student_class,
-          student_guardians: t.student_guardians,
-          student_medical_notes: t.student_medical_notes,
-          student_allergies: t.student_allergies,
-          student_emergency_contact: t.student_emergency_contact,
-          student_phone: t.phone,
-          student_registration_time: 'Registration Time',
-          student_address: t.address,
-          student_start_date: 'Start Date',
-          student_child_value: 'Child value',
-          student_language: 'Language',
-          student_social_security_number: t.ssn,
-          student_first_name_placeholder: t.student_first_name_placeholder,
-          student_last_name_placeholder: t.student_last_name_placeholder,
-          student_medical_notes_placeholder: t.student_medical_notes_placeholder,
-          student_allergies_placeholder: t.student_allergies_placeholder,
-          student_emergency_contact_placeholder: t.student_emergency_contact_placeholder,
-          student_registration_time_placeholder: 'YYYY-MM-DD HH:MM',
-          student_social_security_number_placeholder: t.ssn_placeholder,
-          student_phone_placeholder: t.phone_placeholder,
-          student_child_value_placeholder: '1.0 or 1.7',
-          student_address_placeholder: t.address_placeholder,
-          gender_unknown: t.gender_unknown,
-          gender_male: t.gender_male,
-          gender_female: t.gender_female,
-          gender_other: t.gender_other,
-          no_class_assigned: t.no_class_assigned,
-          no_guardians_available: t.no_guardians_available,
-          student_age_requirement: t.student_age_requirement,
-          create: t.create,
-          update: t.update,
-          cancel: t.cancel,
-          creating: t.creating,
-          updating: t.updating
-        }}
       />
 
       {/* Student Create/Edit Modal - OLD */}

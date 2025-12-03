@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
+import type { StudentFormData } from '@/lib/types/students';
 
 interface StudentFormProps {
   isOpen: boolean;
@@ -13,74 +15,6 @@ interface StudentFormProps {
   guardians: Array<{ id: string; full_name?: string; first_name?: string; last_name?: string; email?: string | null }>;
   classes: Array<{ id: string; name: string }>;
   asPage?: boolean;
-  translations: {
-    create_student: string;
-    edit_student: string;
-    student_first_name: string;
-    student_last_name: string;
-    student_dob: string;
-    student_gender: string;
-    student_class: string;
-    student_status?: string;
-    status_pending?: string;
-    status_approved?: string;
-    status_rejected?: string;
-    student_guardians: string;
-    student_medical_notes: string;
-    student_allergies: string;
-    student_emergency_contact: string;
-    student_phone: string;
-    student_registration_time: string;
-    student_address: string;
-    student_start_date: string;
-    student_child_value: string;
-    student_language: string;
-    student_social_security_number: string;
-    student_registration_time_placeholder: string;
-    student_social_security_number_placeholder: string;
-    student_phone_placeholder: string;
-    student_child_value_placeholder: string;
-    student_address_placeholder: string;
-    student_first_name_placeholder: string;
-    student_last_name_placeholder: string;
-    student_medical_notes_placeholder: string;
-    student_allergies_placeholder: string;
-    student_emergency_contact_placeholder: string;
-    gender_unknown: string;
-    gender_male: string;
-    gender_female: string;
-    gender_other: string;
-    no_class_assigned: string;
-    no_guardians_available: string;
-    student_age_requirement: string;
-    create: string;
-    update: string;
-    cancel: string;
-    creating: string;
-    updating: string;
-  };
-}
-
-export interface StudentFormData {
-  id?: string;
-  first_name: string;
-  last_name: string;
-  dob: string;
-  gender: string;
-  class_id: string;
-  medical_notes: string;
-  allergies: string;
-  emergency_contact: string;
-  guardian_ids: string[];
-
-  // add these so setStudentForm accepts them
-  phone: string;
-  address: string;
-  registration_time: string;
-  start_date: string;
-  barngildi: number;
-  student_language: string;
-  social_security_number: string;
 }
 
 export function StudentForm({
@@ -93,8 +27,8 @@ export function StudentForm({
   guardians,
   classes,
   asPage,
-  translations: t
 }: StudentFormProps) {
+  const { t } = useLanguage();
   // Use lazy initialization to avoid setState in effect
   const [formData, setFormData] = useState<StudentFormData>(() => {
     if (initialData) {
@@ -228,7 +162,7 @@ export function StudentForm({
       <div className={asPage ? "w-[80%] ml-20 bg-white dark:bg-slate-800 p-ds-md shadow-ds-card rounded-ds-lg" : "w-full max-w-2xl rounded-ds-lg bg-white dark:bg-slate-800 p-ds-md shadow-ds-lg max-h-[90vh] overflow-y-auto"}>
         {!asPage && (
           <div className="flex items-center justify-between">
-            <h3 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">
+            <h3 className="text-ds-h3 font-semibold text-ds-text-primary dark:text-slate-100">
               {formData.id ? t.edit_student : t.create_student}
             </h3>
             <button
@@ -240,10 +174,10 @@ export function StudentForm({
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="space-y-ds-md">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-ds-md">
             <div>
-              <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-ds-small font-medium text-ds-text-primary dark:text-slate-300 mb-ds-xs">
                 {t.student_first_name}
               </label>
               <input
@@ -251,13 +185,13 @@ export function StudentForm({
                 value={formData.first_name}
                 onChange={(e) => setFormData(prev => ({ ...prev, first_name: e.target.value }))}
                 placeholder={t.student_first_name_placeholder}
-                className="w-full rounded-ds-md border border-[#D8EBD8] dark:border-slate-600 px-3 py-2 text-ds-small bg-[#F5FFF7] focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+                className="w-full h-10 rounded-ds-md border border-input-stroke dark:border-slate-600 px-ds-sm text-ds-body bg-input-fill text-ds-text-primary focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-ds-small font-medium text-ds-text-primary dark:text-slate-300 mb-ds-xs">
                 {t.student_last_name}
               </label>
               <input
@@ -265,30 +199,30 @@ export function StudentForm({
                 value={formData.last_name}
                 onChange={(e) => setFormData(prev => ({ ...prev, last_name: e.target.value }))}
                 placeholder={t.student_last_name_placeholder}
-                className="w-full rounded-ds-md border border-[#D8EBD8] dark:border-slate-600 px-3 py-2 text-ds-small bg-[#F5FFF7] focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+                className="w-full h-10 rounded-ds-md border border-input-stroke dark:border-slate-600 px-ds-sm text-ds-body bg-input-fill text-ds-text-primary focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-ds-md">
             <div>
-              <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-ds-small font-medium text-ds-text-primary dark:text-slate-300 mb-ds-xs">
                 {t.student_dob}
               </label>
               <input
                 type="date"
                 value={formData.dob}
                 onChange={(e) => setFormData(prev => ({ ...prev, dob: e.target.value }))}
-                className={`w-full rounded-ds-md border px-3 py-2 text-ds-small bg-[#F5FFF7] focus:outline-none focus:ring-1 dark:bg-slate-700 dark:text-slate-200 ${
+                className={`w-full h-10 rounded-ds-md border px-ds-sm text-ds-body bg-input-fill text-ds-text-primary focus:outline-none focus:ring-1 dark:bg-slate-700 dark:text-slate-200 ${
                   formData.dob && !validateStudentAge(formData.dob)
                     ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
-                    : 'border-[#D8EBD8] dark:border-slate-600 focus:border-mint-500 focus:ring-mint-500'
+                    : 'border-input-stroke dark:border-slate-600 focus:border-mint-500 focus:ring-mint-500'
                 }`}
               />
-              <p className={`mt-1 text-ds-tiny ${
+              <p className={`mt-ds-xs text-ds-tiny ${
                 formData.dob && !validateStudentAge(formData.dob)
                   ? 'text-red-500 dark:text-red-400'
-                  : 'text-slate-500 dark:text-slate-400'
+                  : 'text-ds-text-muted dark:text-slate-400'
               }`}>
                 {formData.dob && !validateStudentAge(formData.dob)
                   ? 'Student age must be between 0-18 years old'
@@ -298,13 +232,13 @@ export function StudentForm({
             </div>
 
             <div>
-              <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-ds-small font-medium text-ds-text-primary dark:text-slate-300 mb-ds-xs">
                 {t.student_gender}
               </label>
               <select
                 value={formData.gender}
                 onChange={(e) => setFormData(prev => ({ ...prev, gender: e.target.value }))}
-                className="w-full rounded-ds-md border border-slate-300 dark:border-slate-600 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200"
+                className="w-full h-10 rounded-ds-md border border-input-stroke dark:border-slate-600 px-ds-sm text-ds-body bg-input-fill text-ds-text-primary focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200"
               >
                 <option value="unknown">{t.gender_unknown}</option>
                 <option value="male">{t.gender_male}</option>
@@ -314,9 +248,9 @@ export function StudentForm({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-ds-md">
             <div>
-              <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-ds-small font-medium text-ds-text-primary dark:text-slate-300 mb-ds-xs">
                 {t.student_phone}
               </label>
               <input
@@ -324,12 +258,12 @@ export function StudentForm({
                 value={formData.phone}
                 onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                 placeholder={t.student_phone_placeholder}
-                className="w-full rounded-ds-md border border-[#D8EBD8] dark:border-slate-600 px-3 py-2 text-ds-small bg-[#F5FFF7] focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+                className="w-full h-10 rounded-ds-md border border-input-stroke dark:border-slate-600 px-ds-sm text-ds-body bg-input-fill text-ds-text-primary focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
               />
             </div>
 
             <div>
-              <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-ds-small font-medium text-ds-text-primary dark:text-slate-300 mb-ds-xs">
                 {t.student_registration_time}
               </label>
               <input
@@ -337,27 +271,27 @@ export function StudentForm({
                 value={formData.registration_time}
                 onChange={(e) => setFormData(prev => ({ ...prev, registration_time: e.target.value }))}
                 placeholder='YYYY-MM-DD HH:MM'
-                className="w-full rounded-ds-md border border-[#D8EBD8] dark:border-slate-600 px-3 py-2 text-ds-small bg-[#F5FFF7] focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+                className="w-full h-10 rounded-ds-md border border-input-stroke dark:border-slate-600 px-ds-sm text-ds-body bg-input-fill text-ds-text-primary focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-ds-small font-medium text-ds-text-primary dark:text-slate-300 mb-ds-xs">
               {t.student_address}
             </label>
             <textarea
               value={formData.address}
               onChange={(e) => setFormData(prev => ({ ...prev, address: e.target.value }))}
               placeholder={t.student_address_placeholder}
-              className="w-full rounded-ds-md border border-slate-300 dark:border-slate-600 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+              className="w-full min-h-[120px] rounded-ds-md border border-input-stroke dark:border-slate-600 px-ds-sm py-3 text-ds-body bg-input-fill text-ds-text-primary focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
               rows={2}
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-ds-md">
             <div>
-              <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-ds-small font-medium text-ds-text-primary dark:text-slate-300 mb-ds-xs">
                 {t.student_start_date}
               </label>
               <input
@@ -365,12 +299,12 @@ export function StudentForm({
                 value={formData.start_date}
                 onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
                 placeholder='YYYY-MM-DD'
-                className="w-full rounded-ds-md border border-slate-300 dark:border-slate-600 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200"
+                className="w-full h-10 rounded-ds-md border border-input-stroke dark:border-slate-600 px-ds-sm text-ds-body bg-input-fill text-ds-text-primary focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200"
               />
             </div>
 
             <div>
-              <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-ds-small font-medium text-ds-text-primary dark:text-slate-300 mb-ds-xs">
                 {t.student_child_value}
               </label>
               <input
@@ -390,20 +324,20 @@ export function StudentForm({
                   }
                 }}
                 placeholder={t.student_child_value_placeholder || '1.0 or 1.7'}
-                className="w-full rounded-ds-md border border-[#D8EBD8] dark:border-slate-600 px-3 py-2 text-ds-small bg-[#F5FFF7] focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+                className="w-full h-10 rounded-ds-md border border-input-stroke dark:border-slate-600 px-ds-sm text-ds-body bg-input-fill text-ds-text-primary focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-ds-md">
             <div>
-              <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-ds-small font-medium text-ds-text-primary dark:text-slate-300 mb-ds-xs">
                 {t.student_language}
               </label>
               <select
                 value={formData.student_language}
                 onChange={(e) => setFormData(prev => ({ ...prev, student_language: e.target.value }))}
-                className="w-full rounded-ds-md border border-slate-300 dark:border-slate-600 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200"
+                className="w-full h-10 rounded-ds-md border border-input-stroke dark:border-slate-600 px-ds-sm text-ds-body bg-input-fill text-ds-text-primary focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200"
               >
                 <option value="english">English</option>
                 <option value="icelandic">Íslenska</option>
@@ -411,7 +345,7 @@ export function StudentForm({
             </div>
 
             <div>
-              <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-ds-small font-medium text-ds-text-primary dark:text-slate-300 mb-ds-xs">
                 {t.student_social_security_number}
               </label>
               <input
@@ -419,19 +353,19 @@ export function StudentForm({
                 value={formData.social_security_number}
                 onChange={(e) => setFormData(prev => ({ ...prev, social_security_number: e.target.value }))}
                 placeholder='000000-0000'
-                className="w-full rounded-ds-md border border-[#D8EBD8] dark:border-slate-600 px-3 py-2 text-ds-small bg-[#F5FFF7] focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+                className="w-full h-10 rounded-ds-md border border-input-stroke dark:border-slate-600 px-ds-sm text-ds-body bg-input-fill text-ds-text-primary focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-ds-small font-medium text-ds-text-primary dark:text-slate-300 mb-ds-xs">
               {t.student_class}
             </label>
             <select
               value={formData.class_id}
               onChange={(e) => setFormData(prev => ({ ...prev, class_id: e.target.value }))}
-              className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200"
+              className="w-full h-10 rounded-ds-md border border-input-stroke bg-input-fill dark:border-slate-600 px-ds-sm text-ds-body text-ds-text-primary focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200"
             >
               <option value="">{t.no_class_assigned}</option>
               {classes.map((cls) => (
@@ -445,40 +379,40 @@ export function StudentForm({
           {/* Guardians removed from UI */}
 
           <div>
-            <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-ds-small font-medium text-ds-text-primary dark:text-slate-300 mb-ds-xs">
               {t.student_medical_notes}
             </label>
             <textarea
               value={formData.medical_notes}
               onChange={(e) => setFormData(prev => ({ ...prev, medical_notes: e.target.value }))}
               placeholder={t.student_medical_notes_placeholder}
-              className="w-full rounded-ds-md border border-[#D8EBD8] dark:border-slate-600 px-3 py-2 text-ds-small bg-[#F5FFF7] focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+              className="w-full min-h-[120px] rounded-ds-md border border-input-stroke dark:border-slate-600 px-ds-sm py-3 text-ds-body bg-input-fill text-ds-text-primary focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
               rows={3}
             />
           </div>
 
           <div>
-            <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-ds-small font-medium text-ds-text-primary dark:text-slate-300 mb-ds-xs">
               {t.student_allergies}
             </label>
             <textarea
               value={formData.allergies}
               onChange={(e) => setFormData(prev => ({ ...prev, allergies: e.target.value }))}
               placeholder={t.student_allergies_placeholder}
-              className="w-full rounded-ds-md border border-[#D8EBD8] dark:border-slate-600 px-3 py-2 text-ds-small bg-[#F5FFF7] focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+              className="w-full min-h-[120px] rounded-ds-md border border-input-stroke dark:border-slate-600 px-ds-sm py-3 text-ds-body bg-input-fill text-ds-text-primary focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
               rows={2}
             />
           </div>
 
           <div>
-            <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-ds-small font-medium text-ds-text-primary dark:text-slate-300 mb-ds-xs">
               {t.student_emergency_contact}
             </label>
             <textarea
               value={formData.emergency_contact}
               onChange={(e) => setFormData(prev => ({ ...prev, emergency_contact: e.target.value }))}
               placeholder={t.student_emergency_contact_placeholder}
-              className="w-full rounded-ds-md border border-[#D8EBD8] dark:border-slate-600 px-3 py-2 text-ds-small bg-[#F5FFF7] focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+              className="w-full min-h-[120px] rounded-ds-md border border-input-stroke dark:border-slate-600 px-ds-sm py-3 text-ds-body bg-input-fill text-ds-text-primary focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
               rows={2}
             />
           </div>
@@ -487,18 +421,18 @@ export function StudentForm({
             <div className="text-ds-small text-red-600 dark:text-red-400">{error}</div>
           )}
 
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-ds-sm pt-ds-md">
             <button
               type="button"
               onClick={handleClose}
-              className="flex-1 rounded-ds-md border border-slate-300 dark:border-slate-600 px-4 py-2 text-ds-small hover:bg-mint-50 dark:hover:bg-slate-700 transition-colors"
+              className="flex-1 rounded-ds-md border border-input-stroke dark:border-slate-600 px-ds-sm py-2 text-ds-small text-ds-text-primary hover:bg-mint-50 dark:hover:bg-slate-700 transition-colors"
             >
               {t.cancel}
             </button>
             <button
               type="submit"
               disabled={loading || (!!formData.dob && !validateStudentAge(formData.dob))}
-              className="flex-1 rounded-ds-md bg-mint-500 hover:bg-mint-600 px-4 py-2 text-ds-small text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+              className="flex-1 rounded-ds-md bg-mint-500 hover:bg-mint-600 px-ds-sm py-2 text-ds-small text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-ds-xs transition-colors"
             >
               {loading ? (
                 <>

@@ -119,3 +119,27 @@ export const deleteStudentQuerySchema = z.object({
   id: studentIdSchema,
 });
 
+/**
+ * Student form data schema for client-side validation
+ * Used in StudentForm component before submission
+ */
+export const studentFormDataSchema = z.object({
+  id: studentIdSchema.optional(),
+  first_name: firstNameSchema,
+  last_name: lastNameSchema,
+  dob: studentDobSchema.nullable().optional(),
+  gender: genderSchema.optional(),
+  class_id: classIdSchema.optional(),
+  registration_time: z.string().nullable().optional(),
+  start_date: dateSchema.nullable().optional(),
+  barngildi: barngildiSchema.optional(),
+  student_language: studentLanguageSchema.optional(),
+  medical_notes: medicalNotesSchema,
+  allergies: allergiesSchema,
+  emergency_contact: emergencyContactSchema,
+  phone: phoneSchema,
+  address: addressSchema,
+  social_security_number: ssnSchema,
+  guardian_ids: guardianIdsSchema.optional().default([]),
+});
+
