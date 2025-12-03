@@ -283,6 +283,28 @@ export const isText = {
   no_staff_members: 'Engir starfsmenn enn',
   no_pending_invitations: 'Engin bíðandi boð',
   close: 'Loka',
+  
+  // Staff Status Management
+  change_status: 'Breyta stöðu starfsmanns',
+  update_status: 'Uppfæra stöðu',
+  staff_status: 'Staða starfsmanns',
+  on_holiday: 'Á fríi',
+  on_sick_leave: 'Á veikindaleyfi',
+  on_maternity_leave: 'Á fæðingarorlofi',
+  on_casual_leave: 'Á daglegu leyfi',
+  mark_as_inactive: 'Merkja sem óvirkt',
+  re_activate: 'Endurvirkja',
+  status_reason: 'Ástæða/Skjýring',
+  status_reason_placeholder: 'Sláðu inn ástæðu fyrir stöðubreytingu...',
+  status_reason_required: 'Ástæða er nauðsynleg (að minnsta kosti 10 stafir)',
+  status_start_date: 'Upphafsdagur',
+  status_end_date: 'Lokadagur',
+  status_start_date_invalid: 'Upphafsdagur verður að vera í dag eða síðar',
+  status_end_date_invalid: 'Lokadagur verður að vera >= upphafsdagur',
+  status_end_date_help: 'Ef ekki gefið upp, verður settur sem upphafsdagur',
+  delete_staff_member: 'Eyða starfsmanni',
+  delete_staff_confirmation: 'Ertu viss um að þú viljir eyða þessum starfsmanni varanlega? Þessa aðgerð er ekki hægt að afturkalla.',
+  updating: 'Uppfæri...',
 
   // Guardian translations
   guardians: 'Forráðamenn',

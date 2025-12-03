@@ -281,6 +281,28 @@ export const enText = {
   no_staff_members: 'No staff members yet',
   no_pending_invitations: 'No pending invitations',
   close: 'Close',
+  
+  // Staff Status Management
+  change_status: 'Change Staff Status',
+  update_status: 'Update Status',
+  staff_status: 'Staff Status',
+  on_holiday: 'On Holiday',
+  on_sick_leave: 'On Sick Leave',
+  on_maternity_leave: 'On Maternity Leave',
+  on_casual_leave: 'On Casual Leave',
+  mark_as_inactive: 'Mark as Inactive',
+  re_activate: 'Re-activate',
+  status_reason: 'Reason/Explanation',
+  status_reason_placeholder: 'Enter reason for status change...',
+  status_reason_required: 'Reason is required (minimum 10 characters)',
+  status_start_date: 'Start Date',
+  status_end_date: 'End Date',
+  status_start_date_invalid: 'Start date must be today or later',
+  status_end_date_invalid: 'End date must be >= start date',
+  status_end_date_help: 'If not provided, will be set to start date',
+  delete_staff_member: 'Delete Staff Member',
+  delete_staff_confirmation: 'Are you sure you want to permanently delete this staff member? This action cannot be undone.',
+  updating: 'Updating...',
 
   // Guardian translations
   guardians: 'Guardians',

@@ -8,6 +8,7 @@ import {
   createStaffSchema,
   updateStaffSchema,
   deleteStaffQuerySchema,
+  updateStaffStatusSchema,
 } from '@/lib/validation/staff';
 import type { AuthUser, UserMetadata, SamveraRole } from '@/lib/types/auth';
 
@@ -802,6 +803,144 @@ export async function handleDeleteStaff(
     }
 
     return NextResponse.json({ success: true }, { status: 200 });
+  } catch (err: any) {
+    return NextResponse.json(
+      { error: err.message || 'Unknown error' },
+      { status: 500 },
+    );
+  }
+}
+
+export async function handleUpdateStaffStatus(
+  request: Request,
+  user: AuthUser,
+  adminClient: SupabaseClient,
+): Promise<NextResponse> {
+  try {
+    // Check if user is principal
+    const userRoles = user.user_metadata?.roles || [];
+    const isPrincipal = userRoles.includes('principal') || userRoles.includes('admin');
+    
+    if (!isPrincipal) {
+      return NextResponse.json(
+        { error: 'Only principals can change staff status' },
+        { status: 403 },
+      );
+    }
+
+    let orgId: string;
+    try {
+      orgId = await getCurrentUserOrgId(user);
+    } catch (err) {
+      if (err instanceof MissingOrgIdError) {
+        return NextResponse.json(
+          {
+            error: 'Organization ID not found',
+            code: 'MISSING_ORG_ID',
+          },
+          { status: 401 },
+        );
+      }
+      throw err;
+    }
+
+    const body = await request.json();
+    const bodyValidation = validateBody(updateStaffStatusSchema, body);
+    if (!bodyValidation.success) {
+      return bodyValidation.error;
+    }
+
+    const { staff_id, status, reason, start_date, end_date } = bodyValidation.data;
+
+    // Validate dates
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const startDate = new Date(start_date);
+    startDate.setHours(0, 0, 0, 0);
+    
+    if (startDate < today) {
+      return NextResponse.json(
+        { error: 'Start date must be today or later' },
+        { status: 400 },
+      );
+    }
+
+    // If end_date is not provided, set it to start_date
+    let finalEndDate = end_date || start_date;
+    const endDate = new Date(finalEndDate);
+    endDate.setHours(0, 0, 0, 0);
+
+    if (endDate < startDate) {
+      return NextResponse.json(
+        { error: 'End date must be >= start date' },
+        { status: 400 },
+      );
+    }
+
+    // Verify staff member exists and belongs to same org
+    const { data: targetUser, error: targetErr } = await adminClient
+      .from('users')
+      .select('id, org_id')
+      .eq('id', staff_id)
+      .single();
+
+    if (targetErr || !targetUser) {
+      return NextResponse.json({ error: 'Staff member not found' }, { status: 404 });
+    }
+
+    if (targetUser.org_id !== orgId) {
+      return NextResponse.json(
+        { error: 'Cross-organization access is not allowed' },
+        { status: 403 },
+      );
+    }
+
+    const changedBy = user.id;
+
+    // For all statuses, update is_active and status column, then insert history record
+    // Statuses that make staff inactive: inactive, holiday, sick_leave, maternity_leave, casual_leave
+    const isActive = status === 'active';
+    
+    // Update users.is_active and users.status
+    const { error: updateError } = await adminClient
+      .from('users')
+      .update({ 
+        is_active: isActive, 
+        status: status,
+        updated_at: new Date().toISOString() 
+      })
+      .eq('id', staff_id);
+
+    if (updateError) {
+      return NextResponse.json(
+        { error: `Failed to update staff status: ${updateError.message}` },
+        { status: 500 },
+      );
+    }
+
+    // Insert status history record
+    const { error: historyError } = await adminClient
+      .from('staff_status_history')
+      .insert({
+        staff_id,
+        org_id: orgId,
+        status,
+        reason: reason || (status === 'active' ? 'Staff member reactivated' : 'Status changed'),
+        start_date: start_date,
+        end_date: finalEndDate,
+        changed_by: changedBy,
+      });
+
+    if (historyError) {
+      console.error('❌ Failed to insert status history:', historyError);
+      // Don't fail the whole request, but log the error
+      console.warn('⚠️ Status updated but history record failed');
+    }
+
+    return NextResponse.json(
+      { success: true, message: 'Staff status updated successfully' },
+      { status: 200 },
+    );
   } catch (err: any) {
     return NextResponse.json(
       { error: err.message || 'Unknown error' },

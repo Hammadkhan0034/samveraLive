@@ -3,6 +3,11 @@
  */
 
 /**
+ * Staff status type enum
+ */
+export type StaffStatusType = 'active' | 'inactive' | 'holiday' | 'sick_leave' | 'maternity_leave' | 'casual_leave';
+
+/**
  * Form data interface for creating/editing staff members
  */
 export interface StaffFormData {
@@ -38,6 +43,34 @@ export interface StaffMember {
   union_name?: string | null;
   full_name?: string;
   deleted_at?: string | null;
+  current_status?: StaffStatusType;
+}
+
+/**
+ * Staff status history record
+ */
+export interface StaffStatusHistory {
+  id: string;
+  staff_id: string;
+  org_id: string;
+  status: StaffStatusType;
+  reason: string;
+  start_date: string;
+  end_date: string | null;
+  changed_by: string;
+  created_at: string;
+  deleted_at?: string | null;
+}
+
+/**
+ * Form data for changing staff status
+ */
+export interface StaffStatusChangeFormData {
+  staff_id: string;
+  status: StaffStatusType;
+  reason: string;
+  start_date: string;
+  end_date?: string | null;
 }
 
 /**

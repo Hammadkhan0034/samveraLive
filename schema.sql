@@ -72,6 +72,10 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'student_request_status') THEN
     CREATE TYPE student_request_status AS ENUM ('pending','approved','rejected');
   END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'staff_status_type') THEN
+    CREATE TYPE staff_status_type AS ENUM ('active', 'inactive', 'holiday', 'sick_leave', 'maternity_leave', 'casual_leave');
+  END IF;
 END $$;
 
 -- ======================
@@ -110,6 +114,7 @@ CREATE TABLE IF NOT EXISTS users (
   last_login_at timestamptz,
   is_active boolean NOT NULL DEFAULT true,
   is_staff boolean NOT NULL DEFAULT true,
+  status staff_status_type DEFAULT 'active',
   dob date,
   theme text DEFAULT 'system' CHECK (theme IN ('light','dark','system')),
   language text DEFAULT 'is' CHECK (language IN ('en','is')),
@@ -134,6 +139,22 @@ CREATE TABLE IF NOT EXISTS staff (
   updated_at timestamptz NOT NULL DEFAULT now(),
   UNIQUE (org_id, user_id)
 );
+
+-- STAFF STATUS HISTORY
+CREATE TABLE IF NOT EXISTS staff_status_history (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  staff_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  org_id uuid NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+  status staff_status_type NOT NULL ,
+  reason text NOT NULL,
+  start_date date NOT NULL,
+  end_date date,
+  changed_by uuid NOT NULL REFERENCES users(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  deleted_at timestamptz NULL
+);
+CREATE INDEX IF NOT EXISTS idx_staff_status_history_staff_id ON staff_status_history(staff_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_staff_status_history_org_id ON staff_status_history(org_id);
 
 -- Email format validation (works with citext)
 DO $$

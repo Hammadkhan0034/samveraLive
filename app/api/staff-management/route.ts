@@ -4,6 +4,7 @@ import {
   handlePostStaff,
   handlePutStaff,
   handleDeleteStaff,
+  handleUpdateStaffStatus,
 } from '@/lib/handlers/staff_management_handler';
 
 export async function GET(request: Request) {
@@ -47,5 +48,16 @@ export async function DELETE(request: Request) {
       allowedRoles: ['principal', 'admin'],
     },
     (user, adminClient) => handleDeleteStaff(request, user, adminClient),
+  );
+}
+
+export async function PATCH(request: Request) {
+  return withAuthRoute(
+    request,
+    {
+      requireOrg: true,
+      allowedRoles: ['principal'],
+    },
+    (user, adminClient) => handleUpdateStaffStatus(request, user, adminClient),
   );
 }

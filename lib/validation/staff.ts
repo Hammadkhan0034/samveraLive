@@ -102,10 +102,80 @@ export const staffFormSchema = z.object({
 });
 
 /**
+ * Staff status type enum schema
+ */
+export const staffStatusTypeSchema = z.enum([
+  'active',
+  'inactive',
+  'holiday',
+  'sick_leave',
+  'maternity_leave',
+  'casual_leave',
+]);
+
+/**
+ * Schema for updating staff status (PATCH)
+ */
+export const updateStaffStatusSchema = z
+  .object({
+    staff_id: userIdSchema,
+    status: staffStatusTypeSchema,
+    reason: z
+      .string()
+      .min(10, { message: 'Reason must be at least 10 characters' })
+      .optional(),
+    start_date: z
+      .string()
+      .refine(
+        (date) => {
+          const inputDate = new Date(date);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          inputDate.setHours(0, 0, 0, 0);
+          return inputDate >= today;
+        },
+        {
+          message: 'Start date must be today or later',
+        },
+      ),
+    end_date: z
+      .string()
+      .optional()
+      .nullable()
+      .refine(
+        (date, ctx) => {
+          if (!date) return true; // Optional
+          const endDate = new Date(date);
+          const startDate = new Date(ctx.parent.start_date);
+          endDate.setHours(0, 0, 0, 0);
+          startDate.setHours(0, 0, 0, 0);
+          return endDate >= startDate;
+        },
+        {
+          message: 'End date must be >= start date',
+        },
+      ),
+  })
+  .refine(
+    (data) => {
+      // Reason is required for all statuses except 'active'
+      if (data.status !== 'active') {
+        return data.reason !== undefined && data.reason.length >= 10;
+      }
+      return true; // Reason is optional for 'active'
+    },
+    {
+      message: 'Reason is required for this status',
+      path: ['reason'],
+    },
+  );
+
+/**
  * Type exports
  */
 export type CreateStaffBody = z.infer<typeof createStaffSchema>;
 export type UpdateStaffBody = z.infer<typeof updateStaffSchema>;
 export type DeleteStaffQueryParams = z.infer<typeof deleteStaffQuerySchema>;
 export type StaffFormInput = z.infer<typeof staffFormSchema>;
+export type UpdateStaffStatusBody = z.infer<typeof updateStaffStatusSchema>;
 
