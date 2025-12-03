@@ -1,15 +1,15 @@
 'use client';
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { Users, Menu, CalendarDays } from 'lucide-react';
+import { Users, CalendarDays } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useTeacherClasses } from '@/lib/hooks/useTeacherClasses';
 import { useTeacherStudents } from '@/lib/hooks/useTeacherStudents';
 import { useAttendance } from '@/lib/hooks/useAttendance';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
-import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import TeacherPageLayout, { useTeacherPageLayout } from '@/app/components/shared/TeacherPageLayout';
+import { PageHeader } from '@/app/components/shared/PageHeader';
 import { StudentAttendanceCard } from '@/app/components/attendance/StudentAttendanceCard';
 import { AttendanceFilters } from '@/app/components/attendance/AttendanceFilters';
 import { AttendanceActions } from '@/app/components/attendance/AttendanceActions';
@@ -18,59 +18,6 @@ import type { Student, TeacherClass } from '@/lib/types/attendance';
 import { enText } from '@/lib/translations/en';
 import { isText } from '@/lib/translations/is';
 
-function AttendancePageHeader({
-  title,
-  label,
-  kidsIn,
-  total,
-  todayHint,
-}: {
-  title: string;
-  label: string;
-  kidsIn: number;
-  total: number;
-  todayHint: string;
-}) {
-  const { sidebarRef } = useTeacherPageLayout();
-
-  return (
-    <div className="mb-ds-sm flex flex-col gap-ds-sm md:flex-row md:items-center md:justify-between">
-      <div className="flex items-center gap-ds-sm">
-        {/* Mobile menu button */}
-        <button
-          onClick={() => sidebarRef.current?.open()}
-          className="md:hidden p-2 rounded-ds-md hover:bg-mint-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
-          aria-label="Toggle sidebar"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
-        <h2 className="text-ds-h2 font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-          {title}
-        </h2>
-      </div>
-      <div className="flex items-center gap-ds-sm">
-        <ProfileSwitcher />
-        {/* Desktop stats */}
-        <div className="hidden md:flex items-center gap-2 text-ds-small text-slate-600 dark:text-slate-400">
-          <Users className="h-4 w-4" />
-          <span>
-            {label}: <span className="font-medium">{kidsIn}</span> / {total}
-          </span>
-          <span className="mx-2 text-slate-300 dark:text-slate-600">•</span>
-          <CalendarDays className="h-4 w-4" />
-          <span>{todayHint}</span>
-        </div>
-        {/* Mobile stats */}
-        <div className="md:hidden flex items-center gap-2 text-ds-small text-slate-600 dark:text-slate-400">
-          <Users className="h-4 w-4" />
-          <span>
-            {label}: <span className="font-medium">{kidsIn}</span> / {total}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default function TeacherAttendancePage() {
   const { t, lang } = useLanguage();
@@ -140,15 +87,36 @@ export default function TeacherAttendancePage() {
   const isPageLoading =
     !hasLoadedInitial || loadingClasses || loadingStudents || loadingAttendance;
 
+  const { sidebarRef } = useTeacherPageLayout();
+
   return (
     <TeacherPageLayout attendanceBadge={kidsIn}>
-      {/* Content Header */}
-      <AttendancePageHeader
+      <PageHeader
         title={t.att_title}
-        label={t.kids_checked_in}
-        kidsIn={kidsIn}
-        total={students.length}
-        todayHint={t.today_hint}
+        subtitle={t.attendance_subtitle}
+        showMobileMenu={true}
+        onMobileMenuClick={() => sidebarRef.current?.open()}
+        rightActions={
+          <>
+            {/* Desktop stats */}
+            <div className="hidden md:flex items-center gap-2 text-ds-small text-slate-600 dark:text-slate-400">
+              <Users className="h-4 w-4" />
+              <span>
+                {t.kids_checked_in}: <span className="font-medium">{kidsIn}</span> / {students.length}
+              </span>
+              <span className="mx-2 text-slate-300 dark:text-slate-600">•</span>
+              <CalendarDays className="h-4 w-4" />
+              <span>{t.today_hint}</span>
+            </div>
+            {/* Mobile stats */}
+            <div className="md:hidden flex items-center gap-2 text-ds-small text-slate-600 dark:text-slate-400">
+              <Users className="h-4 w-4" />
+              <span>
+                {t.kids_checked_in}: <span className="font-medium">{kidsIn}</span> / {students.length}
+              </span>
+            </div>
+          </>
+        }
       />
 
       {/* Attendance Panel */}

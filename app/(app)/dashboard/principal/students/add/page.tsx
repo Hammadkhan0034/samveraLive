@@ -7,7 +7,7 @@ import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { StudentForm } from '@/app/components/shared/StudentForm';
 import type { StudentFormData } from '@/lib/types/students';
 import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
-import ProfileSwitcher from '@/app/components/ProfileSwitcher';
+import { PageHeader } from '@/app/components/shared/PageHeader';
 import Loading from '@/app/components/shared/Loading';
 
 function AddStudentPageContent() {
@@ -167,20 +167,11 @@ function AddStudentPageContent() {
 
   return (
     <>
-      {/* Content Header */}
-      <div className="mb-ds-sm flex flex-col gap-ds-sm md:flex-row md:items-center md:justify-between">
-        <div>
-          <h2 className="text-ds-h2 font-semibold tracking-tight text-ds-text-primary dark:text-slate-100">
-            {editingStudent?.id ? t.edit_student : t.add_student}
-          </h2>
-          <p className="mt-ds-xs text-ds-small text-ds-text-muted dark:text-slate-400">
-            {editingStudent?.id ? t.add_student_subtitle : t.student_form_subtitle}
-          </p>
-        </div>
-        <div className="flex items-center gap-ds-sm">
-          <ProfileSwitcher />
-        </div>
-      </div>
+      <PageHeader
+        title={editingStudent?.id ? t.edit_student : t.add_student}
+        subtitle={editingStudent?.id ? t.add_student_subtitle : t.student_form_subtitle}
+        showBackButton={false}
+      />
 
       {/* Error Message */}
       {error && (
@@ -190,7 +181,6 @@ function AddStudentPageContent() {
       )}
 
       {/* Student Form */}
-      <div className="rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">
         <StudentForm
           asPage={true}
           isOpen={true}
@@ -202,7 +192,6 @@ function AddStudentPageContent() {
           guardians={guardians}
           classes={classes}
         />
-      </div>
     </>
   );
 }

@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { X, Search, Send, MessageSquarePlus, Menu } from 'lucide-react';
+import { X, Search, Send, MessageSquarePlus } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { MessageThreadWithParticipants, MessageItem } from '@/lib/types/messages';
 import { useMessagesRealtime } from '@/lib/hooks/useMessagesRealtime';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
-import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import TeacherPageLayout, { useTeacherPageLayout } from '@/app/components/shared/TeacherPageLayout';
+import { PageHeader } from '@/app/components/shared/PageHeader';
 
 type Recipient = {
   id: string;
@@ -18,29 +18,6 @@ type Recipient = {
   role?: string;
 };
 
-// Messages Page Header Component
-function MessagesPageHeader({ title }: { title: string }) {
-  const { sidebarRef } = useTeacherPageLayout();
-
-  return (
-    <div className="mb-ds-sm flex flex-col gap-ds-sm md:flex-row md:items-center md:justify-between">
-      <div className="flex items-center gap-ds-sm">
-        {/* Mobile menu button */}
-        <button
-          onClick={() => sidebarRef.current?.open()}
-          className="md:hidden p-2 rounded-ds-md hover:bg-mint-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
-          aria-label="Toggle sidebar"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
-        <h2 className="text-ds-h2 font-semibold tracking-tight text-slate-900 dark:text-slate-100">{title}</h2>
-      </div>
-      <div className="flex items-center gap-ds-sm">
-        <ProfileSwitcher />
-      </div>
-    </div>
-  );
-}
 
 /**
  * Filters threads to show only allowed participants for teachers
@@ -564,9 +541,16 @@ export default function TeacherMessagesPage() {
     }
   }, [messages]);
 
+  const { sidebarRef } = useTeacherPageLayout();
+
   return (
     <TeacherPageLayout messagesBadge={messagesCount > 0 ? messagesCount : undefined}>
-      <MessagesPageHeader title={t.msg_title} />
+      <PageHeader
+        title={t.msg_title}
+        subtitle={t.messages_subtitle}
+        showMobileMenu={true}
+        onMobileMenuClick={() => sidebarRef.current?.open()}
+      />
       
       {error && (
         <div className="mb-4 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3">

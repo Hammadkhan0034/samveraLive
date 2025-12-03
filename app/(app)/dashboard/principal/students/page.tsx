@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
-import { Menu, Plus, Filter, ChevronDown } from 'lucide-react';
+import { Plus, Filter, ChevronDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { StudentTable } from '@/app/components/shared/StudentTable';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
-import ProfileSwitcher from '@/app/components/ProfileSwitcher';
+import { PageHeader } from '@/app/components/shared/PageHeader';
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import type { StudentWithRelations, ClassWithTeachers, FilterOption } from '@/lib/types/students';
 
@@ -216,33 +216,21 @@ function StudentsPageContent() {
 
   return (
     <>
-      {/* Content Header */}
-      <div className="mb-ds-md flex flex-col gap-ds-md md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-ds-md">
-          {/* Mobile menu button */}
-          <button
-            onClick={() => sidebarRef.current?.open()}
-            className="md:hidden p-2 rounded-ds-md hover:bg-mint-100 dark:hover:bg-slate-800 text-ds-text-primary dark:text-slate-300 transition-colors"
-            aria-label="Toggle sidebar"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-          <div>
-            <h1 className="text-ds-h1 font-bold tracking-tight text-ds-text-primary dark:text-slate-100">{t.students}</h1>
-            <p className="mt-ds-xs text-ds-small text-ds-text-muted dark:text-slate-400">{t.add_student_subtitle}</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-ds-md">
-          <ProfileSwitcher />
+      <PageHeader
+        title={t.students}
+        subtitle={t.students_subtitle}
+        headingLevel="h1"
+        showMobileMenu={true}
+        onMobileMenuClick={() => sidebarRef.current?.open()}
+        rightActions={
           <button
             onClick={openCreateStudentModal}
             className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-ds-sm py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600"
           >
             <Plus className="h-4 w-4" /> {t.add_student}
           </button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Students Table */}
       <div className="rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">

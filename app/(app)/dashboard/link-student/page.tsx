@@ -1,14 +1,14 @@
 'use client';
 
 import React from 'react';
-import { ArrowLeft, Menu } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import LinkStudentGuardian from '../../../components/LinkStudentGuardian';
 import { useRequireAuth } from '../../../../lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import TeacherLayout from '@/app/components/shared/TeacherLayout';
 import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
-import ProfileSwitcher from '@/app/components/ProfileSwitcher';
+import { PageHeader } from '@/app/components/shared/PageHeader';
 import Loading from '@/app/components/shared/Loading';
 
 export default function LinkStudentPage() {
@@ -56,31 +56,13 @@ export default function LinkStudentPage() {
 
     return (
       <>
-        {/* Content Header */}
-        <div className="mb-ds-sm flex flex-col gap-ds-sm md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-ds-sm">
-            {/* Mobile menu button */}
-            <button
-              onClick={() => sidebarRef.current?.open()}
-              className="md:hidden p-2 rounded-ds-md hover:bg-mint-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
-              aria-label="Toggle sidebar"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-            <div>
-              <h2 className="text-ds-h1 font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-                {t.tile_link_student || 'Link Student'}
-              </h2>
-              <p className="mt-1 text-ds-small text-slate-600 dark:text-slate-400">
-                {t.tile_link_student_desc || 'Link a guardian to a student'}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-ds-sm">
-            <ProfileSwitcher />
-          </div>
-        </div>
+        <PageHeader
+          title={t.tile_link_student || 'Link Student'}
+          subtitle={t.tile_link_student_desc || 'Link a guardian to a student'}
+          headingLevel="h1"
+          showMobileMenu={true}
+          onMobileMenuClick={() => sidebarRef.current?.open()}
+        />
 
         {/* Link Student Card */}
         <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">

@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Menu, Plus, Image as ImageIcon, Trash2 } from 'lucide-react';
+import { Plus, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { PhotoUploadModal } from '@/app/components/shared/PhotoUploadModal';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
-import ProfileSwitcher from '@/app/components/ProfileSwitcher';
+import { PageHeader } from '@/app/components/shared/PageHeader';
 import type { Student } from '@/lib/types/attendance';
 
 interface Photo {
@@ -225,33 +225,22 @@ function PrincipalPhotosPageContent() {
 
   return (
     <>
-      {/* Content Header */}
-      <div className="mb-ds-sm flex flex-col gap-ds-sm md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-ds-sm">
-          {/* Mobile menu button */}
-          <button
-            onClick={() => sidebarRef.current?.open()}
-            className="md:hidden p-2 rounded-ds-md hover:bg-mint-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
-            aria-label="Toggle sidebar"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-          <h2 className="text-ds-h1 font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            {t.photos || 'Photos'}
-          </h2>
-        </div>
-
-        <div className="flex items-center gap-ds-sm">
-          <ProfileSwitcher />
+      <PageHeader
+        title={t.photos || 'Photos'}
+        subtitle={t.photos_subtitle}
+        headingLevel="h1"
+        showMobileMenu={true}
+        onMobileMenuClick={() => sidebarRef.current?.open()}
+        rightActions={
           <button
             onClick={() => setIsModalOpen(true)}
-              className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600"
-            >
-              <Plus className="h-4 w-4" />
-              {t.upload_photo || 'Upload Photo'}
-            </button>
-        </div>
-      </div>
+            className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600"
+          >
+            <Plus className="h-4 w-4" />
+            {t.upload_photo || 'Upload Photo'}
+          </button>
+        }
+      />
 
         {/* Photos Panel */}
         <div className="rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">

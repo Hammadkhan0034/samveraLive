@@ -4,10 +4,10 @@ import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { Menu, Users } from 'lucide-react';
+import { Users } from 'lucide-react';
 import TeacherSelection from '@/app/components/TeacherSelection';
 import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
-import ProfileSwitcher from '@/app/components/ProfileSwitcher';
+import { PageHeader } from '@/app/components/shared/PageHeader';
 import Loading from '@/app/components/shared/Loading';
 
 type Lang = 'is' | 'en';
@@ -244,30 +244,12 @@ function CreateClassPageContent() {
 
   return (
     <>
-      {/* Content Header */}
-      <div className="mb-ds-sm flex flex-col gap-ds-sm md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-ds-sm">
-          {/* Mobile menu button */}
-          <button
-            onClick={() => sidebarRef.current?.open()}
-            className="md:hidden p-2 rounded-ds-md hover:bg-mint-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
-            aria-label="Toggle sidebar"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-          <div>
-            <h2 className="text-ds-h2 font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-              {isEditMode ? t.edit_class : t.add_class}
-            </h2>
-            <p className="mt-1 text-ds-small text-slate-600 dark:text-slate-400">
-              {isEditMode ? t.edit_class_subtitle : t.create_class_subtitle}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-ds-sm">
-          <ProfileSwitcher />
-        </div>
-      </div>
+      <PageHeader
+        title={isEditMode ? t.edit_class : t.add_class}
+        subtitle={isEditMode ? t.edit_class_subtitle : t.create_class_subtitle}
+        showMobileMenu={true}
+        onMobileMenuClick={() => sidebarRef.current?.open()}
+      />
 
         {/* Error Message */}
         {error && (

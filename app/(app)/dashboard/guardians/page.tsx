@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
-import { Plus, ArrowLeft, Menu } from 'lucide-react';
+import { Plus, ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useRequireAuth } from '@/lib/hooks/useAuth';
 import { type GuardianFormData } from '@/app/components/shared/GuardianForm';
@@ -10,7 +10,7 @@ import { GuardianTable } from '@/app/components/shared/GuardianTable';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import TeacherLayout from '@/app/components/shared/TeacherLayout';
 import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
-import ProfileSwitcher from '@/app/components/ProfileSwitcher';
+import { PageHeader } from '@/app/components/shared/PageHeader';
 import Loading from '@/app/components/shared/Loading';
 
 type Lang = 'is' | 'en';
@@ -349,33 +349,21 @@ export default function GuardiansPage() {
 
     return (
       <>
-        {/* Content Header */}
-        <div className="mb-ds-sm flex flex-col gap-ds-sm md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-ds-sm">
-            {/* Mobile menu button */}
-            <button
-              onClick={() => sidebarRef.current?.open()}
-              className="md:hidden p-2 rounded-ds-md hover:bg-mint-200 dark:hover:bg-slate-800 text-ds-text-secondary dark:text-slate-300 transition-colors"
-              aria-label="Toggle sidebar"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-            <div>
-              <h2 className="text-ds-h1 font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.guardians}</h2>
-              <p className="mt-1 text-ds-small text-ds-text-secondary dark:text-slate-400">Manage guardians</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-ds-sm">
-            <ProfileSwitcher />
+        <PageHeader
+          title={t.guardians}
+          subtitle={t.tile_guardians_desc}
+          headingLevel="h1"
+          showMobileMenu={true}
+          onMobileMenuClick={() => sidebarRef.current?.open()}
+          rightActions={
             <button
               onClick={openCreateGuardianModal}
               className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 hover:bg-mint-600 px-4 py-2 text-ds-small text-white transition-colors"
             >
               <Plus className="h-4 w-4" /> {t.add_guardian}
             </button>
-          </div>
-        </div>
+          }
+        />
 
         {/* Guardians Table */}
         <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">

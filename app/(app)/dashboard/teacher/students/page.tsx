@@ -2,15 +2,15 @@
 
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Users, Plus, Search, Edit, Trash2, Menu, CalendarDays } from 'lucide-react';
+import { Users, Plus, Search, Edit, Trash2, CalendarDays } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { enText } from '@/lib/translations/en';
 import { isText } from '@/lib/translations/is';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
-import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import TeacherPageLayout, { useTeacherPageLayout } from '@/app/components/shared/TeacherPageLayout';
+import { PageHeader } from '@/app/components/shared/PageHeader';
 import { StudentForm } from '@/app/components/shared/StudentForm';
 import type { StudentFormData } from '@/lib/types/students';
 
@@ -59,58 +59,6 @@ interface Student {
 
 // Translations removed - using centralized translations from @/lib/translations
 
-// Students Page Header Component
-function StudentsPageHeader({
-  title,
-  label,
-  value,
-  todayHint
-}: {
-  title: string;
-  label: string;
-  value: number;
-  todayHint: string;
-}) {
-  const { sidebarRef } = useTeacherPageLayout();
-
-  return (
-    <div className="mb-ds-sm flex flex-col gap-ds-sm md:flex-row md:items-center md:justify-between">
-      <div className="flex items-center gap-ds-sm">
-        {/* Mobile menu button */}
-        <button
-          onClick={() => sidebarRef.current?.open()}
-          className="md:hidden p-2 rounded-ds-md hover:bg-mint-100 dark:hover:bg-slate-800 text-ds-text-primary dark:text-slate-300 transition-colors"
-          aria-label="Toggle sidebar"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
-        <h2 className="text-ds-h2 font-semibold tracking-tight text-ds-text-primary dark:text-slate-100">{title}</h2>
-      </div>
-      <div className="flex items-center gap-ds-sm">
-        <ProfileSwitcher />
-        {/* Desktop stats */}
-        <div className="hidden md:flex items-center gap-ds-xs text-ds-small text-ds-text-secondary dark:text-slate-400">
-          <Users className="h-4 w-4" />
-          <span>
-            {label}:{' '}
-            <span className="font-medium">{value}</span>
-          </span>
-          <span className="mx-ds-xs text-slate-300 dark:text-slate-600">•</span>
-          <CalendarDays className="h-4 w-4" />
-          <span>{todayHint}</span>
-        </div>
-        {/* Mobile stats */}
-        <div className="md:hidden flex items-center gap-ds-xs text-ds-small text-ds-text-secondary dark:text-slate-400">
-          <Users className="h-4 w-4" />
-          <span>
-            {label}:{' '}
-            <span className="font-medium">{value}</span>
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // Helper function to format date
 function formatDate(dateString: string | null | undefined): string {
@@ -671,14 +619,38 @@ export default function TeacherStudentsPage() {
   }, [deletingStudentId, loadStudents]);
 
 
+  const { sidebarRef } = useTeacherPageLayout();
+
   return (
     <TeacherPageLayout>
-      {/* Content Header */}
-      <StudentsPageHeader
+      <PageHeader
         title={t.students}
-        label={t.tile_students}
-        value={students.length}
-        todayHint={t.today_hint}
+        subtitle={t.students_subtitle}
+        showMobileMenu={true}
+        onMobileMenuClick={() => sidebarRef.current?.open()}
+        rightActions={
+          <>
+            {/* Desktop stats */}
+            <div className="hidden md:flex items-center gap-ds-xs text-ds-small text-ds-text-secondary dark:text-slate-400">
+              <Users className="h-4 w-4" />
+              <span>
+                {t.tile_students}:{' '}
+                <span className="font-medium">{students.length}</span>
+              </span>
+              <span className="mx-ds-xs text-slate-300 dark:text-slate-600">•</span>
+              <CalendarDays className="h-4 w-4" />
+              <span>{t.today_hint}</span>
+            </div>
+            {/* Mobile stats */}
+            <div className="md:hidden flex items-center gap-ds-xs text-ds-small text-ds-text-secondary dark:text-slate-400">
+              <Users className="h-4 w-4" />
+              <span>
+                {t.tile_students}:{' '}
+                <span className="font-medium">{students.length}</span>
+              </span>
+            </div>
+          </>
+        }
       />
 
       {/* Students Panel */}

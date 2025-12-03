@@ -3,9 +3,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useRouter, useParams } from 'next/navigation';
-import { Menu, Trash2, AlertTriangle, UserPlus, Users } from 'lucide-react';
+import { Trash2, AlertTriangle, UserPlus, Users } from 'lucide-react';
 import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
-import ProfileSwitcher from '@/app/components/ProfileSwitcher';
+import { PageHeader } from '@/app/components/shared/PageHeader';
 import { StudentAssignmentModal } from '@/app/components/principal/classes/StudentAssignmentModal';
 import { TeacherAssignmentModal } from '@/app/components/principal/classes/TeacherAssignmentModal';
 import type { TranslationStrings } from '@/app/components/principal/classes/types';
@@ -229,25 +229,12 @@ function ClassDetailsPageContent() {
 
   return (
     <>
-      {/* Content Header */}
-      <div className="mb-ds-sm flex flex-col gap-ds-sm md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-ds-sm">
-          {/* Mobile menu button */}
-          <button
-            onClick={() => sidebarRef.current?.open()}
-            className="md:hidden p-2 rounded-ds-md hover:bg-mint-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
-            aria-label="Toggle sidebar"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-          <h2 className="text-ds-h2 font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-            {t.class_details || 'Class Details'} {classData ? `- ${classData.name}` : ''}
-          </h2>
-        </div>
-        <div className="flex items-center gap-ds-sm">
-          <ProfileSwitcher />
-        </div>
-      </div>
+      <PageHeader
+        title={`${t.class_details || 'Class Details'}${classData ? ` - ${classData.name}` : ''}`}
+        subtitle={t.class_details_subtitle}
+        showMobileMenu={true}
+        onMobileMenuClick={() => sidebarRef.current?.open()}
+      />
 
         {/* Class Details Table */}
         <div className="mb-ds-md rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">

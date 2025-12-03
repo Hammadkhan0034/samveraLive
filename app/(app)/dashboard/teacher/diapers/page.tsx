@@ -3,11 +3,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { enText } from '@/lib/translations/en';
 import { isText } from '@/lib/translations/is';
-import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Users, Plus, Send, Paperclip, Bell, X, Search, ChevronLeft, ChevronRight, Edit, Trash2, Link as LinkIcon, Mail, Utensils, Menu, ChevronDown } from 'lucide-react';
+import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Users, Plus, Send, Paperclip, Bell, X, Search, ChevronLeft, ChevronRight, Edit, Trash2, Link as LinkIcon, Mail, Utensils, ChevronDown } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import type { HealthLog, HealthLogWithRelations, HealthLogFormData } from '@/lib/types/health-logs';
-import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import TeacherPageLayout, { useTeacherPageLayout } from '@/app/components/shared/TeacherPageLayout';
+import { PageHeader } from '@/app/components/shared/PageHeader';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import { HealthLogFormModal } from '@/app/components/shared/HealthLogFormModal';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
@@ -15,37 +15,19 @@ import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton'
 
 // Small helpers
 
-// Diapers Page Header Component
-function DiapersPageHeader({ title }: { title: string }) {
-  const { sidebarRef } = useTeacherPageLayout();
-
-  return (
-    <div className="mb-ds-sm flex flex-col gap-ds-sm md:flex-row md:items-center md:justify-between">
-      <div className="flex items-center gap-ds-sm">
-        {/* Mobile menu button */}
-        <button
-          onClick={() => sidebarRef.current?.open()}
-          className="md:hidden p-2 rounded-ds-md hover:bg-mint-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
-          aria-label="Toggle sidebar"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
-        <h2 className="text-ds-h2 font-semibold tracking-tight text-slate-900 dark:text-slate-100">{title}</h2>
-      </div>
-      <div className="flex items-center gap-ds-sm">
-        <ProfileSwitcher />
-      </div>
-    </div>
-  );
-}
 
 export default function TeacherDiapersPage() {
   const { t } = useLanguage();
+  const { sidebarRef } = useTeacherPageLayout();
 
   return (
     <TeacherPageLayout>
-      {/* Content Header */}
-      <DiapersPageHeader title={t.di_title} />
+      <PageHeader
+        title={t.di_title}
+        subtitle={t.diapers_subtitle}
+        showMobileMenu={true}
+        onMobileMenuClick={() => sidebarRef.current?.open()}
+      />
       <p className="mb-ds-sm text-ds-small text-slate-600 dark:text-slate-400">{t.di_hint}</p>
       {/* Diapers Panel */}
       <section>
