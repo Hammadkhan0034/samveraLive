@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useImperativeHandle, forwardRef, useEffect, Suspense } from 'react';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { X } from 'lucide-react';
 import { LayoutDashboard, Users, School, ChartBar as BarChart3, MessageSquare, Camera, CalendarDays, Shield, Link as LinkIcon, Utensils, FileText, Megaphone } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
@@ -30,13 +30,53 @@ export interface PrincipalSidebarRef {
   close: () => void;
 }
 
+type BuiltInTileId =
+  | 'dashboard'
+  | 'students'
+  | 'staff'
+  | 'classes'
+  | 'messages'
+  | 'photos'
+  | 'calendar'
+  | 'guardians'
+  | 'link_student'
+  | 'menus'
+  | 'stories'
+  | 'announcements';
+
+interface BuiltInTileConfig {
+  id: BuiltInTileId;
+  route: string;
+}
+
+const builtInTileRoutes: BuiltInTileConfig[] = [
+  { id: 'dashboard', route: '/dashboard/principal' },
+  { id: 'students', route: '/dashboard/principal/students' },
+  { id: 'staff', route: '/dashboard/principal/staff' },
+  { id: 'classes', route: '/dashboard/principal/classes' },
+  { id: 'messages', route: '/dashboard/principal/messages' },
+  { id: 'photos', route: '/dashboard/principal/photos' },
+  { id: 'calendar', route: '/dashboard/principal/calendar' },
+  { id: 'guardians', route: '/dashboard/principal/guardians' },
+  { id: 'link_student', route: '/dashboard/principal/link-student' },
+  { id: 'menus', route: '/dashboard/principal/menus-list' },
+  { id: 'stories', route: '/dashboard/principal/stories' },
+  { id: 'announcements', route: '/dashboard/principal/announcements' },
+];
+
+const getRouteForTileId = (tileId: string): string | undefined => {
+  const config = builtInTileRoutes.find((tile) => tile.id === tileId);
+  return config?.route;
+};
+
+const getBasePathnameFromRoute = (route: string): string => route.split('?')[0];
+
 const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebarProps>(({
   messagesBadge,
   tiles = [],
 }, ref) => {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const { t } = useLanguage();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [optimisticActiveTile, setOptimisticActiveTile] = useState<string | null>(null);
@@ -56,23 +96,7 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
   useEffect(() => {
     if (!optimisticActiveTile) return;
 
-    // Map tile IDs to their expected routes
-    const tileRouteMap: Record<string, string> = {
-      'dashboard': '/dashboard/principal',
-      'students': '/dashboard/principal/students',
-      'staff': '/dashboard/principal/staff',
-      'classes': '/dashboard/principal/classes',
-      'messages': '/dashboard/principal/messages',
-      'photos': '/dashboard/principal/photos',
-      'calendar': '/dashboard/principal/calendar',
-      'guardians': '/dashboard/guardians',
-      'link_student': '/dashboard/link-student',
-      'menus': '/dashboard/menus-list',
-      'stories': '/dashboard/stories',
-      'announcements': '/dashboard/announcements',
-    };
-
-    const expectedRoute = tileRouteMap[optimisticActiveTile];
+    const expectedRoute = getRouteForTileId(optimisticActiveTile);
     if (expectedRoute && pathname === expectedRoute) {
       // Navigation completed, clear optimistic state
       // Use setTimeout to avoid synchronous setState in effect
@@ -90,193 +114,42 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
       return optimisticActiveTile === tileId;
     }
 
-    // Use pathname-based detection (route mode) when no optimistic state
-    if (tileRoute) {
-      // Extract pathname from route (remove query parameters for comparison)
-      const routePathname = tileRoute.split('?')[0];
-      // Check if pathname matches, or if route has query params, check if we're on the base path
-      if (tileRoute.includes('?')) {
-        // For routes with query params like /dashboard/principal?tab=media
-        // Check if we're on the base path and the tab matches
-        return pathname === routePathname;
+    const routeToUse = tileRoute ?? getRouteForTileId(tileId);
+    if (!routeToUse) return false;
+
+    const routePathname = getBasePathnameFromRoute(routeToUse);
+    return pathname === routePathname;
+  };
+
+  const navigateToRoute = (tileId: string, route: string, options?: { replace?: boolean }) => {
+    setOptimisticActiveTile(tileId);
+
+    const basePath = getBasePathnameFromRoute(route);
+    const shouldReplace = options?.replace ?? true;
+
+    if (pathname !== basePath) {
+      if (shouldReplace) {
+        router.replace(route);
+      } else {
+        router.push(route);
       }
-      return pathname === tileRoute;
     }
-    // For special tiles, check pathname
-    if (tileId === 'dashboard') {
-      return pathname === '/dashboard/principal';
-    }
-    if (tileId === 'students') {
-      return pathname === '/dashboard/principal/students';
-    }
-    if (tileId === 'staff') {
-      return pathname === '/dashboard/principal/staff';
-    }
-    if (tileId === 'classes') {
-      return pathname === '/dashboard/principal/classes';
-    }
-    if (tileId === 'messages') {
-      return pathname === '/dashboard/principal/messages';
-    }
-    if (tileId === 'photos') {
-      return pathname === '/dashboard/principal/photos';
-    }
-    if (tileId === 'calendar') {
-      return pathname === '/dashboard/principal/calendar';
-    }
-    if (tileId === 'guardians') {
-      return pathname === '/dashboard/guardians';
-    }
-    if (tileId === 'link_student') {
-      return pathname === '/dashboard/link-student';
-    }
-    if (tileId === 'menus') {
-      return pathname === '/dashboard/menus-list';
-    }
-    if (tileId === 'stories') {
-      return pathname === '/dashboard/stories';
-    }
-    if (tileId === 'announcements') {
-      return pathname === '/dashboard/announcements';
-    }
-    return false;
-  };
 
-  // Handle tile click
-  const handleTileClick = (tile: PrincipalSidebarTile) => {
-    if (tile.route) {
-      // Set optimistic state immediately for instant feedback
-      if (tile.id) {
-        setOptimisticActiveTile(tile.id);
-      }
-      // Route-based navigation - navigate to the new route
-      router.push(tile.route);
-      handleSidebarClose();
-    }
-  };
-
-  // Handle dashboard tile click
-  const handleDashboardClick = () => {
-    // Set optimistic state immediately for instant feedback
-    setOptimisticActiveTile('dashboard');
-    if (pathname !== '/dashboard/principal') {
-      router.replace('/dashboard/principal');
-    }
     handleSidebarClose();
   };
 
-  // Handle students tile click
-  const handleStudentsClick = () => {
-    setOptimisticActiveTile('students');
-    if (pathname !== '/dashboard/principal/students') {
-      router.replace('/dashboard/principal/students');
-    }
-    handleSidebarClose();
+  const handleBuiltInTileClick = (tileId: BuiltInTileId) => {
+    const route = getRouteForTileId(tileId);
+    if (!route) return;
+
+    navigateToRoute(tileId, route, { replace: true });
   };
 
-  // Handle staff tile click
-  const handleStaffClick = () => {
-    setOptimisticActiveTile('staff');
-    if (pathname !== '/dashboard/principal/staff') {
-      router.replace('/dashboard/principal/staff');
-    }
-    handleSidebarClose();
+  // Handle custom tiles that provide explicit routes
+  const handleCustomTileClick = (tile: PrincipalSidebarTile) => {
+    if (!tile.route) return;
+    navigateToRoute(tile.id, tile.route, { replace: false });
   };
-
-  // Handle classes tile click
-  const handleClassesClick = () => {
-    setOptimisticActiveTile('classes');
-    if (pathname !== '/dashboard/principal/classes') {
-      router.replace('/dashboard/principal/classes');
-    }
-    handleSidebarClose();
-  };
-
-  // Handle messages tile click
-  const handleMessagesClick = () => {
-    setOptimisticActiveTile('messages');
-    if (pathname !== '/dashboard/principal/messages') {
-      router.replace('/dashboard/principal/messages');
-    }
-    handleSidebarClose();
-  };
-
-  // Handle photos tile click
-  const handlePhotosClick = () => {
-    setOptimisticActiveTile('photos');
-    if (pathname !== '/dashboard/principal/photos') {
-      router.replace('/dashboard/principal/photos');
-    }
-    handleSidebarClose();
-  };
-
-  // Handle calendar tile click
-  const handleCalendarClick = () => {
-    setOptimisticActiveTile('calendar');
-    if (pathname !== '/dashboard/principal/calendar') {
-      router.replace('/dashboard/principal/calendar');
-    }
-    handleSidebarClose();
-  };
-
-  // Handle guardians tile click
-  const handleGuardiansClick = () => {
-    setOptimisticActiveTile('guardians');
-    if (pathname !== '/dashboard/guardians') {
-      router.replace('/dashboard/guardians');
-    }
-    handleSidebarClose();
-  };
-
-  // Handle link student tile click
-  const handleLinkStudentClick = () => {
-    setOptimisticActiveTile('link_student');
-    if (pathname !== '/dashboard/link-student') {
-      router.replace('/dashboard/link-student');
-    }
-    handleSidebarClose();
-  };
-
-  // Handle menus tile click
-  const handleMenusClick = () => {
-    setOptimisticActiveTile('menus');
-    if (pathname !== '/dashboard/menus-list') {
-      router.replace('/dashboard/menus-list');
-    }
-    handleSidebarClose();
-  };
-
-  // Handle stories tile click
-  const handleStoriesClick = () => {
-    setOptimisticActiveTile('stories');
-    if (pathname !== '/dashboard/stories') {
-      router.replace('/dashboard/stories');
-    }
-    handleSidebarClose();
-  };
-
-  // Handle announcements tile click
-  const handleAnnouncementsClick = () => {
-    setOptimisticActiveTile('announcements');
-    if (pathname !== '/dashboard/announcements') {
-      router.replace('/dashboard/announcements');
-    }
-    handleSidebarClose();
-  };
-
-  // Use isTileActive helper for consistent optimistic state handling
-  const isDashboardActive = isTileActive('dashboard');
-  const isStudentsActive = isTileActive('students');
-  const isStaffActive = isTileActive('staff');
-  const isClassesActive = isTileActive('classes');
-  const isMessagesActive = isTileActive('messages');
-  const isPhotosActive = isTileActive('photos');
-  const isCalendarActive = isTileActive('calendar');
-  const isGuardiansActive = isTileActive('guardians');
-  const isLinkStudentActive = isTileActive('link_student');
-  const isMenusActive = isTileActive('menus');
-  const isStoriesActive = isTileActive('stories');
-  const isAnnouncementsActive = isTileActive('announcements');
 
   return (
     <>
@@ -317,18 +190,18 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
           <nav className="space-y-3">
             {/* Dashboard tile - Design System: Text-based nav with mint active state */}
             <button
-              onClick={handleDashboardClick}
+              onClick={() => handleBuiltInTileClick('dashboard')}
               className={clsx(
                 'w-full flex items-center gap-3 px-ds-sm py-ds-sm rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
-                isDashboardActive
+                isTileActive('dashboard')
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
                   : 'border-l-4 border-transparent'
               )}
             >
               <span className={clsx(
                 'flex-shrink-0 rounded-lg p-2',
-                isDashboardActive
+                isTileActive('dashboard')
                   ? 'bg-mint-500 text-white'
                   : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
               )}>
@@ -338,7 +211,7 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
                 <div className="flex items-center justify-between gap-2">
                   <span className={clsx(
                     'font-medium truncate',
-                    isDashboardActive
+                    isTileActive('dashboard')
                       ? 'text-slate-900 dark:text-slate-100'
                       : 'text-slate-700 dark:text-slate-300'
                   )}>
@@ -353,18 +226,18 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
 
             {/* Students tile */}
             <button
-              onClick={handleStudentsClick}
+              onClick={() => handleBuiltInTileClick('students')}
               className={clsx(
                 'w-full flex items-center gap-3 px-ds-sm py-ds-sm rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
-                isStudentsActive
+                isTileActive('students')
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
                   : 'border-l-4 border-transparent'
               )}
             >
               <span className={clsx(
                 'flex-shrink-0 rounded-lg p-2',
-                isStudentsActive
+                isTileActive('students')
                   ? 'bg-mint-500 text-white'
                   : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
               )}>
@@ -374,7 +247,7 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
                 <div className="flex items-center justify-between gap-2">
                   <span className={clsx(
                     'font-medium truncate',
-                    isStudentsActive
+                    isTileActive('students')
                       ? 'text-slate-900 dark:text-slate-100'
                       : 'text-slate-700 dark:text-slate-300'
                   )}>
@@ -387,18 +260,18 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
 
             {/* Staff tile */}
             <button
-              onClick={handleStaffClick}
+              onClick={() => handleBuiltInTileClick('staff')}
               className={clsx(
                 'w-full flex items-center gap-3 px-ds-sm py-ds-sm rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
-                isStaffActive
+                isTileActive('staff')
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
                   : 'border-l-4 border-transparent'
               )}
             >
               <span className={clsx(
                 'flex-shrink-0 rounded-lg p-2',
-                isStaffActive
+                isTileActive('staff')
                   ? 'bg-mint-500 text-white'
                   : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
               )}>
@@ -408,7 +281,7 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
                 <div className="flex items-center justify-between gap-2">
                   <span className={clsx(
                     'font-medium truncate',
-                    isStaffActive
+                    isTileActive('staff')
                       ? 'text-slate-900 dark:text-slate-100'
                       : 'text-slate-700 dark:text-slate-300'
                   )}>
@@ -421,18 +294,18 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
 
             {/* Classes tile */}
             <button
-              onClick={handleClassesClick}
+              onClick={() => handleBuiltInTileClick('classes')}
               className={clsx(
                 'w-full flex items-center gap-3 px-ds-sm py-ds-sm rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
-                isClassesActive
+                isTileActive('classes')
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
                   : 'border-l-4 border-transparent'
               )}
             >
               <span className={clsx(
                 'flex-shrink-0 rounded-lg p-2',
-                isClassesActive
+                isTileActive('classes')
                   ? 'bg-mint-500 text-white'
                   : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
               )}>
@@ -442,7 +315,7 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
                 <div className="flex items-center justify-between gap-2">
                   <span className={clsx(
                     'font-medium truncate',
-                    isClassesActive
+                    isTileActive('classes')
                       ? 'text-slate-900 dark:text-slate-100'
                       : 'text-slate-700 dark:text-slate-300'
                   )}>
@@ -455,18 +328,18 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
 
             {/* Messages tile */}
             <button
-              onClick={handleMessagesClick}
+              onClick={() => handleBuiltInTileClick('messages')}
               className={clsx(
                 'w-full flex items-center gap-3 px-ds-sm py-ds-sm rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
-                isMessagesActive
+                isTileActive('messages')
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
                   : 'border-l-4 border-transparent'
               )}
             >
               <span className={clsx(
                 'flex-shrink-0 rounded-lg p-2',
-                isMessagesActive
+                isTileActive('messages')
                   ? 'bg-mint-500 text-white'
                   : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
               )}>
@@ -476,7 +349,7 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
                 <div className="flex items-center justify-between gap-2">
                   <span className={clsx(
                     'font-medium truncate',
-                    isMessagesActive
+                    isTileActive('messages')
                       ? 'text-slate-900 dark:text-slate-100'
                       : 'text-slate-700 dark:text-slate-300'
                   )}>
@@ -494,18 +367,18 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
 
             {/* Photos tile */}
             <button
-              onClick={handlePhotosClick}
+              onClick={() => handleBuiltInTileClick('photos')}
               className={clsx(
                 'w-full flex items-center gap-3 px-ds-sm py-ds-sm rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
-                isPhotosActive
+                isTileActive('photos')
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
                   : 'border-l-4 border-transparent'
               )}
             >
               <span className={clsx(
                 'flex-shrink-0 rounded-lg p-2',
-                isPhotosActive
+                isTileActive('photos')
                   ? 'bg-mint-500 text-white'
                   : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
               )}>
@@ -515,7 +388,7 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
                 <div className="flex items-center justify-between gap-2">
                   <span className={clsx(
                     'font-medium truncate',
-                    isPhotosActive
+                    isTileActive('photos')
                       ? 'text-slate-900 dark:text-slate-100'
                       : 'text-slate-700 dark:text-slate-300'
                   )}>
@@ -528,18 +401,18 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
 
             {/* Calendar tile */}
             <button
-              onClick={handleCalendarClick}
+              onClick={() => handleBuiltInTileClick('calendar')}
               className={clsx(
                 'w-full flex items-center gap-3 px-ds-sm py-ds-sm rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
-                isCalendarActive
+                isTileActive('calendar')
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
                   : 'border-l-4 border-transparent'
               )}
             >
               <span className={clsx(
                 'flex-shrink-0 rounded-lg p-2',
-                isCalendarActive
+                isTileActive('calendar')
                   ? 'bg-mint-500 text-white'
                   : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
               )}>
@@ -549,7 +422,7 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
                 <div className="flex items-center justify-between gap-2">
                   <span className={clsx(
                     'font-medium truncate',
-                    isCalendarActive
+                    isTileActive('calendar')
                       ? 'text-slate-900 dark:text-slate-100'
                       : 'text-slate-700 dark:text-slate-300'
                   )}>
@@ -562,18 +435,18 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
 
             {/* Guardians tile */}
             <button
-              onClick={handleGuardiansClick}
+              onClick={() => handleBuiltInTileClick('guardians')}
               className={clsx(
                 'w-full flex items-center gap-3 px-ds-sm py-ds-sm rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
-                isGuardiansActive
+                isTileActive('guardians')
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
                   : 'border-l-4 border-transparent'
               )}
             >
               <span className={clsx(
                 'flex-shrink-0 rounded-lg p-2',
-                isGuardiansActive
+                isTileActive('guardians')
                   ? 'bg-mint-500 text-white'
                   : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
               )}>
@@ -583,7 +456,7 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
                 <div className="flex items-center justify-between gap-2">
                   <span className={clsx(
                     'font-medium truncate',
-                    isGuardiansActive
+                    isTileActive('guardians')
                       ? 'text-slate-900 dark:text-slate-100'
                       : 'text-slate-700 dark:text-slate-300'
                   )}>
@@ -596,18 +469,18 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
 
             {/* Link Student tile */}
             <button
-              onClick={handleLinkStudentClick}
+              onClick={() => handleBuiltInTileClick('link_student')}
               className={clsx(
                 'w-full flex items-center gap-3 px-ds-sm py-ds-sm rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
-                isLinkStudentActive
+                isTileActive('link_student')
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
                   : 'border-l-4 border-transparent'
               )}
             >
               <span className={clsx(
                 'flex-shrink-0 rounded-lg p-2',
-                isLinkStudentActive
+                isTileActive('link_student')
                   ? 'bg-mint-500 text-white'
                   : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
               )}>
@@ -617,7 +490,7 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
                 <div className="flex items-center justify-between gap-2">
                   <span className={clsx(
                     'font-medium truncate',
-                    isLinkStudentActive
+                    isTileActive('link_student')
                       ? 'text-slate-900 dark:text-slate-100'
                       : 'text-slate-700 dark:text-slate-300'
                   )}>
@@ -630,18 +503,18 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
 
             {/* Menus tile */}
             <button
-              onClick={handleMenusClick}
+              onClick={() => handleBuiltInTileClick('menus')}
               className={clsx(
                 'w-full flex items-center gap-3 px-ds-sm py-ds-sm rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
-                isMenusActive
+                isTileActive('menus')
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
                   : 'border-l-4 border-transparent'
               )}
             >
               <span className={clsx(
                 'flex-shrink-0 rounded-lg p-2',
-                isMenusActive
+                isTileActive('menus')
                   ? 'bg-mint-500 text-white'
                   : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
               )}>
@@ -651,7 +524,7 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
                 <div className="flex items-center justify-between gap-2">
                   <span className={clsx(
                     'font-medium truncate',
-                    isMenusActive
+                    isTileActive('menus')
                       ? 'text-slate-900 dark:text-slate-100'
                       : 'text-slate-700 dark:text-slate-300'
                   )}>
@@ -664,18 +537,18 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
 
             {/* Stories tile */}
             <button
-              onClick={handleStoriesClick}
+              onClick={() => handleBuiltInTileClick('stories')}
               className={clsx(
                 'w-full flex items-center gap-3 px-ds-sm py-ds-sm rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
-                isStoriesActive
+                isTileActive('stories')
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
                   : 'border-l-4 border-transparent'
               )}
             >
               <span className={clsx(
                 'flex-shrink-0 rounded-lg p-2',
-                isStoriesActive
+                isTileActive('stories')
                   ? 'bg-mint-500 text-white'
                   : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
               )}>
@@ -685,7 +558,7 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
                 <div className="flex items-center justify-between gap-2">
                   <span className={clsx(
                     'font-medium truncate',
-                    isStoriesActive
+                    isTileActive('stories')
                       ? 'text-slate-900 dark:text-slate-100'
                       : 'text-slate-700 dark:text-slate-300'
                   )}>
@@ -698,18 +571,18 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
 
             {/* Announcements tile */}
             <button
-              onClick={handleAnnouncementsClick}
+              onClick={() => handleBuiltInTileClick('announcements')}
               className={clsx(
                 'w-full flex items-center gap-3 px-ds-sm py-ds-sm rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
-                isAnnouncementsActive
+                isTileActive('announcements')
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
                   : 'border-l-4 border-transparent'
               )}
             >
               <span className={clsx(
                 'flex-shrink-0 rounded-lg p-2',
-                isAnnouncementsActive
+                isTileActive('announcements')
                   ? 'bg-mint-500 text-white'
                   : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
               )}>
@@ -719,7 +592,7 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
                 <div className="flex items-center justify-between gap-2">
                   <span className={clsx(
                     'font-medium truncate',
-                    isAnnouncementsActive
+                    isTileActive('announcements')
                       ? 'text-slate-900 dark:text-slate-100'
                       : 'text-slate-700 dark:text-slate-300'
                   )}>
@@ -736,7 +609,7 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
               return (
                 <button
                   key={tile.id}
-                  onClick={() => handleTileClick(tile)}
+                  onClick={() => handleCustomTileClick(tile)}
                   className={clsx(
                     'w-full flex items-center gap-3 px-4 py-3 rounded-ds-md text-left transition-all duration-200',
                     'hover:bg-slate-100 dark:hover:bg-slate-700',

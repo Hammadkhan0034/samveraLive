@@ -11,7 +11,6 @@ interface GuardianFormProps {
   loading: boolean;
   error: string | null;
   successMessage?: string | null;
-  orgs: Array<{ id: string; name: string }>;
   asPage?: boolean;
   translations: {
     create_guardian: string;
@@ -60,7 +59,6 @@ export function GuardianForm({
   loading,
   error,
   successMessage,
-  orgs,
   asPage,
   translations: t
 }: GuardianFormProps) {
@@ -98,7 +96,7 @@ export function GuardianForm({
       }
     });
     return () => cancelAnimationFrame(id);
-  }, [initialData, orgs]);
+  }, [initialData]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

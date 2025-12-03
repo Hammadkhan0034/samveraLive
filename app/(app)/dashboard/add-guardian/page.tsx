@@ -15,19 +15,6 @@ function AddGuardianPageContent() {
   const { t } = useLanguage();
 
 
-  // orgs (for validation/display if needed)
-  const [orgs, setOrgs] = useState<Array<{ id: string; name: string }>>([]);
-  useEffect(() => {
-    const loadOrgs = async () => {
-      try {
-        const res = await fetch('/api/orgs', { cache: 'no-store' });
-        const json = await res.json();
-        if (res.ok) setOrgs((json.orgs || []).map((o: any) => ({ id: o.id, name: o.name })));
-      } catch {}
-    };
-    loadOrgs();
-  }, []);
-
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -129,7 +116,6 @@ function AddGuardianPageContent() {
             loading={loadingSubmit}
             error={error}
             successMessage={successMessage}
-            orgs={orgs}
             translations={{
               create_guardian: t.create_guardian,
               edit_guardian: t.edit_guardian,
