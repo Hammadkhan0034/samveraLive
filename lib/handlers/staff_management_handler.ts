@@ -51,7 +51,7 @@ export async function handleGetStaff(
   created_at,
   education_level,
   union_name,
-  users!inner(id,email,first_name,last_name,phone,address,ssn,org_id,is_active,created_at,role,deleted_at)
+  users!inner(id,email,first_name,last_name,phone,address,ssn,org_id,is_active,created_at,role,deleted_at,status)
 `,
       )
       .eq('org_id', orgId)
@@ -74,6 +74,7 @@ export async function handleGetStaff(
           deleted_at: s.users.deleted_at || null,
           education_level: s.education_level || null,
           union_name: s.union_name || null,
+          current_status: s.users.status || null,
         };
 
         // Only include sensitive fields for principals and admins
@@ -102,7 +103,7 @@ export async function handleGetStaff(
       const roleQuery = adminClient
         .from('users')
         .select(
-          'id,email,first_name,last_name,phone,address,ssn,org_id,is_active,created_at,role',
+          'id,email,first_name,last_name,phone,address,ssn,org_id,is_active,created_at,role,status',
         )
         .eq('org_id', orgId)
         .eq('role', 'teacher')
@@ -118,7 +119,7 @@ export async function handleGetStaff(
         const allUsersQuery = adminClient
           .from('users')
           .select(
-            'id,email,first_name,last_name,phone,address,ssn,org_id,is_active,created_at,role',
+            'id,email,first_name,last_name,phone,address,ssn,org_id,is_active,created_at,role,status',
           )
           .eq('org_id', orgId)
           .is('deleted_at', null);
@@ -158,6 +159,7 @@ export async function handleGetStaff(
               is_active: user.is_active,
               created_at: user.created_at,
               role: user.role || 'teacher',
+              current_status: user.status || null,
             };
 
             // Only include sensitive fields for principals and admins
@@ -193,7 +195,7 @@ export async function handleGetStaff(
           `
           user_id,
           membership_role,
-          users!inner(id,email,first_name,last_name,phone,address,ssn,org_id,is_active,created_at,role)
+          users!inner(id,email,first_name,last_name,phone,address,ssn,org_id,is_active,created_at,role,status)
         `,
         )
         .eq('membership_role', 'teacher')
@@ -215,6 +217,7 @@ export async function handleGetStaff(
               is_active: m.users.is_active,
               created_at: m.users.created_at,
               role: m.users.role || 'teacher',
+              current_status: m.users.status || null,
             };
 
             // Only include sensitive fields for principals and admins
@@ -249,7 +252,7 @@ export async function handleGetStaff(
             `
         user_id,
         membership_role,
-        users!inner(id,email,first_name,last_name,phone,address,ssn,org_id,is_active,created_at)
+        users!inner(id,email,first_name,last_name,phone,address,ssn,org_id,is_active,created_at,status)
       `,
           )
           .eq('membership_role', 'teacher');
@@ -267,6 +270,7 @@ export async function handleGetStaff(
                 is_active: m.users.is_active,
                 created_at: m.users.created_at,
                 role: 'teacher',
+                current_status: m.users.status || null,
               };
 
               // Only include sensitive fields for principals and admins

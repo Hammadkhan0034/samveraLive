@@ -138,23 +138,7 @@ export const updateStaffStatusSchema = z
           message: 'Start date must be today or later',
         },
       ),
-    end_date: z
-      .string()
-      .optional()
-      .nullable()
-      .refine(
-        (date, ctx) => {
-          if (!date) return true; // Optional
-          const endDate = new Date(date);
-          const startDate = new Date(ctx.parent.start_date);
-          endDate.setHours(0, 0, 0, 0);
-          startDate.setHours(0, 0, 0, 0);
-          return endDate >= startDate;
-        },
-        {
-          message: 'End date must be >= start date',
-        },
-      ),
+    end_date: z.string().optional().nullable(),
   })
   .refine(
     (data) => {
@@ -167,6 +151,23 @@ export const updateStaffStatusSchema = z
     {
       message: 'Reason is required for this status',
       path: ['reason'],
+    },
+  )
+  .refine(
+    (data) => {
+      // End date must be >= start date if provided
+      if (data.end_date) {
+        const endDate = new Date(data.end_date);
+        const startDate = new Date(data.start_date);
+        endDate.setHours(0, 0, 0, 0);
+        startDate.setHours(0, 0, 0, 0);
+        return endDate >= startDate;
+      }
+      return true; // End date is optional
+    },
+    {
+      message: 'End date must be >= start date',
+      path: ['end_date'],
     },
   );
 
