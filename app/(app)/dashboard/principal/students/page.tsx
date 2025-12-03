@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { Menu, Plus, Filter, ChevronDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -8,6 +8,8 @@ import { StudentTable } from '@/app/components/shared/StudentTable';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
+import { useDebounce } from '@/lib/hooks/useDebounce';
+import type { StudentWithRelations, ClassWithTeachers, FilterOption } from '@/lib/types/students';
 
 function StudentsPageContent() {
   const { t } = useLanguage();
@@ -15,7 +17,7 @@ function StudentsPageContent() {
   const { sidebarRef } = usePrincipalPageLayout();
 
   // Student states - initialize with cached data
-  const [students, setStudents] = useState<Array<{ id: string; first_name: string; last_name: string | null; dob: string | null; gender: string; class_id: string | null; phone: string | null; address: string | null; registration_number: string | null; start_date: string | null; child_value: string | null; language: string | null; social_security_number: string | null; created_at: string; classes?: any; guardians?: Array<{ id: string; relation: string; users?: { id: string; full_name: string; email: string } }> }>>(() => {
+  const [students, setStudents] = useState<StudentWithRelations[]>(() => {
     if (typeof window !== 'undefined') {
       const cached = localStorage.getItem('students_cache');
       return cached ? JSON.parse(cached) : [];
@@ -29,20 +31,32 @@ function StudentsPageContent() {
   const [studentToDelete, setStudentToDelete] = useState<string | null>(null);
 
   // Classes states (needed for student form)
-  const [classes, setClasses] = useState<Array<{ id: string; name: string; code: string | null; assigned_teachers: any[] }>>([]);
+  const [classes, setClasses] = useState<ClassWithTeachers[]>([]);
 
   // Filter states
   const [selectedClassFilter, setSelectedClassFilter] = useState<string>('all');
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
+
+  // Reset to page 1 when search query or filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchQuery, selectedClassFilter]);
+
+  // Ref for filter dropdown to handle click outside
+  const filterDropdownRef = useRef<HTMLDivElement>(null);
 
   // Close filter dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element;
-      if (isFilterDropdownOpen && !target.closest('.filter-dropdown')) {
+      if (
+        isFilterDropdownOpen &&
+        filterDropdownRef.current &&
+        !filterDropdownRef.current.contains(event.target as Node)
+      ) {
         setIsFilterDropdownOpen(false);
       }
     };
@@ -73,9 +87,10 @@ function StudentsPageContent() {
       if (typeof window !== 'undefined') {
         localStorage.setItem('students_cache', JSON.stringify(studentsList));
       }
-    } catch (e: any) {
-      console.error('❌ Error loading students:', e.message);
-      setStudentError(e.message);
+    } catch (e) {
+      const errorMessage = e instanceof Error ? e.message : 'Failed to load students';
+      console.error('❌ Error loading students:', errorMessage);
+      setStudentError(errorMessage);
     } finally {
       if (showLoading) {
         setLoadingStudents(false);
@@ -111,7 +126,7 @@ function StudentsPageContent() {
     router.push('/dashboard/principal/students/add');
   }, [router]);
 
-  const openEditStudentModal = useCallback((student: any) => {
+  const openEditStudentModal = useCallback((student: StudentWithRelations) => {
     router.push(`/dashboard/principal/students/add?id=${encodeURIComponent(student.id)}`);
   }, [router]);
 
@@ -128,7 +143,7 @@ function StudentsPageContent() {
 
       const res = await fetch(`/api/students?id=${encodeURIComponent(studentToDelete)}`, { method: 'DELETE' });
       
-      let json: any = {};
+      let json: { error?: string } = {};
       try {
         const text = await res.text();
         if (text) {
@@ -146,8 +161,9 @@ function StudentsPageContent() {
       setIsDeleteStudentModalOpen(false);
       setStudentToDelete(null);
       await loadStudents(false);
-    } catch (e: any) {
-      setStudentError(e.message);
+    } catch (e) {
+      const errorMessage = e instanceof Error ? e.message : 'Failed to delete student';
+      setStudentError(errorMessage);
     } finally {
       setDeletingStudent(false);
     }
@@ -156,17 +172,21 @@ function StudentsPageContent() {
 
   // Filter students based on selected class and search
   const filteredStudents = useMemo(() => {
-    const byClass = selectedClassFilter === 'all' ? students : students.filter(s => s.class_id === selectedClassFilter);
-    const q = searchQuery.trim().toLowerCase();
+    const byClass = selectedClassFilter === 'all' 
+      ? students 
+      : students.filter(s => s.class_id === selectedClassFilter);
+    
+    const q = debouncedSearchQuery.trim().toLowerCase();
     if (!q) return byClass;
+    
     return byClass.filter((s) => {
-      const first = ((s as any).users?.first_name || s.first_name || '').toLowerCase();
-      const last = ((s as any).users?.last_name || s.last_name || '').toLowerCase();
+      const first = (s.users?.first_name || s.first_name || '').toLowerCase();
+      const last = (s.users?.last_name || s.last_name || '').toLowerCase();
       const full = `${first} ${last}`.trim();
-      const cls = (s as any).classes?.name ? String((s as any).classes.name).toLowerCase() : '';
+      const cls = s.classes?.name ? String(s.classes.name).toLowerCase() : '';
       return first.includes(q) || last.includes(q) || full.includes(q) || cls.includes(q);
     });
-  }, [students, selectedClassFilter, searchQuery]);
+  }, [students, selectedClassFilter, debouncedSearchQuery]);
 
   // Pagination
   const totalPages = Math.max(1, Math.ceil(filteredStudents.length / itemsPerPage));
@@ -176,8 +196,8 @@ function StudentsPageContent() {
   }, [filteredStudents, currentPage]);
 
   // Get filter options
-  const filterOptions = useMemo(() => {
-    const options: Array<{ value: string; label: string }> = [
+  const filterOptions = useMemo<FilterOption[]>(() => {
+    const options: FilterOption[] = [
       { value: 'all', label: t.all_classes }
     ];
     
@@ -239,36 +259,36 @@ function StudentsPageContent() {
               />
             </div>
             {/* Filter Dropdown */}
-            <div className="relative filter-dropdown">
-            <button
-              onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
-              className="flex items-center gap-2 rounded-ds-md bg-transparent border border-slate-300 text-ds-small px-3 py-1.5 text-slate-700 hover:bg-mint-50 transition-colors dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
-            >
-              <Filter className="h-4 w-4" />
-              <span className="hidden sm:inline">{filterOptions.find(opt => opt.value === selectedClassFilter)?.label || t.all_classes}</span>
-              <ChevronDown className={`h-4 w-4 transition-transform ${isFilterDropdownOpen ? 'rotate-180' : ''}`} />
-            </button>
+            <div className="relative" ref={filterDropdownRef}>
+              <button
+                onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
+                className="flex items-center gap-2 rounded-ds-md bg-transparent border border-slate-300 text-ds-small px-3 py-1.5 text-slate-700 hover:bg-mint-50 transition-colors dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-800"
+              >
+                <Filter className="h-4 w-4" />
+                <span className="hidden sm:inline">{filterOptions.find(opt => opt.value === selectedClassFilter)?.label || t.all_classes}</span>
+                <ChevronDown className={`h-4 w-4 transition-transform ${isFilterDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
 
-            {isFilterDropdownOpen && (
-              <div className="absolute right-0 top-full mt-1 w-48 rounded-ds-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-ds-lg z-50">
-                {filterOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => {
-                      setSelectedClassFilter(option.value);
-                      setIsFilterDropdownOpen(false);
-                    }}
-                    className={`w-full px-3 py-2 text-ds-small text-left hover:bg-mint-50 dark:hover:bg-slate-700 first:rounded-t-ds-md last:rounded-b-ds-md transition-colors ${
-                      selectedClassFilter === option.value
-                        ? 'bg-mint-100 dark:bg-slate-700 text-mint-700 dark:text-slate-100'
-                        : 'text-gray-700 dark:text-slate-300'
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            )}
+              {isFilterDropdownOpen && (
+                <div className="absolute right-0 top-full mt-1 w-48 rounded-ds-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-ds-lg z-50">
+                  {filterOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => {
+                        setSelectedClassFilter(option.value);
+                        setIsFilterDropdownOpen(false);
+                      }}
+                      className={`w-full px-3 py-2 text-ds-small text-left hover:bg-mint-50 dark:hover:bg-slate-700 first:rounded-t-ds-md last:rounded-b-ds-md transition-colors ${
+                        selectedClassFilter === option.value
+                          ? 'bg-mint-100 dark:bg-slate-700 text-mint-700 dark:text-slate-100'
+                          : 'text-gray-700 dark:text-slate-300'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 

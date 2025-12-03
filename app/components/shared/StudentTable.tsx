@@ -2,40 +2,12 @@
 
 import React from 'react';
 import { Edit, Plus, Trash2 } from 'lucide-react';
+import type { StudentWithRelations } from '@/lib/types/students';
 
 interface StudentTableProps {
-  students: Array<{
-    id: string;
-    first_name: string;
-    last_name: string | null;
-    dob: string | null;
-    gender: string;
-    phone: string | null;
-    address: string | null;
-    registration_number: string | null;
-    start_date: string | null;
-    child_value: string | null;
-    language: string | null;
-    social_security_number: string | null;
-    users?: {
-      id: string;
-      first_name: string;
-      last_name: string | null;
-      dob: string | null;
-      gender: string | null;
-      phone: string | null;
-      address: string | null;
-      ssn: string | null;
-    };
-    classes?: { name: string };
-    guardians?: Array<{ 
-      id: string; 
-      relation: string; 
-      users?: { id: string; full_name: string; email: string } 
-    }>;
-  }>;
+  students: StudentWithRelations[];
   error: string | null;
-  onEdit: (student: any) => void;
+  onEdit: (student: StudentWithRelations) => void;
   onDelete: (id: string) => void;
   onCreate: () => void;
   translations: {
@@ -109,33 +81,33 @@ export function StudentTable({
               students.map((s) => (
                 <tr key={s.id} className="border-b border-slate-100 dark:border-slate-700 hover:bg-mint-50 dark:hover:bg-slate-700/50">
                   <td className="text-left py-2 px-4 text-ds-small text-slate-900 dark:text-slate-100">
-                    {(s as any).users?.first_name ?? s.first_name ?? '—'}
+                    {s.users?.first_name ?? s.first_name ?? '—'}
                   </td>
                   <td className="text-left py-2 px-4 text-ds-small text-slate-900 dark:text-slate-100">
-                    {(s as any).users?.last_name ?? s.last_name ?? '—'}
+                    {s.users?.last_name ?? s.last_name ?? '—'}
                   </td>
                   <td className="text-left py-2 px-4 text-ds-small text-slate-600 dark:text-slate-400">
                     {s.classes?.name || '—'}
                   </td>
                   <td className="text-left py-2 px-4 text-ds-small text-slate-600 dark:text-slate-400">
-                    {(s as any).users?.dob
-                      ? (typeof (s as any).users.dob === 'string' ? new Date((s as any).users.dob).toLocaleDateString() : '—')
+                    {s.users?.dob
+                      ? (typeof s.users.dob === 'string' ? new Date(s.users.dob).toLocaleDateString() : '—')
                       : (s.dob && typeof s.dob === 'string' ? new Date(s.dob).toLocaleDateString() : '—')
                     }
                   </td>
                   <td className="text-left py-2 px-4 text-ds-small text-slate-600 dark:text-slate-400">
-                    {(s as any).users?.gender ?? s.gender ?? '—'}
+                    {s.users?.gender ?? s.gender ?? '—'}
                   </td>
                   <td className="text-left py-2 px-4 text-ds-small text-slate-600 dark:text-slate-400">
                     {s.guardians && s.guardians.length > 0
                       ? s.guardians
-                          .map((g: any) => {
+                          .map((g) => {
                             const firstName = g.users?.first_name || '';
                             const lastName = g.users?.last_name || '';
                             const name = `${firstName} ${lastName}`.trim();
                             return name || '—';
                           })
-                          .filter((name: string) => name !== '—')
+                          .filter((name) => name !== '—')
                           .join(', ') || '—'
                       : '—'}
                   </td>

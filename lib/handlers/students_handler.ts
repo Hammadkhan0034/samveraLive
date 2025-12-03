@@ -1,122 +1,15 @@
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { getUserDataCacheHeaders } from '@/lib/cacheConfig';
+import { validateBody, validateQuery } from '@/lib/validation';
 import {
-  validateBody,
-  validateQuery,
-  classIdSchema,
-  studentIdSchema,
-  firstNameSchema,
-  lastNameSchema,
-  studentDobSchema,
-  genderSchema,
-  studentLanguageSchema,
-  barngildiSchema,
-  phoneSchema,
-  addressSchema,
-  ssnSchema,
-  medicalNotesSchema,
-  allergiesSchema,
-  emergencyContactSchema,
-  guardianIdsSchema,
-  dateSchema,
-} from '@/lib/validation';
+  getStudentsQuerySchema,
+  postStudentBodySchema,
+  putStudentBodySchema,
+  deleteStudentQuerySchema,
+} from '@/lib/validation/students';
 import type { AuthUser, UserMetadata, SamveraRole } from '@/lib/types/auth';
-
-// GET query parameter schema
-const getStudentsQuerySchema = z.object({
-  classId: classIdSchema.optional(),
-});
-
-// POST body schema with date transformations
-const postStudentBodySchema = z
-  .object({
-    first_name: firstNameSchema,
-    last_name: lastNameSchema,
-    dob: studentDobSchema.nullable().optional(),
-    gender: genderSchema.optional(),
-    class_id: classIdSchema.optional(),
-    registration_time: z.string().nullable().optional(),
-    start_date: dateSchema.nullable().optional(),
-    barngildi: barngildiSchema.optional(),
-    student_language: studentLanguageSchema.optional(),
-    medical_notes: medicalNotesSchema,
-    allergies: allergiesSchema,
-    emergency_contact: emergencyContactSchema,
-    phone: phoneSchema,
-    address: addressSchema,
-    social_security_number: ssnSchema,
-    guardian_ids: guardianIdsSchema.optional().default([]),
-  })
-  .transform((data) => {
-    // Transform dates to ISO format strings
-    let validatedDob = null;
-    if (data.dob) {
-      const birthDate = new Date(data.dob);
-      validatedDob = birthDate.toISOString().split('T')[0];
-    }
-
-    let validatedStartDate = null;
-    if (data.start_date) {
-      const startDate = new Date(data.start_date);
-      validatedStartDate = startDate.toISOString().split('T')[0];
-    }
-
-    return {
-      ...data,
-      dob: validatedDob,
-      start_date: validatedStartDate,
-    };
-  });
-
-// PUT body schema with date transformations
-const putStudentBodySchema = z
-  .object({
-    id: studentIdSchema,
-    first_name: firstNameSchema,
-    last_name: lastNameSchema,
-    dob: studentDobSchema.nullable().optional(),
-    gender: genderSchema.optional(),
-    class_id: classIdSchema.optional(),
-    registration_time: z.string().nullable().optional(),
-    start_date: dateSchema.nullable().optional(),
-    barngildi: barngildiSchema.optional(),
-    student_language: studentLanguageSchema.optional(),
-    medical_notes: medicalNotesSchema,
-    allergies: allergiesSchema,
-    emergency_contact: emergencyContactSchema,
-    phone: phoneSchema,
-    address: addressSchema,
-    social_security_number: ssnSchema,
-    guardian_ids: guardianIdsSchema.optional().default([]),
-  })
-  .transform((data) => {
-    // Transform dates to ISO format strings
-    let validatedDob = null;
-    if (data.dob) {
-      const birthDate = new Date(data.dob);
-      validatedDob = birthDate.toISOString().split('T')[0];
-    }
-
-    let validatedStartDate = null;
-    if (data.start_date) {
-      const startDate = new Date(data.start_date);
-      validatedStartDate = startDate.toISOString().split('T')[0];
-    }
-
-    return {
-      ...data,
-      dob: validatedDob,
-      start_date: validatedStartDate,
-    };
-  });
-
-// DELETE query parameter schema
-const deleteStudentQuerySchema = z.object({
-  id: studentIdSchema,
-});
 
 export async function handleGetStudents(
   request: Request,

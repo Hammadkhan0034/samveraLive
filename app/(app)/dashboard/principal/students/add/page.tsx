@@ -172,7 +172,7 @@ function AddStudentPageContent() {
               {editingStudent?.id ? t.edit_student : t.add_student}
             </h2>
             <p className="mt-1 text-ds-small text-slate-600 dark:text-slate-400">
-              {editingStudent?.id ? t.edit_student_subtitle || '' : t.student_form_subtitle}
+              {editingStudent?.id ? t.add_student_subtitle : t.student_form_subtitle}
             </p>
           </div>
         </div>
