@@ -1,9 +1,22 @@
 'use client';
 
 import React, { useState, useImperativeHandle, forwardRef, useEffect, Suspense } from 'react';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { X } from 'lucide-react';
-import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Bell, Users, Shield, Link as LinkIcon, Utensils, LayoutDashboard, CalendarDays } from 'lucide-react';
+import {
+  SquareCheck as CheckSquare,
+  Baby,
+  MessageSquare,
+  Camera,
+  Timer,
+  Bell,
+  Users,
+  Shield,
+  Link as LinkIcon,
+  Utensils,
+  LayoutDashboard,
+  CalendarDays,
+} from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 
 // Small helper
@@ -32,6 +45,47 @@ export interface TeacherSidebarRef {
   close: () => void;
 }
 
+type BuiltInTileId =
+  | 'dashboard'
+  | 'attendance'
+  | 'diapers'
+  | 'messages'
+  | 'media'
+  | 'stories'
+  | 'announcements'
+  | 'calendar'
+  | 'students'
+  | 'guardians'
+  | 'link_student'
+  | 'menus';
+
+interface BuiltInTileConfig {
+  id: BuiltInTileId;
+  route: string;
+}
+
+const builtInTileRoutes: BuiltInTileConfig[] = [
+  { id: 'dashboard', route: '/dashboard/teacher' },
+  { id: 'attendance', route: '/dashboard/teacher/attendance' },
+  { id: 'diapers', route: '/dashboard/teacher/diapers' },
+  { id: 'messages', route: '/dashboard/teacher/messages' },
+  { id: 'media', route: '/dashboard/teacher/media' },
+  { id: 'stories', route: '/dashboard/teacher/stories' },
+  { id: 'announcements', route: '/dashboard/teacher/announcements' },
+  { id: 'students', route: '/dashboard/teacher/students' },
+  { id: 'guardians', route: '/dashboard/teacher/guardians' },
+  { id: 'link_student', route: '/dashboard/teacher/link-student' },
+  { id: 'menus', route: '/dashboard/teacher/menus' },
+  { id: 'calendar', route: '/dashboard/teacher/calendar' },
+];
+
+const getRouteForTileId = (tileId: string): string | undefined => {
+  const config = builtInTileRoutes.find((tile) => tile.id === tileId);
+  return config?.route;
+};
+
+const getBasePathnameFromRoute = (route: string): string => route.split('?')[0];
+
 const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>(({
   messagesBadge,
   attendanceBadge,
@@ -40,7 +94,6 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
 }, ref) => {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const { t } = useLanguage();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [optimisticActiveTile, setOptimisticActiveTile] = useState<string | null>(null);
@@ -60,23 +113,7 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
   useEffect(() => {
     if (!optimisticActiveTile) return;
 
-    // Map tile IDs to their expected routes
-    const tileRouteMap: Record<string, string> = {
-      'dashboard': '/dashboard/teacher',
-      'attendance': '/dashboard/teacher/attendance',
-      'diapers': '/dashboard/teacher/diapers',
-      'messages': '/dashboard/teacher/messages',
-      'media': '/dashboard/teacher/media',
-      'stories': '/dashboard/teacher/stories',
-      'announcements': '/dashboard/teacher/announcements',
-      'students': '/dashboard/teacher/students',
-      'guardians': '/dashboard/teacher/guardians',
-      'link_student': '/dashboard/teacher/link-student',
-      'menus': '/dashboard/teacher/menus',
-      'calendar': '/dashboard/teacher/calendar',
-    };
-
-    const expectedRoute = tileRouteMap[optimisticActiveTile];
+    const expectedRoute = getRouteForTileId(optimisticActiveTile);
     if (expectedRoute && pathname === expectedRoute) {
       // Navigation completed, clear optimistic state
       // Use setTimeout to avoid synchronous setState in effect
@@ -94,204 +131,41 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
       return optimisticActiveTile === tileId;
     }
 
-    // Use pathname-based detection (route mode) when no optimistic state
-    if (tileRoute) {
-      // Extract pathname from route (remove query parameters for comparison)
-      const routePathname = tileRoute.split('?')[0];
-      // Check if pathname matches, or if route has query params, check if we're on the base path
-      if (tileRoute.includes('?')) {
-        // For routes with query params like /dashboard/teacher?tab=media
-        // Check if we're on the base path and the tab matches
-        return pathname === routePathname;
+    const routeToUse = tileRoute ?? getRouteForTileId(tileId);
+    if (!routeToUse) return false;
+
+    const routePathname = getBasePathnameFromRoute(routeToUse);
+    return pathname === routePathname;
+  };
+
+  const navigateToRoute = (tileId: string, route: string, options?: { replace?: boolean }) => {
+    setOptimisticActiveTile(tileId);
+
+    const basePath = getBasePathnameFromRoute(route);
+    const shouldReplace = options?.replace ?? true;
+
+    if (pathname !== basePath) {
+      if (shouldReplace) {
+        router.replace(route);
+      } else {
+        router.push(route);
       }
-      return pathname === tileRoute;
     }
-    // For special tiles, check pathname
-    if (tileId === 'dashboard') {
-      return pathname === '/dashboard/teacher';
-    }
-    if (tileId === 'attendance') {
-      return pathname === '/dashboard/teacher/attendance';
-    }
-    if (tileId === 'diapers') {
-      return pathname === '/dashboard/teacher/diapers';
-    }
-    if (tileId === 'messages') {
-      return pathname === '/dashboard/teacher/messages';
-    }
-    if (tileId === 'media') {
-      return pathname === '/dashboard/teacher/media';
-    }
-    if (tileId === 'stories') {
-      return pathname === '/dashboard/teacher/stories';
-    }
-    if (tileId === 'announcements') {
-      return pathname === '/dashboard/teacher/announcements';
-    }
-    if (tileId === 'calendar') {
-      return pathname === '/dashboard/teacher/calendar';
-    }
-    if (tileId === 'students') {
-      return pathname === '/dashboard/teacher/students';
-    }
-    if (tileId === 'guardians') {
-      return pathname === '/dashboard/teacher/guardians';
-    }
-    if (tileId === 'link_student') {
-      return pathname === '/dashboard/teacher/link-student';
-    }
-    if (tileId === 'menus') {
-      return pathname === '/dashboard/teacher/menus';
-    }
-    return false;
-  };
 
-  // Handle tile click
-  const handleTileClick = (tile: TeacherSidebarTile) => {
-    if (tile.route) {
-      // Set optimistic state immediately for instant feedback
-      if (tile.id) {
-        setOptimisticActiveTile(tile.id);
-      }
-      // Route-based navigation - navigate to the new route
-      router.push(tile.route);
-      handleSidebarClose();
-    }
-  };
-
-  // Handle dashboard tile click
-  const handleDashboardClick = () => {
-    // Set optimistic state immediately for instant feedback
-    setOptimisticActiveTile('dashboard');
-    if (pathname !== '/dashboard/teacher') {
-      router.replace('/dashboard/teacher');
-    }
     handleSidebarClose();
   };
 
-  // Handle attendance tile click
-  const handleAttendanceClick = () => {
-    // Set optimistic state immediately for instant feedback
-    setOptimisticActiveTile('attendance');
-    if (pathname !== '/dashboard/teacher/attendance') {
-      router.replace('/dashboard/teacher/attendance');
-    }
-    handleSidebarClose();
+  const handleBuiltInTileClick = (tileId: BuiltInTileId) => {
+    const route = getRouteForTileId(tileId);
+    if (!route) return;
+
+    navigateToRoute(tileId, route, { replace: true });
   };
 
-  // Handle diapers tile click
-  const handleDiapersClick = () => {
-    // Set optimistic state immediately for instant feedback
-    setOptimisticActiveTile('diapers');
-    if (pathname !== '/dashboard/teacher/diapers') {
-      router.replace('/dashboard/teacher/diapers');
-    }
-    handleSidebarClose();
+  const handleCustomTileClick = (tile: TeacherSidebarTile) => {
+    if (!tile.route) return;
+    navigateToRoute(tile.id, tile.route, { replace: false });
   };
-
-  // Handle messages tile click
-  const handleMessagesClick = () => {
-    // Set optimistic state immediately for instant feedback
-    setOptimisticActiveTile('messages');
-    if (pathname !== '/dashboard/teacher/messages') {
-      router.replace('/dashboard/teacher/messages');
-    }
-    handleSidebarClose();
-  };
-
-  // Handle media tile click
-  const handleMediaClick = () => {
-    // Set optimistic state immediately for instant feedback
-    setOptimisticActiveTile('media');
-    if (pathname !== '/dashboard/teacher/media') {
-      router.replace('/dashboard/teacher/media');
-    }
-    handleSidebarClose();
-  };
-
-  // Handle stories tile click
-  const handleStoriesClick = () => {
-    // Set optimistic state immediately for instant feedback
-    setOptimisticActiveTile('stories');
-    if (pathname !== '/dashboard/teacher/stories') {
-      router.replace('/dashboard/teacher/stories');
-    }
-    handleSidebarClose();
-  };
-
-  // Handle announcements tile click
-  const handleAnnouncementsClick = () => {
-    // Set optimistic state immediately for instant feedback
-    setOptimisticActiveTile('announcements');
-    if (pathname !== '/dashboard/teacher/announcements') {
-      router.replace('/dashboard/teacher/announcements');
-    }
-    handleSidebarClose();
-  };
-
-  // Handle calendar tile click
-  const handleCalendarClick = () => {
-    // Set optimistic state immediately for instant feedback
-    setOptimisticActiveTile('calendar');
-    if (pathname !== '/dashboard/teacher/calendar') {
-      router.replace('/dashboard/teacher/calendar');
-    }
-    handleSidebarClose();
-  };
-
-  // Handle students tile click
-  const handleStudentsClick = () => {
-    // Set optimistic state immediately for instant feedback
-    setOptimisticActiveTile('students');
-    if (pathname !== '/dashboard/teacher/students') {
-      router.replace('/dashboard/teacher/students');
-    }
-    handleSidebarClose();
-  };
-
-  // Handle guardians tile click
-  const handleGuardiansClick = () => {
-    // Set optimistic state immediately for instant feedback
-    setOptimisticActiveTile('guardians');
-    if (pathname !== '/dashboard/teacher/guardians') {
-      router.replace('/dashboard/teacher/guardians');
-    }
-    handleSidebarClose();
-  };
-
-  // Handle link student tile click
-  const handleLinkStudentClick = () => {
-    // Set optimistic state immediately for instant feedback
-    setOptimisticActiveTile('link_student');
-    if (pathname !== '/dashboard/teacher/link-student') {
-      router.replace('/dashboard/teacher/link-student');
-    }
-    handleSidebarClose();
-  };
-
-  // Handle menus tile click
-  const handleMenusClick = () => {
-    // Set optimistic state immediately for instant feedback
-    setOptimisticActiveTile('menus');
-    if (pathname !== '/dashboard/teacher/menus') {
-      router.replace('/dashboard/teacher/menus');
-    }
-    handleSidebarClose();
-  };
-
-  // Use isTileActive helper for consistent optimistic state handling
-  const isDashboardActive = isTileActive('dashboard');
-  const isAttendanceActive = isTileActive('attendance');
-  const isDiapersActive = isTileActive('diapers');
-  const isMessagesActive = isTileActive('messages');
-  const isMediaActive = isTileActive('media');
-  const isStoriesActive = isTileActive('stories');
-  const isAnnouncementsActive = isTileActive('announcements');
-  const isCalendarActive = isTileActive('calendar');
-  const isStudentsActive = isTileActive('students');
-  const isGuardiansActive = isTileActive('guardians');
-  const isLinkStudentActive = isTileActive('link_student');
-  const isMenusActive = isTileActive('menus');
 
   return (
     <>
@@ -332,18 +206,18 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
           <nav className="space-y-1 px-3">
             {/* Dashboard tile - Design System: Text-based nav with mint active state */}
             <button
-              onClick={handleDashboardClick}
+              onClick={() => handleBuiltInTileClick('dashboard')}
               className={clsx(
                 'w-full flex items-center gap-3 px-4 py-3 rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
-                isDashboardActive
+                isTileActive('dashboard')
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
                   : 'border-l-4 border-transparent'
               )}
             >
               <span className={clsx(
                 'flex-shrink-0 rounded-lg p-2',
-                isDashboardActive
+                isTileActive('dashboard')
                   ? 'bg-mint-500 text-white'
                   : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
               )}>
@@ -353,7 +227,7 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
                 <div className="flex items-center justify-between gap-2">
                   <span className={clsx(
                     'font-medium truncate',
-                    isDashboardActive
+                    isTileActive('dashboard')
                       ? 'text-slate-900 dark:text-slate-100'
                       : 'text-slate-700 dark:text-slate-300'
                   )}>
@@ -368,18 +242,18 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
 
             {/* Attendance tile */}
             <button
-              onClick={handleAttendanceClick}
+              onClick={() => handleBuiltInTileClick('attendance')}
               className={clsx(
                 'w-full flex items-center gap-3 px-4 py-3 rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
-                isAttendanceActive
+                isTileActive('attendance')
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
                   : 'border-l-4 border-transparent'
               )}
             >
               <span className={clsx(
                 'flex-shrink-0 rounded-lg p-2',
-                isAttendanceActive
+                isTileActive('attendance')
                   ? 'bg-mint-500 text-white'
                   : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
               )}>
@@ -389,7 +263,7 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
                 <div className="flex items-center justify-between gap-2">
                   <span className={clsx(
                     'font-medium truncate',
-                    isAttendanceActive
+                    isTileActive('attendance')
                       ? 'text-slate-900 dark:text-slate-100'
                       : 'text-slate-700 dark:text-slate-300'
                   )}>
@@ -407,18 +281,18 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
 
             {/* Diapers tile */}
             <button
-              onClick={handleDiapersClick}
+              onClick={() => handleBuiltInTileClick('diapers')}
               className={clsx(
                 'w-full flex items-center gap-3 px-4 py-3 rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
-                isDiapersActive
+                isTileActive('diapers')
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
                   : 'border-l-4 border-transparent'
               )}
             >
               <span className={clsx(
                 'flex-shrink-0 rounded-lg p-2',
-                isDiapersActive
+                isTileActive('diapers')
                   ? 'bg-mint-500 text-white'
                   : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
               )}>
@@ -428,7 +302,7 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
                 <div className="flex items-center justify-between gap-2">
                   <span className={clsx(
                     'font-medium truncate',
-                    isDiapersActive
+                    isTileActive('diapers')
                       ? 'text-slate-900 dark:text-slate-100'
                       : 'text-slate-700 dark:text-slate-300'
                   )}>
@@ -441,18 +315,18 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
 
             {/* Messages tile */}
             <button
-              onClick={handleMessagesClick}
+              onClick={() => handleBuiltInTileClick('messages')}
               className={clsx(
                 'w-full flex items-center gap-3 px-4 py-3 rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
-                isMessagesActive
+                isTileActive('messages')
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
                   : 'border-l-4 border-transparent'
               )}
             >
               <span className={clsx(
                 'flex-shrink-0 rounded-lg p-2',
-                isMessagesActive
+                isTileActive('messages')
                   ? 'bg-mint-500 text-white'
                   : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
               )}>
@@ -462,7 +336,7 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
                 <div className="flex items-center justify-between gap-2">
                   <span className={clsx(
                     'font-medium truncate',
-                    isMessagesActive
+                    isTileActive('messages')
                       ? 'text-slate-900 dark:text-slate-100'
                       : 'text-slate-700 dark:text-slate-300'
                   )}>
@@ -480,18 +354,18 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
 
             {/* Media tile */}
             <button
-              onClick={handleMediaClick}
+              onClick={() => handleBuiltInTileClick('media')}
               className={clsx(
                 'w-full flex items-center gap-3 px-4 py-3 rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
-                isMediaActive
+                isTileActive('media')
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
                   : 'border-l-4 border-transparent'
               )}
             >
               <span className={clsx(
                 'flex-shrink-0 rounded-lg p-2',
-                isMediaActive
+                isTileActive('media')
                   ? 'bg-mint-500 text-white'
                   : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
               )}>
@@ -501,7 +375,7 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
                 <div className="flex items-center justify-between gap-2">
                   <span className={clsx(
                     'font-medium truncate',
-                    isMediaActive
+                    isTileActive('media')
                       ? 'text-slate-900 dark:text-slate-100'
                       : 'text-slate-700 dark:text-slate-300'
                   )}>
@@ -519,18 +393,18 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
 
             {/* Stories tile */}
             <button
-              onClick={handleStoriesClick}
+              onClick={() => handleBuiltInTileClick('stories')}
               className={clsx(
                 'w-full flex items-center gap-3 px-4 py-3 rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
-                isStoriesActive
+                isTileActive('stories')
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
                   : 'border-l-4 border-transparent'
               )}
             >
               <span className={clsx(
                 'flex-shrink-0 rounded-lg p-2',
-                isStoriesActive
+                isTileActive('stories')
                   ? 'bg-mint-500 text-white'
                   : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
               )}>
@@ -540,7 +414,7 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
                 <div className="flex items-center justify-between gap-2">
                   <span className={clsx(
                     'font-medium truncate',
-                    isStoriesActive
+                    isTileActive('stories')
                       ? 'text-slate-900 dark:text-slate-100'
                       : 'text-slate-700 dark:text-slate-300'
                   )}>
@@ -553,18 +427,18 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
 
             {/* Announcements tile */}
             <button
-              onClick={handleAnnouncementsClick}
+              onClick={() => handleBuiltInTileClick('announcements')}
               className={clsx(
                 'w-full flex items-center gap-3 px-4 py-3 rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
-                isAnnouncementsActive
+                isTileActive('announcements')
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
                   : 'border-l-4 border-transparent'
               )}
             >
               <span className={clsx(
                 'flex-shrink-0 rounded-lg p-2',
-                isAnnouncementsActive
+                isTileActive('announcements')
                   ? 'bg-mint-500 text-white'
                   : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
               )}>
@@ -574,7 +448,7 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
                 <div className="flex items-center justify-between gap-2">
                   <span className={clsx(
                     'font-medium truncate',
-                    isAnnouncementsActive
+                    isTileActive('announcements')
                       ? 'text-slate-900 dark:text-slate-100'
                       : 'text-slate-700 dark:text-slate-300'
                   )}>
@@ -587,18 +461,18 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
 
             {/* Calendar tile */}
             <button
-              onClick={handleCalendarClick}
+              onClick={() => handleBuiltInTileClick('calendar')}
               className={clsx(
                 'w-full flex items-center gap-3 px-4 py-3 rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
-                isCalendarActive
+                isTileActive('calendar')
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
                   : 'border-l-4 border-transparent'
               )}
             >
               <span className={clsx(
                 'flex-shrink-0 rounded-lg p-2',
-                isCalendarActive
+                isTileActive('calendar')
                   ? 'bg-mint-500 text-white'
                   : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
               )}>
@@ -608,7 +482,7 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
                 <div className="flex items-center justify-between gap-2">
                   <span className={clsx(
                     'font-medium truncate',
-                    isCalendarActive
+                    isTileActive('calendar')
                       ? 'text-slate-900 dark:text-slate-100'
                       : 'text-slate-700 dark:text-slate-300'
                   )}>
@@ -621,18 +495,18 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
 
             {/* Students tile */}
             <button
-              onClick={handleStudentsClick}
+              onClick={() => handleBuiltInTileClick('students')}
               className={clsx(
                 'w-full flex items-center gap-3 px-4 py-3 rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
-                isStudentsActive
+                isTileActive('students')
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
                   : 'border-l-4 border-transparent'
               )}
             >
               <span className={clsx(
                 'flex-shrink-0 rounded-lg p-2',
-                isStudentsActive
+                isTileActive('students')
                   ? 'bg-mint-500 text-white'
                   : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
               )}>
@@ -642,7 +516,7 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
                 <div className="flex items-center justify-between gap-2">
                   <span className={clsx(
                     'font-medium truncate',
-                    isStudentsActive
+                    isTileActive('students')
                       ? 'text-slate-900 dark:text-slate-100'
                       : 'text-slate-700 dark:text-slate-300'
                   )}>
@@ -655,18 +529,18 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
 
             {/* Guardians tile */}
             <button
-              onClick={handleGuardiansClick}
+              onClick={() => handleBuiltInTileClick('guardians')}
               className={clsx(
                 'w-full flex items-center gap-3 px-4 py-3 rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
-                isGuardiansActive
+                isTileActive('guardians')
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
                   : 'border-l-4 border-transparent'
               )}
             >
               <span className={clsx(
                 'flex-shrink-0 rounded-lg p-2',
-                isGuardiansActive
+                isTileActive('guardians')
                   ? 'bg-mint-500 text-white'
                   : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
               )}>
@@ -676,7 +550,7 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
                 <div className="flex items-center justify-between gap-2">
                   <span className={clsx(
                     'font-medium truncate',
-                    isGuardiansActive
+                    isTileActive('guardians')
                       ? 'text-slate-900 dark:text-slate-100'
                       : 'text-slate-700 dark:text-slate-300'
                   )}>
@@ -689,18 +563,18 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
 
             {/* Link Student tile */}
             <button
-              onClick={handleLinkStudentClick}
+              onClick={() => handleBuiltInTileClick('link_student')}
               className={clsx(
                 'w-full flex items-center gap-3 px-4 py-3 rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
-                isLinkStudentActive
+                isTileActive('link_student')
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
                   : 'border-l-4 border-transparent'
               )}
             >
               <span className={clsx(
                 'flex-shrink-0 rounded-lg p-2',
-                isLinkStudentActive
+                isTileActive('link_student')
                   ? 'bg-mint-500 text-white'
                   : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
               )}>
@@ -710,7 +584,7 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
                 <div className="flex items-center justify-between gap-2">
                   <span className={clsx(
                     'font-medium truncate',
-                    isLinkStudentActive
+                    isTileActive('link_student')
                       ? 'text-slate-900 dark:text-slate-100'
                       : 'text-slate-700 dark:text-slate-300'
                   )}>
@@ -723,18 +597,18 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
 
             {/* Menus tile */}
             <button
-              onClick={handleMenusClick}
+              onClick={() => handleBuiltInTileClick('menus')}
               className={clsx(
                 'w-full flex items-center gap-3 px-4 py-3 rounded-ds-md text-left transition-all duration-200',
                 'hover:bg-slate-100 dark:hover:bg-slate-700',
-                isMenusActive
+                isTileActive('menus')
                   ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
                   : 'border-l-4 border-transparent'
               )}
             >
               <span className={clsx(
                 'flex-shrink-0 rounded-lg p-2',
-                isMenusActive
+                isTileActive('menus')
                   ? 'bg-mint-500 text-white'
                   : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
               )}>
@@ -744,7 +618,7 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
                 <div className="flex items-center justify-between gap-2">
                   <span className={clsx(
                     'font-medium truncate',
-                    isMenusActive
+                    isTileActive('menus')
                       ? 'text-slate-900 dark:text-slate-100'
                       : 'text-slate-700 dark:text-slate-300'
                   )}>
@@ -761,7 +635,7 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
               return (
                 <button
                   key={tile.id}
-                  onClick={() => handleTileClick(tile)}
+                  onClick={() => handleCustomTileClick(tile)}
                   className={clsx(
                     'w-full flex items-center gap-3 px-4 py-3 rounded-ds-md text-left transition-all duration-200',
                     'hover:bg-slate-100 dark:hover:bg-slate-700',

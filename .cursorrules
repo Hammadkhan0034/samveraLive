@@ -1,418 +1,313 @@
-# Next.js 16 Cursor Rules
+# Next.js 16 Cursor Rules (Samvera)
 
 ## Project Overview
-This is a Next.js 16 application using the App Router, TypeScript, Tailwind CSS, and Supabase. Follow these rules for all code generation and modifications.
+This is a Next.js 16 application using the App Router, TypeScript, Tailwind CSS, Supabase, and Firebase for a multi-role (admin, principal, teacher, guardian) school platform.  
+Follow these rules for all code generation and modifications so they stay consistent with the existing `app/`, `app/components/`, `lib/handlers/`, `lib/services/`, and `lib/validation/` structure.
 
 ## Core Principles
 
-### 1. Component/Module-First Approach
-- **Always** organize code by feature/domain first, then by type
-- Prefer colocation: keep related files (components, hooks, utils, types) together
-- Use the `app/` directory structure for routes and layouts
-- Use `components/` directory for reusable UI components
-- Use `lib/` directory for utilities, hooks, and shared logic
-- Group related functionality in feature-based modules
+### 1. Feature‑First, Handler‑Centric Architecture
+- **Always** organize code by feature/domain (announcements, attendance, menus, messages, dashboards, etc.) before type.
+- Keep domain logic in `lib/handlers/` and `lib/services/`, not in React components or route handlers.
+- Use `lib/validation/` + `lib/types/` for shared schemas and types per feature.
+- Treat `lib/server-actions.ts` as the main entry point for dashboard/server actions, delegating to handlers.
 
-### 2. Shared Components
-- **Always** check `app/components/shared/` before creating new components
-- Extract common UI patterns into shared components
-- Shared components should be:
-  - Generic and reusable
-  - Well-typed with TypeScript
-  - Documented with JSDoc comments
-  - Located in `app/components/shared/`
-- Examples of shared components: buttons, inputs, modals, cards, loading states, error boundaries
+### 2. Components & Colocation
+- Use `app/(app)/dashboard/**` for role-specific dashboard routes and pages.
+- Use `app/components/` for reusable UI and feature components; colocate per feature:
+  - `app/components/shared/` for generic building blocks (buttons, inputs, layout, skeletons, etc.).
+  - `app/components/attendance/`, `app/components/principal/`, etc. for feature- or role-specific UI.
+- Prefer colocation: keep a feature’s components, types, validation, handlers, and services close by within `lib/**` and `app/components/**`.
 
-### 3. Next.js 16 Best Practices
+### 3. Shared Components
+- **Always** check `app/components/shared/` before creating a new button, input, layout element, modal, or card.
+- Shared components must be:
+  - Generic and reusable across roles (teacher, principal, guardian, admin).
+  - Well-typed with TypeScript and accept `className` for Tailwind extension.
+  - Documented with JSDoc comments when behavior is non-trivial.
+- If a pattern is used in more than one dashboard route, extract it into `app/components/shared/` (or a clearly named subfolder) rather than duplicating.
 
-#### App Router Structure
-- Use Server Components by default (React Server Components)
-- Only use `'use client'` directive when necessary (interactivity, hooks, browser APIs)
-- Leverage Server Actions for mutations instead of API routes when possible
-- Use Route Handlers (`route.ts`) for external API integrations or webhooks
-- Implement proper loading states with `loading.tsx`
-- Use `error.tsx` for error boundaries
-- Leverage `not-found.tsx` for 404 handling
+## Next.js 16 & Routing
 
-#### File Naming Conventions
-- Use `page.tsx` for route pages
-- Use `layout.tsx` for layouts
-- Use `loading.tsx` for loading states
-- Use `error.tsx` for error boundaries
-- Use `not-found.tsx` for 404 pages
-- Use `route.ts` for API route handlers
-- Use `component.tsx` or `Component.tsx` for components (PascalCase)
-- Use `hook.ts` or `useHook.ts` for custom hooks
-- Use `util.ts` or `utils.ts` for utility functions
-- Use `type.ts` or `types.ts` for TypeScript types
+### App Router Structure
+- Use **Server Components by default** for `page.tsx`, `layout.tsx`, and most dashboard routes under:
+  - `app/(app)/dashboard/**`
+  - `app/(auth)/**`
+  - `app/invite/**`
+- Only mark components with `'use client'` when they:
+  - Use React hooks (`useState`, `useEffect`, `useContext`, etc.).
+  - Use browser APIs (e.g. `window`, `localStorage`).
+  - Handle DOM events (`onClick`, `onChange`, etc.).
+  - Integrate with client-only SDKs (Firebase messaging, etc.).
+- Use route groups as they exist:
+  - Auth routes in `app/(auth)/signin`, `app/(auth)/callback`.
+  - Main app experiences in `app/(app)/dashboard/...`.
 
-#### Server Components (Default)
-- Prefer Server Components for:
-  - Data fetching
-  - Accessing backend resources
-  - Keeping sensitive information on the server
-  - Large dependencies (reduce client bundle)
-  - Static content
-- Server Components can:
-  - Directly access databases, file systems, etc.
-  - Use async/await for data fetching
-  - Import Server-only modules
+### API Routes vs Server Actions
+- **Default to API routes** (`app/api/**/route.ts`) for all new backend behavior unless a task explicitly asks for a Server Action.
+- Use `app/api/**/route.ts` for:
+  - Dashboard mutations initiated from UI (announcements, menus, notifications, events, etc.).
+  - Integrations with external services or webhooks.
+  - Endpoints consumed by non-Next.js clients.
+  - Batched/background operations not tied to a single form submit.
+- Use **Server Actions** (in `lib/server-actions.ts` or colocated `actions.ts`) **only when explicitly requested**, or when you are modifying an existing server action flow.
+- In both API routes and Server Actions, always call into `lib/handlers/**` and `lib/services/**` to avoid duplicating business logic.
 
-#### Client Components
-- Only use `'use client'` when you need:
-  - React hooks (useState, useEffect, useContext, etc.)
-  - Browser APIs (window, document, localStorage, etc.)
-  - Event listeners (onClick, onChange, etc.)
-  - Third-party libraries that require client-side JavaScript
-- Keep Client Components small and focused
-- Pass data from Server Components to Client Components as props
-- Use Server Actions for mutations from Client Components
+### File Naming Conventions
+- Routes: `page.tsx`, `layout.tsx`, `loading.tsx`, `error.tsx`, `not-found.tsx`.
+- API route handlers: `app/api/[route]/route.ts`.
+- Components: `ComponentName.tsx` (PascalCase).
+- Hooks: `useSomething.ts` in `lib/hooks/`.
+- Validation: `[feature].ts` in `lib/validation/`.
+- Types: `[feature].ts` in `lib/types/`.
+- Handlers: `[feature]_handler.ts` or similar in `lib/handlers/`.
+- Services: `[feature].ts` in `lib/services/`.
 
-#### Data Fetching
-- Use async Server Components for data fetching
-- Use `fetch` with Next.js caching by default
-- Configure caching with `cache: 'no-store'` for dynamic data
-- Use `revalidate` for ISR (Incremental Static Regeneration)
-- Use `generateStaticParams` for dynamic routes
-- Prefer Server Actions over API routes for mutations
+## Auth, Roles & Security
 
-#### Server Actions
-- Define Server Actions in `lib/server-actions.ts` or colocated `actions.ts` files
-- Use `'use server'` directive at the top of Server Action files
-- Validate inputs with Zod schemas
-- Handle errors gracefully with try-catch
-- Return proper error messages to the client
+### Auth & Context
+- Use the existing auth utilities instead of rolling your own:
+  - `lib/auth.ts` and `lib/auth-context.tsx` for Supabase auth and React auth context.
+  - `lib/server-helpers.ts` (`getRequestAuthContext`, `MissingOrgIdError`, etc.) to get the current user and org.
+- Do not access Supabase directly in components or API routes; go through:
+  - `lib/supabaseServer.ts` or `lib/supabaseClient.ts` where appropriate.
+  - `supabaseAdmin` for server-side admin actions (already configured in `lib/supabaseClient.ts`).
 
-#### TypeScript
-- Use strict TypeScript configuration
-- Define types in `lib/types/` directory
-- Use interfaces for object shapes
-- Use types for unions, intersections, and computed types
-- Avoid `any` - use `unknown` if type is truly unknown
-- Use type inference where possible
-- Export types from a central `types.ts` file per module
+### Role‑Based Access
+- Use `SamveraRole` and `UserMetadata` from `lib/types/auth.ts` for role and metadata typing.
+- In **server actions** and **API routes**, enforce access via `getRequestAuthContext`:
+  - Always specify `allowedRoles` and `requireOrg` as appropriate.
+  - Do not read `user.user_metadata` directly when a helper already exists for that behavior.
+- For role switching and permission checks:
+  - Use the helpers in `lib/server-actions.ts` (`hasPermission`, `hasAnyPermission`, `hasMinimumPermission`, `switchUserRole`).
+  - When adding new role-sensitive flows, follow the pattern used for dashboards and announcements in `lib/server-actions.ts`.
 
-#### Styling
-- Use Tailwind CSS utility classes
-- Prefer Tailwind over custom CSS
-- Use CSS modules only when necessary for component-scoped styles
-- Use `globals.css` for global styles only
-- Follow mobile-first responsive design
-- Use Tailwind's dark mode utilities when applicable
+### Security Rules
+- Never expose Supabase admin credentials or server secrets to Client Components.
+- Validate **all** user inputs (including URL params and query) with Zod schemas in `lib/validation/**`.
+- Always sanitize or validate any user-provided text that might be displayed back in the UI.
+- Use RLS and database policies (see `db/rls_policies.sql`) rather than trusting client-side checks.
 
-#### Performance
-- Use `next/image` for all images
-- Use `next/link` for client-side navigation
-- Implement proper code splitting
-- Use dynamic imports (`next/dynamic`) for heavy components
-- Optimize fonts with `next/font`
-- Use React Server Components to reduce bundle size
-- Implement proper loading states
-- Use Suspense boundaries for async components
+## Directory & Module Organization
 
-#### Error Handling
-- Use error boundaries (`error.tsx`) for route-level errors
-- Handle errors in Server Actions with try-catch
-- Provide user-friendly error messages
-- Log errors appropriately (server-side)
-- Use proper HTTP status codes in API routes
-
-#### Security
-- Never expose sensitive data to Client Components
-- Validate all user inputs with Zod
-- Use Server Actions for mutations (CSRF protection built-in)
-- Sanitize user inputs
-- Use environment variables for secrets (never commit)
-- Implement proper authentication checks in Server Components
-
-## File Organization
-
-### Directory Structure
-```
+### `app/` Directory
+```text
 app/
-  ├── (routes)/          # Route groups
-  │   ├── page.tsx
-  │   ├── layout.tsx
-  │   └── loading.tsx
-  ├── components/        # Reusable components
-  │   ├── shared/        # Shared/common components
-  │   └── [feature]/     # Feature-specific components
-  ├── api/               # API route handlers
-  │   └── [route]/
-  │       └── route.ts
-  └── globals.css
+  layout.tsx
+  page.tsx
+  globals.css
 
-lib/
-  ├── hooks/             # Custom React hooks
-  ├── utils/             # Utility functions
-  ├── types/             # TypeScript types
-  ├── validation/        # Zod schemas
-  └── [feature]/         # Feature-specific logic
+  (app)/
+    dashboard/
+      page.tsx
+      add-announcement/
+      add-guardian/
+      add-menu/
+      add-story/
+      add-student/
+      admin/
+      announcements/
+      attendance/
+      edit-story/
+      guardians/
+      link-student/
+      menus/
+      menus-list/
+      menus-view/
+      notifications/
+      parent/
+      principal/
+      stories/
+      teacher/
+
+  (auth)/
+    signin/
+    callback/
+
+  api/
+    [feature]/
+      route.ts
+
+  auth/
+    callback-guardian/
+    callback-staff/
+
+  invite/
+    accept-guardian/
+    accept-staff/
 ```
 
-### Component Organization
-- **Shared Components**: `app/components/shared/`
-  - Buttons, Inputs, Cards, Modals, etc.
-  - Should be generic and reusable
-- **Feature Components**: `app/components/[feature]/`
-  - Feature-specific components
-  - Can import from shared components
+### `app/components/` Directory
+- **Shared**: `app/components/shared/**` (buttons, inputs, layout wrappers, modals, skeletons, common UI).
+- **Feature/role specific** (examples, not exhaustive):
+  - `app/components/attendance/**`
+  - `app/components/principal/**`
+  - `app/components/loading-skeletons/**`
+  - Other top-level components like `AdminDashboard`, `ParentDashboard`, `Navbar`, `ServerRoleGuard`, `ProfileSwitcher`, etc.
+- When adding new feature UI:
+  - If it is dashboard-only and not generic, prefer `app/components/[feature]/`.
+  - If it is generic or reused in multiple features (e.g. a modal, table wrapper, badge), prefer `app/components/shared/`.
 
-## Code Generation Rules
+### `lib/` Directory
+- **Auth & Contexts**
+  - `lib/auth.ts`, `lib/auth-context.tsx`, `lib/auth-errors.ts`
+  - `lib/contexts/LanguageContext.tsx`, `lib/contexts/ThemeContext.tsx`
+- **Core Data & Integration**
+  - `lib/supabaseClient.ts`, `lib/supabaseServer.ts`
+  - `lib/firebase/admin.ts`, `lib/firebase/client.ts`
+  - `lib/email-service.ts`, `lib/email-templates.ts`
+  - `lib/cacheConfig.ts`, `lib/server-helpers.ts`
+  - `lib/translations/**`
+- **Domain Logic**
+  - `lib/handlers/**` for feature-specific data access and business rules.
+  - `lib/services/**` for cross-cutting concerns (notifications, device tokens, attendance, push notifications).
+  - `lib/utils/**` for pure helpers (`studentUtils.ts`, etc.).
+  - `lib/types/**` for feature-specific types (announcements, attendance, auth, menus, messages, dashboards, health-logs).
+  - `lib/validation/**` for Zod schemas per feature (announcements, attendance, menus, orgs, photos, classes).
+  - `lib/server-actions.ts` as the central server action entrypoint delegating into handlers/services.
 
-### When Creating Components
-1. **Check for existing shared components first**
-2. If creating a new shared component:
-   - Place in `app/components/shared/`
-   - Make it generic and reusable
-   - Add TypeScript types for all props
-   - Add JSDoc comments
-   - Export as named export
-3. If creating a feature component:
-   - Place in `app/components/[feature]/`
-   - Import shared components when possible
-   - Keep it focused on the feature
+When adding a new feature, follow this pattern:
+- **Types** → `lib/types/[feature].ts`
+- **Validation** → `lib/validation/[feature].ts`
+- **Handlers** → `lib/handlers/[feature]_handler.ts` (or similar).
+- **Services** → `lib/services/[feature].ts` (only if it’s cross-cutting/infrastructural).
+- **UI** → `app/components/[feature]/` and/or `app/components/shared/`.
+- **Routes** → `app/(app)/dashboard/[feature]/page.tsx` (for dashboard) or `app/api/[feature]/route.ts` (for API).
 
-### Component Template
+## Server Actions & Handlers
+
+### Pattern
+- All server actions in `lib/server-actions.ts`:
+  - Start with `'use server';` at the top of the file.
+  - Call `getRequestAuthContext` to enforce auth, roles, and optionally org membership.
+  - Use `supabaseAdmin` to interact with Supabase, never raw clients directly from components.
+  - Delegate business logic to `lib/handlers/**` (e.g. `handleCreateAnnouncement`, `handleCreateMenu`, `handleCreateEvent`).
+  - Use `revalidatePath` to keep dashboard and detail routes in sync after mutations.
+- When adding a new server action:
+  1. Define or reuse Zod schemas in `lib/validation/**`.
+  2. Implement a handler in `lib/handlers/**` doing the heavy lifting.
+  3. Add a thin server action in `lib/server-actions.ts` that:
+     - Authenticates and checks roles.
+     - Calls the handler and handles errors.
+     - Revalidates all relevant paths (e.g. `/dashboard`, `/dashboard/[feature]`).
+
+### Example Skeleton
 ```tsx
-import { type ComponentProps } from 'react'
+'use server';
 
-/**
- * [Component description]
- * 
- * @example
- * ```tsx
- * <ComponentName prop1="value" />
- * ```
- */
-export function ComponentName({
-  prop1,
-  ...props
-}: ComponentNameProps) {
-  return (
-    <div {...props}>
-      {/* Component content */}
-    </div>
-  )
-}
+import { revalidatePath } from 'next/cache';
+import { z } from 'zod';
 
-export type ComponentNameProps = ComponentProps<'div'> & {
-  prop1: string
-}
-```
+import { getRequestAuthContext } from './server-helpers';
+import { supabaseAdmin } from './supabaseClient';
+import { handleCreateSomething } from './handlers/server_actions_handler';
+import { createSomethingSchema } from './validation';
 
-### Server Component Template
-```tsx
-import { type Metadata } from 'next'
+export async function createSomething(data: z.infer<typeof createSomethingSchema>) {
+  const { user } = await getRequestAuthContext({
+    allowedRoles: ['teacher', 'principal', 'admin'],
+    requireOrg: true,
+  });
 
-export const metadata: Metadata = {
-  title: 'Page Title',
-  description: 'Page description',
-}
-
-export default async function Page() {
-  // Data fetching
-  const data = await fetchData()
-  
-  return (
-    <div>
-      {/* Server Component content */}
-    </div>
-  )
-}
-```
-
-### Client Component Template
-```tsx
-'use client'
-
-import { useState } from 'react'
-
-export function ClientComponent() {
-  const [state, setState] = useState()
-  
-  return (
-    <div>
-      {/* Client Component content */}
-    </div>
-  )
-}
-```
-
-### Server Action Template
-```tsx
-'use server'
-
-import { z } from 'zod'
-import { revalidatePath } from 'next/cache'
-
-const schema = z.object({
-  // Define schema
-})
-
-export async function actionName(formData: FormData) {
-  try {
-    const validated = schema.parse({
-      // Parse form data
-    })
-    
-    // Perform action
-    
-    revalidatePath('/path')
-    return { success: true }
-  } catch (error) {
-    return { 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Unknown error' 
-    }
+  if (!supabaseAdmin) {
+    throw new Error('Admin client not configured');
   }
+
+  const result = await handleCreateSomething(user, supabaseAdmin, data);
+
+  revalidatePath('/dashboard');
+  revalidatePath('/dashboard/something');
+  return result;
 }
 ```
 
-## Package Management
+## TypeScript & Validation
 
-### Latest Packages (as of Next.js 16)
-- `next`: ^16.0.0
-- `react`: ^18.3.0
-- `react-dom`: ^18.3.0
-- `typescript`: ^5.7.0
-- `tailwindcss`: ^3.3.3
-- `zod`: ^3.23.8 (for validation)
-- `@supabase/ssr`: ^0.7.0
-- `@supabase/supabase-js`: ^2.45.0
+### TypeScript
+- Use strict typing everywhere; avoid `any`. Use `unknown` only when truly necessary and narrow it.
+- Prefer `interface` for object shapes; use `type` for unions, intersections, and utility types.
+- Export feature-specific types from `lib/types/[feature].ts` and reuse them across:
+  - Handlers (`lib/handlers/**`)
+  - Services (`lib/services/**`)
+  - Components (`app/components/**`)
+  - API routes (`app/api/**/route.ts`)
 
-### When Adding New Packages
-- Always use the latest stable version
-- Check compatibility with Next.js 16
-- Prefer packages that support React Server Components
-- Use `npm install` or `pnpm install` (check package manager in use)
+### Zod & Validation
+- Every mutation or external input path must be backed by a Zod schema:
+  - Store schemas in `lib/validation/[feature].ts`.
+  - Reuse schemas between server actions, handlers, and API routes.
+- Parse at the edge:
+  - For server actions, parse the input directly using the schema (or use types derived via `z.infer`).
+  - For API routes, validate `req.json()` or `req.body` with the correct schema before any DB calls.
+
+## Styling & UI
+
+### Tailwind CSS
+- Use Tailwind utility classes for styling; avoid custom CSS unless required.
+- Use responsive classes (e.g. `sm:`, `md:`, `lg:`) to maintain mobile-first design.
+- Prefer composition via `className` and shared primitives (e.g. buttons, cards) in `app/components/shared/`.
+
+### Layout & Skeletons
+- Use `LayoutWrapper`, `Navbar`, `ThemeToggle`, and other layout components rather than re-inventing layout logic.
+- For loading states:
+  - Prefer dedicated skeleton components in `app/components/loading-skeletons/` over inline spinners when loading large sections.
+  - Create `loading.tsx` files for long-running dashboard pages.
+
+## Performance
+- Use `next/image` for all images.
+- Use `next/link` for navigation between pages.
+- Keep heavy or client-only UI in isolated client components and use dynamic imports (`next/dynamic`) when necessary.
+- Use React Server Components for data-heavy or role-gated dashboard pages to keep bundles small.
+- Use appropriate caching strategies (`next: { revalidate }` or `cache: 'no-store'`) based on data freshness requirements.
+
+## Testing & Reliability
+- Prefer testing server actions and handlers over UI when validating business logic.
+- When adding a new complex handler in `lib/handlers/**`, design it so it can be tested independently of Next.js.
+- For client components, use React Testing Library to test UI behaviors and interactions (if/when test harness exists).
+
+## Accessibility
+- Use semantic HTML (e.g. `button`, `nav`, `main`, `section`, `header`, `footer`).
+- Ensure all interactive elements are keyboard accessible and have visible focus states.
+- Always provide labels for form elements and ARIA attributes when necessary.
+- Maintain a consistent heading hierarchy across dashboard pages.
 
 ## Import Conventions
 
 ### Import Order
-1. React and Next.js imports
-2. Third-party library imports
-3. Internal imports (use `@/` alias)
-4. Type imports (use `type` keyword)
-5. Relative imports
+1. React and Next.js imports.
+2. Third-party library imports.
+3. Internal imports using the `@/` alias (if available) or from `lib/` and `app/components/`.
+4. Type-only imports using the `type` keyword.
+5. Relative imports (`./` and `../`).
 
 ### Example
 ```tsx
-import { useState } from 'react'
-import { type Metadata } from 'next'
-import { z } from 'zod'
+import { useState } from 'react';
+import { type Metadata } from 'next';
+import { z } from 'zod';
 
-import { Button } from '@/app/components/shared/Button'
-import { useAuth } from '@/lib/hooks/useAuth'
+import { Button } from '@/app/components/shared/Button';
+import { useAuth } from '@/lib/hooks/useAuth';
 
-import type { User } from '@/lib/types/auth'
+import type { User } from '@/lib/types/auth';
 ```
 
-## Common Patterns
-
-### Data Fetching Pattern
-```tsx
-// Server Component
-export default async function Page() {
-  const data = await fetch('...', {
-    next: { revalidate: 3600 } // ISR
-  }).then(res => res.json())
-  
-  return <DataDisplay data={data} />
-}
-```
-
-### Form with Server Action Pattern
-```tsx
-// Server Component
-import { Form } from './Form'
-
-export default function Page() {
-  return <Form />
-}
-
-// Client Component (Form.tsx)
-'use client'
-
-import { useActionState } from 'react'
-import { submitAction } from '@/lib/server-actions'
-
-export function Form() {
-  const [state, formAction] = useActionState(submitAction, null)
-  
-  return (
-    <form action={formAction}>
-      {/* Form fields */}
-    </form>
-  )
-}
-```
-
-### Loading State Pattern
-```tsx
-// app/[route]/loading.tsx
-export default function Loading() {
-  return <div>Loading...</div>
-}
-```
-
-### Error Boundary Pattern
-```tsx
-// app/[route]/error.tsx
-'use client'
-
-export default function Error({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string }
-  reset: () => void
-}) {
-  return (
-    <div>
-      <h2>Something went wrong!</h2>
-      <button onClick={reset}>Try again</button>
-    </div>
-  )
-}
-```
-
-## Testing Considerations
-- Write tests for Server Actions
-- Test Server Components with async rendering
-- Test Client Components with React Testing Library
-- Use proper mocking for external dependencies
-
-## Accessibility
-- Use semantic HTML elements
-- Add proper ARIA labels when needed
-- Ensure keyboard navigation works
-- Maintain proper heading hierarchy
-- Use proper form labels
-- Ensure color contrast meets WCAG standards
-
-## Code Quality
-- Use ESLint with Next.js config
-- Format code with Prettier (if configured)
-- Write self-documenting code
-- Add JSDoc comments for complex functions
-- Keep functions small and focused
-- Avoid deep nesting (max 3-4 levels)
-
-## Git Conventions
-- Use descriptive commit messages
-- Keep commits focused and atomic
-- Use conventional commit format when possible
+## Git & Code Quality
+- Use ESLint with the Next.js config and keep the codebase formatted (Prettier, if configured).
+- Keep functions small and focused; prefer extracting helpers to `lib/utils/**` or `lib/handlers/**`.
+- Use descriptive, atomic commits; follow conventional commit format when possible.
+- Add JSDoc for complex components, hooks, and handlers, especially those in `lib/services/` and `lib/handlers/`.
 
 ## Important Reminders
-1. **Always check `app/components/shared/` before creating new components**
-2. **Use Server Components by default - only add `'use client'` when necessary**
-3. **Prefer Server Actions over API routes for mutations**
-4. **Use TypeScript strictly - avoid `any`**
-5. **Follow the component/module-first organization approach**
-6. **Keep components small, focused, and reusable**
-7. **Use Tailwind CSS for styling**
-8. **Implement proper error handling and loading states**
-9. **Optimize for performance (images, fonts, code splitting)**
-10. **Validate all inputs with Zod**
+1. **Reuse existing patterns** in `lib/server-actions.ts`, `lib/handlers/`, `lib/services/`, and `lib/validation/` when adding new features.
+2. **Centralize business logic** in handlers/services, not in components or route handlers.
+3. **Use Server Components by default**, and `'use client'` only when needed.
+4. **Validate all inbound data** with Zod schemas from `lib/validation/**`.
+5. **Enforce roles and org membership** with `getRequestAuthContext` for every protected operation.
+6. **Keep components small, focused, and reusable**, and prefer `app/components/shared/` when patterns repeat.
+7. **Use Tailwind CSS** and shared layout components for consistent, responsive UI.
+8. **Leverage Supabase and Firebase helpers** instead of adding new clients or ad‑hoc integrations.
+9. **Keep routes, handlers, and actions in sync** by revalidating relevant dashboard paths after mutations.
+10. **Never commit secrets**; always use environment variables and keep security and RLS policies in mind.
+
 
