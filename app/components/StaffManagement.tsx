@@ -24,6 +24,7 @@ export default function StaffManagement(_props: StaffManagementProps) {
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [loadingStaff, setLoadingStaff] = useState(false);
   const [staffError, setStaffError] = useState<string | null>(null);
+  const [isDeletingStaff, setIsDeletingStaff] = useState(false);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -63,6 +64,7 @@ export default function StaffManagement(_props: StaffManagementProps) {
 
   const deleteStaffMember = useCallback(async (id: string) => {
     try {
+      setIsDeletingStaff(true);
       setStaffError(null);
       const response = await fetch(`/api/staff-management?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
       const data = await response.json();
@@ -73,6 +75,8 @@ export default function StaffManagement(_props: StaffManagementProps) {
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to delete staff';
       setStaffError(errorMessage);
+    } finally {
+      setIsDeletingStaff(false);
     }
   }, [loadStaff]);
 
@@ -337,6 +341,7 @@ export default function StaffManagement(_props: StaffManagementProps) {
         onConfirm={handleConfirmDelete}
         title={t.remove_staff_member}
         message={t.remove_staff_confirm}
+        loading={isDeletingStaff}
         error={staffError}
         confirmButtonText={t.remove}
         cancelButtonText={t.cancel}
