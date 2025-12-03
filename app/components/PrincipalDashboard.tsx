@@ -1,50 +1,109 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { Users, School, ChartBar as BarChart3, Utensils } from 'lucide-react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { Users, School, ChartBar as BarChart3, Utensils, AlertCircle } from 'lucide-react';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import AnnouncementList from './AnnouncementList';
 import { useRouter } from 'next/navigation';
 import StoryColumn from './shared/StoryColumn';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
+import KPICardSkeleton from '@/app/components/loading-skeletons/KPICardSkeleton';
+import type { KPICard } from '@/lib/types/dashboard';
+import { useAuth } from '@/lib/hooks/useAuth';
 
 export default function PrincipalDashboard() {
   const { t, lang } = useLanguage();
   const router = useRouter();
-  
-  const [classesCount, setClassesCount] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const cached = localStorage.getItem('classes_count_cache');
-      return cached ? parseInt(cached) : 0;
-    }
-    return 0;
-  });
- 
 
-  // KPI data states (simplified for counts only) - initialize from cache
-  const [studentsCount, setStudentsCount] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const cached = localStorage.getItem('students_count_cache');
-      return cached ? parseInt(cached) : 0;
-    }
-    return 0;
-  });
-  const [staffCount, setStaffCount] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const cached = localStorage.getItem('staff_count_cache');
-      return cached ? parseInt(cached) : 0;
-    }
-    return 0;
-  });
-  const [menusCount, setMenusCount] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const cached = localStorage.getItem('menus_count_cache');
-      return cached ? parseInt(cached) : 0;
-    }
-    return 0;
-  });
+  // KPI data states - initialized to 0 and populated from API
+  const [classesCount, setClassesCount] = useState(0);
+  const [studentsCount, setStudentsCount] = useState(0);
+  const [staffCount, setStaffCount] = useState(0);
+  const [menusCount, setMenusCount] = useState(0);
 
-  // Counts are initialized lazily from localStorage above, so no effect is needed here.
+  // Loading and error states
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Single consolidated function to fetch all metrics from the API
+  const fetchMetrics = useCallback(async (signal: AbortSignal) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const res = await fetch(`/api/principal-dashboard-metrics?t=${Date.now()}`, {
+        cache: 'no-store',
+        signal,
+        credentials: 'include',
+      });
+
+      if (signal.aborted) {
+        return;
+      }
+
+      if (!res.ok) {
+        let errorMessage = `HTTP ${res.status}`;
+        try {
+          const errorData = await res.json();
+          errorMessage = (errorData as any).error || errorMessage;
+        } catch {
+          try {
+            const errorText = await res.text();
+            errorMessage = errorText || errorMessage;
+          } catch {
+            // Fallback to default errorMessage
+          }
+        }
+        throw new Error(errorMessage);
+      }
+
+      const data = await res.json();
+
+      if (signal.aborted) {
+        return;
+      }
+
+      setStudentsCount((data as any).studentsCount || 0);
+      setStaffCount((data as any).staffCount || 0);
+      setClassesCount((data as any).classesCount || 0);
+      setMenusCount((data as any).menusCount || 0);
+    } catch (err: unknown) {
+      if (signal.aborted) {
+        return;
+      }
+
+      const message =
+        err instanceof Error ? err.message : 'Failed to load dashboard metrics. Please try again.';
+      setError(message);
+      console.error('Error loading principal dashboard metrics:', err);
+    } finally {
+      if (!signal.aborted) {
+        setIsLoading(false);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+    void fetchMetrics(abortController.signal);
+    return () => {
+      abortController.abort();
+    };
+  }, [ fetchMetrics]);
+
+  // Retry handler for error state
+  const handleRetry = useCallback(() => {
+    setError(null);
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+    void fetchMetrics(abortController.signal);
+  }, [fetchMetrics]);
 
   // Memoize activity items to ensure they update when language changes
   const activityItems = useMemo(
@@ -58,7 +117,7 @@ export default function PrincipalDashboard() {
   );
 
   // Memoize KPIs to ensure they update when language changes
-  const kpis = useMemo(
+  const kpis = useMemo<KPICard[]>(
     () => [
       {
         label: t.kpi_students,
@@ -88,9 +147,6 @@ export default function PrincipalDashboard() {
     [t, studentsCount, staffCount, classesCount, menusCount, router],
   );
 
-
-
-
   return (
     <main className="mx-auto max-w-7xl px-4 py-ds-lg md:px-6">
       {/* Header */}
@@ -114,40 +170,65 @@ export default function PrincipalDashboard() {
         userRole="principal"
       />
 
-      {/* KPIs */}
-      <div className="grid grid-cols-1 gap-ds-md sm:grid-cols-2 lg:grid-cols-4">
-        {kpis.map(({ label, value, icon: Icon, onClick }, i) => {
-          // Cycle through tinted backgrounds: pale-blue, pale-yellow, pale-peach
-          const bgColors = [
-            'bg-pale-blue dark:bg-slate-800',
-            'bg-pale-yellow dark:bg-slate-800',
-            'bg-pale-peach dark:bg-slate-800',
-          ];
-          const bgColor = bgColors[i % 3];
-
-          return (
-            <div
-              key={i}
-              className={`rounded-ds-lg p-ds-md shadow-ds-card ${bgColor} ${
-                onClick !== undefined
-                  ? 'cursor-pointer transition-all duration-200 hover:shadow-ds-lg'
-                  : ''
-              }`}
-              onClick={onClick}
-            >
-              <div className="flex items-center justify-between">
-                <div className="text-ds-small text-slate-600 dark:text-slate-400">{label}</div>
-                <span className="rounded-ds-md bg-white/50 p-2 dark:bg-slate-700">
-                  <Icon className="h-4 w-4 text-slate-700 dark:text-slate-300" />
-                </span>
+      {/* KPIs and status */}
+      <section className="mt-ds-md">
+        {/* Error Message */}
+        {error && (
+          <div className="mb-ds-sm rounded-ds-md border border-red-200 bg-red-50 p-ds-sm dark:border-red-800 dark:bg-red-900/20">
+            <div className="flex items-center gap-ds-md">
+              <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+              <div className="flex-1">
+                <p className="text-ds-small font-medium text-red-800 dark:text-red-200">{error}</p>
               </div>
-              <div className="mt-3 text-ds-h2 font-semibold text-slate-900 dark:text-slate-100">
-                {value}
-              </div>
+              <button
+                type="button"
+                onClick={handleRetry}
+                className="rounded-ds-md bg-red-100 px-3 py-1.5 text-ds-small font-medium text-red-700 hover:bg-red-200 transition-colors dark:bg-red-800/50 dark:text-red-200 dark:hover:bg-red-800/70"
+              >
+                Retry
+              </button>
             </div>
-          );
-        })}
-      </div>
+          </div>
+        )}
+
+        {isLoading ? (
+          <KPICardSkeleton count={4} />
+        ) : (
+          <div className="grid grid-cols-1 gap-ds-md sm:grid-cols-2 lg:grid-cols-4">
+            {kpis.map(({ label, value, icon: Icon, onClick }, i) => {
+              // Cycle through tinted backgrounds: pale-blue, pale-yellow, pale-peach
+              const bgColors = [
+                'bg-pale-blue dark:bg-slate-800',
+                'bg-pale-yellow dark:bg-slate-800',
+                'bg-pale-peach dark:bg-slate-800',
+              ];
+              const bgColor = bgColors[i % 3];
+
+              return (
+                <div
+                  key={i}
+                  className={`rounded-ds-lg p-ds-md shadow-ds-card ${bgColor} ${
+                    onClick !== undefined
+                      ? 'cursor-pointer transition-all duration-200 hover:shadow-ds-lg'
+                      : ''
+                  }`}
+                  onClick={onClick}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="text-ds-small text-slate-600 dark:text-slate-400">{label}</div>
+                    <span className="rounded-ds-md bg-white/50 p-2 dark:bg-slate-700">
+                      <Icon className="h-4 w-4 text-slate-700 dark:text-slate-300" />
+                    </span>
+                  </div>
+                  <div className="mt-3 text-ds-h2 font-semibold text-slate-900 dark:text-slate-100">
+                    {value}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
       {/* School Announcements Section */}
       <div className="mt-ds-md">
