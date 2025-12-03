@@ -644,8 +644,6 @@ export default function ParentDashboard() {
           <div className="mt-3">
             <AnnouncementList
               classId={(session?.user?.user_metadata as any)?.class_id}
-              orgId={(session?.user?.user_metadata as any)?.org_id}
-              userId={session?.user?.id}
               userRole={(session?.user?.user_metadata as any)?.role || (session?.user?.user_metadata as any)?.activeRole || 'guardian'}
               showAuthor={false}
               limit={3}

@@ -29,9 +29,11 @@ export async function handleGetAnnouncements(
     classId,
     teacherClassIds,
     limit: limitParam,
-    userId,
-    userRole,
   } = queryValidation.data;
+
+  // Derive user context from authenticated user instead of trusting query params
+  const userId = _user.id;
+  const userRole = _user.user_metadata.activeRole;
 
   // If id is provided, fetch single announcement
   if (id) {

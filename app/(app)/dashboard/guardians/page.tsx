@@ -41,24 +41,18 @@ export default function GuardiansPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 20;
 
-  // Organizations states (needed for guardian form)
-  const [orgs, setOrgs] = useState<Array<{ id: string; name: string; slug: string; timezone: string }>>([]);
-  const [loadingOrgs, setLoadingOrgs] = useState(false);
-
   // Language handled by global context
 
 
   // Load data on mount - start immediately
   useEffect(() => {
     loadGuardians();
-    loadOrgs();
   }, []);
 
   // Also load when user is available
   useEffect(() => {
     if (user?.id) {
       loadGuardians(false);
-      loadOrgs(false);
     }
   }, [user?.id]);
 
@@ -90,21 +84,6 @@ export default function GuardiansPage() {
       if (showLoading) {
         // setLoadingGuardians(false);
       }
-    }
-  }
-
-  // Load organizations
-  async function loadOrgs(showLoading = true) {
-    try {
-      if (showLoading) setLoadingOrgs(true);
-      const res = await fetch('/api/orgs', { cache: 'no-store' });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
-      setOrgs(json.orgs || []);
-    } catch (e: any) {
-      console.error('❌ Error loading organizations:', e.message);
-    } finally {
-      if (showLoading) setLoadingOrgs(false);
     }
   }
 

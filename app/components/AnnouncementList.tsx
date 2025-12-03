@@ -17,8 +17,6 @@ interface Announcement {
 
 interface AnnouncementListProps {
   classId?: string;
-  orgId?: string;
-  userId?: string;
   userRole?: string;
   teacherClassIds?: string[]; // For teachers: all assigned class IDs
   showAuthor?: boolean;
@@ -29,9 +27,7 @@ interface AnnouncementListProps {
 type Lang = 'is' | 'en';
 
 export default function AnnouncementList({ 
-  classId, 
-  orgId, 
-  userId,
+  classId,
   userRole,
   teacherClassIds,
   showAuthor = false, 
@@ -42,7 +38,6 @@ export default function AnnouncementList({
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(false); // Start with false to avoid initial skeleton
   const [error, setError] = useState('');
-  const [orgName, setOrgName] = useState<string | null>(null);
   const [hydratedFromCache, setHydratedFromCache] = useState(false);
 
   const { t, lang: currentLang } = useLanguage();
@@ -64,7 +59,6 @@ export default function AnnouncementList({
 
       const params = new URLSearchParams();
       if (classId) params.set('classId', classId);
-      if (userId) params.set('userId', userId);
       if (userRole) params.set('userRole', userRole);
       if (teacherClassIds && teacherClassIds.length > 0) {
         params.set('teacherClassIds', teacherClassIds.join(','));
@@ -142,11 +136,10 @@ export default function AnnouncementList({
       setAnnouncements(normalized);
 
       // Write-through cache for instant next render
-      // Include userId and userRole in cache key for proper filtering
+      // Include role and class-based filters in cache key for proper filtering
       try {
-        const effectiveOrgId = orgId || (user?.user_metadata?.org_id || user?.user_metadata?.organization_id);
-        const cacheKey = effectiveOrgId ? `announcements_${effectiveOrgId}_${classId || 'org'}_${userId || 'all'}_${userRole || 'all'}` : null;
-        if (typeof window !== 'undefined' && cacheKey) {
+        const cacheKey = `announcements_${classId || 'org'}_${userRole || 'all'}_${teacherClassIds?.join('-') || 'none'}`;
+        if (typeof window !== 'undefined') {
           localStorage.setItem(cacheKey, JSON.stringify(normalized));
         }
       } catch {
@@ -165,11 +158,9 @@ export default function AnnouncementList({
 
   useEffect(() => {
     // Instant render from cache (no skeleton) and then refresh in background
-    const effectiveOrgId = orgId || (user?.user_metadata?.org_id || user?.user_metadata?.organization_id);
-    // Use same cache key format as loadAnnouncements
-    const cacheKey = effectiveOrgId ? `announcements_${effectiveOrgId}_${classId || 'org'}_${userId || 'all'}_${userRole || 'all'}` : null;
+    const cacheKey = `announcements_${classId || 'org'}_${userRole || 'all'}_${teacherClassIds?.join('-') || 'none'}`;
 
-    if (typeof window !== 'undefined' && cacheKey) {
+    if (typeof window !== 'undefined') {
       try {
         const cached = localStorage.getItem(cacheKey);
         if (cached) {
@@ -190,7 +181,7 @@ export default function AnnouncementList({
       // Load fresh data in background without showing loading
       loadAnnouncements();
     }
-  }, [classId, orgId, userId, userRole, loadAnnouncements, user]);
+  }, [classId, userRole, teacherClassIds, loadAnnouncements, user]);
   
   // Listen for custom event to refresh announcements
   useEffect(() => {
@@ -205,23 +196,6 @@ export default function AnnouncementList({
       window.removeEventListener('announcements-refresh', handleRefresh);
     };
   }, [loadAnnouncements]);
-
-  useEffect(() => {
-    const effectiveOrgId = orgId || (user?.user_metadata?.org_id || user?.user_metadata?.organization_id);
-    if (!effectiveOrgId) return;
-    (async () => {
-      try {
-        const res = await fetch(`/api/orgs?ids=${encodeURIComponent(effectiveOrgId)}`, { cache: 'no-store', credentials: 'include' });
-        if (res.ok) {
-          const { orgs } = await res.json();
-          const found = Array.isArray(orgs) && orgs[0] ? orgs[0] : null;
-          setOrgName(found?.name || null);
-        }
-      } catch {
-        // ignore
-      }
-    })();
-  }, [orgId, user?.user_metadata?.org_id]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -288,7 +262,7 @@ export default function AnnouncementList({
               </span>
             ) : (
               <span className="bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300 px-2 py-1 rounded-full text-xs whitespace-nowrap flex-shrink-0">
-                {orgName || t.organization_wide}
+                {t.organization_wide}
               </span>
             )}
             <span className="text-sm text-gray-500 dark:text-slate-400 whitespace-nowrap flex-shrink-0">

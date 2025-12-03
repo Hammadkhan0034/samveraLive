@@ -79,37 +79,6 @@ export default function PrincipalDashboard() {
       }
   }, []);
 
-  // Load fresh data once when session is available - only once, no refresh
-  useEffect(() => {
-    // Only load if we have session, and only once
-    if (session?.user?.id) {
-      // Load fresh data in background without showing loading
-      Promise.allSettled([
-        loadOrgs(false),
-        loadClassesForKPI(false),
-        loadStaff(false),
-        loadStaffForKPI(false),
-        loadGuardiansForKPI(false),
-        loadStudentsForKPI(false),
-        loadMenusForKPI(false),
-        loadStoriesForKPI(),
-        loadAnnouncementsForKPI(),
-        loadMessagesForKPI(false),
-        loadPhotosForKPI(false)
-      ]).then((results) => {
-        // Log results for debugging
-        results.forEach((result, index) => {
-          const names = ['loadOrgs', 'loadClassesForKPI', 'loadStaff', 'loadStaffForKPI', 'loadGuardiansForKPI', 'loadStudentsForKPI', 'loadMenusForKPI', 'loadStoriesForKPI', 'loadAnnouncementsForKPI', 'loadPhotosForKPI'];
-          if (result.status === 'rejected') {
-            console.error(`❌ ${names[index]} failed:`, result.reason);
-          } else {
-            console.log(`✅ ${names[index]} completed`);
-          }
-        });
-      });
-    }
-  }, [session?.user?.id]);
-
   // Check on mount if stories were just updated (when returning from add-story page)
   useEffect(() => {
     if (typeof window !== 'undefined' && session?.user?.id) {
@@ -154,21 +123,6 @@ export default function PrincipalDashboard() {
       document.removeEventListener('visibilitychange', onVisibility);
     };
   }, [session?.user?.id]);
-
-  // Load organizations
-  async function loadOrgs(showLoading = true) {
-    try {
-      if (showLoading) setLoadingOrgs(true);
-      const res = await fetch('/api/orgs', { cache: 'no-store', credentials: 'include' });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
-      setOrgs(json.orgs || []);
-    } catch (e: any) {
-      console.error('❌ Error loading organizations:', e.message);
-    } finally {
-      if (showLoading) setLoadingOrgs(false);
-    }
-  }
 
   // Load menus count for KPI
   async function loadMenusForKPI(showLoading = true) {
@@ -347,7 +301,6 @@ export default function PrincipalDashboard() {
   const refreshAllData = async () => {
     if (session?.user?.id) {
       await Promise.all([
-        loadOrgs(),
         loadClassesForKPI(),
         loadStaff(),
         loadStaffForKPI(),
@@ -434,10 +387,6 @@ export default function PrincipalDashboard() {
     return 0;
   });
 
-  // Organizations states
-  const [orgs, setOrgs] = useState<Array<{ id: string; name: string; slug: string; timezone: string }>>([]);
-  const [loadingOrgs, setLoadingOrgs] = useState(false);
-  
   // Global loading state - always false to show dashboard immediately
   const [isInitialLoading] = useState(false);
 
@@ -727,7 +676,6 @@ export default function PrincipalDashboard() {
             <h3 className="text-ds-h3 font-medium text-slate-900 dark:text-slate-100">{t.announcements_list}</h3>
           </div>
           <AnnouncementList
-            userId={session?.user?.id}
             userRole={(userMetadata?.role || userMetadata?.activeRole || 'principal') as string}
             showAuthor={true}
             limit={5}
