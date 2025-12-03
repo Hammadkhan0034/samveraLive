@@ -1,12 +1,12 @@
 'use client';
 
 import React, { useEffect, useState, useMemo } from 'react';
-import { Edit, Trash2, Users, X } from 'lucide-react';
+import { Edit, Trash2, Users } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
-import { CreateStaffModal } from '@/app/components/staff/CreateStaffModal';
+import { CreateStaffModal, type StaffFormData } from '@/app/components/staff/CreateStaffModal';
 
 type Lang = 'is' | 'en';
 
@@ -27,8 +27,7 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDeleteStaffModalOpen, setIsDeleteStaffModalOpen] = useState(false);
   const [staffToDelete, setStaffToDelete] = useState<string | null>(null);
-  const [isEditStaffModalOpen, setIsEditStaffModalOpen] = useState(false);
-  const [editingStaff, setEditingStaff] = useState<any>(null);
+  const [editingStaff, setEditingStaff] = useState<StaffFormData | null>(null);
 
   const [staff, setStaff] = useState<Array<{ id: string; email: string; first_name: string; last_name: string | null; is_active: boolean; created_at: string }>>([]);
   const [loadingStaff, setLoadingStaff] = useState(false);
@@ -83,7 +82,9 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
   }
 
   function openEditStaffModal(staffMember: any) {
-    setEditingStaff({
+    // Transform staff data to StaffFormData format
+    // Note: union_name is always a string (null or empty string if no union)
+    const staffFormData: StaffFormData = {
       id: staffMember.id,
       first_name: staffMember.first_name || '',
       last_name: staffMember.last_name || '',
@@ -92,43 +93,16 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
       address: (staffMember as any).address || '',
       ssn: (staffMember as any).ssn || '',
       education_level: (staffMember as any).education_level || '',
-      union_membership: (staffMember as any).union_name === 'Yes',
+      union_membership: (staffMember as any).union_name || '',
+      class_id: (staffMember as any).class_id || '',
       role: (staffMember as any).role || 'teacher',
       is_active: staffMember.is_active ?? true,
-    });
-    setIsEditStaffModalOpen(true);
+    };
+    setEditingStaff(staffFormData);
+    setIsCreateModalOpen(true);
     setStaffError(null);
   }
 
-  async function handleUpdateStaff(e: React.FormEvent) {
-    e.preventDefault();
-    if (!editingStaff?.id) return;
-    try {
-      setLoadingStaff(true);
-      setStaffError(null);
-      const response = await fetch('/api/staff-management', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(editingStaff),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        // Extract error message from response
-        const errorMsg = data.details || data.error || 'Failed to update staff member';
-        throw new Error(errorMsg);
-      }
-      setIsEditStaffModalOpen(false);
-      setEditingStaff(null);
-      setStaffError(null);
-      await loadStaff();
-    } catch (error: any) {
-      const errorMsg = error.message || 'Failed to update staff member';
-      setStaffError(errorMsg);
-      console.error('❌ Error updating staff:', errorMsg);
-    } finally {
-      setLoadingStaff(false);
-    }
-  }
 
   // Pagination logic
   const totalPages = Math.max(1, Math.ceil(staff.length / itemsPerPage));
@@ -155,7 +129,10 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
           </div>
         <div className="flex flex-wrap gap-ds-sm">
           <button
-            onClick={() => setIsCreateModalOpen(true)}
+            onClick={() => {
+              setEditingStaff(null);
+              setIsCreateModalOpen(true);
+            }}
             className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-ds-sm py-2 text-ds-small text-white hover:bg-mint-600 transition-colors"
           >
             <Users className="h-4 w-4" /> {t.create_staff}
@@ -277,86 +254,16 @@ export default function StaffManagement({ lang: propLang }: StaffManagementProps
         )}
       </div>
 
-      {/* Create Staff Modal */}
+      {/* Create/Edit Staff Modal */}
       <CreateStaffModal
         isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        onClose={() => {
+          setIsCreateModalOpen(false);
+          setEditingStaff(null);
+        }}
         onSuccess={loadStaff}
+        initialData={editingStaff || undefined}
       />
-
-      {/* Edit Staff Modal */}
-      {isEditStaffModalOpen && editingStaff && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-xl rounded-ds-lg bg-white p-ds-md shadow-ds-lg dark:bg-slate-800 max-h-[90vh] overflow-y-auto">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-ds-h3 font-semibold text-ds-text-primary dark:text-slate-100">
-                {t.edit_staff || 'Edit Staff Member'}
-              </h3>
-              <button onClick={() => { setIsEditStaffModalOpen(false); setEditingStaff(null); }} className="rounded-ds-md p-1 hover:bg-mint-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-colors">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            {staffError && (
-              <div className="mb-4 rounded-ds-md bg-red-50 border border-red-200 px-4 py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">{staffError}</div>
-            )}
-            <form onSubmit={handleUpdateStaff} className="space-y-1">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.first_name || 'First Name'}</label>
-                  <input type="text" value={editingStaff.first_name} onChange={(e) => setEditingStaff({ ...editingStaff, first_name: e.target.value })} className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" required />
-                </div>
-                <div>
-                  <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.last_name || 'Last Name'}</label>
-                  <input type="text" value={editingStaff.last_name} onChange={(e) => setEditingStaff({ ...editingStaff, last_name: e.target.value })} className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.email}</label>
-                <input type="email" value={editingStaff.email} onChange={(e) => setEditingStaff({ ...editingStaff, email: e.target.value })} className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" required />
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_phone || 'Phone'}</label>
-                  <input type="tel" value={editingStaff.phone} onChange={(e) => setEditingStaff({ ...editingStaff, phone: e.target.value })} className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
-                </div>
-                <div>
-                  <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_ssn || 'SSN'}</label>
-                  <input type="text" value={editingStaff.ssn} onChange={(e) => setEditingStaff({ ...editingStaff, ssn: e.target.value })} className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
-                </div>
-                <div>
-                  <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_education_level || 'Education Level'}</label>
-                  <input type="text" value={editingStaff.education_level} onChange={(e) => setEditingStaff({ ...editingStaff, education_level: e.target.value })} placeholder={t.staff_education_level_placeholder || 'e.g. B.Ed, M.Ed'} className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
-                </div>
-              </div>
-              <div>
-                <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_address || 'Address'}</label>
-                <input type="text" value={editingStaff.address} onChange={(e) => setEditingStaff({ ...editingStaff, address: e.target.value })} placeholder={t.staff_address_placeholder || 'Enter address'} className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400" />
-              </div>
-              {/* Role selection */}
-              <div>
-                <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_role || 'Role'}</label>
-                <select
-                  value={editingStaff.role || 'teacher'}
-                  onChange={(e) => setEditingStaff({ ...editingStaff, role: e.target.value })}
-                  className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
-                >
-                  <option value="teacher">{t.role_teacher || 'Teacher'}</option>
-                  <option value="assistant">{t.role_assistant || 'Assistant'}</option>
-                  <option value="specialist">{t.role_specialist || 'Specialist'}</option>
-                </select>
-              </div>
-              <div className="flex items-center gap-2">
-                <input type="checkbox" id="union_membership" checked={!!editingStaff.union_membership} onChange={(e) => setEditingStaff({ ...editingStaff, union_membership: e.target.checked })} className="h-4 w-4 rounded border-slate-300 text-mint-500 focus:ring-mint-500 dark:border-slate-600" />
-                <label htmlFor="union_membership" className="text-ds-small text-slate-700 dark:text-slate-300">{t.staff_union_membership || 'Union Membership'}</label>
-              </div>
-              <div className="flex gap-3 pt-4">
-                <button type="button" onClick={() => { setIsEditStaffModalOpen(false); setEditingStaff(null); }} className="flex-1 rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small text-slate-700 hover:bg-mint-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 transition-colors">{t.cancel || 'Cancel'}</button>
-                <button type="submit" disabled={loadingStaff} className="flex-1 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small text-white hover:bg-mint-600 disabled:opacity-50 transition-colors">{loadingStaff ? (t.updating || 'Updating...') : (t.update || 'Update')}</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Delete Staff Confirmation Modal */}
       <DeleteConfirmationModal

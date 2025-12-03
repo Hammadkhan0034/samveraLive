@@ -5,18 +5,36 @@ import { X } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 
+export interface StaffFormData {
+  id?: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  address: string;
+  ssn: string;
+  education_level: string;
+  union_membership: string;
+  class_id: string;
+  role: string;
+  is_active?: boolean;
+}
+
 interface CreateStaffModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  initialData?: StaffFormData;
 }
 
-export function CreateStaffModal({ isOpen, onClose, onSuccess }: CreateStaffModalProps) {
-  const { session } = useAuth?.() || ({} as any);
+export function CreateStaffModal({ isOpen, onClose, onSuccess, initialData }: CreateStaffModalProps) {
   const { t } = useLanguage();
 
+  const isEditMode = !!initialData?.id;
+
   // Form state
-  const [newStaff, setNewStaff] = useState({
+  const [newStaff, setNewStaff] = useState<StaffFormData>({
+    id: undefined,
     first_name: '',
     last_name: '',
     email: '',
@@ -26,18 +44,38 @@ export function CreateStaffModal({ isOpen, onClose, onSuccess }: CreateStaffModa
     education_level: '',
     union_membership: '',
     class_id: '',
+    role: 'teacher',
+    is_active: true,
   });
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [classesForDropdown, setClassesForDropdown] = useState<Array<{ id: string; name: string; code: string | null }>>([]);
 
-  // Load classes when component mounts and session is available
   useEffect(() => {
-    if (isOpen && session?.user?.id) {
       loadClassesForDropdown();
+    
+  }, [isOpen]);
+
+  // Initialize form from initialData when provided (edit mode)
+  useEffect(() => {
+    if (isOpen && initialData) {
+      setNewStaff({
+        id: initialData.id,
+        first_name: initialData.first_name || '',
+        last_name: initialData.last_name || '',
+        email: initialData.email || '',
+        phone: initialData.phone || '',
+        address: initialData.address || '',
+        ssn: initialData.ssn || '',
+        education_level: initialData.education_level || '',
+        union_membership: initialData.union_membership || '',
+        class_id: initialData.class_id || '',
+        role: initialData.role || 'teacher',
+        is_active: initialData.is_active ?? true,
+      });
     }
-  }, [isOpen, session?.user?.id]);
+  }, [isOpen, initialData]);
 
   async function loadClassesForDropdown() {
     try {
@@ -51,7 +89,7 @@ export function CreateStaffModal({ isOpen, onClose, onSuccess }: CreateStaffModa
     }
   }
 
-  async function handleAddStaff(e: React.FormEvent) {
+  async function handleSubmitStaff(e: React.FormEvent) {
     e.preventDefault();
     if (!newStaff.first_name.trim() || !newStaff.email.trim()) return;
     // Validate phone format if provided (E.164-like, 7-15 digits, optional +)
@@ -59,49 +97,68 @@ export function CreateStaffModal({ isOpen, onClose, onSuccess }: CreateStaffModa
       setPhoneError(t.invalid_phone);
       return;
     }
-    if (!session?.user?.id) {
-      alert('User session not found. Please log in again.');
-      return;
-    }
+
     try {
       setError(null);
       setLoading(true);
+      
+      const method = isEditMode ? 'PUT' : 'POST';
+      const requestBody: any = {
+        first_name: newStaff.first_name.trim(),
+        last_name: newStaff.last_name.trim() || null,
+        email: newStaff.email.trim(),
+        phone: newStaff.phone?.trim() || null,
+        class_id: newStaff.class_id?.trim() ? newStaff.class_id : null,
+        address: newStaff.address?.trim() || null,
+        ssn: newStaff.ssn?.trim() || null,
+        education_level: newStaff.education_level?.trim() || null,
+        union_membership: newStaff.union_membership?.trim() || null,
+        role: newStaff.role || 'teacher',
+      };
+
+      // Include id for edit mode
+      if (isEditMode && newStaff.id) {
+        requestBody.id = newStaff.id;
+      }
+
       const response = await fetch('/api/staff-management', {
-        method: 'POST',
+        method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          first_name: newStaff.first_name.trim(),
-          last_name: newStaff.last_name.trim() || null,
-          email: newStaff.email,
-          phone: newStaff.phone || null,
-          class_id: newStaff.class_id?.trim() ? newStaff.class_id : null,
-          address: newStaff.address || null,
-          ssn: newStaff.ssn || null,
-          education_level: newStaff.education_level || null,
-          union_membership: newStaff.union_membership.trim() || null,
-          role: 'teacher'
-        }),
+        body: JSON.stringify(requestBody),
       });
       const data = await response.json();
       if (!response.ok) {
         // Extract error message from response
-        const errorMsg = data.details || data.error || 'Failed to create staff';
+        const errorMsg = data.details || data.error || (isEditMode ? 'Failed to update staff' : 'Failed to create staff');
         throw new Error(errorMsg);
       }
       // Reset form
-      setNewStaff({ first_name: '', last_name: '', email: '', address: '', ssn: '', phone: '', education_level: '', union_membership: '', class_id: '' });
+      setNewStaff({ 
+        id: undefined,
+        first_name: '', 
+        last_name: '', 
+        email: '', 
+        address: '', 
+        ssn: '', 
+        phone: '', 
+        education_level: '', 
+        union_membership: '', 
+        class_id: '',
+        role: 'teacher',
+        is_active: true,
+      });
       setError(null);
       setPhoneError(null);
-      alert(`✅ ${t.staff_created_success}`);
+      alert(`✅ ${isEditMode ? (t.staff_updated_success || 'Staff member updated successfully') : t.staff_created_success}`);
       onClose();
       // Call onSuccess callback if provided
       if (onSuccess) {
         onSuccess();
       }
     } catch (error: any) {
-      const errorMsg = error.message || 'Failed to create staff';
+      const errorMsg = error.message || (isEditMode ? 'Failed to update staff' : 'Failed to create staff');
       setError(errorMsg);
-      console.error('❌ Staff creation error:', errorMsg);
+      console.error(`❌ Staff ${isEditMode ? 'update' : 'creation'} error:`, errorMsg);
     } finally {
       setLoading(false);
     }
@@ -110,7 +167,20 @@ export function CreateStaffModal({ isOpen, onClose, onSuccess }: CreateStaffModa
   // Reset form when modal closes
   useEffect(() => {
     if (!isOpen) {
-      setNewStaff({ first_name: '', last_name: '', email: '', address: '', ssn: '', phone: '', education_level: '', union_membership: '', class_id: '' });
+      setNewStaff({ 
+        id: undefined,
+        first_name: '', 
+        last_name: '', 
+        email: '', 
+        address: '', 
+        ssn: '', 
+        phone: '', 
+        education_level: '', 
+        union_membership: '', 
+        class_id: '',
+        role: 'teacher',
+        is_active: true,
+      });
       setError(null);
       setPhoneError(null);
     }
@@ -123,7 +193,7 @@ export function CreateStaffModal({ isOpen, onClose, onSuccess }: CreateStaffModa
       <div className="w-full max-w-xl rounded-ds-lg bg-white p-ds-md shadow-ds-lg dark:bg-slate-800">
         <div className="mb-2 flex items-center justify-between">
           <h3 className="text-ds-h3 font-semibold text-ds-text-primary dark:text-slate-100">
-            {t.create_staff}
+            {isEditMode ? (t.edit_staff || 'Edit Staff Member') : t.create_staff}
           </h3>
           <button onClick={onClose} className="rounded-ds-md p-1 hover:bg-mint-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-colors">
             <X className="h-5 w-5" />
@@ -134,7 +204,7 @@ export function CreateStaffModal({ isOpen, onClose, onSuccess }: CreateStaffModa
             {error}
           </div>
         )}
-        <form onSubmit={handleAddStaff} className="space-y-3">
+        <form onSubmit={handleSubmitStaff} className="space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.first_name || 'First name'}</label>
@@ -167,6 +237,7 @@ export function CreateStaffModal({ isOpen, onClose, onSuccess }: CreateStaffModa
               placeholder={t.staff_email_placeholder}
               className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
               required
+              disabled={isEditMode}
             />
           </div>
           <div>
@@ -236,6 +307,18 @@ export function CreateStaffModal({ isOpen, onClose, onSuccess }: CreateStaffModa
             />
           </div>
           <div>
+            <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.staff_role || 'Role'}</label>
+            <select
+              value={newStaff.role || 'teacher'}
+              onChange={(e) => setNewStaff((prev) => ({ ...prev, role: e.target.value }))}
+              className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+            >
+              <option value="teacher">{t.role_teacher || 'Teacher'}</option>
+              <option value="assistant">{t.role_assistant || 'Assistant'}</option>
+              <option value="specialist">{t.role_specialist || 'Specialist'}</option>
+            </select>
+          </div>
+          <div>
             <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">{t.assign_to_class}</label>
             <select
               value={newStaff.class_id}
@@ -271,10 +354,10 @@ export function CreateStaffModal({ isOpen, onClose, onSuccess }: CreateStaffModa
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  {t.creating}
+                  {isEditMode ? (t.updating || 'Updating...') : t.creating}
                 </>
               ) : (
-                t.create_staff_btn
+                isEditMode ? (t.update || 'Update') : t.create_staff_btn
               )}
             </button>
           </div>
