@@ -1,24 +1,10 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { X } from 'lucide-react';
-import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
-
-export interface StaffFormData {
-  id?: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone: string;
-  address: string;
-  ssn: string;
-  education_level: string;
-  union_membership: string;
-  class_id: string;
-  role: string;
-  is_active?: boolean;
-}
+import type { StaffFormData } from '@/lib/types/staff';
+import { staffFormSchema } from '@/lib/validation/staff';
 
 interface CreateStaffModalProps {
   isOpen: boolean;
@@ -27,35 +13,50 @@ interface CreateStaffModalProps {
   initialData?: StaffFormData;
 }
 
+const DEFAULT_FORM_DATA: StaffFormData = {
+  id: undefined,
+  first_name: '',
+  last_name: '',
+  email: '',
+  address: '',
+  ssn: '',
+  phone: '',
+  education_level: '',
+  union_membership: '',
+  class_id: '',
+  role: 'teacher',
+  is_active: true,
+};
+
 export function CreateStaffModal({ isOpen, onClose, onSuccess, initialData }: CreateStaffModalProps) {
   const { t } = useLanguage();
 
-  const isEditMode = !!initialData?.id;
+  const isEditMode = useMemo(() => !!initialData?.id, [initialData?.id]);
 
   // Form state
-  const [newStaff, setNewStaff] = useState<StaffFormData>({
-    id: undefined,
-    first_name: '',
-    last_name: '',
-    email: '',
-    address: '',
-    ssn: '',
-    phone: '',
-    education_level: '',
-    union_membership: '',
-    class_id: '',
-    role: 'teacher',
-    is_active: true,
-  });
+  const [newStaff, setNewStaff] = useState<StaffFormData>(DEFAULT_FORM_DATA);
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [classesForDropdown, setClassesForDropdown] = useState<Array<{ id: string; name: string; code: string | null }>>([]);
 
+  const loadClassesForDropdown = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/classes?t=${Date.now()}`, { cache: 'no-store' });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
+      const classesList = json.classes || [];
+      setClassesForDropdown(classesList.map((cls: any) => ({ id: cls.id, name: cls.name, code: cls.code })));
+    } catch (e: any) {
+      console.error('❌ Error loading classes for dropdown:', e.message);
+    }
+  }, []);
+
   useEffect(() => {
+    if (isOpen) {
       loadClassesForDropdown();
-    
-  }, [isOpen]);
+    }
+  }, [isOpen, loadClassesForDropdown]);
 
   // Initialize form from initialData when provided (edit mode)
   useEffect(() => {
@@ -74,25 +75,40 @@ export function CreateStaffModal({ isOpen, onClose, onSuccess, initialData }: Cr
         role: initialData.role || 'teacher',
         is_active: initialData.is_active ?? true,
       });
+    } else if (isOpen && !initialData) {
+      // Reset to default when opening in create mode
+      setNewStaff(DEFAULT_FORM_DATA);
     }
   }, [isOpen, initialData]);
 
-  async function loadClassesForDropdown() {
-    try {
-      const res = await fetch(`/api/classes?t=${Date.now()}`, { cache: 'no-store' });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
-      const classesList = json.classes || [];
-      setClassesForDropdown(classesList.map((cls: any) => ({ id: cls.id, name: cls.name, code: cls.code })));
-    } catch (e: any) {
-      console.error('❌ Error loading classes for dropdown:', e.message);
-    }
-  }
+  const resetForm = useCallback(() => {
+    setNewStaff(DEFAULT_FORM_DATA);
+    setError(null);
+    setPhoneError(null);
+  }, []);
 
-  async function handleSubmitStaff(e: React.FormEvent) {
+  const handleSubmitStaff = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newStaff.first_name.trim() || !newStaff.email.trim()) return;
-    // Validate phone format if provided (E.164-like, 7-15 digits, optional +)
+    
+    // Validate form with Zod schema
+    const validationResult = staffFormSchema.safeParse(newStaff);
+    if (!validationResult.success) {
+      const firstError = validationResult.error.errors[0];
+      if (firstError.path.includes('phone')) {
+        setPhoneError(t.invalid_phone);
+      } else {
+        setError(firstError.message);
+      }
+      return;
+    }
+
+    // Additional validation for required fields
+    if (!newStaff.first_name.trim() || !newStaff.email.trim()) {
+      setError('First name and email are required');
+      return;
+    }
+
+    // Validate phone format if provided
     if (newStaff.phone && !/^\+?[1-9]\d{6,14}$/.test(newStaff.phone)) {
       setPhoneError(t.invalid_phone);
       return;
@@ -100,6 +116,7 @@ export function CreateStaffModal({ isOpen, onClose, onSuccess, initialData }: Cr
 
     try {
       setError(null);
+      setPhoneError(null);
       setLoading(true);
       
       const method = isEditMode ? 'PUT' : 'POST';
@@ -132,23 +149,8 @@ export function CreateStaffModal({ isOpen, onClose, onSuccess, initialData }: Cr
         const errorMsg = data.details || data.error || (isEditMode ? 'Failed to update staff' : 'Failed to create staff');
         throw new Error(errorMsg);
       }
-      // Reset form
-      setNewStaff({ 
-        id: undefined,
-        first_name: '', 
-        last_name: '', 
-        email: '', 
-        address: '', 
-        ssn: '', 
-        phone: '', 
-        education_level: '', 
-        union_membership: '', 
-        class_id: '',
-        role: 'teacher',
-        is_active: true,
-      });
-      setError(null);
-      setPhoneError(null);
+      
+      resetForm();
       alert(`✅ ${isEditMode ? t.staff_updated_success : t.staff_created_success}`);
       onClose();
       // Call onSuccess callback if provided
@@ -162,29 +164,14 @@ export function CreateStaffModal({ isOpen, onClose, onSuccess, initialData }: Cr
     } finally {
       setLoading(false);
     }
-  }
+  }, [newStaff, isEditMode, t, onClose, onSuccess, resetForm]);
 
   // Reset form when modal closes
   useEffect(() => {
     if (!isOpen) {
-      setNewStaff({ 
-        id: undefined,
-        first_name: '', 
-        last_name: '', 
-        email: '', 
-        address: '', 
-        ssn: '', 
-        phone: '', 
-        education_level: '', 
-        union_membership: '', 
-        class_id: '',
-        role: 'teacher',
-        is_active: true,
-      });
-      setError(null);
-      setPhoneError(null);
+      resetForm();
     }
-  }, [isOpen]);
+  }, [isOpen, resetForm]);
 
   if (!isOpen) return null;
 

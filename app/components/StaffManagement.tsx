@@ -6,7 +6,8 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
-import { CreateStaffModal, type StaffFormData } from '@/app/components/staff/CreateStaffModal';
+import { CreateStaffModal } from '@/app/components/staff/CreateStaffModal';
+import type { StaffFormData } from '@/lib/types/staff';
 
 type Lang = 'is' | 'en';
 

@@ -1,68 +1,15 @@
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { getCurrentUserOrgId, MissingOrgIdError } from '@/lib/server-helpers';
 import { getUserDataCacheHeaders } from '@/lib/cacheConfig';
+import { validateBody, validateQuery } from '@/lib/validation';
 import {
-  validateBody,
-  validateQuery,
-  firstNameSchema,
-  lastNameSchema,
-  emailSchema,
-  roleSchema,
-  phoneSchema,
-  addressSchema,
-  ssnSchema,
-  classIdSchema,
-  userIdSchema,
-} from '@/lib/validation';
+  createStaffSchema,
+  updateStaffSchema,
+  deleteStaffQuerySchema,
+} from '@/lib/validation/staff';
 import type { AuthUser, UserMetadata, SamveraRole } from '@/lib/types/auth';
-
-// Validation schemas
-const postStaffBodySchema = z.object({
-  first_name: firstNameSchema,
-  last_name: lastNameSchema,
-  email: emailSchema,
-  role: roleSchema,
-  phone: phoneSchema,
-  class_id: classIdSchema.optional(),
-  address: addressSchema,
-  ssn: ssnSchema,
-  education_level: z.string().max(100).nullable().optional(),
-  union_membership: z
-    .union([
-      z.boolean().transform((val) => (val ? 'Yes' : null)),
-      z.string().max(100),
-      z.null(),
-    ])
-    .optional(),
-});
-
-const putStaffBodySchema = z.object({
-  id: userIdSchema,
-  first_name: firstNameSchema.optional(),
-  last_name: lastNameSchema,
-  email: emailSchema.optional(),
-  role: roleSchema.optional(),
-  phone: phoneSchema,
-  address: addressSchema,
-  ssn: ssnSchema,
-  is_active: z.boolean().optional(),
-  class_id: classIdSchema.optional(),
-  education_level: z.string().max(100).nullable().optional(),
-  union_membership: z
-    .union([
-      z.boolean().transform((val) => (val ? 'Yes' : null)),
-      z.string().max(100),
-      z.null(),
-    ])
-    .optional(),
-});
-
-const deleteStaffQuerySchema = z.object({
-  id: userIdSchema,
-});
 
 export async function handleGetStaff(
   request: Request,
@@ -101,6 +48,8 @@ export async function handleGetStaff(
   user_id,
   org_id,
   created_at,
+  education_level,
+  union_name,
   users!inner(id,email,first_name,last_name,phone,address,ssn,org_id,is_active,created_at,role,deleted_at)
 `,
       )
@@ -122,6 +71,8 @@ export async function handleGetStaff(
           created_at: s.users.created_at,
           role: s.users.role || 'teacher',
           deleted_at: s.users.deleted_at || null,
+          education_level: s.education_level || null,
+          union_name: s.union_name || null,
         };
 
         // Only include sensitive fields for principals and admins
@@ -405,7 +356,7 @@ export async function handlePostStaff(
     const created_by = user.id;
 
     const body = await request.json();
-    const bodyValidation = validateBody(postStaffBodySchema, body);
+    const bodyValidation = validateBody(createStaffSchema, body);
     if (!bodyValidation.success) {
       return bodyValidation.error;
     }
@@ -651,7 +602,7 @@ export async function handlePutStaff(
 ): Promise<NextResponse> {
   try {
     const body = await request.json();
-    const bodyValidation = validateBody(putStaffBodySchema, body);
+    const bodyValidation = validateBody(updateStaffSchema, body);
     if (!bodyValidation.success) {
       return bodyValidation.error;
     }
