@@ -4,7 +4,6 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { Menu, Plus, Filter, ChevronDown } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { StudentForm, type StudentFormData } from '@/app/components/shared/StudentForm';
 import { StudentTable } from '@/app/components/shared/StudentTable';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
@@ -24,34 +23,10 @@ function StudentsPageContent() {
     return [];
   });
   const [loadingStudents, setLoadingStudents] = useState(false);
-  const [submittingStudent, setSubmittingStudent] = useState(false);
   const [deletingStudent, setDeletingStudent] = useState(false);
   const [studentError, setStudentError] = useState<string | null>(null);
-  const [studentForm, setStudentForm] = useState<StudentFormData>({ 
-    first_name: '', 
-    last_name: '', 
-    dob: '', 
-    gender: 'unknown', 
-    class_id: '', 
-    phone: '',
-    address: '',
-    registration_time: '',
-    start_date: '',
-    barngildi: 0,
-    student_language: 'english',
-    social_security_number: '',
-    medical_notes: '', 
-    allergies: '', 
-    emergency_contact: '', 
-    guardian_ids: []
-  });
-  const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
   const [isDeleteStudentModalOpen, setIsDeleteStudentModalOpen] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState<string | null>(null);
-
-  // Guardian states (needed for student form)
-  const [guardians, setGuardians] = useState<Array<{ id: string; email: string | null; phone: string | null; full_name: string; org_id: string; is_active: boolean; created_at: string; metadata?: any }>>([]);
-  const [loadingGuardians, setLoadingGuardians] = useState(false);
 
   // Classes states (needed for student form)
   const [classes, setClasses] = useState<Array<{ id: string; name: string; code: string | null; assigned_teachers: any[] }>>([]);
@@ -108,29 +83,6 @@ function StudentsPageContent() {
     }
   }, []);
 
-  // Load guardians
-  const loadGuardians = useCallback(async (showLoading = true) => {
-    try {
-      if (showLoading) {
-        setLoadingGuardians(true);
-      }
-
-      const res = await fetch(`/api/guardians?t=${Date.now()}`, { cache: 'no-store' });
-      const json = await res.json();
-
-      if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
-
-      const guardiansList = json.guardians || [];
-      setGuardians(guardiansList);
-    } catch (e: any) {
-      console.error('❌ Error loading guardians:', e.message);
-    } finally {
-      if (showLoading) {
-        setLoadingGuardians(false);
-      }
-    }
-  }, []);
-
   // Load classes
   const loadClasses = useCallback(async (showLoading = false) => {
     try {
@@ -151,77 +103,16 @@ function StudentsPageContent() {
   // Load data on mount
   useEffect(() => {
     loadStudents();
-    loadGuardians();
     loadClasses();
-  }, [loadStudents, loadGuardians, loadClasses]);
-
-  // Student form submission
-  const submitStudent = useCallback(async (data: StudentFormData) => {
-    try {
-      setStudentError(null);
-      setSubmittingStudent(true);
-
-      const res = await fetch('/api/students', {
-        method: data.id ? 'PUT' : 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      let json: any = {};
-      try {
-        const text = await res.text();
-        if (text) {
-          json = JSON.parse(text);
-        }
-      } catch (parseError) {
-        console.error('❌ JSON parsing error:', parseError);
-        throw new Error(`Server error: ${res.status} - ${res.statusText}`);
-      }
-      
-      if (!res.ok) {
-        const errorMsg = json?.error || `Request failed with status ${res.status}`;
-        console.error('❌ API Error:', errorMsg);
-        throw new Error(errorMsg);
-      }
-
-      // Close modal and reset form
-      setIsStudentModalOpen(false);
-      setStudentForm({ 
-        first_name: '', 
-        last_name: '', 
-        dob: '', 
-        gender: 'unknown', 
-        class_id: '', 
-        phone: '',
-        address: '',
-        registration_time: '',
-        start_date: '',
-        barngildi: 0,
-        student_language: 'english',
-        social_security_number: '',
-        medical_notes: '', 
-        allergies: '', 
-        emergency_contact: '', 
-        guardian_ids: []
-      });
-
-      // Refresh students list
-      await loadStudents(false);
-    } catch (e: any) {
-      console.error('❌ Error submitting student:', e.message);
-      setStudentError(e.message);
-    } finally {
-      setSubmittingStudent(false);
-    }
-  }, [loadStudents]);
+  }, [loadStudents, loadClasses]);
 
   // Student create now navigates to dedicated page
   const openCreateStudentModal = useCallback(() => {
-    router.push('/dashboard/add-student');
+    router.push('/dashboard/principal/students/add');
   }, [router]);
 
   const openEditStudentModal = useCallback((student: any) => {
-    router.push(`/dashboard/add-student?id=${encodeURIComponent(student.id)}`);
+    router.push(`/dashboard/principal/students/add?id=${encodeURIComponent(student.id)}`);
   }, [router]);
 
   const openDeleteStudentModal = useCallback((id: string) => {
@@ -431,64 +322,6 @@ function StudentsPageContent() {
           </button>
         </div>
       </div>
-
-      {/* Student Form Modal */}
-      <StudentForm
-        isOpen={isStudentModalOpen}
-        onClose={() => setIsStudentModalOpen(false)}
-        onSubmit={submitStudent}
-        initialData={studentForm}
-        loading={submittingStudent}
-        error={studentError}
-        guardians={guardians}
-        classes={classes}
-        translations={{
-          create_student: t.create_student,
-          edit_student: t.edit_student,
-          student_first_name: t.first_name,
-          student_last_name: t.last_name,
-          student_dob: t.dob,
-          student_gender: t.gender,
-          student_class: t.class,
-          student_status: 'Status',
-          status_pending: 'Pending',
-          status_approved: 'Approved',
-          status_rejected: 'Rejected',
-          student_guardians: t.guardians,
-          student_medical_notes: t.medical_notes,
-          student_allergies: t.allergies,
-          student_emergency_contact: t.emergency_contact,
-          student_phone: t.student_phone || 'Phone',
-          student_registration_time: t.student_registration_time || 'Registration Time',
-          student_registration_time_placeholder: t.student_registration_time_placeholder || 'Enter registration time',
-          student_address: t.student_address || 'Address',
-          student_address_placeholder: t.student_address_placeholder || 'Enter address',
-          student_start_date: t.student_start_date || 'Start Date',
-          student_child_value: t.student_child_value || 'Child Value',
-          student_child_value_placeholder: t.student_child_value_placeholder || 'Enter child value',
-          student_language: t.student_language || 'Language',
-          student_social_security_number: t.student_social_security_number || 'Social Security Number',
-          student_social_security_number_placeholder: t.student_social_security_number_placeholder || 'Enter social security number',
-          student_phone_placeholder: t.student_phone_placeholder || 'Enter phone number',
-          student_first_name_placeholder: t.student_first_name_placeholder,
-          student_last_name_placeholder: t.student_last_name_placeholder,
-          student_medical_notes_placeholder: t.student_medical_notes_placeholder,
-          student_allergies_placeholder: t.student_allergies_placeholder,
-          student_emergency_contact_placeholder: t.student_emergency_contact_placeholder,
-          gender_unknown: t.gender_unknown,
-          gender_male: t.gender_male,
-          gender_female: t.gender_female,
-          gender_other: t.gender_other,
-          no_class_assigned: t.no_class_assigned,
-          no_guardians_available: t.no_guardians_available,
-          student_age_requirement: t.student_age_requirement,
-          create: t.create,
-          update: t.update,
-          cancel: t.cancel,
-          creating: t.creating,
-          updating: t.updating
-        }}
-      />
 
       {/* Delete Student Confirmation Modal */}
       <DeleteConfirmationModal
