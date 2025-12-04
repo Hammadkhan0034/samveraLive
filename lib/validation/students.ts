@@ -8,7 +8,6 @@ import {
   genderSchema,
   studentLanguageSchema,
   barngildiSchema,
-  phoneSchema,
   addressSchema,
   ssnSchema,
   medicalNotesSchema,
