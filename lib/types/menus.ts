@@ -16,7 +16,6 @@ export type UpsertMenuPayload = {
   snack?: string | null;
   notes?: string | null;
   is_public?: boolean;
-  created_by?: string;
 };
 
 /**

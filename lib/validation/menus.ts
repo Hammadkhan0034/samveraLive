@@ -4,7 +4,6 @@ import {
   classIdSchema,
   dateSchema,
   notesSchema,
-  userIdSchema,
   uuidSchema,
 } from '@/lib/validation';
 
@@ -21,7 +20,6 @@ export const postMenuBodySchema = z.object({
   snack: z.string().max(1000).nullable().optional(),
   notes: notesSchema,
   is_public: z.boolean().default(true),
-  created_by: userIdSchema.optional(),
 });
 
 export const putMenuBodySchema = z.object({

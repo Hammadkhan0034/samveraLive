@@ -245,7 +245,7 @@ async function upsertMenu(
     });
   }
 
-  const { class_id, day, breakfast, lunch, snack, notes, is_public, created_by } =
+  const { class_id, day, breakfast, lunch, snack, notes, is_public } =
     payload;
 
   const finalClassId =
@@ -358,7 +358,7 @@ async function upsertMenu(
           snack: snack || null,
           notes: notes || null,
           is_public: typeof is_public !== 'undefined' ? is_public : true,
-          created_by: created_by || userId,
+          created_by: userId,
           deleted_at: null,
         })
         .select(

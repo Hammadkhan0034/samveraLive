@@ -39,6 +39,7 @@ export default function TeacherLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setMounted(true); }, []);
 
   // Calculate kids checked in from actual students (needed for tiles badge)
