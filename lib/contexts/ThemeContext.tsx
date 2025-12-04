@@ -28,8 +28,8 @@ interface ThemeProviderProps {
   children: ReactNode;
 }
 
-// Default theme: 'dark' (not 'system')
-const DEFAULT_THEME: ThemeMode = 'dark';
+// Default theme: 'light' (not 'system')
+const DEFAULT_THEME: ThemeMode = 'light';
 
 export const ThemeProvider = ({ children }: ThemeProviderProps) => {
   const { user } = useAuth();
@@ -37,14 +37,14 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
   const [isLoading, setIsLoading] = useState(true);
 
   // Always start with default to prevent hydration mismatch
-  // Server and client both start with 'dark'
+  // Server and client both start with 'light'
   const [theme, setThemeState] = useState<ThemeMode>(DEFAULT_THEME);
-  const [isDark, setIsDarkState] = useState(true); // Default to dark
+  const [isDark, setIsDarkState] = useState(false); // Default to light
 
   // Compute isDark based on theme mode
   const getIsDark = useCallback((currentTheme: ThemeMode): boolean => {
     if (currentTheme === 'system') {
-      if (typeof window === 'undefined') return true; // Default to dark on server
+      if (typeof window === 'undefined') return false; // Default to light on server
       return window.matchMedia("(prefers-color-scheme: dark)").matches;
     }
     return currentTheme === 'dark';
@@ -85,9 +85,9 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
         setThemeState(saved);
         setIsDarkState(getIsDark(saved));
       } else {
-        // No localStorage, use default and save it
+        // No localStorage, use default (light) and save it
         setThemeState(DEFAULT_THEME);
-        setIsDarkState(true);
+        setIsDarkState(false);
         localStorage.setItem('theme', DEFAULT_THEME);
       }
       

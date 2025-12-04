@@ -75,7 +75,7 @@ export default function Navbar({ variant = 'fixed' }: NavbarProps) {
             suppressHydrationWarning
           >
             {!mounted ? (
-              <Moon size={16} /> // Default to dark icon during SSR
+              <Sun size={16} /> // Default to light icon during SSR
             ) : theme === 'light' ? (
               <Sun size={16} />
             ) : theme === 'dark' ? (

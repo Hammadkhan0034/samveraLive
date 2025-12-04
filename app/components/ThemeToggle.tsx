@@ -27,7 +27,7 @@ export default function ThemeToggle() {
       className="inline-flex items-center gap-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 hover:border-slate-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:hover:border-slate-500 transition-all duration-200"
     >
       {!mounted ? (
-        <Moon size={16} className="text-slate-600 dark:text-slate-300" /> // Default to dark icon during SSR
+        <Sun size={16} className="text-amber-500" /> // Default to light icon during SSR
       ) : theme === 'light' ? (
         <Sun size={16} className="text-amber-500" />
       ) : theme === 'dark' ? (
