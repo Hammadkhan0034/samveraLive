@@ -12,7 +12,6 @@ import {
   Bell,
   Users,
   Shield,
-  Link as LinkIcon,
   Utensils,
   LayoutDashboard,
   CalendarDays,
@@ -56,7 +55,6 @@ type BuiltInTileId =
   | 'calendar'
   | 'students'
   | 'guardians'
-  | 'link_student'
   | 'menus';
 
 interface BuiltInTileConfig {
@@ -74,7 +72,6 @@ const builtInTileRoutes: BuiltInTileConfig[] = [
   { id: 'announcements', route: '/dashboard/teacher/announcements' },
   { id: 'students', route: '/dashboard/teacher/students' },
   { id: 'guardians', route: '/dashboard/teacher/guardians' },
-  { id: 'link_student', route: '/dashboard/teacher/link-student' },
   { id: 'menus', route: '/dashboard/teacher/menus' },
   { id: 'calendar', route: '/dashboard/teacher/calendar' },
 ];
@@ -558,40 +555,6 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{t.tile_guardians_desc || 'Manage guardians'}</p>
-              </div>
-            </button>
-
-            {/* Link Student tile */}
-            <button
-              onClick={() => handleBuiltInTileClick('link_student')}
-              className={clsx(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-ds-md text-left transition-all duration-200',
-                'hover:bg-slate-100 dark:hover:bg-slate-700',
-                isTileActive('link_student')
-                  ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
-                  : 'border-l-4 border-transparent'
-              )}
-            >
-              <span className={clsx(
-                'flex-shrink-0 rounded-lg p-2',
-                isTileActive('link_student')
-                  ? 'bg-mint-500 text-white'
-                  : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
-              )}>
-                <LinkIcon className="h-5 w-5" />
-              </span>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2">
-                  <span className={clsx(
-                    'font-medium truncate',
-                    isTileActive('link_student')
-                      ? 'text-slate-900 dark:text-slate-100'
-                      : 'text-slate-700 dark:text-slate-300'
-                  )}>
-                    {t.tile_link_student || 'Link Student'}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{t.tile_link_student_desc || 'Link a guardian to a student'}</p>
               </div>
             </button>
 
