@@ -40,3 +40,10 @@ export const deleteClassQuerySchema = z.object({
   id: classIdSchema,
 });
 
+/**
+ * GET /api/search-classes query parameter schema
+ */
+export const searchClassesQuerySchema = z.object({
+  q: z.string().default(''),
+});
+

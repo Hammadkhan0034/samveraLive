@@ -50,7 +50,6 @@ export interface StudentFormData {
   allergies: string;
   emergency_contact: string;
   guardian_ids: string[];
-  phone: string;
   address: string;
   registration_time: string;
   start_date: string;

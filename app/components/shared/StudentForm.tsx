@@ -5,6 +5,7 @@ import { X } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import type { StudentFormData } from '@/lib/types/students';
 import { GuardianSelector } from './GuardianSelector';
+import { ClassSelector } from './ClassSelector';
 
 interface StudentFormProps {
   isOpen: boolean;
@@ -42,7 +43,6 @@ export function StudentForm({
       dob: '',
       gender: 'unknown',
       class_id: '',
-      phone: '',
       address: '',
       registration_time: '',
       start_date: '',
@@ -63,11 +63,11 @@ export function StudentForm({
 
   // Track when user starts typing to prevent form resets
   useEffect(() => {
-    const hasInput = formData.first_name || formData.last_name || formData.dob || formData.phone || formData.address;
+    const hasInput = formData.first_name || formData.last_name || formData.dob || formData.address;
     if (hasInput) {
       hasUserInputRef.current = true;
     }
-  }, [formData.first_name, formData.last_name, formData.dob, formData.phone, formData.address]);
+  }, [formData.first_name, formData.last_name, formData.dob, formData.address]);
 
   // Update form data when initialData changes - but preserve user input
   useEffect(() => {
@@ -139,7 +139,6 @@ export function StudentForm({
       dob: '',
       gender: 'unknown',
       class_id: '',
-      phone: '',
       address: '',
       registration_time: '',
       start_date: '',
@@ -250,32 +249,17 @@ export function StudentForm({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-ds-md">
-            <div>
-              <label className="block text-ds-small font-medium text-ds-text-primary dark:text-slate-300 mb-ds-xs">
-                {t.student_phone}
-              </label>
-              <input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                placeholder={t.student_phone_placeholder}
-                className="w-full h-10 rounded-ds-md border border-input-stroke dark:border-slate-600 px-ds-sm text-ds-body bg-input-fill text-ds-text-primary focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
-              />
-            </div>
-
-            <div>
-              <label className="block text-ds-small font-medium text-ds-text-primary dark:text-slate-300 mb-ds-xs">
-                {t.student_registration_time}
-              </label>
-              <input
-                type="text"
-                value={formData.registration_time}
-                onChange={(e) => setFormData(prev => ({ ...prev, registration_time: e.target.value }))}
-                placeholder='YYYY-MM-DD HH:MM'
-                className="w-full h-10 rounded-ds-md border border-input-stroke dark:border-slate-600 px-ds-sm text-ds-body bg-input-fill text-ds-text-primary focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
-              />
-            </div>
+          <div>
+            <label className="block text-ds-small font-medium text-ds-text-primary dark:text-slate-300 mb-ds-xs">
+              {t.student_registration_time}
+            </label>
+            <input
+              type="text"
+              value={formData.registration_time}
+              onChange={(e) => setFormData(prev => ({ ...prev, registration_time: e.target.value }))}
+              placeholder='YYYY-MM-DD HH:MM'
+              className="w-full h-10 rounded-ds-md border border-input-stroke dark:border-slate-600 px-ds-sm text-ds-body bg-input-fill text-ds-text-primary focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+            />
           </div>
 
           <div>
@@ -360,23 +344,12 @@ export function StudentForm({
             </div>
           </div>
 
-          <div>
-            <label className="block text-ds-small font-medium text-ds-text-primary dark:text-slate-300 mb-ds-xs">
-              {t.student_class}
-            </label>
-            <select
-              value={formData.class_id}
-              onChange={(e) => setFormData(prev => ({ ...prev, class_id: e.target.value }))}
-              className="w-full h-10 rounded-ds-md border border-input-stroke bg-input-fill dark:border-slate-600 px-ds-sm text-ds-body text-ds-text-primary focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200"
-            >
-              <option value="">{t.no_class_assigned}</option>
-              {classes.map((cls) => (
-                <option key={cls.id} value={cls.id}>
-                  {cls.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          <ClassSelector
+            value={formData.class_id ? [formData.class_id] : []}
+            onChange={(classIds) => setFormData(prev => ({ ...prev, class_id: classIds.length > 0 ? classIds[0] : '' }))}
+            label={t.student_class}
+            classes={classes}
+          />
 
           <GuardianSelector
             guardians={guardians}
