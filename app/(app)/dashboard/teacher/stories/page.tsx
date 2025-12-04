@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Timer, Users, Bell, MessageSquare, Camera, Link as LinkIcon, Utensils, Plus, Eye, Edit, Trash2 } from 'lucide-react';
+import { Timer, Users, Bell, MessageSquare, Camera, Utensils, Plus, Eye, Edit, Trash2 } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
@@ -11,13 +11,12 @@ import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmat
 import TeacherPageLayout from '@/app/components/shared/TeacherPageLayout';
 import { supabase } from '@/lib/supabaseClient';
 
-type Lang = 'is' | 'en';
-type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'link_student' | 'menus';
+type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'menus';
 
 // Translations removed - using centralized translations from @/lib/translations
 
 export default function TeacherStoriesPage() {
-  const { t, lang } = useLanguage();
+  const { t } = useLanguage();
   const { session } = useAuth();
   const router = useRouter();
 
@@ -387,19 +386,6 @@ export default function TeacherStoriesPage() {
       setDeleting(false);
     }
   }
-
-  // Define tiles array (excluding stories, attendance, diapers, messages, and media as they're handled separately)
-  const tiles: Array<{
-    id: TileId;
-    title: string;
-    desc: string;
-    Icon: React.ElementType;
-    badge?: string | number;
-    route?: string;
-  }> = useMemo(() => [
-      { id: 'link_student', title: t.tile_link_student || 'Link Student', desc: t.tile_link_student_desc || 'Link a guardian to a student', Icon: LinkIcon, route: '/dashboard/teacher?tab=link_student' },
-      { id: 'menus', title: t.tile_menus || 'Menus', desc: t.tile_menus_desc || 'Manage daily menus', Icon: Utensils, route: '/dashboard/teacher?tab=menus' },
-    ], [t, lang]);
 
   return (
     <TeacherPageLayout>

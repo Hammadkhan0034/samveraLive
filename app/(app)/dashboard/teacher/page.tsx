@@ -109,8 +109,6 @@ function TeacherDashboardPageContent() {
         router.replace('/dashboard/teacher/students');
       } else if (tabParam === 'menus') {
         router.replace('/dashboard/teacher/menus');
-      } else if (tabParam === 'link_student') {
-        router.replace('/dashboard/teacher/link-student');
       }
     }
   }, [searchParams, router]);
@@ -124,7 +122,6 @@ function TeacherDashboardPageContent() {
       router.prefetch('/dashboard/teacher/stories');
       router.prefetch('/dashboard/teacher/announcements');
       router.prefetch('/dashboard/teacher/menus');
-      router.prefetch('/dashboard/teacher/link-student');
       router.prefetch('/dashboard/teacher/messages');
       router.prefetch('/dashboard/teacher/calendar');
     } catch {

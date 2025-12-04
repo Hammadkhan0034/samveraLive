@@ -1,13 +1,13 @@
 'use client';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Users, CalendarDays, X, Link as LinkIcon, Utensils, Menu, Bell } from 'lucide-react';
+import { SquareCheck as CheckSquare, Baby, MessageSquare, Camera, Timer, Users, CalendarDays, X, Utensils, Menu, Bell } from 'lucide-react';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 
 type Lang = 'is' | 'en';
-type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
+type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'menus';
 
 function clsx(...xs: Array<string | false | undefined>) {
   return xs.filter(Boolean).join(' ');
@@ -62,15 +62,11 @@ export default function TeacherLayout({
     { id: 'stories', title: t.tile_stories, desc: t.tile_stories_desc, Icon: Timer },
     { id: 'announcements', title: t.tile_announcements, desc: t.tile_announcements_desc, Icon: Bell },
     { id: 'students', title: t.tile_students, desc: t.tile_students_desc, Icon: Users, badge: studentRequests.filter(r => r.status === 'pending').length || undefined },
-    { id: 'guardians', title: t.tile_guardians || 'Guardians', desc: t.tile_guardians_desc || 'Manage guardians', Icon: Users },
-    { id: 'link_student', title: t.tile_link_student || 'Link Student', desc: t.tile_link_student_desc || 'Link a guardian to a student', Icon: LinkIcon },
     { id: 'menus', title: t.tile_menus || 'Menus', desc: t.tile_menus_desc || 'Manage daily menus', Icon: Utensils },
   ], [t, kidsIn, uploads, studentRequests, messagesCount]);
 
   // Determine active tile based on pathname
   const getActiveTile = (): TileId | null => {
-    if (pathname?.includes('/guardians')) return 'guardians';
-    if (pathname?.includes('/link-student')) return 'link_student';
     if (pathname?.includes('/menus')) return 'menus';
     if (pathname?.includes('/messages')) return 'messages';
     if (pathname?.includes('/stories')) return 'stories';
@@ -163,16 +159,6 @@ export default function TeacherLayout({
                   <button
                     key={id}
                     onClick={() => {
-                      if (id === 'guardians') {
-                        router.push('/dashboard/guardians');
-                        setSidebarOpen(false);
-                        return;
-                      }
-                      if (id === 'link_student') {
-                        router.push('/dashboard/teacher/link-student');
-                        setSidebarOpen(false);
-                        return;
-                      }
                       if (id === 'menus') {
                         router.push('/dashboard/teacher/menus');
                         setSidebarOpen(false);
