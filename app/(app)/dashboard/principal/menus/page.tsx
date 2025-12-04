@@ -443,38 +443,6 @@ export default function PrincipalMenusPage() {
             </div>
           </div>
 
-          {/* Date Filter */}
-          <div className="mb-ds-md rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
-            <div className="flex flex-col gap-ds-sm">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-mint-600 dark:text-slate-400" />
-                <span className="text-ds-small font-medium text-slate-700 dark:text-slate-300">{t.filter_by_date}</span>
-              </div>
-              <div className="flex items-center gap-ds-sm">
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => {
-                    setSelectedDate(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="flex-1 rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
-                />
-                {selectedDate && (
-                  <button
-                    onClick={() => {
-                      setSelectedDate('');
-                      setCurrentPage(1);
-                    }}
-                    className="rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 whitespace-nowrap"
-                  >
-                    {t.clear_filter}
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-
           {/* Error Message */}
           {error && (
             <div className="mb-4 rounded-ds-md bg-red-50 border border-red-200 px-4 py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
@@ -482,8 +450,40 @@ export default function PrincipalMenusPage() {
             </div>
           )}
 
-          {/* Menus Table */}
-          <div className="rounded-ds-lg border border-slate-200 bg-white pt-6 px-6 pb-0 shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+          {/* Menus Table with Filter */}
+          <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+            {/* Date Filter Section */}
+            <div className="mb-ds-md pb-ds-md border-b border-slate-200 dark:border-slate-700">
+              <div className="flex flex-col gap-ds-sm">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-mint-600 dark:text-slate-400" />
+                  <span className="text-ds-small font-medium text-slate-700 dark:text-slate-300">{t.filter_by_date}</span>
+                </div>
+                <div className="flex items-center gap-ds-sm">
+                  <input
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => {
+                      setSelectedDate(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="flex-1 rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                  />
+                  {selectedDate && (
+                    <button
+                      onClick={() => {
+                        setSelectedDate('');
+                        setCurrentPage(1);
+                      }}
+                      className="rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 whitespace-nowrap"
+                    >
+                      {t.clear_filter}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+            {/* Table Section */}
             {paginatedMenus.length === 0 ? (
               <div className="text-center py-12">
                 <Utensils className="h-12 w-12 mx-auto text-mint-400 dark:text-slate-500 mb-4" />
@@ -636,38 +636,6 @@ export default function PrincipalMenusPage() {
           </div>
         </div>
 
-        {/* Date Filter */}
-        <div className="mb-ds-md rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
-          <div className="flex flex-col gap-ds-sm">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-mint-600 dark:text-slate-400" />
-              <span className="text-ds-small font-medium text-slate-700 dark:text-slate-300">{t.filter_by_date}</span>
-            </div>
-            <div className="flex items-center gap-ds-sm">
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => {
-                  setSelectedDate(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="flex-1 rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
-              />
-              {selectedDate && (
-                <button
-                  onClick={() => {
-                    setSelectedDate('');
-                    setCurrentPage(1);
-                  }}
-                  className="rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 whitespace-nowrap"
-                >
-                  {t.clear_filter}
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-
         {/* Error Message */}
         {error && (
           <div className="mb-4 rounded-ds-md bg-red-50 border border-red-200 px-4 py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
@@ -675,8 +643,40 @@ export default function PrincipalMenusPage() {
           </div>
         )}
 
-        {/* Menus Table */}
+        {/* Menus Table with Filter */}
         <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+          {/* Date Filter Section */}
+          <div className="mb-ds-md pb-ds-md border-b border-slate-200 dark:border-slate-700">
+            <div className="flex flex-col gap-ds-sm">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-mint-600 dark:text-slate-400" />
+                <span className="text-ds-small font-medium text-slate-700 dark:text-slate-300">{t.filter_by_date}</span>
+              </div>
+              <div className="flex items-center gap-ds-sm">
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => {
+                    setSelectedDate(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="flex-1 rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                />
+                {selectedDate && (
+                  <button
+                    onClick={() => {
+                      setSelectedDate('');
+                      setCurrentPage(1);
+                    }}
+                    className="rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 whitespace-nowrap"
+                  >
+                    {t.clear_filter}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+          {/* Table Section */}
           {paginatedMenus.length === 0 ? (
             <div className="text-center py-12">
               <Utensils className="h-12 w-12 mx-auto text-mint-400 dark:text-slate-500 mb-4" />
