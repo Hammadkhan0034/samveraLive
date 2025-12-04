@@ -1,463 +1,398 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { Utensils, Plus, Edit, Trash2 } from 'lucide-react';
-import { useAuth } from '@/lib/hooks/useAuth';
+import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
-import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
-import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
-import { MenuFormModal, type MenuFormData } from '@/app/components/shared/MenuFormModal';
-import TeacherPageLayout from '@/app/components/shared/TeacherPageLayout';
-import type { MenuWithClass, Menu } from '@/lib/types/menus';
-import type { TeacherClass } from '@/lib/types/attendance';
+import { Calendar, Utensils, Menu } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import TeacherPageLayout, { useTeacherPageLayout } from '@/app/components/shared/TeacherPageLayout';
 
-function formatMenuDate(dateString: string | undefined, lang: 'is' | 'en'): string {
-  if (!dateString) return '—';
-  
-  if (typeof window === 'undefined') return '';
-  
-  const date = new Date(dateString);
-  const locale = lang === 'is' ? 'is-IS' : 'en-US';
-  
-  if (dateString.includes('T')) {
-    return date.toLocaleDateString(locale, {
-      weekday: 'short',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  }
-  
-  return date.toLocaleDateString(locale);
+interface Menu {
+  id: string;
+  org_id: string;
+  class_id?: string | null;
+  day: string;
+  breakfast?: string | null;
+  lunch?: string | null;
+  snack?: string | null;
+  notes?: string | null;
+  is_public?: boolean;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export default function TeacherMenusPage() {
   const { lang, t } = useLanguage();
-  const { session } = useAuth();
-  const router = useRouter();
+  const pathname = usePathname();
 
-  const [menus, setMenus] = useState<MenuWithClass[]>([]);
+  // Initialize from cache immediately if available to avoid loading state
+  const [menus, setMenus] = useState<Menu[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cacheKey = 'teacher_menus_list';
+        const cached = localStorage.getItem(cacheKey);
+        const cacheTime = localStorage.getItem(`${cacheKey}_time`);
+        if (cached && cacheTime) {
+          const cachedMenus = JSON.parse(cached);
+          const age = Date.now() - parseInt(cacheTime);
+          if (cachedMenus && Array.isArray(cachedMenus) && age < 5 * 60 * 1000 && cachedMenus.length > 0) {
+            return cachedMenus;
+          }
+        }
+      } catch (e) {
+        // Ignore cache errors
+      }
+    }
+    return [];
+  });
   const [loadingMenus, setLoadingMenus] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [menuToDelete, setMenuToDelete] = useState<string | null>(null);
-  const [deletingMenu, setDeletingMenu] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [teacherClasses, setTeacherClasses] = useState<TeacherClass[]>([]);
-  const [isMenuModalOpen, setIsMenuModalOpen] = useState(false);
-  const [editingMenu, setEditingMenu] = useState<Menu | null>(null);
-  const [submittingMenu, setSubmittingMenu] = useState(false);
-  const [menuError, setMenuError] = useState<string | null>(null);
-
-  const loadCachedData = useCallback(() => {
-    if (typeof window === 'undefined') return { menus: null, classes: null };
-    
-    try {
-      const cachedMenus = localStorage.getItem('teacher_menus_cache');
-      const cachedClasses = localStorage.getItem('teacher_classes_cache');
-      
-      return {
-        menus: cachedMenus ? JSON.parse(cachedMenus) : null,
-        classes: cachedClasses ? JSON.parse(cachedClasses) : null,
-      };
-    } catch {
-      return { menus: null, classes: null };
-    }
-  }, []);
-
-  const fetchTeacherClasses = useCallback(async (userId: string): Promise<TeacherClass[]> => {
-    try {
-      const res = await fetch(`/api/teacher-classes?userId=${userId}&t=${Date.now()}`, { 
-        cache: 'no-store' 
-      });
-      const data = await res.json();
-      const classes = (data.classes || []) as TeacherClass[];
-      
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('teacher_classes_cache', JSON.stringify(classes));
-      }
-      
-      return classes;
-    } catch (error) {
-      console.warn('⚠️ Error loading teacher classes:', error);
-      return [];
-    }
-  }, []);
-
-  const fetchMenus = useCallback(async (
-    userId: string, 
-    classes: TeacherClass[]
-  ): Promise<MenuWithClass[]> => {
-    try {
-      const res = await fetch(`/api/menus?createdBy=${userId}`, { 
-        cache: 'no-store' 
-      });
-      const json = await res.json();
-      
-      if (res.status === 429) {
-        setError('Too many requests. Please wait a moment and try again.');
-        throw new Error('Rate limit');
-      }
-      
-      if (!res.ok) {
-        throw new Error(json.error || `Failed with ${res.status}`);
-      }
-      
-      const allMenus: MenuWithClass[] = (json.menus || []).map((m: MenuWithClass) => ({
-        ...m,
-        classes: m.class_id ? (classes.find(c => c.id === m.class_id) || null) : null
-      }));
-      
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('teacher_menus_cache', JSON.stringify(allMenus));
-      }
-      
-      return allMenus;
-    } catch (error) {
-      if (error instanceof Error && (error.message.includes('rate limit') || error.message.includes('429'))) {
-        setError('Request rate limit reached. Please wait a moment and refresh.');
-        console.warn('⚠️ Rate limit reached, using cached data');
-        throw error;
-      }
-      throw error;
-    }
-  }, []);
+  const [selectedDate, setSelectedDate] = useState<string>(() => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  });
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const loadMenus = useCallback(async () => {
-    if (!session?.user?.id) return;
-    
-    const cached = loadCachedData();
-    if (cached.menus && Array.isArray(cached.menus)) {
-      setMenus(cached.menus);
-    }
-    
-    try {
-      setLoadingMenus(true);
-      setError(null);
+    // Check cache first for instant display
+    const cacheKey = 'teacher_menus_list';
+    if (typeof window !== 'undefined') {
+      const cached = localStorage.getItem(cacheKey);
+      const cacheTime = localStorage.getItem(`${cacheKey}_time`);
       
-      let classes: TeacherClass[] = [];
-      if (cached.classes && Array.isArray(cached.classes)) {
-        classes = cached.classes;
-        setTeacherClasses(cached.classes);
-      } else {
-        classes = await fetchTeacherClasses(session.user.id);
-        if (classes.length > 0) {
-          setTeacherClasses(classes);
+      if (cached && cacheTime) {
+        try {
+          const cachedMenus = JSON.parse(cached);
+          const age = Date.now() - parseInt(cacheTime);
+          // Use cache if less than 5 minutes old
+          if (age < 5 * 60 * 1000 && cachedMenus && Array.isArray(cachedMenus) && cachedMenus.length > 0) {
+            setMenus(cachedMenus);
+            // Fetch fresh data in background
+            fetchFreshMenus(cachedMenus);
+            return;
+          }
+        } catch (e) {
+          // Invalid cache, continue to fetch
         }
       }
+    }
+
+    // No cache, fetch immediately
+    await fetchFreshMenus(null);
+
+    async function fetchFreshMenus(existingMenus: Menu[] | null) {
+      setLoadingMenus(true);
+      setError(null);
+      try {
+        // For teachers: API automatically filters by created_by (handled in menus_handler.ts)
+        const res = await fetch(`/api/menus`, { 
+          cache: 'no-store',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!res.ok) {
+          const errorText = await res.text();
+          let errorJson;
+          try {
+            errorJson = JSON.parse(errorText);
+          } catch {
+            throw new Error(`Failed to load menus: ${res.status} ${res.statusText}`);
+          }
+          throw new Error(errorJson.error || `Failed to load menus: ${res.status}`);
+        }
+
+        const json = await res.json();
+        const allMenus: Menu[] = json.menus || [];
       
-      const allMenus = await fetchMenus(session.user.id, classes);
-      setMenus(allMenus);
-    } catch (error) {
-      console.error('❌ Error loading menus:', error);
-      if (error instanceof Error) {
-        setError(error.message || 'Failed to load menus');
-      } else {
-        setError('Failed to load menus');
+        // Only update if menus are actually different to prevent blinking
+        if (existingMenus) {
+          const existingIds = new Set(existingMenus.map(m => m.id));
+          const newIds = new Set(allMenus.map(m => m.id));
+          const isDifferent = existingIds.size !== newIds.size || 
+            Array.from<string>(existingIds).some((id: string) => !newIds.has(id)) ||
+            Array.from<string>(newIds).some((id: string) => !existingIds.has(id));
+          
+          if (isDifferent) {
+            setMenus(allMenus);
+          }
+        } else {
+          setMenus(allMenus);
+        }
+        
+        // Always update cache
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(cacheKey, JSON.stringify(allMenus));
+          localStorage.setItem(`${cacheKey}_time`, Date.now().toString());
+        }
+      } catch (e: any) {
+        console.error('❌ Error loading menus:', e);
+        const errorMessage = e.message || 'Failed to load menus. Please try again.';
+        setError(errorMessage);
+        // Keep cached menus on error
+        if (!existingMenus) {
+          setMenus([]);
+        }
+      } finally {
+        setLoadingMenus(false);
       }
-    } finally {
-      setLoadingMenus(false);
     }
-  }, [session?.user?.id, loadCachedData, fetchTeacherClasses, fetchMenus]);
+  }, []);
 
+  // Listen for menu updates and refresh instantly
   useEffect(() => {
-    if (session?.user?.id) {
-      loadMenus();
-    }
-  }, [session?.user?.id, loadMenus]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
     const handleMenuUpdate = () => {
+      // Check if menu was updated
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('teacher_menus_cache');
+        const menuUpdated = localStorage.getItem('menu_data_updated');
+        if (menuUpdated === 'true') {
+          localStorage.removeItem('menu_data_updated');
+          loadMenus();
+        }
       }
-      if (session?.user?.id) {
+    };
+
+    // Listen for window focus (when user returns from edit page)
+    const handleFocus = () => handleMenuUpdate();
+    // Listen for visibility change (when tab becomes visible)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        handleMenuUpdate();
+      }
+    };
+    // Listen for custom menu update event
+    const handleCustomEvent = () => handleMenuUpdate();
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('focus', handleFocus);
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      window.addEventListener('menu-updated', handleCustomEvent);
+      // Also check immediately in case page is already focused
+      handleMenuUpdate();
+      
+      return () => {
+        window.removeEventListener('focus', handleFocus);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+        window.removeEventListener('menu-updated', handleCustomEvent);
+      };
+    }
+  }, [loadMenus]);
+
+  // Also listen for pathname changes (when navigating back from edit page)
+  useEffect(() => {
+    if (pathname === '/dashboard/teacher/menus') {
+      // Check if menu was updated when we navigate to this page
+      if (typeof window !== 'undefined') {
+        const menuUpdated = localStorage.getItem('menu_data_updated');
+        if (menuUpdated === 'true') {
+          localStorage.removeItem('menu_data_updated');
+          loadMenus();
+        }
+      }
+    }
+  }, [pathname, loadMenus]);
+
+  // Load menus when user is available
+  useEffect(() => {
+    loadMenus();
+  }, [loadMenus]);
+
+  // Reload menus when returning from add-menu page or when page becomes visible
+  useEffect(() => {
+    const handleFocus = () => {
+      // Check if menu was just created/updated
+      if (typeof window !== 'undefined') {
+        const menuUpdated = localStorage.getItem('menu_data_updated');
+        if (menuUpdated === 'true') {
+          localStorage.removeItem('menu_data_updated');
+          loadMenus();
+          return;
+        }
+      }
+      loadMenus();
+    };
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // Check if menu was just created/updated
+        if (typeof window !== 'undefined') {
+          const menuUpdated = localStorage.getItem('menu_data_updated');
+          if (menuUpdated === 'true') {
+            localStorage.removeItem('menu_data_updated');
+            loadMenus();
+            return;
+          }
+        }
         loadMenus();
       }
     };
     
-    window.addEventListener('menu-updated', handleMenuUpdate);
-    
-    if (session?.user?.id) {
+    // Check on mount if menu was just created
+    if (typeof window !== 'undefined') {
       const menuUpdated = localStorage.getItem('menu_data_updated');
       if (menuUpdated === 'true') {
         localStorage.removeItem('menu_data_updated');
-        handleMenuUpdate();
+        loadMenus();
       }
     }
+    
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
     
     return () => {
-      window.removeEventListener('menu-updated', handleMenuUpdate);
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [session?.user?.id, loadMenus]);
+  }, [loadMenus]);
 
-  function openDeleteModal(menuId: string) {
-    setMenuToDelete(menuId);
-    setIsDeleteModalOpen(true);
-    setDeleteError(null);
-  }
+  // Filter menus by selected date
+  const filteredMenus = menus.filter(m => !selectedDate || m.day === selectedDate);
+  const totalPages = Math.ceil(filteredMenus.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedMenus = filteredMenus.slice(startIndex, startIndex + itemsPerPage);
 
-  function closeDeleteModal() {
-    setIsDeleteModalOpen(false);
-    setMenuToDelete(null);
-    setDeleteError(null);
-  }
+  function TeacherMenusContent() {
+    const { sidebarRef } = useTeacherPageLayout();
 
-  async function confirmDelete() {
-    if (!menuToDelete) return;
-    
-    setDeletingMenu(true);
-    setDeleteError(null);
-    
-    try {
-      const res = await fetch(`/api/menus?id=${menuToDelete}`, {
-        method: 'DELETE',
-      });
-      
-      const json = await res.json();
-      
-      if (!res.ok) {
-        throw new Error(json.error || `Failed to delete menu: ${res.status}`);
-      }
-      
-      setMenus(prev => {
-        const updated = prev.filter(m => m.id !== menuToDelete);
-        
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('teacher_menus_cache', JSON.stringify(updated));
-        }
-        
-        return updated;
-      });
-      
-      closeDeleteModal();
-    } catch (error) {
-      if (error instanceof Error) {
-        setDeleteError(error.message);
-      } else {
-        setDeleteError('Failed to delete menu');
-      }
-    } finally {
-      setDeletingMenu(false);
-    }
-  }
+    return (
+      <>
+        {/* Content Header */}
+        <div className="mb-ds-sm flex flex-col gap-ds-sm md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-ds-sm">
+            {/* Mobile menu button */}
+            <button
+              onClick={() => sidebarRef.current?.open()}
+              className="md:hidden p-2 rounded-ds-md hover:bg-mint-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
+              aria-label="Toggle sidebar"
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+            <div>
+              <h2 className="text-ds-h1 font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.tile_menus || 'Menus'}</h2>
+              <p className="mt-1 text-ds-small text-slate-600 dark:text-slate-400">View daily menus</p>
+            </div>
+          </div>
+        </div>
 
-  function openMenuModal(menu?: MenuWithClass) {
-    if (menu) {
-      // Convert MenuWithClass to Menu for editing
-      const menuForEdit: Menu = {
-        id: menu.id,
-        org_id: menu.org_id,
-        class_id: menu.class_id,
-        day: menu.day,
-        breakfast: menu.breakfast,
-        lunch: menu.lunch,
-        snack: menu.snack,
-        notes: menu.notes,
-        is_public: menu.is_public,
-        created_at: menu.created_at,
-        updated_at: menu.updated_at,
-      };
-      setEditingMenu(menuForEdit);
-    } else {
-      setEditingMenu(null);
-    }
-    setMenuError(null);
-    setIsMenuModalOpen(true);
-  }
+        {/* Error Message */}
+        {error && (
+          <div className="mb-4 rounded-ds-md bg-red-50 border border-red-200 px-4 py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+            {error}
+          </div>
+        )}
 
-  function closeMenuModal() {
-    setIsMenuModalOpen(false);
-    setEditingMenu(null);
-    setMenuError(null);
-  }
+        {/* Menus Table with Filter */}
+        <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+          {/* Date Filter Section */}
+          <div className="mb-ds-md pb-ds-md border-b border-slate-200 dark:border-slate-700">
+            <div className="flex flex-col gap-ds-sm">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-5 w-5 text-mint-600 dark:text-slate-400" />
+                <span className="text-ds-small font-medium text-slate-700 dark:text-slate-300">{t.filter_by_date}</span>
+              </div>
+              <div className="flex items-center gap-ds-sm">
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => {
+                    setSelectedDate(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="flex-1 rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                />
+                {selectedDate && (
+                  <button
+                    onClick={() => {
+                      setSelectedDate('');
+                      setCurrentPage(1);
+                    }}
+                    className="rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 whitespace-nowrap"
+                  >
+                    {t.clear_filter}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+          {/* Table Section */}
+          {paginatedMenus.length === 0 ? (
+            <div className="text-center py-12">
+              <Utensils className="h-12 w-12 mx-auto text-mint-400 dark:text-slate-500 mb-4" />
+              <p className="text-slate-600 dark:text-slate-400">{t.no_menus}</p>
+            </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto rounded-ds-md">
+                <table className="w-full text-ds-small border-collapse rounded-ds-md">
+                  <thead className="bg-mint-500 text-white dark:bg-slate-800">
+                    <tr>
+                      <th className="py-2 px-4 text-left rounded-tl-ds-md">{t.created_date || 'Created'}</th>
+                      <th className="py-2 px-4 text-left">{t.breakfast}</th>
+                      <th className="py-2 px-4 text-left">{t.lunch}</th>
+                      <th className="py-2 px-4 text-left">{t.snack}</th>
+                      <th className="py-2 px-4 text-left rounded-tr-ds-md">{t.notes}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                    {paginatedMenus.map((menu) => (
+                      <tr key={menu.id} className="hover:bg-mint-50 dark:hover:bg-slate-700/50 transition-colors">
+                        <td className="py-3 px-4 text-black dark:text-slate-300">
+                          {menu.created_at ? new Date(menu.created_at).toLocaleString(lang === 'is' ? 'is-IS' : 'en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          }) : '—'}
+                        </td>
+                        <td className="py-3 px-4 text-black dark:text-slate-300">{menu.breakfast || '—'}</td>
+                        <td className="py-3 px-4 text-black dark:text-slate-300">{menu.lunch || '—'}</td>
+                        <td className="py-3 px-4 text-black dark:text-slate-300">{menu.snack || '—'}</td>
+                        <td className="py-3 px-4 text-black dark:text-slate-300">{menu.notes || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-  async function handleMenuSubmit(data: MenuFormData & { id?: string }) {
-    if (!session?.user?.id) {
-      setMenuError('Missing user information');
-      return;
-    }
-
-    setSubmittingMenu(true);
-    setMenuError(null);
-
-    try {
-      const url = '/api/menus';
-      const method = editingMenu ? 'PUT' : 'POST';
-      
-      // Server will get org_id and user_id from AuthUser, so we don't send them
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      const json = await res.json();
-      if (!res.ok) {
-        throw new Error(json.error || `Failed with ${res.status}`);
-      }
-
-      // Set flag to trigger refresh on menus-list and menus-view pages
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('menu_data_updated', 'true');
-        // Dispatch custom event for instant update
-        window.dispatchEvent(new Event('menu-updated'));
-      }
-
-      // Refresh menus list
-      if (session.user.id) {
-        await loadMenus();
-      }
-
-      closeMenuModal();
-    } catch (error) {
-      console.error('❌ Error submitting menu:', error);
-      if (error instanceof Error) {
-        setMenuError(error.message);
-      } else {
-        setMenuError('Failed to submit menu');
-      }
-      throw error; // Re-throw so modal can handle it
-    } finally {
-      setSubmittingMenu(false);
-    }
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="mt-4 w-full flex justify-end gap-2">
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="inline-flex items-center rounded-ds-md border border-slate-400 px-3 py-1.5 text-ds-small disabled:opacity-50 hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                  >
+                    {t.prev}
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`inline-flex items-center rounded-ds-md px-3 py-1.5 text-ds-small transition-colors ${currentPage === page ? 'bg-mint-500 text-white border border-mint-500' : 'border border-slate-400 hover:bg-mint-50 dark:border-slate-600 dark:text-slate-200'}`}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    className="inline-flex items-center rounded-ds-md border border-slate-400 px-3 py-1.5 text-ds-small disabled:opacity-50 hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                  >
+                    {t.next}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </>
+    );
   }
 
   return (
     <TeacherPageLayout>
-      <div className="space-y-6">
-              <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
-                <div className="mb-4 flex items-center justify-between">
-                  <h2 className="text-ds-h3 font-medium text-slate-900 dark:text-slate-100">{t.tile_menus || 'Menus'}</h2>
-                  <button
-                    onClick={() => openMenuModal()}
-                    className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600"
-                  >
-                    <Plus className="h-4 w-4" /> {lang === 'is' ? 'Bæta við matseðli' : 'Add Menu'}
-                  </button>
-                </div>
-                {error && (
-                  <div className="mb-4 rounded-ds-md bg-red-50 border border-red-200 px-4 py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
-                    {error}
-                  </div>
-                )}
-                {loadingMenus ? (
-                  <LoadingSkeleton type="table" rows={5} />
-                ) : menus.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Utensils className="h-12 w-12 mx-auto text-mint-400 dark:text-slate-500 mb-4" />
-                    <p className="text-slate-600 dark:text-slate-400">{lang === 'is' ? 'Engir matseðillar fundust. Smelltu á "Bæta við matseðli" til að búa til einn.' : 'No menus found. Click "Add Menu" to create one.'}</p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto rounded-ds-md border border-slate-200 dark:border-slate-700">
-                    <table className="w-full border-collapse">
-                      <thead>
-                        <tr className="bg-mint-500">
-                          <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
-                            {lang === 'is' ? 'Dagur' : 'Date'}
-                          </th>
-                          <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
-                            {lang === 'is' ? 'Hópur' : 'Class'}
-                          </th>
-                          <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
-                            {lang === 'is' ? 'Morgunmatur' : 'Breakfast'}
-                          </th>
-                          <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
-                            {lang === 'is' ? 'Hádegismatur' : 'Lunch'}
-                          </th>
-                          <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
-                            {lang === 'is' ? 'Kvöldmatur' : 'Snack'}
-                          </th>
-                          <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
-                            {lang === 'is' ? 'Athugasemdir' : 'Notes'}
-                          </th>
-                          <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
-                            {t.actions || 'Actions'}
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
-                        {menus.map((menu) => (
-                          <tr key={menu.id} className="hover:bg-mint-50 dark:hover:bg-slate-700/30 transition-colors">
-                            <td className="py-2 px-4 text-ds-small text-slate-900 dark:text-slate-100">
-                              <span suppressHydrationWarning>
-                                {formatMenuDate(menu.day || menu.created_at, lang)}
-                              </span>
-                            </td>
-                            <td className="py-2 px-4 text-ds-small text-slate-600 dark:text-slate-400">
-                              {menu.classes?.name || (menu.class_id ? `Class ${menu.class_id.substring(0, 8)}...` : lang === 'is' ? 'Allir hópar' : 'All Classes')}
-                            </td>
-                            <td className="py-2 px-4 text-ds-small text-slate-600 dark:text-slate-400">
-                              {menu.breakfast || '—'}
-                            </td>
-                            <td className="py-2 px-4 text-ds-small text-slate-600 dark:text-slate-400">
-                              {menu.lunch || '—'}
-                            </td>
-                            <td className="py-2 px-4 text-ds-small text-slate-600 dark:text-slate-400">
-                              {menu.snack || '—'}
-                            </td>
-                            <td className="py-2 px-4 text-ds-small text-slate-600 dark:text-slate-400">
-                              {menu.notes ? (
-                                <span className="line-clamp-2" title={menu.notes}>{menu.notes}</span>
-                              ) : (
-                                '—'
-                              )}
-                            </td>
-                            <td className="py-2 px-4">
-                              <div className="flex items-center gap-2">
-                                <button
-                                  onClick={() => openMenuModal(menu)}
-                                  className="inline-flex items-center gap-1 rounded-ds-sm border border-slate-300 px-2 py-1 text-ds-tiny hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
-                                  title={t.edit || 'Edit'}
-                                >
-                                  <Edit className="h-3.5 w-3.5" />
-                                  {t.edit || 'Edit'}
-                                </button>
-                                <button
-                                  onClick={() => openDeleteModal(menu.id)}
-                                  className="inline-flex items-center gap-1 rounded-ds-sm border border-red-300 px-2 py-1 text-ds-tiny text-red-600 hover:bg-red-50 transition-colors dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20"
-                                  title={t.delete || 'Delete'}
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                  {t.delete || 'Delete'}
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-
-                <DeleteConfirmationModal
-                  isOpen={isDeleteModalOpen}
-                  onClose={closeDeleteModal}
-                  onConfirm={confirmDelete}
-                  title={lang === 'is' ? 'Eyða matseðli' : 'Delete Menu'}
-                  message={lang === 'is' ? 'Ertu viss um að þú viljir eyða þessum matseðli? Þessa aðgerð er ekki hægt að afturkalla.' : 'Are you sure you want to delete this menu? This action cannot be undone.'}
-                  loading={deletingMenu}
-                  error={deleteError}
-                  confirmButtonText={t.delete || 'Delete'}
-                  cancelButtonText={t.cancel || 'Cancel'}
-                />
-
-                {session?.user?.id && (
-                  <MenuFormModal
-                    isOpen={isMenuModalOpen}
-                    onClose={closeMenuModal}
-                    onSubmit={handleMenuSubmit}
-                    initialData={editingMenu}
-                    classes={teacherClasses.map(c => ({ id: c.id, name: c.name }))}
-                    loading={submittingMenu}
-                    error={menuError}
-                  />
-                )}
-              </div>
-            </div>
+      <TeacherMenusContent />
     </TeacherPageLayout>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import  { useState, useEffect, useCallback } from 'react';
+import  { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { Plus, Calendar, Utensils, Edit, Trash2, Menu } from 'lucide-react';
 import { usePathname } from 'next/navigation';
@@ -62,12 +62,18 @@ export default function PrincipalMenusPage() {
   const [isMenuModalOpen, setIsMenuModalOpen] = useState(false);
   const [editingMenu, setEditingMenu] = useState<Menu | null>(null);
 
+  // Ref to prevent concurrent calls to loadMenus
+  const isLoadingRef = useRef(false);
+
   // Language handled by context
 
 
 
   const loadMenus = useCallback(async () => {
-   
+    // Prevent concurrent calls
+    if (isLoadingRef.current) {
+      return;
+    }
 
     // Check cache first for instant display
     const cacheKey = 'menus_list';
@@ -96,6 +102,7 @@ export default function PrincipalMenusPage() {
     await fetchFreshMenus(null);
 
     async function fetchFreshMenus(existingMenus: Menu[] | null) {
+      isLoadingRef.current = true;
       setLoadingMenus(true);
       setError(null);
       try {
@@ -151,117 +158,70 @@ export default function PrincipalMenusPage() {
         }
       } finally {
         setLoadingMenus(false);
+        isLoadingRef.current = false;
       }
     }
   }, []);
 
-  // Listen for menu updates and refresh instantly
+  // Consolidated effect: Load menus on mount, handle updates, and manage event listeners
   useEffect(() => {
-    const handleMenuUpdate = () => {
-      // Check if menu was updated
-      if (typeof window !== 'undefined') {
-        const menuUpdated = localStorage.getItem('menu_data_updated');
-        if (menuUpdated === 'true') {
-          localStorage.removeItem('menu_data_updated');
-            loadMenus();
-          
-        }
-      }
-    };
+    if (typeof window === 'undefined') return;
 
-    // Listen for window focus (when user returns from edit page)
-    const handleFocus = () => handleMenuUpdate();
-    // Listen for visibility change (when tab becomes visible)
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        handleMenuUpdate();
-      }
-    };
-    // Listen for custom menu update event
-    const handleCustomEvent = () => handleMenuUpdate();
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('focus', handleFocus);
-      document.addEventListener('visibilitychange', handleVisibilityChange);
-      window.addEventListener('menu-updated', handleCustomEvent);
-      // Also check immediately in case page is already focused
-      handleMenuUpdate();
-      
-      return () => {
-        window.removeEventListener('focus', handleFocus);
-        document.removeEventListener('visibilitychange', handleVisibilityChange);
-        window.removeEventListener('menu-updated', handleCustomEvent);
-      };
-    }
-  }, [ loadMenus]);
-
-  // Also listen for pathname changes (when navigating back from edit page)
-  useEffect(() => {
-    if (pathname === '/dashboard/principal/menus') {
-      // Check if menu was updated when we navigate to this page
-      if (typeof window !== 'undefined') {
-        const menuUpdated = localStorage.getItem('menu_data_updated');
-        if (menuUpdated === 'true') {
-          localStorage.removeItem('menu_data_updated');
-            loadMenus();
-        }
-      }
-    }
-  }, [pathname, loadMenus]);
-
-  // Load menus when user is available
-  useEffect(() => {
-      loadMenus();
-    
-  }, [ loadMenus]);
-
-  // Reload menus when returning from add-menu page or when page becomes visible
-  useEffect(() => {
-
-    const handleFocus = () => {
-      // Check if menu was just created/updated
-      if (typeof window !== 'undefined') {
-        const menuUpdated = localStorage.getItem('menu_data_updated');
-        if (menuUpdated === 'true') {
-          localStorage.removeItem('menu_data_updated');
-          loadMenus();
-          return;
-        }
-      }
-      loadMenus();
-    };
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        // Check if menu was just created/updated
-        if (typeof window !== 'undefined') {
-          const menuUpdated = localStorage.getItem('menu_data_updated');
-          if (menuUpdated === 'true') {
-            localStorage.removeItem('menu_data_updated');
-            loadMenus();
-            return;
-          }
-        }
+    // Helper to check and handle menu updates
+    const checkAndLoadMenus = () => {
+      const menuUpdated = localStorage.getItem('menu_data_updated');
+      if (menuUpdated === 'true') {
+        localStorage.removeItem('menu_data_updated');
         loadMenus();
+        return true;
+      }
+      return false;
+    };
+
+    // Event handlers - only reload if there's an update flag
+    const handleFocus = () => {
+      checkAndLoadMenus();
+    };
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        checkAndLoadMenus();
       }
     };
-    
-    // Check on mount if menu was just created
-    if (typeof window !== 'undefined') {
+
+    const handleMenuUpdated = () => {
+      checkAndLoadMenus();
+    };
+
+    // Initial load: check for updates first, then load if needed
+    const hasUpdate = checkAndLoadMenus();
+    if (!hasUpdate) {
+      loadMenus();
+    }
+
+    // Set up event listeners (only once, no duplicates)
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('menu-updated', handleMenuUpdated);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('menu-updated', handleMenuUpdated);
+    };
+  }, [loadMenus]);
+
+  // Handle pathname changes (when navigating back to this page)
+  useEffect(() => {
+    if (pathname === '/dashboard/principal/menus' && typeof window !== 'undefined') {
       const menuUpdated = localStorage.getItem('menu_data_updated');
       if (menuUpdated === 'true') {
         localStorage.removeItem('menu_data_updated');
         loadMenus();
       }
     }
-    
-    window.addEventListener('focus', handleFocus);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [ loadMenus]);
+  }, [pathname, loadMenus]);
 
   function openDeleteMenuModal(id: string) {
     setMenuToDelete(id);

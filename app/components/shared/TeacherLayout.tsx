@@ -174,7 +174,7 @@ export default function TeacherLayout({
                         return;
                       }
                       if (id === 'menus') {
-                        router.push('/dashboard/principal/menus');
+                        router.push('/dashboard/teacher/menus');
                         setSidebarOpen(false);
                         return;
                       }
