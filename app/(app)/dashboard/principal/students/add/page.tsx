@@ -88,7 +88,6 @@ function AddStudentPageContent() {
             gender: s.users?.gender || s.gender || 'unknown',
             class_id: s.class_id || '',
             address: s.users?.address || s.address || '',
-            registration_time: s.registration_time || '',
             start_date: s.start_date || '',
             barngildi: s.barngildi ?? 0,
             student_language: s.student_language === 'en' 

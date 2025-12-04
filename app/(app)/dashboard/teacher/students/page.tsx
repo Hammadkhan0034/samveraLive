@@ -528,7 +528,6 @@ export default function TeacherStudentsPage() {
       emergency_contact: student.emergency_contact_encrypted || '',
       guardian_ids: [],
       address: '',
-      registration_time: '',
       start_date: '',
       barngildi: 0,
       student_language: 'english',

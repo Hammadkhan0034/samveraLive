@@ -51,7 +51,6 @@ export interface StudentFormData {
   emergency_contact: string;
   guardian_ids: string[];
   address: string;
-  registration_time: string;
   start_date: string;
   barngildi: number;
   student_language: string;

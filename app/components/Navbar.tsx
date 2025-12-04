@@ -23,11 +23,11 @@ export default function Navbar({ variant = 'fixed' }: NavbarProps) {
   const pathname = usePathname();
   const userRole = useUserRole();
   
-  // Hide notification bell for Admin role
   const showNotifications = userRole !== 'admin';
 
   // Ensure component is mounted before rendering theme-dependent content
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 

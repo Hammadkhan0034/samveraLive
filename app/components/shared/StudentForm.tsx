@@ -44,7 +44,6 @@ export function StudentForm({
       gender: 'unknown',
       class_id: '',
       address: '',
-      registration_time: '',
       start_date: '',
       barngildi: 0,
       student_language: 'english',
@@ -75,6 +74,7 @@ export function StudentForm({
     if (isInitialMount.current) {
       isInitialMount.current = false;
       if (initialData) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setFormData(initialData);
         prevInitialDataIdRef.current = initialData.id;
       }
@@ -140,7 +140,6 @@ export function StudentForm({
       gender: 'unknown',
       class_id: '',
       address: '',
-      registration_time: '',
       start_date: '',
       barngildi: 0,
       student_language: 'english',
@@ -247,19 +246,6 @@ export function StudentForm({
                 <option value="other">{t.gender_other}</option>
               </select>
             </div>
-          </div>
-
-          <div>
-            <label className="block text-ds-small font-medium text-ds-text-primary dark:text-slate-300 mb-ds-xs">
-              {t.student_registration_time}
-            </label>
-            <input
-              type="text"
-              value={formData.registration_time}
-              onChange={(e) => setFormData(prev => ({ ...prev, registration_time: e.target.value }))}
-              placeholder='YYYY-MM-DD HH:MM'
-              className="w-full h-10 rounded-ds-md border border-input-stroke dark:border-slate-600 px-ds-sm text-ds-body bg-input-fill text-ds-text-primary focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
-            />
           </div>
 
           <div>
