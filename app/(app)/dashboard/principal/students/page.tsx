@@ -235,8 +235,7 @@ function StudentsPageContent() {
       {/* Students Table */}
       <div className="rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">
         <div className="flex items-center justify-between mb-ds-sm gap-ds-md">
-          <h2 className="text-ds-h3 font-semibold text-ds-text-primary dark:text-slate-100">{t.students}</h2>
-          <div className="flex items-center gap-ds-sm">
+       
             <div className="relative">
               <input
                 type="text"
@@ -278,7 +277,6 @@ function StudentsPageContent() {
                 </div>
               )}
             </div>
-          </div>
 
         </div>
         <StudentTable

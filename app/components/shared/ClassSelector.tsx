@@ -17,6 +17,8 @@ interface ClassSelectorProps {
   onChange: (classIds: string[]) => void;
   label?: string;
   className?: string;
+
+  singleSelect?: boolean;
 }
 
 export function ClassSelector({
@@ -25,11 +27,16 @@ export function ClassSelector({
   onChange,
   label,
   className,
+  singleSelect = false,
 }: ClassSelectorProps) {
   const { t } = useLanguage();
   
   // Internal state for class IDs, initialized from value prop
   const [classIds, setClassIds] = useState<string[]>(() => {
+    if (singleSelect) {
+      // In single-select mode, only keep the first value (if any)
+      return value.length > 0 ? [value[0]] : [''];
+    }
     return value.length > 0 ? value : [''];
   });
 
@@ -52,7 +59,8 @@ export function ClassSelector({
       // Still update selected class data from classes prop if needed
       setSelectedClassData(prev => {
         const next = new Map(prev);
-        value.forEach(classId => {
+        const effectiveValue = singleSelect && value.length > 1 ? [value[0]] : value;
+        effectiveValue.forEach(classId => {
           if (classId && !next.has(classId)) {
             const cls = classes.find(c => String(c.id) === String(classId));
             if (cls) {
@@ -68,17 +76,25 @@ export function ClassSelector({
     // Value changed externally - update our state
     prevValueRef.current = currentValueStr;
     
-    // Preserve any empty slots we have (for adding new classes)
-    const emptySlots = classIds.filter(id => !id || id.trim() === '');
+    // Preserve any empty slots we have (for adding new classes in multi-select mode)
+    const emptySlots = singleSelect
+      ? []
+      : classIds.filter(id => !id || id.trim() === '');
     
     if (value.length > 0) {
-      // Merge: value from prop + any empty slots we're maintaining
-      setClassIds([...value, ...emptySlots]);
+      if (singleSelect) {
+        // In single-select mode, only keep the first non-empty value
+        setClassIds([value[0]]);
+      } else {
+        // Merge: value from prop + any empty slots we're maintaining
+        setClassIds([...value, ...emptySlots]);
+      }
       
       // Initialize selected class data from classes prop for pre-selected classes
       setSelectedClassData(prev => {
         const next = new Map(prev);
-        value.forEach(classId => {
+        const effectiveValue = singleSelect && value.length > 1 ? [value[0]] : value;
+        effectiveValue.forEach(classId => {
           if (classId && !next.has(classId)) {
             const cls = classes.find(c => String(c.id) === String(classId));
             if (cls) {
@@ -97,10 +113,19 @@ export function ClassSelector({
 
   // Notify parent of changes
   const handleClassIdsChange = (newIds: string[]) => {
-    setClassIds(newIds);
+    // In single-select mode, ensure we only ever keep a single non-empty ID
+    const nextIds = singleSelect
+      ? newIds.slice(0, 1)
+      : newIds;
+
+    setClassIds(nextIds);
+
     // Filter out empty strings before calling onChange
-    const filtered = newIds.filter(id => id && id.trim() !== '');
-    onChange(filtered.length > 0 ? filtered : []);
+    const filtered = nextIds.filter(id => id && id.trim() !== '');
+    // In single-select mode, also ensure we only send a single ID back up
+    const finalIds = singleSelect && filtered.length > 1 ? [filtered[0]] : filtered;
+
+    onChange(finalIds.length > 0 ? finalIds : []);
   };
 
   // Searchable Class Dropdown Component
@@ -218,8 +243,14 @@ export function ClassSelector({
 
       const currentIds = classIds.length > 0 ? [...classIds] : [''];
       currentIds[index] = cls.id;
-      const filtered = currentIds.filter(id => id && id.trim() !== '');
-      handleClassIdsChange(filtered.length > 0 ? filtered : ['']);
+
+      if (singleSelect) {
+        // In single-select mode we only keep the selected class in the first slot
+        handleClassIdsChange([cls.id]);
+      } else {
+        const filtered = currentIds.filter(id => id && id.trim() !== '');
+        handleClassIdsChange(filtered.length > 0 ? filtered : ['']);
+      }
       setIsOpen(false);
       setSearchQuery('');
     };
@@ -334,10 +365,10 @@ export function ClassSelector({
         {label || (t as any).classes || 'Classes'}
       </label>
       <div className="space-y-ds-sm">
-        {classIds.map((classId, index) => (
+        {(singleSelect ? classIds.slice(0, 1) : classIds).map((classId, index) => (
           <div key={index} className="flex gap-ds-sm items-center">
             <ClassSearchDropdown classId={classId} index={index} />
-            {classIds.length > 1 || (classIds.length === 1 && classIds[0]) ? (
+            {!singleSelect && (classIds.length > 1 || (classIds.length === 1 && classIds[0])) ? (
               <button
                 type="button"
                 onClick={() => {
@@ -352,16 +383,18 @@ export function ClassSelector({
             ) : null}
           </div>
         ))}
-        <button
-          type="button"
-          onClick={() => {
-            const currentIds = classIds.length > 0 ? classIds : [''];
-            handleClassIdsChange([...currentIds, '']);
-          }}
-          className="w-full rounded-ds-md border border-input-stroke dark:border-slate-600 px-ds-sm py-2 text-ds-small text-ds-text-primary hover:bg-mint-50 dark:hover:bg-slate-700 transition-colors"
-        >
-          {(t as any).add_another_class || '+ Add Another Class'}
-        </button>
+        {!singleSelect && (
+          <button
+            type="button"
+            onClick={() => {
+              const currentIds = classIds.length > 0 ? classIds : [''];
+              handleClassIdsChange([...currentIds, '']);
+            }}
+            className="w-full rounded-ds-md border border-input-stroke dark:border-slate-600 px-ds-sm py-2 text-ds-small text-ds-text-primary hover:bg-mint-50 dark:hover:bg-slate-700 transition-colors"
+          >
+            {(t as any).add_another_class || '+ Add Another Class'}
+          </button>
+        )}
       </div>
     </div>
   );

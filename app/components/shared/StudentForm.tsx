@@ -332,6 +332,7 @@ export function StudentForm({
 
           <ClassSelector
             value={formData.class_id ? [formData.class_id] : []}
+            singleSelect={true}
             onChange={(classIds) =>
               setFormData((prev) => ({
                 ...prev,
