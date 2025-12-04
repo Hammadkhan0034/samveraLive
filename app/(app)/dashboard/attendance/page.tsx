@@ -191,8 +191,6 @@ export default function AttendancePage() {
   // Get status label
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'present':
-        return t.attendance_present || 'Present';
       case 'absent':
         return t.attendance_absent || 'Absent';
       case 'late':
@@ -207,8 +205,6 @@ export default function AttendancePage() {
   // Get status badge color
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
-      case 'present':
-        return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400';
       case 'absent':
         return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
       case 'late':

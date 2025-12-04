@@ -40,7 +40,7 @@ BEGIN
   END IF;
 
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'attendance_status') THEN
-    CREATE TYPE attendance_status AS ENUM ('present','absent','late','excused','arrived','away_holiday','away_sick','gone');
+    CREATE TYPE attendance_status AS ENUM ('absent','late','excused','arrived','away_holiday','away_sick','gone');
   END IF;
 
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role_type') THEN
@@ -571,15 +571,17 @@ CREATE TABLE IF NOT EXISTS attendance (
   class_id uuid REFERENCES classes(id) ON DELETE CASCADE,
   student_id uuid REFERENCES students(id) ON DELETE CASCADE,
   date date NOT NULL,
-  status attendance_status NOT NULL DEFAULT 'present',
+  status attendance_status NOT NULL DEFAULT 'arrived',
   notes text,
   recorded_by uuid REFERENCES users(id) ON DELETE SET NULL,
+  left_at timestamptz NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
   UNIQUE (student_id, date)
 );
 CREATE INDEX IF NOT EXISTS idx_attendance_class_date ON attendance(class_id, date DESC);
 CREATE INDEX IF NOT EXISTS idx_attendance_status ON attendance(status);
+CREATE INDEX IF NOT EXISTS idx_attendance_left_at ON attendance(left_at) WHERE left_at IS NOT NULL;
 
 -- ASSESSMENTS/GRADES
 CREATE TABLE IF NOT EXISTS assessments (

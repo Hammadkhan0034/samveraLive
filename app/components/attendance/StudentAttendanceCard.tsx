@@ -9,7 +9,7 @@ function clsx(...xs: Array<string | false | undefined>) {
   return xs.filter(Boolean).join(' ');
 }
 
-type AttendanceStatus = 'arrived' | 'away_holiday' | 'away_sick' | 'gone' | 'present' | 'absent' | 'late' | 'excused' | '';
+type AttendanceStatus = 'arrived' | 'away_holiday' | 'away_sick' | 'gone' | 'absent' | 'late' | 'excused' | '';
 
 interface StudentAttendanceCardProps {
   student: Student;
@@ -18,6 +18,7 @@ interface StudentAttendanceCardProps {
   disabled?: boolean;
   classes: Array<{ id: string; name: string }>;
   updatedAt?: string | null;
+  leftAt?: string | null;
 }
 
 export const StudentAttendanceCard = React.memo<StudentAttendanceCardProps>(
@@ -28,21 +29,31 @@ export const StudentAttendanceCard = React.memo<StudentAttendanceCardProps>(
     disabled = false,
     classes,
     updatedAt,
+    leftAt,
   }) {
     const { t, lang } = useLanguage();
     const studentName = getStudentName(student);
     const classId = student.class_id || (student as any).classes?.id || null;
     const className = getClassName(classId, classes);
+    const isGone = leftAt !== null && leftAt !== undefined;
 
-    // Get available status options based on current status
+    // Get available status options based on current status and left_at
     const getAvailableOptions = (): Array<{ value: string; label: string }> => {
       const currentStatus = status || '';
       
-      // If status is 'arrived', only show 'gone' as next option
+      // If student has left (left_at is set), show option to unmark as gone
+      if (isGone) {
+        return [
+          { value: 'arrived', label: t.attendance_status_arrived || 'Arrived' },
+          { value: 'gone', label: t.attendance_status_gone || 'Marked as Gone' },
+        ];
+      }
+      
+      // If status is 'arrived' and not gone, show option to mark as gone
       if (currentStatus === 'arrived') {
         return [
           { value: 'arrived', label: t.attendance_status_arrived || 'Arrived' },
-          { value: 'gone', label: t.attendance_mark_as_gone || 'Marked as Gone' },
+          { value: 'gone', label: t.attendance_mark_as_gone || 'Mark as Gone' },
         ];
       }
       
@@ -59,6 +70,11 @@ export const StudentAttendanceCard = React.memo<StudentAttendanceCardProps>(
 
     // Get status display label
     const getStatusLabel = (statusValue: string): string => {
+      // If student has left, show "Marked as Gone" regardless of status
+      if (isGone) {
+        return t.attendance_status_gone || 'Marked as Gone';
+      }
+      
       if (!statusValue) return t.attendance_not_recorded || 'Not Recorded';
       switch (statusValue) {
         case 'arrived':
@@ -69,8 +85,6 @@ export const StudentAttendanceCard = React.memo<StudentAttendanceCardProps>(
           return t.attendance_status_away_sick || 'Away – Sick';
         case 'gone':
           return t.attendance_status_gone || 'Marked as Gone';
-        case 'present':
-          return t.attendance_present || 'Present';
         case 'absent':
           return t.attendance_absent || 'Absent';
         case 'late':
@@ -84,9 +98,13 @@ export const StudentAttendanceCard = React.memo<StudentAttendanceCardProps>(
 
     // Get status color classes
     const getStatusColorClasses = (statusValue: string): string => {
+      // If student has left, use gone styling
+      if (isGone) {
+        return 'border-slate-200 bg-slate-50 text-slate-800 dark:border-slate-600 dark:bg-slate-900/20 dark:text-slate-300';
+      }
+      
       switch (statusValue) {
         case 'arrived':
-        case 'present':
           return 'border-mint-200 bg-mint-50 text-mint-800 dark:border-mint-600 dark:bg-mint-900/20 dark:text-mint-300';
         case 'away_holiday':
         case 'away_sick':
@@ -126,7 +144,10 @@ export const StudentAttendanceCard = React.memo<StudentAttendanceCardProps>(
     };
 
     const statusColorClasses = getStatusColorClasses(status);
-    const timestampText = formatTimestamp(updatedAt);
+    // Show left_at timestamp if student has left, otherwise show updated_at
+    const timestampText = formatTimestamp(isGone ? leftAt : updatedAt);
+    // Display status label - if gone, show "Marked as Gone", otherwise show actual status
+    const displayStatus = isGone ? 'gone' : status;
 
     return (
       <div
@@ -148,7 +169,7 @@ export const StudentAttendanceCard = React.memo<StudentAttendanceCardProps>(
         
         <div className="flex flex-col gap-2">
           <select
-            value={status || ''}
+            value={displayStatus || ''}
             onChange={(e) => onStatusChange(student.id, e.target.value)}
             disabled={disabled}
             className={clsx(

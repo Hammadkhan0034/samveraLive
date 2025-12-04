@@ -27,6 +27,7 @@ interface TeacherAttendanceContentProps {
   teacherClasses: TeacherClass[];
   attendance: Record<string, string>;
   attendanceRecords: Record<string, any>;
+  leftAt: Record<string, string | null>;
   hasUnsavedChanges: boolean;
   isSaving: boolean;
   isLoading: boolean;
@@ -43,6 +44,7 @@ function TeacherAttendanceContent({
   teacherClasses,
   attendance,
   attendanceRecords,
+  leftAt,
   hasUnsavedChanges,
   isSaving,
   isLoading,
@@ -90,13 +92,14 @@ function TeacherAttendanceContent({
           students={students}
           teacherClasses={teacherClasses}
           attendance={attendance}
+          attendanceRecords={attendanceRecords}
+          leftAt={leftAt}
           hasUnsavedChanges={hasUnsavedChanges}
           isSaving={isSaving}
           isLoading={isLoading}
           onMarkAll={onMarkAll}
           onStatusChange={onStatusChange}
           onSubmit={onSubmit}
-          attendanceRecords={attendanceRecords}
         />
       </section>
     </>
@@ -113,6 +116,8 @@ export default function TeacherAttendancePage() {
     attendance,
     savedAttendance,
     attendanceRecords,
+    leftAt,
+    savedLeftAt,
     isLoading: loadingAttendance,
     isSaving: isSavingAttendance,
     hasLoadedInitial,
@@ -131,11 +136,11 @@ export default function TeacherAttendancePage() {
   }, [students.length, teacherClasses.length, loadAttendance]);
 
   // Calculate kids checked in from actual students (needed for tiles badge)
-  // Count students with 'arrived' or 'present' status
+  // Count students with 'arrived' status
   const kidsIn = useMemo(() => {
     return students.filter((s) => {
       const status = attendance[s.id] || '';
-      return status === 'arrived' || status === 'present';
+      return status === 'arrived';
     }).length;
   }, [students, attendance]);
 
@@ -144,18 +149,20 @@ export default function TeacherAttendancePage() {
     return students.some((student) => {
       const currentStatus = attendance[student.id] || '';
       const savedStatus = savedAttendance[student.id] || '';
-      return currentStatus !== savedStatus;
+      const currentLeftAt = leftAt[student.id] ?? null;
+      const savedLeftAtValue = savedLeftAt[student.id] ?? null;
+      return currentStatus !== savedStatus || currentLeftAt !== savedLeftAtValue;
     });
-  }, [attendance, savedAttendance, students]);
+  }, [attendance, savedAttendance, leftAt, savedLeftAt, students]);
 
   // Handle save attendance
   const handleSaveAttendance = useCallback(async () => {
     try {
-      await saveAttendance(attendance);
+      await saveAttendance(attendance, leftAt);
     } catch (error: any) {
       alert(error.message || 'Error saving attendance. Please try again.');
     }
-  }, [attendance, saveAttendance]);
+  }, [attendance, leftAt, saveAttendance]);
 
   // Handle status change
   const handleStatusChange = useCallback(
@@ -186,6 +193,7 @@ export default function TeacherAttendancePage() {
         teacherClasses={teacherClasses}
         attendance={attendance}
         attendanceRecords={attendanceRecords}
+        leftAt={leftAt}
         hasUnsavedChanges={hasUnsavedChanges}
         isSaving={isSavingAttendance}
         isLoading={isPageLoading}
@@ -206,6 +214,7 @@ interface AttendancePanelProps {
   teacherClasses: TeacherClass[];
   attendance: Record<string, string>;
   attendanceRecords: Record<string, any>;
+  leftAt: Record<string, string | null>;
   hasUnsavedChanges: boolean;
   isSaving: boolean;
   isLoading: boolean;
@@ -221,6 +230,7 @@ const AttendancePanel = React.memo<AttendancePanelProps>(function AttendancePane
   teacherClasses,
   attendance,
   attendanceRecords,
+  leftAt,
   hasUnsavedChanges,
   isSaving,
   isLoading,
@@ -295,6 +305,7 @@ const AttendancePanel = React.memo<AttendancePanelProps>(function AttendancePane
           {filteredStudents.map((student) => {
             const status = attendance[student.id] || '';
             const record = attendanceRecords[student.id];
+            const studentLeftAt = leftAt[student.id] ?? record?.left_at ?? null;
             return (
               <StudentAttendanceCard
                 key={student.id}
@@ -304,6 +315,7 @@ const AttendancePanel = React.memo<AttendancePanelProps>(function AttendancePane
                 disabled={isSaving || isLoading}
                 classes={teacherClasses}
                 updatedAt={record?.updated_at || record?.created_at || null}
+                leftAt={studentLeftAt}
               />
             );
           })}

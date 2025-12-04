@@ -633,7 +633,6 @@ export const isText = {
   attendance: 'Mæting',
   attendance_desc: 'Skoða mætingarskrá barnsins.',
   attendance_title: 'Mæting dagsins',
-  attendance_present: 'Mætt',
   attendance_absent: 'Fjarverandi',
   attendance_late: 'Seinn',
   attendance_excused: 'Afskráð',

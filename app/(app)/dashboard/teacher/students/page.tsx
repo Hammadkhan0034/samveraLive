@@ -400,17 +400,6 @@ export default function TeacherStudentsPage() {
     }
   }, [teacherClasses]);
 
-  // Create table if needed
-  const createTableIfNeeded = useCallback(async () => {
-    try {
-      await fetch('/api/create-student-requests-table', {
-        method: 'POST'
-      });
-    } catch (error) {
-      // Silently fail - table creation is not critical
-    }
-  }, []);
-
   // Load data on mount and when dependencies change
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -451,12 +440,11 @@ export default function TeacherStudentsPage() {
     if (!session?.user?.id) return;
 
     if (teacherClasses.length > 0) {
-      createTableIfNeeded();
       loadStudents(false);
     } else if (!loadingClasses) {
       loadTeacherClasses(false);
     }
-  }, [teacherClasses.length, session?.user?.id, loadingClasses, loadStudents, loadTeacherClasses, createTableIfNeeded]);
+  }, [teacherClasses.length, session?.user?.id, loadingClasses, loadStudents, loadTeacherClasses]);
 
   // Child component that uses the hook inside TeacherPageLayout
   function TeacherStudentsContent() {

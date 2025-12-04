@@ -113,8 +113,8 @@ export const genderSchema = z.enum(['male', 'female', 'other', 'unknown'], {
 /**
  * Attendance status enum
  */
-export const attendanceStatusSchema = z.enum(['present', 'absent', 'late', 'excused', 'arrived', 'away_holiday', 'away_sick', 'gone'], {
-  errorMap: () => ({ message: 'Invalid status. Must be one of: present, absent, late, excused, arrived, away_holiday, away_sick, gone' })
+export const attendanceStatusSchema = z.enum(['absent', 'late', 'excused', 'arrived', 'away_holiday', 'away_sick', 'gone'], {
+  errorMap: () => ({ message: 'Invalid status. Must be one of: absent, late, excused, arrived, away_holiday, away_sick, gone' })
 });
 
 /**

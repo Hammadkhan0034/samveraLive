@@ -23,8 +23,9 @@ export const postAttendanceBodySchema = z.object({
   class_id: classIdSchema.optional(),
   student_id: studentIdSchema,
   date: dateSchema,
-  status: attendanceStatusSchema.default('present'),
+  status: attendanceStatusSchema.default('arrived'),
   notes: notesSchema,
+  left_at: z.string().datetime().nullable().optional(),
 });
 
 /**
@@ -34,6 +35,7 @@ export const putAttendanceBodySchema = z.object({
   id: uuidSchema,
   status: attendanceStatusSchema.optional(),
   notes: notesSchema,
+  left_at: z.string().datetime().nullable().optional(),
 });
 
 /**

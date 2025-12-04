@@ -760,8 +760,6 @@ export default function ParentDashboard() {
                 {attendanceData.map((att) => {
                   const getStatusColor = (status: string) => {
                     switch (status) {
-                      case 'present':
-                        return 'bg-mint-100 text-mint-800 dark:bg-emerald-900/20 dark:text-emerald-300';
                       case 'absent':
                         return 'bg-red-50 text-red-800 dark:bg-red-900/20 dark:text-red-300';
                       case 'late':
@@ -774,8 +772,6 @@ export default function ParentDashboard() {
                   };
                   const getStatusText = (status: string) => {
                     switch (status) {
-                      case 'present':
-                        return t.attendance_present || 'Present';
                       case 'absent':
                         return t.attendance_absent || 'Absent';
                       case 'late':

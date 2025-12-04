@@ -261,6 +261,7 @@ const postBatchAttendanceBodySchema = z.object({
       date: dateSchema,
       class_id: classIdSchema.optional().nullable(),
       notes: notesSchema.optional().nullable(),
+      left_at: z.string().datetime().nullable().optional(),
     }),
   ).min(1),
 });
@@ -293,17 +294,42 @@ export async function handlePostBatchAttendance(
   }
   const { records } = bodyValidation.data;
 
+  // Fetch existing records to preserve status when setting left_at
+  const existingRecords = await adminClient
+    .from('attendance')
+    .select('student_id, date, status')
+    .in('student_id', records.map(r => r.student_id))
+    .in('date', records.map(r => r.date));
+
+  const existingMap = new Map(
+    (existingRecords.data || []).map(r => [`${r.student_id}-${r.date}`, r])
+  );
+
   // Prepare records for upsert
-  const attendanceRecords = records.map((record) => ({
-    org_id: orgId,
-    class_id: record.class_id || null,
-    student_id: record.student_id,
-    date: record.date,
-    status: record.status,
-    notes: record.notes || null,
-    recorded_by: userId,
-    updated_at: new Date().toISOString(),
-  }));
+  const attendanceRecords = records.map((record) => {
+    const key = `${record.student_id}-${record.date}`;
+    const existing = existingMap.get(key);
+    
+    // If left_at is being set, preserve original status (unless it's 'gone')
+    let finalStatus = record.status;
+    if (record.left_at !== undefined && record.left_at !== null) {
+      if (existing && existing.status !== 'gone') {
+        finalStatus = existing.status;
+      }
+    }
+
+    return {
+      org_id: orgId,
+      class_id: record.class_id || null,
+      student_id: record.student_id,
+      date: record.date,
+      status: finalStatus,
+      notes: record.notes || null,
+      left_at: record.left_at !== undefined ? record.left_at : undefined,
+      recorded_by: userId,
+      updated_at: new Date().toISOString(),
+    };
+  });
 
   // Use upsert to handle UNIQUE constraint (student_id, date)
   // This will update existing records or create new ones
@@ -314,7 +340,7 @@ export async function handlePostBatchAttendance(
       ignoreDuplicates: false,
     })
     .select(
-      'id,org_id,class_id,student_id,date,status,notes,recorded_by,created_at,updated_at',
+      'id,org_id,class_id,student_id,date,status,notes,recorded_by,left_at,created_at,updated_at',
     );
 
   if (attendanceError) {

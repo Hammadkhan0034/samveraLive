@@ -53,6 +53,7 @@ export async function fetchAttendanceByFilters({
         status,
         notes,
         recorded_by,
+        left_at,
         created_at,
         updated_at,
         students!attendance_student_id_fkey (
@@ -117,7 +118,25 @@ export async function upsertAttendance({
 }: UpsertAttendanceArgs): Promise<AttendanceRecord> {
   assertSupabaseAdmin();
 
-  const { class_id, student_id, date, status, notes } = payload;
+  const { class_id, student_id, date, status, notes, left_at } = payload;
+
+  // If left_at is being set, preserve the existing status if it's not 'gone'
+  // Otherwise use the provided status
+  let finalStatus = status;
+  if (left_at !== undefined && left_at !== null) {
+    // When marking as gone, preserve original status
+    // First check if record exists
+    const { data: existing } = await supabaseAdmin!
+      .from('attendance')
+      .select('status')
+      .eq('student_id', student_id)
+      .eq('date', date)
+      .single();
+    
+    if (existing && existing.status !== 'gone') {
+      finalStatus = existing.status;
+    }
+  }
 
   try {
     const { data, error } = await supabaseAdmin!
@@ -128,9 +147,10 @@ export async function upsertAttendance({
           class_id: class_id || null,
           student_id,
           date,
-          status,
+          status: finalStatus,
           notes: notes || null,
           recorded_by: userId,
+          left_at: left_at !== undefined ? left_at : undefined,
           updated_at: new Date().toISOString(),
         },
         {
@@ -139,7 +159,7 @@ export async function upsertAttendance({
         },
       )
       .select(
-        'id,org_id,class_id,student_id,date,status,notes,recorded_by,created_at,updated_at',
+        'id,org_id,class_id,student_id,date,status,notes,recorded_by,left_at,created_at,updated_at',
       )
       .single()
       .returns<AttendanceRecord>();
@@ -171,9 +191,9 @@ export async function updateAttendance({
 }: UpdateAttendanceArgs): Promise<AttendanceRecord> {
   assertSupabaseAdmin();
 
-  const { id, status, notes } = payload;
+  const { id, status, notes, left_at } = payload;
 
-  const updateData: Partial<Pick<AttendanceRecord, 'status' | 'notes'>> & {
+  const updateData: Partial<Pick<AttendanceRecord, 'status' | 'notes' | 'left_at'>> & {
     updated_at: string;
     recorded_by: string;
   } = {
@@ -189,13 +209,32 @@ export async function updateAttendance({
     updateData.notes = notes;
   }
 
+  // Handle left_at: can be set to a timestamp or null to unmark as gone
+  if (left_at !== undefined) {
+    updateData.left_at = left_at;
+  }
+
+  // If left_at is being set, preserve existing status (unless explicitly changed)
+  if (left_at !== undefined && left_at !== null && typeof status === 'undefined') {
+    const { data: existing } = await supabaseAdmin!
+      .from('attendance')
+      .select('status')
+      .eq('id', id)
+      .single();
+    
+    if (existing && existing.status !== 'gone') {
+      // Preserve original status when marking as gone
+      updateData.status = existing.status;
+    }
+  }
+
   try {
     const { data, error } = await supabaseAdmin!
       .from('attendance')
       .update(updateData)
       .eq('id', id)
       .select(
-        'id,org_id,class_id,student_id,date,status,notes,recorded_by,created_at,updated_at',
+        'id,org_id,class_id,student_id,date,status,notes,recorded_by,left_at,created_at,updated_at',
       )
       .single()
       .returns<AttendanceRecord>();

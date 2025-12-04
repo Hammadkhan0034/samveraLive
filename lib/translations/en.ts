@@ -632,7 +632,6 @@ export const enText = {
   attendance: 'Attendance',
   attendance_desc: 'View your child\'s attendance records.',
   attendance_title: 'Today\'s Attendance',
-  attendance_present: 'Present',
   attendance_absent: 'Absent',
   attendance_late: 'Late',
   attendance_excused: 'Excused',

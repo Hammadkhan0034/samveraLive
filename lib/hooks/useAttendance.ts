@@ -14,6 +14,8 @@ export function useAttendance(
   const [attendance, setAttendance] = useState<Record<string, string>>({});
   const [savedAttendance, setSavedAttendance] = useState<Record<string, string>>({});
   const [attendanceRecords, setAttendanceRecords] = useState<Record<string, AttendanceRecord>>({});
+  const [leftAt, setLeftAt] = useState<Record<string, string | null>>({});
+  const [savedLeftAt, setSavedLeftAt] = useState<Record<string, string | null>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [hasLoadedInitial, setHasLoadedInitial] = useState(false);
@@ -49,12 +51,14 @@ export function useAttendance(
 
         const results = await Promise.allSettled(fetchPromises);
         const allAttendance: Record<string, string> = {};
+        const allLeftAt: Record<string, string | null> = {};
         const allRecords: Record<string, AttendanceRecord> = {};
 
         results.forEach((result) => {
           if (result.status === 'fulfilled') {
             result.value.forEach((record) => {
               allAttendance[record.student_id] = record.status;
+              allLeftAt[record.student_id] = record.left_at || null;
               allRecords[record.student_id] = record;
             });
           }
@@ -62,6 +66,8 @@ export function useAttendance(
 
         setAttendance(allAttendance);
         setSavedAttendance(allAttendance);
+        setLeftAt(allLeftAt);
+        setSavedLeftAt(allLeftAt);
         setAttendanceRecords(allRecords);
         console.log('✅ Attendance loaded for date:', date, allAttendance);
       } catch (error) {
@@ -78,10 +84,29 @@ export function useAttendance(
   const saveAttendanceRecord = useCallback(async (
     studentId: string,
     status: string,
-    classId?: string | null
+    classId?: string | null,
+    leftAtValue?: string | null
   ): Promise<boolean> => {
     try {
       const today = new Date().toISOString().split('T')[0];
+      const record = attendanceRecords[studentId];
+      const originalStatus = record?.status || 'arrived';
+
+      // If status is 'gone', set left_at and preserve original status
+      let finalStatus = status;
+      let finalLeftAt: string | null | undefined = leftAtValue;
+      
+      if (status === 'gone') {
+        finalStatus = originalStatus !== 'gone' ? originalStatus : 'arrived';
+        finalLeftAt = new Date().toISOString();
+      } else {
+        // If status is not 'gone' and student was previously gone, clear left_at
+        const recordLeftAt = record?.left_at ?? null;
+        if (recordLeftAt !== null && recordLeftAt !== undefined) {
+          finalLeftAt = null; // Clear left_at when unmarking as gone
+        }
+        // Otherwise, use the provided leftAtValue (which may be null/undefined)
+      }
 
       const response = await fetch('/api/attendance', {
         method: 'POST',
@@ -90,14 +115,15 @@ export function useAttendance(
           class_id: classId || null,
           student_id: studentId,
           date: today,
-          status: status,
+          status: finalStatus,
+          left_at: finalLeftAt,
         }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        console.log('✅ Attendance saved:', { studentId, status });
+        console.log('✅ Attendance saved:', { studentId, status: finalStatus, left_at: finalLeftAt });
         return true;
       } else {
         console.error('❌ Failed to save attendance:', data.error);
@@ -107,10 +133,10 @@ export function useAttendance(
       console.error('❌ Error saving attendance:', error);
       return false;
     }
-  }, []);
+  }, [attendanceRecords]);
 
   // Save all attendance changes (batch)
-  const saveAttendance = useCallback(async (changes: Record<string, string>) => {
+  const saveAttendance = useCallback(async (changes: Record<string, string>, leftAtChanges?: Record<string, string | null>) => {
     if (isSaving) {
       return;
     }
@@ -118,11 +144,13 @@ export function useAttendance(
     try {
       setIsSaving(true);
 
-      // Find students that have changes
+      // Find students that have changes (status or left_at)
       const studentsToSave = students.filter((student) => {
         const currentStatus = changes[student.id] ?? attendance[student.id] ?? '';
         const savedStatus = savedAttendance[student.id] ?? '';
-        return currentStatus !== savedStatus;
+        const currentLeftAt = leftAtChanges?.[student.id] ?? leftAt[student.id] ?? null;
+        const savedLeftAtValue = savedLeftAt[student.id] ?? null;
+        return currentStatus !== savedStatus || currentLeftAt !== savedLeftAtValue;
       });
 
       if (studentsToSave.length === 0) {
@@ -138,11 +166,35 @@ export function useAttendance(
       const records = studentsToSave.map((student) => {
         const status = changes[student.id] ?? attendance[student.id] ?? 'absent';
         const classId = student.class_id || (student as any)?.classes?.id || null;
+        const record = attendanceRecords[student.id];
+        const originalStatus = record?.status || 'arrived';
+        const currentLeftAt = leftAtChanges?.[student.id] ?? leftAt[student.id] ?? null;
+
+        // If status is 'gone', set left_at and preserve original status
+        let finalStatus = status;
+        let finalLeftAt: string | null | undefined = currentLeftAt;
+        
+        if (status === 'gone') {
+          finalStatus = originalStatus !== 'gone' ? originalStatus : 'arrived';
+          finalLeftAt = new Date().toISOString();
+        } else {
+          // If status is not 'gone', check if we need to clear left_at
+          const savedLeftAtValue = savedLeftAt[student.id] ?? null;
+          const recordLeftAt = record?.left_at ?? null;
+          
+          // If student was previously gone (had left_at) and now status is not 'gone', clear left_at
+          if (savedLeftAtValue !== null || recordLeftAt !== null) {
+            finalLeftAt = null;
+          }
+          // Otherwise, use the current leftAt value (which may be null or undefined)
+        }
+
         return {
           student_id: student.id,
-          status: status as any,
+          status: finalStatus as any,
           date: today,
           class_id: classId,
+          left_at: finalLeftAt,
         };
       });
 
@@ -159,6 +211,17 @@ export function useAttendance(
         if (batchResponse.ok) {
           const batchData = await batchResponse.json();
           setSavedAttendance({ ...attendance, ...changes });
+          const newLeftAt = { ...leftAt };
+          studentsToSave.forEach((student) => {
+            const status = changes[student.id] ?? attendance[student.id] ?? '';
+            if (status === 'gone') {
+              newLeftAt[student.id] = new Date().toISOString();
+            } else if (status !== 'gone' && leftAt[student.id]) {
+              newLeftAt[student.id] = null;
+            }
+          });
+          setSavedLeftAt(newLeftAt);
+          setLeftAt(newLeftAt);
           console.log(`✅ Successfully saved attendance for ${studentsToSave.length} student(s) via batch`);
           setIsSaving(false);
           return;
@@ -171,7 +234,8 @@ export function useAttendance(
       const savePromises = studentsToSave.map(async (student) => {
         const status = changes[student.id] ?? attendance[student.id] ?? 'absent';
         const classId = student.class_id || (student as any)?.classes?.id || null;
-        return saveAttendanceRecord(student.id, status, classId);
+        const currentLeftAt = leftAtChanges?.[student.id] ?? leftAt[student.id] ?? null;
+        return saveAttendanceRecord(student.id, status, classId, currentLeftAt);
       });
 
       const results = await Promise.allSettled(savePromises);
@@ -182,6 +246,17 @@ export function useAttendance(
 
       if (failureCount === 0) {
         setSavedAttendance({ ...attendance, ...changes });
+        const newLeftAt = { ...leftAt };
+        studentsToSave.forEach((student) => {
+          const status = changes[student.id] ?? attendance[student.id] ?? '';
+          if (status === 'gone') {
+            newLeftAt[student.id] = new Date().toISOString();
+          } else if (status !== 'gone' && leftAt[student.id]) {
+            newLeftAt[student.id] = null;
+          }
+        });
+        setSavedLeftAt(newLeftAt);
+        setLeftAt(newLeftAt);
         console.log(`✅ Successfully saved attendance for ${successCount} student(s)`);
       } else {
         console.error(`❌ Failed to save attendance for ${failureCount} student(s)`);
@@ -193,11 +268,34 @@ export function useAttendance(
     } finally {
       setIsSaving(false);
     }
-  }, [isSaving, students, attendance, savedAttendance, saveAttendanceRecord]);
+  }, [isSaving, students, attendance, savedAttendance, leftAt, savedLeftAt, attendanceRecords, saveAttendanceRecord]);
 
   // Update attendance state (optimistic update)
   const updateAttendance = useCallback((studentId: string, status: string) => {
-    setAttendance((prev) => ({ ...prev, [studentId]: status }));
+    setAttendance((prev) => {
+      const newAttendance = { ...prev, [studentId]: status };
+      
+      // If status is 'gone', set left_at
+      if (status === 'gone') {
+        setLeftAt((prevLeftAt) => ({
+          ...prevLeftAt,
+          [studentId]: new Date().toISOString(),
+        }));
+      } else {
+        // If changing from 'gone' to another status, clear left_at (set to null)
+        setLeftAt((prevLeftAt) => {
+          if (prevLeftAt[studentId] !== null && prevLeftAt[studentId] !== undefined) {
+            return {
+              ...prevLeftAt,
+              [studentId]: null,
+            };
+          }
+          return prevLeftAt;
+        });
+      }
+      
+      return newAttendance;
+    });
   }, []);
 
   // Mark all students as arrived
@@ -223,6 +321,8 @@ export function useAttendance(
     attendance,
     savedAttendance,
     attendanceRecords,
+    leftAt,
+    savedLeftAt,
     isLoading,
     isSaving,
     hasLoadedInitial,

@@ -67,9 +67,10 @@ export interface AttendanceRecord {
   class_id: string | null;
   student_id: string;
   date: string;
-  status: 'present' | 'absent' | 'late' | 'excused' | 'arrived' | 'away_holiday' | 'away_sick' | 'gone';
+  status: 'absent' | 'late' | 'excused' | 'arrived' | 'away_holiday' | 'away_sick' | 'gone';
   notes?: string | null;
   recorded_by?: string | null;
+  left_at?: string | null;
   created_at: string;
   updated_at?: string;
   // Nested data from API joins
@@ -96,9 +97,10 @@ export interface AttendanceState {
 
 export interface BatchAttendanceRecord {
   student_id: string;
-  status: 'present' | 'absent' | 'late' | 'excused' | 'arrived' | 'away_holiday' | 'away_sick' | 'gone';
+  status: 'absent' | 'late' | 'excused' | 'arrived' | 'away_holiday' | 'away_sick' | 'gone';
   date: string;
   class_id?: string | null;
   notes?: string | null;
+  left_at?: string | null;
 }
 

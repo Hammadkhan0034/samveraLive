@@ -5,7 +5,6 @@
 export const DEFAULT_ORG_ID = '1db3c97c-de42-4ad2-bb72-cc0b6cda69f7';
 
 export const ATTENDANCE_STATUS = {
-  PRESENT: 'present',
   ABSENT: 'absent',
 } as const;
 
