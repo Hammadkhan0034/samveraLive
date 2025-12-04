@@ -67,7 +67,7 @@ export interface AttendanceRecord {
   class_id: string | null;
   student_id: string;
   date: string;
-  status: 'present' | 'absent' | 'late' | 'excused';
+  status: 'present' | 'absent' | 'late' | 'excused' | 'arrived' | 'away_holiday' | 'away_sick' | 'gone';
   notes?: string | null;
   recorded_by?: string | null;
   created_at: string;
@@ -89,14 +89,14 @@ export interface AttendanceRecord {
 }
 
 export interface AttendanceState {
-  attendance: Record<string, boolean>;
-  savedAttendance: Record<string, boolean>;
+  attendance: Record<string, string>;
+  savedAttendance: Record<string, string>;
   isSaving: boolean;
 }
 
 export interface BatchAttendanceRecord {
   student_id: string;
-  status: 'present' | 'absent' | 'late' | 'excused';
+  status: 'present' | 'absent' | 'late' | 'excused' | 'arrived' | 'away_holiday' | 'away_sick' | 'gone';
   date: string;
   class_id?: string | null;
   notes?: string | null;

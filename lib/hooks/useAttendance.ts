@@ -11,8 +11,9 @@ export function useAttendance(
   students: Student[],
   classes: TeacherClass[]
 ) {
-  const [attendance, setAttendance] = useState<Record<string, boolean>>({});
-  const [savedAttendance, setSavedAttendance] = useState<Record<string, boolean>>({});
+  const [attendance, setAttendance] = useState<Record<string, string>>({});
+  const [savedAttendance, setSavedAttendance] = useState<Record<string, string>>({});
+  const [attendanceRecords, setAttendanceRecords] = useState<Record<string, AttendanceRecord>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [hasLoadedInitial, setHasLoadedInitial] = useState(false);
@@ -47,18 +48,21 @@ export function useAttendance(
         });
 
         const results = await Promise.allSettled(fetchPromises);
-        const allAttendance: Record<string, boolean> = {};
+        const allAttendance: Record<string, string> = {};
+        const allRecords: Record<string, AttendanceRecord> = {};
 
         results.forEach((result) => {
           if (result.status === 'fulfilled') {
             result.value.forEach((record) => {
-              allAttendance[record.student_id] = record.status === 'present';
+              allAttendance[record.student_id] = record.status;
+              allRecords[record.student_id] = record;
             });
           }
         });
 
         setAttendance(allAttendance);
         setSavedAttendance(allAttendance);
+        setAttendanceRecords(allRecords);
         console.log('✅ Attendance loaded for date:', date, allAttendance);
       } catch (error) {
         console.error('❌ Error loading attendance:', error);
@@ -73,12 +77,11 @@ export function useAttendance(
   // Save single attendance record
   const saveAttendanceRecord = useCallback(async (
     studentId: string,
-    isPresent: boolean,
+    status: string,
     classId?: string | null
   ): Promise<boolean> => {
     try {
       const today = new Date().toISOString().split('T')[0];
-      const status = isPresent ? 'present' : 'absent';
 
       const response = await fetch('/api/attendance', {
         method: 'POST',
@@ -107,7 +110,7 @@ export function useAttendance(
   }, []);
 
   // Save all attendance changes (batch)
-  const saveAttendance = useCallback(async (changes: Record<string, boolean>) => {
+  const saveAttendance = useCallback(async (changes: Record<string, string>) => {
     if (isSaving) {
       return;
     }
@@ -117,8 +120,8 @@ export function useAttendance(
 
       // Find students that have changes
       const studentsToSave = students.filter((student) => {
-        const currentStatus = changes[student.id] ?? attendance[student.id] ?? false;
-        const savedStatus = savedAttendance[student.id] ?? false;
+        const currentStatus = changes[student.id] ?? attendance[student.id] ?? '';
+        const savedStatus = savedAttendance[student.id] ?? '';
         return currentStatus !== savedStatus;
       });
 
@@ -133,11 +136,11 @@ export function useAttendance(
       // Use batch endpoint if available, otherwise save individually
       const today = new Date().toISOString().split('T')[0];
       const records = studentsToSave.map((student) => {
-        const isPresent = changes[student.id] ?? attendance[student.id] ?? false;
+        const status = changes[student.id] ?? attendance[student.id] ?? 'absent';
         const classId = student.class_id || (student as any)?.classes?.id || null;
         return {
           student_id: student.id,
-          status: isPresent ? ('present' as const) : ('absent' as const),
+          status: status as any,
           date: today,
           class_id: classId,
         };
@@ -166,9 +169,9 @@ export function useAttendance(
 
       // Fallback to individual saves
       const savePromises = studentsToSave.map(async (student) => {
-        const isPresent = changes[student.id] ?? attendance[student.id] ?? false;
+        const status = changes[student.id] ?? attendance[student.id] ?? 'absent';
         const classId = student.class_id || (student as any)?.classes?.id || null;
-        return saveAttendanceRecord(student.id, isPresent, classId);
+        return saveAttendanceRecord(student.id, status, classId);
       });
 
       const results = await Promise.allSettled(savePromises);
@@ -193,11 +196,11 @@ export function useAttendance(
   }, [isSaving, students, attendance, savedAttendance, saveAttendanceRecord]);
 
   // Update attendance state (optimistic update)
-  const updateAttendance = useCallback((studentId: string, isPresent: boolean) => {
-    setAttendance((prev) => ({ ...prev, [studentId]: isPresent }));
+  const updateAttendance = useCallback((studentId: string, status: string) => {
+    setAttendance((prev) => ({ ...prev, [studentId]: status }));
   }, []);
 
-  // Mark all students as present
+  // Mark all students as arrived
   const markAllPresent = useCallback((classId?: string) => {
     setAttendance((prev) => {
       const newAttendance = { ...prev };
@@ -209,7 +212,7 @@ export function useAttendance(
         : students;
 
       studentsToMark.forEach((s) => {
-        newAttendance[s.id] = true;
+        newAttendance[s.id] = 'arrived';
       });
 
       return newAttendance;
@@ -219,6 +222,7 @@ export function useAttendance(
   return {
     attendance,
     savedAttendance,
+    attendanceRecords,
     isLoading,
     isSaving,
     hasLoadedInitial,

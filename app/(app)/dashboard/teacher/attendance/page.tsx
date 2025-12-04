@@ -25,12 +25,13 @@ interface TeacherAttendanceContentProps {
   kidsIn: number;
   students: Student[];
   teacherClasses: TeacherClass[];
-  attendance: Record<string, boolean>;
+  attendance: Record<string, string>;
+  attendanceRecords: Record<string, any>;
   hasUnsavedChanges: boolean;
   isSaving: boolean;
   isLoading: boolean;
   onMarkAll: (classId?: string) => void;
-  onToggle: (studentId: string, checked: boolean) => void;
+  onStatusChange: (studentId: string, status: string) => void;
   onSubmit: () => void;
 }
 
@@ -41,11 +42,12 @@ function TeacherAttendanceContent({
   students,
   teacherClasses,
   attendance,
+  attendanceRecords,
   hasUnsavedChanges,
   isSaving,
   isLoading,
   onMarkAll,
-  onToggle,
+  onStatusChange,
   onSubmit,
 }: TeacherAttendanceContentProps) {
   const { sidebarRef } = useTeacherPageLayout();
@@ -92,8 +94,9 @@ function TeacherAttendanceContent({
           isSaving={isSaving}
           isLoading={isLoading}
           onMarkAll={onMarkAll}
-          onToggle={onToggle}
+          onStatusChange={onStatusChange}
           onSubmit={onSubmit}
+          attendanceRecords={attendanceRecords}
         />
       </section>
     </>
@@ -109,6 +112,7 @@ export default function TeacherAttendancePage() {
   const {
     attendance,
     savedAttendance,
+    attendanceRecords,
     isLoading: loadingAttendance,
     isSaving: isSavingAttendance,
     hasLoadedInitial,
@@ -127,15 +131,19 @@ export default function TeacherAttendancePage() {
   }, [students.length, teacherClasses.length, loadAttendance]);
 
   // Calculate kids checked in from actual students (needed for tiles badge)
+  // Count students with 'arrived' or 'present' status
   const kidsIn = useMemo(() => {
-    return students.filter((s) => attendance[s.id]).length;
+    return students.filter((s) => {
+      const status = attendance[s.id] || '';
+      return status === 'arrived' || status === 'present';
+    }).length;
   }, [students, attendance]);
 
   // Check if there are unsaved changes
   const hasUnsavedChanges = useMemo(() => {
     return students.some((student) => {
-      const currentStatus = attendance[student.id] || false;
-      const savedStatus = savedAttendance[student.id] || false;
+      const currentStatus = attendance[student.id] || '';
+      const savedStatus = savedAttendance[student.id] || '';
       return currentStatus !== savedStatus;
     });
   }, [attendance, savedAttendance, students]);
@@ -149,10 +157,10 @@ export default function TeacherAttendancePage() {
     }
   }, [attendance, saveAttendance]);
 
-  // Handle toggle attendance
-  const handleToggleAttendance = useCallback(
-    (studentId: string, checked: boolean) => {
-      updateAttendance(studentId, checked);
+  // Handle status change
+  const handleStatusChange = useCallback(
+    (studentId: string, status: string) => {
+      updateAttendance(studentId, status);
     },
     [updateAttendance]
   );
@@ -177,11 +185,12 @@ export default function TeacherAttendancePage() {
         students={students}
         teacherClasses={teacherClasses}
         attendance={attendance}
+        attendanceRecords={attendanceRecords}
         hasUnsavedChanges={hasUnsavedChanges}
         isSaving={isSavingAttendance}
         isLoading={isPageLoading}
         onMarkAll={handleMarkAllPresent}
-        onToggle={handleToggleAttendance}
+        onStatusChange={handleStatusChange}
         onSubmit={handleSaveAttendance}
       />
     </TeacherPageLayout>
@@ -195,12 +204,13 @@ interface AttendancePanelProps {
   lang: 'is' | 'en';
   students: Student[];
   teacherClasses: TeacherClass[];
-  attendance: Record<string, boolean>;
+  attendance: Record<string, string>;
+  attendanceRecords: Record<string, any>;
   hasUnsavedChanges: boolean;
   isSaving: boolean;
   isLoading: boolean;
   onMarkAll: (classId?: string) => void;
-  onToggle: (studentId: string, checked: boolean) => void;
+  onStatusChange: (studentId: string, status: string) => void;
   onSubmit: () => void;
 }
 
@@ -210,11 +220,12 @@ const AttendancePanel = React.memo<AttendancePanelProps>(function AttendancePane
   students,
   teacherClasses,
   attendance,
+  attendanceRecords,
   hasUnsavedChanges,
   isSaving,
   isLoading,
   onMarkAll,
-  onToggle,
+  onStatusChange,
   onSubmit,
 }) {
   const [selectedClassId, setSelectedClassId] = useState<string>('all');
@@ -282,15 +293,17 @@ const AttendancePanel = React.memo<AttendancePanelProps>(function AttendancePane
       ) : (
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {filteredStudents.map((student) => {
-            const isPresent = attendance[student.id] || false;
+            const status = attendance[student.id] || '';
+            const record = attendanceRecords[student.id];
             return (
               <StudentAttendanceCard
                 key={student.id}
                 student={student}
-                isPresent={isPresent}
-                onToggle={onToggle}
+                status={status}
+                onStatusChange={onStatusChange}
                 disabled={isSaving || isLoading}
                 classes={teacherClasses}
+                updatedAt={record?.updated_at || record?.created_at || null}
               />
             );
           })}
