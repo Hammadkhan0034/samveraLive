@@ -346,7 +346,12 @@ export function StudentForm({
 
           <ClassSelector
             value={formData.class_id ? [formData.class_id] : []}
-            onChange={(classIds) => setFormData(prev => ({ ...prev, class_id: classIds.length > 0 ? classIds[0] : '' }))}
+            onChange={(classIds) =>
+              setFormData((prev) => ({
+                ...prev,
+                class_id: classIds.length > 0 ? classIds[0] : '',
+              }))
+            }
             label={t.student_class}
             classes={classes}
           />
@@ -354,7 +359,12 @@ export function StudentForm({
           <GuardianSelector
             guardians={guardians}
             value={formData.guardian_ids}
-            onChange={(guardianIds) => setFormData(prev => ({ ...prev, guardian_ids: guardianIds }))}
+            onChange={(guardianIds) =>
+              setFormData((prev) => ({
+                ...prev,
+                guardian_ids: guardianIds,
+              }))
+            }
           />
 
           <div>

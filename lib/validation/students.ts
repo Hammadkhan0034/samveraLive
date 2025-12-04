@@ -26,6 +26,13 @@ export const getStudentsQuerySchema = z.object({
 });
 
 /**
+ * GET /api/search-students query parameter schema
+ */
+export const searchStudentsQuerySchema = z.object({
+  q: z.string().default(''),
+});
+
+/**
  * POST /api/students body schema with date transformations
  */
 export const postStudentBodySchema = z
