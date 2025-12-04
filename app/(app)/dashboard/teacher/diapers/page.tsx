@@ -15,13 +15,15 @@ import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton'
 
 // Small helpers
 
+interface TeacherDiapersContentProps {
+  t: typeof enText | typeof isText;
+}
 
-export default function TeacherDiapersPage() {
-  const { t } = useLanguage();
+function TeacherDiapersContent({ t }: TeacherDiapersContentProps) {
   const { sidebarRef } = useTeacherPageLayout();
 
   return (
-    <TeacherPageLayout>
+    <>
       <PageHeader
         title={t.di_title}
         subtitle={t.diapers_subtitle}
@@ -33,6 +35,16 @@ export default function TeacherDiapersPage() {
       <section>
         <DiaperPanel t={t} />
       </section>
+    </>
+  );
+}
+
+export default function TeacherDiapersPage() {
+  const { t } = useLanguage();
+
+  return (
+    <TeacherPageLayout>
+      <TeacherDiapersContent t={t} />
     </TeacherPageLayout>
   );
 }

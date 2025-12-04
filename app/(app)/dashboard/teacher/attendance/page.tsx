@@ -19,6 +19,87 @@ import { enText } from '@/lib/translations/en';
 import { isText } from '@/lib/translations/is';
 
 
+interface TeacherAttendanceContentProps {
+  t: typeof enText | typeof isText;
+  lang: 'is' | 'en';
+  kidsIn: number;
+  students: Student[];
+  teacherClasses: TeacherClass[];
+  attendance: Record<string, boolean>;
+  hasUnsavedChanges: boolean;
+  isSaving: boolean;
+  isLoading: boolean;
+  onMarkAll: (classId?: string) => void;
+  onToggle: (studentId: string, checked: boolean) => void;
+  onSubmit: () => void;
+}
+
+function TeacherAttendanceContent({
+  t,
+  lang,
+  kidsIn,
+  students,
+  teacherClasses,
+  attendance,
+  hasUnsavedChanges,
+  isSaving,
+  isLoading,
+  onMarkAll,
+  onToggle,
+  onSubmit,
+}: TeacherAttendanceContentProps) {
+  const { sidebarRef } = useTeacherPageLayout();
+
+  return (
+    <>
+      <PageHeader
+        title={t.att_title}
+        subtitle={t.attendance_subtitle}
+        showMobileMenu={true}
+        onMobileMenuClick={() => sidebarRef.current?.open()}
+        rightActions={
+          <>
+            {/* Desktop stats */}
+            <div className="hidden md:flex items-center gap-2 text-ds-small text-slate-600 dark:text-slate-400">
+              <Users className="h-4 w-4" />
+              <span>
+                {t.kids_checked_in}: <span className="font-medium">{kidsIn}</span> / {students.length}
+              </span>
+              <span className="mx-2 text-slate-300 dark:text-slate-600">•</span>
+              <CalendarDays className="h-4 w-4" />
+              <span>{t.today_hint}</span>
+            </div>
+            {/* Mobile stats */}
+            <div className="md:hidden flex items-center gap-2 text-ds-small text-slate-600 dark:text-slate-400">
+              <Users className="h-4 w-4" />
+              <span>
+                {t.kids_checked_in}: <span className="font-medium">{kidsIn}</span> / {students.length}
+              </span>
+            </div>
+          </>
+        }
+      />
+
+      {/* Attendance Panel */}
+      <section>
+        <AttendancePanel
+          t={t}
+          lang={lang}
+          students={students}
+          teacherClasses={teacherClasses}
+          attendance={attendance}
+          hasUnsavedChanges={hasUnsavedChanges}
+          isSaving={isSaving}
+          isLoading={isLoading}
+          onMarkAll={onMarkAll}
+          onToggle={onToggle}
+          onSubmit={onSubmit}
+        />
+      </section>
+    </>
+  );
+}
+
 export default function TeacherAttendancePage() {
   const { t, lang } = useLanguage();
   const { classes: teacherClasses, isLoading: loadingClasses } = useTeacherClasses();
@@ -87,54 +168,22 @@ export default function TeacherAttendancePage() {
   const isPageLoading =
     !hasLoadedInitial || loadingClasses || loadingStudents || loadingAttendance;
 
-  const { sidebarRef } = useTeacherPageLayout();
-
   return (
     <TeacherPageLayout attendanceBadge={kidsIn}>
-      <PageHeader
-        title={t.att_title}
-        subtitle={t.attendance_subtitle}
-        showMobileMenu={true}
-        onMobileMenuClick={() => sidebarRef.current?.open()}
-        rightActions={
-          <>
-            {/* Desktop stats */}
-            <div className="hidden md:flex items-center gap-2 text-ds-small text-slate-600 dark:text-slate-400">
-              <Users className="h-4 w-4" />
-              <span>
-                {t.kids_checked_in}: <span className="font-medium">{kidsIn}</span> / {students.length}
-              </span>
-              <span className="mx-2 text-slate-300 dark:text-slate-600">•</span>
-              <CalendarDays className="h-4 w-4" />
-              <span>{t.today_hint}</span>
-            </div>
-            {/* Mobile stats */}
-            <div className="md:hidden flex items-center gap-2 text-ds-small text-slate-600 dark:text-slate-400">
-              <Users className="h-4 w-4" />
-              <span>
-                {t.kids_checked_in}: <span className="font-medium">{kidsIn}</span> / {students.length}
-              </span>
-            </div>
-          </>
-        }
+      <TeacherAttendanceContent
+        t={t}
+        lang={lang}
+        kidsIn={kidsIn}
+        students={students}
+        teacherClasses={teacherClasses}
+        attendance={attendance}
+        hasUnsavedChanges={hasUnsavedChanges}
+        isSaving={isSavingAttendance}
+        isLoading={isPageLoading}
+        onMarkAll={handleMarkAllPresent}
+        onToggle={handleToggleAttendance}
+        onSubmit={handleSaveAttendance}
       />
-
-      {/* Attendance Panel */}
-      <section>
-        <AttendancePanel
-          t={t}
-          lang={lang}
-          students={students}
-          teacherClasses={teacherClasses}
-          attendance={attendance}
-          hasUnsavedChanges={hasUnsavedChanges}
-          isSaving={isSavingAttendance}
-          isLoading={isPageLoading}
-          onMarkAll={handleMarkAllPresent}
-          onToggle={handleToggleAttendance}
-          onSubmit={handleSaveAttendance}
-        />
-      </section>
     </TeacherPageLayout>
   );
 }
