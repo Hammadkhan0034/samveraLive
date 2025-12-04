@@ -69,7 +69,7 @@ export function AdminDashboard() {
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [studentError, setStudentError] = useState<string | null>(null);
   const [isSubmittingStudent, setIsSubmittingStudent] = useState(false);
-  const [studentForm, setStudentForm] = useState<StudentFormData>({ first_name: '', last_name: '', dob: '', gender: 'unknown', class_id: '', medical_notes: '', allergies: '', emergency_contact: '', guardian_ids: [], phone: '', address: '', registration_time: '', start_date: '', barngildi: 0, student_language: '', social_security_number: '' });
+  const [studentForm, setStudentForm] = useState<StudentFormData>({ first_name: '', last_name: '', dob: '', gender: 'unknown', class_id: '', medical_notes: '', allergies: '', emergency_contact: '', guardian_ids: [], address: '', registration_time: '', start_date: '', barngildi: 0, student_language: '', social_security_number: '' });
 
   // Classes states
   const [classes, setClasses] = useState<Array<{ id: string; name: string; code: string | null }>>([]);
@@ -853,7 +853,6 @@ export function AdminDashboard() {
         allergies: '',
         emergency_contact: '',
         guardian_ids: [],
-        phone: '',
         address: '',
         registration_time: '',
         start_date: '',
@@ -875,7 +874,7 @@ export function AdminDashboard() {
   }
 
   function openCreateStudentModal() {
-    setStudentForm({ first_name: '', last_name: '', dob: '', gender: 'unknown', class_id: '', medical_notes: '', allergies: '', emergency_contact: '', guardian_ids: [], phone: '', address: '', registration_time: '', start_date: '', barngildi: 0, student_language: '', social_security_number: '' });
+    setStudentForm({ first_name: '', last_name: '', dob: '', gender: 'unknown', class_id: '', medical_notes: '', allergies: '', emergency_contact: '', guardian_ids: [],  address: '', registration_time: '', start_date: '', barngildi: 0, student_language: '', social_security_number: '' });
     setStudentError(null);
     setIsStudentModalOpen(true);
     // Load guardians when opening the modal
@@ -896,7 +895,6 @@ export function AdminDashboard() {
       guardian_ids: [],
 
       // required fields to satisfy StudentFormData
-      phone: student.phone || '',
       address: student.address || '',
       registration_time: student.registration_time || '',
       start_date: student.start_date || '',
@@ -1705,7 +1703,7 @@ export function AdminDashboard() {
           }
 
       setIsStudentModalOpen(false);
-      setStudentForm({ first_name: '', last_name: '', dob: '', gender: 'unknown', class_id: '', medical_notes: '', allergies: '', emergency_contact: '', guardian_ids: [], phone: '', address: '', registration_time: '', start_date: '', barngildi: 0, student_language: '', social_security_number: '' });
+      setStudentForm({ first_name: '', last_name: '', dob: '', gender: 'unknown', class_id: '', medical_notes: '', allergies: '', emergency_contact: '', guardian_ids: [], address: '', registration_time: '', start_date: '', barngildi: 0, student_language: '', social_security_number: '' });
 
       // Force refresh dashboard data in background to ensure data is in sync
       loadDashboardData().catch(err => console.error('Error refreshing dashboard:', err));

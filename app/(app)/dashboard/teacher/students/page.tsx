@@ -527,7 +527,6 @@ export default function TeacherStudentsPage() {
       allergies: student.allergies_encrypted || '',
       emergency_contact: student.emergency_contact_encrypted || '',
       guardian_ids: [],
-      phone: '',
       address: '',
       registration_time: '',
       start_date: '',

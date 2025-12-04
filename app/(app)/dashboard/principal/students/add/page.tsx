@@ -87,7 +87,6 @@ function AddStudentPageContent() {
             dob: s.users?.dob || s.dob || '',
             gender: s.users?.gender || s.gender || 'unknown',
             class_id: s.class_id || '',
-            phone: s.users?.phone || s.phone || '',
             address: s.users?.address || s.address || '',
             registration_time: s.registration_time || '',
             start_date: s.start_date || '',
