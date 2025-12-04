@@ -141,7 +141,7 @@ export default function PrincipalDashboard() {
         label: t.kpi_menus,
         value: menusCount,
         icon: Utensils,
-        onClick: () => router.push('/dashboard/menus-list'),
+        onClick: () => router.push('/dashboard/principal/menus'),
       },
     ],
     [t, studentsCount, staffCount, classesCount, menusCount, router],

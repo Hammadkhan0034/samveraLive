@@ -59,7 +59,7 @@ const builtInTileRoutes: BuiltInTileConfig[] = [
   { id: 'calendar', route: '/dashboard/principal/calendar' },
   { id: 'guardians', route: '/dashboard/principal/guardians' },
   { id: 'link_student', route: '/dashboard/principal/link-student' },
-  { id: 'menus', route: '/dashboard/principal/menus-list' },
+  { id: 'menus', route: '/dashboard/principal/menus' },
   { id: 'stories', route: '/dashboard/principal/stories' },
   { id: 'announcements', route: '/dashboard/principal/announcements' },
 ];

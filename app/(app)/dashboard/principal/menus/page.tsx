@@ -27,7 +27,7 @@ interface Menu {
   updated_at?: string;
 }
 
-export default function MenusListPage() {
+export default function PrincipalMenusPage() {
   const { lang, t } = useLanguage();
   const { user, loading, isSigningIn, session } = useRequireAuth();
   const router = useRouter();
@@ -279,7 +279,7 @@ export default function MenusListPage() {
 
   // Also listen for pathname changes (when navigating back from edit page)
   useEffect(() => {
-    if (pathname === '/dashboard/menus-list') {
+    if (pathname === '/dashboard/principal/menus') {
       // Check if menu was updated when we navigate to this page
       if (typeof window !== 'undefined') {
         const menuUpdated = localStorage.getItem('menu_data_updated');

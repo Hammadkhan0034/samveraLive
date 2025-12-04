@@ -173,7 +173,7 @@ export default function TeacherLayout({
                         return;
                       }
                       if (id === 'menus') {
-                        router.push('/dashboard/menus-list');
+                        router.push('/dashboard/principal/menus');
                         setSidebarOpen(false);
                         return;
                       }
