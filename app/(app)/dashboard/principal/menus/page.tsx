@@ -4,8 +4,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { Plus, Calendar, Utensils, Edit, Trash2, ArrowLeft, Menu } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useAuth, useRequireAuth } from '@/lib/hooks/useAuth';
+import {  useRequireAuth } from '@/lib/hooks/useAuth';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
+import { MenuFormModal } from '@/app/components/shared/MenuFormModal';
 import TeacherLayout from '@/app/components/shared/TeacherLayout';
 import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
@@ -65,6 +66,8 @@ export default function PrincipalMenusPage() {
   const [menuToDelete, setMenuToDelete] = useState<string | null>(null);
   const [deletingMenu, setDeletingMenu] = useState(false);
   const [deleteMenuError, setDeleteMenuError] = useState<string | null>(null);
+  const [isMenuModalOpen, setIsMenuModalOpen] = useState(false);
+  const [editingMenu, setEditingMenu] = useState<Menu | null>(null);
 
   // Language handled by context
 
@@ -355,6 +358,26 @@ export default function PrincipalMenusPage() {
     setDeleteMenuError(null);
   }
 
+  function openAddMenuModal() {
+    setEditingMenu(null);
+    setIsMenuModalOpen(true);
+  }
+
+  function openEditMenuModal(menu: Menu) {
+    setEditingMenu(menu);
+    setIsMenuModalOpen(true);
+  }
+
+  function closeMenuModal() {
+    setIsMenuModalOpen(false);
+    setEditingMenu(null);
+  }
+
+  function handleMenuSuccess() {
+    closeMenuModal();
+    loadMenus();
+  }
+
   async function confirmDeleteMenu() {
     if (!menuToDelete) return;
     
@@ -412,7 +435,7 @@ export default function PrincipalMenusPage() {
             <h1 className="text-ds-h1 font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.tile_menus || 'Menus'}</h1>
             <div className="flex items-center gap-2 ml-auto">
               <button
-                onClick={() => router.push('/dashboard/add-menu')}
+                onClick={openAddMenuModal}
                 className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 hover:bg-mint-600 px-4 py-2 text-ds-small text-white transition-colors"
               >
                 <Plus className="h-4 w-4" /> {t.add_menu}
@@ -500,7 +523,7 @@ export default function PrincipalMenusPage() {
                           <td className="py-3 px-4">
                             <div className="flex items-center justify-center gap-2">
                               <button
-                                onClick={() => router.push(`/dashboard/add-menu?id=${menu.id}`)}
+                                onClick={() => openEditMenuModal(menu)}
                                 className="inline-flex items-center gap-1 rounded-ds-sm border border-slate-300 px-2 py-1 text-ds-tiny hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
                               >
                                 <Edit className="h-3 w-3" /> {t.edit}
@@ -567,6 +590,14 @@ export default function PrincipalMenusPage() {
           confirmButtonText={t.delete}
           cancelButtonText={t.cancel}
         />
+
+        {/* Add/Edit Menu Modal */}
+        <MenuFormModal
+          isOpen={isMenuModalOpen}
+          onClose={closeMenuModal}
+          onSuccess={handleMenuSuccess}
+          initialData={editingMenu}
+        />
         </div>
       </div>
   );
@@ -597,7 +628,7 @@ export default function PrincipalMenusPage() {
           <div className="flex items-center gap-ds-sm">
             <ProfileSwitcher />
             <button
-              onClick={() => router.push('/dashboard/add-menu')}
+              onClick={openAddMenuModal}
               className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 hover:bg-mint-600 px-4 py-2 text-ds-small text-white transition-colors"
             >
               <Plus className="h-4 w-4" /> {t.add_menu}
@@ -685,7 +716,7 @@ export default function PrincipalMenusPage() {
                         <td className="py-3 px-4">
                           <div className="flex items-center justify-center gap-2">
                             <button
-                              onClick={() => router.push(`/dashboard/add-menu?id=${menu.id}`)}
+                              onClick={() => openEditMenuModal(menu)}
                               className="inline-flex items-center gap-1 rounded-ds-sm border border-slate-300 px-2 py-1 text-ds-tiny hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
                             >
                               <Edit className="h-3 w-3" /> {t.edit}
@@ -751,6 +782,14 @@ export default function PrincipalMenusPage() {
           error={deleteMenuError}
           confirmButtonText={t.delete}
           cancelButtonText={t.cancel}
+        />
+
+        {/* Add/Edit Menu Modal */}
+        <MenuFormModal
+          isOpen={isMenuModalOpen}
+          onClose={closeMenuModal}
+          onSuccess={handleMenuSuccess}
+          initialData={editingMenu}
         />
       </>
     );
