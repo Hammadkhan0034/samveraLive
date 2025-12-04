@@ -11,7 +11,7 @@ import TeacherPageLayout from '@/app/components/shared/TeacherPageLayout';
 import { PhotoUploadModal } from '@/app/components/shared/PhotoUploadModal';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 
-type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
+type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'link_student' | 'menus';
 
 interface Photo {
   id: string;

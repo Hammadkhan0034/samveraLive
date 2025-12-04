@@ -12,7 +12,7 @@ import TeacherPageLayout from '@/app/components/shared/TeacherPageLayout';
 import { supabase } from '@/lib/supabaseClient';
 
 type Lang = 'is' | 'en';
-type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'guardians' | 'link_student' | 'menus';
+type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'link_student' | 'menus';
 
 // Translations removed - using centralized translations from @/lib/translations
 

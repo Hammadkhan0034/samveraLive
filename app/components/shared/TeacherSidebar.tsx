@@ -11,7 +11,6 @@ import {
   Timer,
   Bell,
   Users,
-  Shield,
   Utensils,
   LayoutDashboard,
   CalendarDays,
@@ -54,7 +53,6 @@ type BuiltInTileId =
   | 'announcements'
   | 'calendar'
   | 'students'
-  | 'guardians'
   | 'menus';
 
 interface BuiltInTileConfig {
@@ -71,7 +69,6 @@ const builtInTileRoutes: BuiltInTileConfig[] = [
   { id: 'stories', route: '/dashboard/teacher/stories' },
   { id: 'announcements', route: '/dashboard/teacher/announcements' },
   { id: 'students', route: '/dashboard/teacher/students' },
-  { id: 'guardians', route: '/dashboard/teacher/guardians' },
   { id: 'menus', route: '/dashboard/teacher/menus' },
   { id: 'calendar', route: '/dashboard/teacher/calendar' },
 ];
@@ -521,40 +518,6 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{t.tile_students_desc}</p>
-              </div>
-            </button>
-
-            {/* Guardians tile */}
-            <button
-              onClick={() => handleBuiltInTileClick('guardians')}
-              className={clsx(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-ds-md text-left transition-all duration-200',
-                'hover:bg-slate-100 dark:hover:bg-slate-700',
-                isTileActive('guardians')
-                  ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
-                  : 'border-l-4 border-transparent'
-              )}
-            >
-              <span className={clsx(
-                'flex-shrink-0 rounded-lg p-2',
-                isTileActive('guardians')
-                  ? 'bg-mint-500 text-white'
-                  : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
-              )}>
-                <Shield className="h-5 w-5" />
-              </span>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2">
-                  <span className={clsx(
-                    'font-medium truncate',
-                    isTileActive('guardians')
-                      ? 'text-slate-900 dark:text-slate-100'
-                      : 'text-slate-700 dark:text-slate-300'
-                  )}>
-                    {t.tile_guardians || 'Guardians'}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{t.tile_guardians_desc || 'Manage guardians'}</p>
               </div>
             </button>
 

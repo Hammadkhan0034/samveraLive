@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     request,
     {
       requireOrg: true,
-      allowedRoles: ['principal', 'admin', 'teacher', 'guardian'],
+      allowedRoles: ['principal', 'teacher'],
     },
     (user, adminClient) => handleGetStudents(request, user, adminClient)
   )
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     request,
     {
       requireOrg: true,
-      allowedRoles: ['principal', 'admin', 'teacher'],
+      allowedRoles: ['principal'],
     },
     (user, adminClient) => handlePostStudent(request, user, adminClient)
   )
@@ -33,7 +33,7 @@ export async function PUT(request: Request) {
     request,
     {
       requireOrg: true,
-      allowedRoles: ['principal', 'admin', 'teacher'],
+      allowedRoles: ['principal'],
     },
     (user, adminClient) => handlePutStudent(request, user, adminClient)
   )
@@ -44,7 +44,7 @@ export async function DELETE(request: Request) {
     request,
     {
       requireOrg: true,
-      allowedRoles: ['principal', 'admin', 'teacher'],
+      allowedRoles: ['principal'],
     },
     (_user, adminClient) => handleDeleteStudent(request, _user, adminClient)
   )
