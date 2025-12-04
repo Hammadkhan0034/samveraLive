@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { X, ChevronDown } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useDebounce } from '@/lib/hooks/useDebounce';
@@ -37,11 +37,45 @@ export function GuardianSelector({
 
   // Store selected guardian data (id, name, email) for display
   const [selectedGuardianData, setSelectedGuardianData] = useState<Map<string, Guardian>>(new Map());
+  
+  // Track previous value to detect actual external changes
+  const prevValueRef = useRef<string>(JSON.stringify(value));
 
-  // Sync internal state with value prop changes
+  // Sync internal state with value prop changes (only when value changes externally)
   useEffect(() => {
+    const currentValueStr = JSON.stringify(value);
+    const prevValueStr = prevValueRef.current;
+    
+    // Get current non-empty guardian IDs from our state
+    const currentNonEmpty = guardianIds.filter(id => id && id.trim() !== '');
+    
+    // If value hasn't changed externally, just update selected guardian data if needed
+    if (currentValueStr === prevValueStr) {
+      // Still update selected guardian data from guardians prop if needed
+      setSelectedGuardianData(prev => {
+        const next = new Map(prev);
+        value.forEach(guardianId => {
+          if (guardianId && !next.has(guardianId)) {
+            const guardian = guardians.find(g => String(g.id) === String(guardianId));
+            if (guardian) {
+              next.set(guardianId, guardian);
+            }
+          }
+        });
+        return next;
+      });
+      return;
+    }
+    
+    // Value changed externally - update our state
+    prevValueRef.current = currentValueStr;
+    
+    // Preserve any empty slots we have (for adding new guardians)
+    const emptySlots = guardianIds.filter(id => !id || id.trim() === '');
+    
     if (value.length > 0) {
-      setGuardianIds(value);
+      // Merge: value from prop + any empty slots we're maintaining
+      setGuardianIds([...value, ...emptySlots]);
       
       // Initialize selected guardian data from guardians prop for pre-selected guardians
       setSelectedGuardianData(prev => {
@@ -57,8 +91,10 @@ export function GuardianSelector({
         return next;
       });
     } else {
-      setGuardianIds(['']);
+      // If value is empty, keep empty slots if we have them, otherwise start with one
+      setGuardianIds(emptySlots.length > 0 ? emptySlots : ['']);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, guardians]);
 
   // Notify parent of changes
@@ -87,7 +123,8 @@ export function GuardianSelector({
 
     // Get selected guardian from stored data or fallback to guardians prop
     const selectedGuardian = (() => {
-      if (!guardianId) return undefined;
+      // Explicitly check for empty string or falsy values
+      if (!guardianId || guardianId.trim() === '') return undefined;
       
       // First check stored data
       const stored = selectedGuardianData.get(guardianId);
