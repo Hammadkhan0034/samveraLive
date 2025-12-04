@@ -10,6 +10,8 @@ import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton'
 import { CreateStaffModal } from '@/app/components/staff/CreateStaffModal';
 import { StaffStatusChangeModal } from '@/app/components/staff/StaffStatusChangeModal';
 import type { StaffFormData, StaffMember, StaffManagementProps, StaffStatusType } from '@/lib/types/staff';
+import { PageHeader } from './shared/PageHeader';
+import { usePrincipalPageLayout } from './shared/PrincipalPageLayout';
 
 const ITEMS_PER_PAGE = 20;
 
@@ -35,7 +37,8 @@ export default function StaffManagement(_props: StaffManagementProps) {
   const [loadingStaff, setLoadingStaff] = useState(false);
   const [staffError, setStaffError] = useState<string | null>(null);
   const [isDeletingStaff, setIsDeletingStaff] = useState(false);
-  
+  const { sidebarRef } = usePrincipalPageLayout();
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const loadingRef = useRef(false);
@@ -370,22 +373,21 @@ export default function StaffManagement(_props: StaffManagementProps) {
 
   return (
     <main className="mx-auto max-w-6xl px-4 pb-4 md:px-6">
-      <div className="mb-ds-lg flex flex-col gap-ds-sm md:flex-row md:items-center md:justify-between">
-        <div>
-          <h2 className="text-ds-h1 font-bold tracking-tight text-ds-text-primary dark:text-slate-100">
-            {t.staff_management}
-          </h2>
-          <p className="mt-2 text-ds-small text-ds-text-muted dark:text-slate-400">{t.manage_staff}</p>
-        </div>
-        <div className="flex flex-wrap gap-ds-sm">
+       <PageHeader
+        title={t.staff}
+        subtitle={t.staff_subtitle}
+        showMobileMenu={true}
+        onMobileMenuClick={() => sidebarRef.current?.open()}
+        rightActions={
           <button
             onClick={handleOpenCreateModal}
             className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-ds-sm py-2 text-ds-small text-white hover:bg-mint-600 transition-colors"
           >
             <Users className="h-4 w-4" /> {t.create_staff}
           </button>
-        </div>
-      </div>
+        }
+      />
+   
 
       {staffError && (
         <div className="mb-ds-md rounded-ds-md bg-red-50 border border-red-200 px-ds-md py-ds-sm text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">

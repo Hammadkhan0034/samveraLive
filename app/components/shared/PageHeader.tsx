@@ -21,7 +21,7 @@ interface PageHeaderProps {
 export function PageHeader({
   title,
   subtitle,
-  headingLevel = 'h2',
+  headingLevel = 'h1',
   showBackButton = false,
   backHref,
   showProfileSwitcher = true,
@@ -77,7 +77,7 @@ export function PageHeader({
           >
             {title}
           </HeadingTag>
-          <p className="mt-1 text-ds-small text-slate-600 dark:text-slate-400">
+          <p className="mt-2 text-ds-small text-ds-text-muted dark:text-slate-400">
             {subtitle}
           </p>
         </div>
