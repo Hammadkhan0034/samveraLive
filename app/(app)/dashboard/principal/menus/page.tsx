@@ -407,20 +407,17 @@ export default function PrincipalMenusPage() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedMenus = filteredMenus.slice(startIndex, startIndex + itemsPerPage);
 
-  // Only show loading if we're actually loading and don't have a user yet
   if (loading && !user && isSigningIn) {
     return <Loading fullScreen text="Loading menus page..." />;
   }
 
   if (!user) return null;
 
-  // Check if user is a teacher or principal
   const userMetadata = user?.user_metadata || session?.user?.user_metadata;
   const role = (userMetadata?.role || userMetadata?.user_role || userMetadata?.app_role || userMetadata?.activeRole || '').toString().toLowerCase();
   const isTeacher = role === 'teacher' || (userMetadata?.roles && Array.isArray(userMetadata.roles) && userMetadata.roles.includes('teacher'));
   const isPrincipal = role === 'principal' || (userMetadata?.roles && Array.isArray(userMetadata.roles) && userMetadata.roles.includes('principal'));
 
-  // Content for teacher layout (with gradient background and back button)
   const teacherContent = (
       <div className="min-h-screen bg-mint-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
         <div className="mx-auto max-w-6xl px-4 pt-6 pb-0 md:px-6">
@@ -602,7 +599,6 @@ export default function PrincipalMenusPage() {
       </div>
   );
 
-  // Content for principal layout (matching students/guardians page structure)
   function PrincipalMenusContent() {
     const { sidebarRef } = usePrincipalPageLayout();
 
@@ -795,7 +791,6 @@ export default function PrincipalMenusPage() {
     );
   }
 
-  // Wrap with appropriate layout based on user role
   if (isTeacher) {
     return <TeacherLayout hideHeader={true}>{teacherContent}</TeacherLayout>;
   }
@@ -807,10 +802,7 @@ export default function PrincipalMenusPage() {
       </PrincipalPageLayout>
     );
   }
-
-  // Fallback for other roles (return teacher content without layout)
   return teacherContent;
 }
 
-// Translations removed - using centralized translations from @/lib/translations
 
