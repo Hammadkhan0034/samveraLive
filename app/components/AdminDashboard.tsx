@@ -797,7 +797,7 @@ export function AdminDashboard() {
       ? age - 1
       : age;
 
-    return actualAge >= 0 && actualAge <= 18;
+    return actualAge >= 3 && actualAge <= 18;
   }
 
   async function submitStudent(e: React.FormEvent) {
@@ -809,7 +809,7 @@ export function AdminDashboard() {
 
       // Validate age before submitting
       if (studentForm.dob && !validateStudentAge(studentForm.dob)) {
-        setStudentError('Student age must be between 0 and 18 years old');
+        setStudentError('Student age must be between 3 and 18 years old');
         return;
       }
 
@@ -1782,7 +1782,7 @@ export function AdminDashboard() {
                     : 'text-slate-500 dark:text-slate-400'
                     }`}>
                     {studentForm.dob && !validateStudentAge(studentForm.dob)
-                      ? 'Student age must be between 0-18 years old'
+                      ? 'Student age must be between 3-18 years old'
                       : t.student_age_requirement
                     }
                   </p>

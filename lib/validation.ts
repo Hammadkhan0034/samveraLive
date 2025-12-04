@@ -36,7 +36,7 @@ export const futureDateSchema = isoDateTimeSchema.refine(
 );
 
 /**
- * Student age validation (0-18 years)
+ * Student age validation (3-18 years)
  */
 export const studentDobSchema = z.string().refine(
   (dob) => {
@@ -50,9 +50,9 @@ export const studentDobSchema = z.string().refine(
       ? age - 1 
       : age;
     
-    return actualAge >= 0 && actualAge <= 18;
+    return actualAge >= 3 && actualAge <= 18;
   },
-  { message: 'Student age must be between 0 and 18 years old' }
+  { message: 'Student age must be between 3 and 18 years old' }
 );
 
 /**

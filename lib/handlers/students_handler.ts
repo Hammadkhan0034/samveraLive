@@ -284,10 +284,10 @@ export async function handlePostStudent(
         ? age - 1
         : age;
 
-    // Check if age is within valid range (0-18 years)
-    if (actualAge < 0 || actualAge > 18) {
+    // Check if age is within valid range (3-18 years)
+    if (actualAge < 3 || actualAge > 18) {
       return NextResponse.json(
-        { error: 'Student age must be between 0 and 18 years old' },
+        { error: 'Student age must be between 3 and 18 years old' },
         { status: 400 },
       );
     }

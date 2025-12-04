@@ -302,8 +302,8 @@ BEGIN
   IF NEW.user_id IS NOT NULL THEN
     SELECT dob INTO user_dob FROM users WHERE id = NEW.user_id;
     IF user_dob IS NOT NULL THEN
-      IF user_dob > CURRENT_DATE OR user_dob < (CURRENT_DATE - INTERVAL '18 years') THEN
-        RAISE EXCEPTION 'Invalid DOB on linked user: must be within the last 18 years and not in the future';
+      IF user_dob > CURRENT_DATE OR user_dob < (CURRENT_DATE - INTERVAL '18 years') OR user_dob > (CURRENT_DATE - INTERVAL '3 years') THEN
+        RAISE EXCEPTION 'Invalid DOB on linked user: must be between 3 and 18 years old and not in the future';
       END IF;
     END IF;
   END IF;
@@ -316,8 +316,8 @@ CREATE OR REPLACE FUNCTION validate_user_dob()
 RETURNS TRIGGER AS $$
 BEGIN
   IF NEW.dob IS NOT NULL THEN
-    IF NEW.dob > CURRENT_DATE OR NEW.dob < (CURRENT_DATE - INTERVAL '18 years') THEN
-      RAISE EXCEPTION 'Invalid DOB: must be within the last 18 years and not in the future';
+    IF NEW.dob > CURRENT_DATE OR NEW.dob < (CURRENT_DATE - INTERVAL '18 years') OR NEW.dob > (CURRENT_DATE - INTERVAL '3 years') THEN
+      RAISE EXCEPTION 'Invalid DOB: must be between 3 and 18 years old and not in the future';
     END IF;
   END IF;
   RETURN NEW;

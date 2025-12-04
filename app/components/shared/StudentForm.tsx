@@ -118,7 +118,7 @@ export function StudentForm({
       ? age - 1 
       : age;
     
-    return actualAge >= 0 && actualAge <= 18;
+    return actualAge >= 3 && actualAge <= 18;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -227,7 +227,7 @@ export function StudentForm({
                   : 'text-ds-text-muted dark:text-slate-400'
               }`}>
                 {formData.dob && !validateStudentAge(formData.dob)
-                  ? 'Student age must be between 0-18 years old'
+                  ? 'Student age must be between 3-18 years old'
                   : t.student_age_requirement
                 }
               </p>
