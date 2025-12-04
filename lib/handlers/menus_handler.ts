@@ -202,13 +202,13 @@ async function fetchMenus(
       .is('deleted_at', null)
       .order('day', { ascending: false });
 
-    if (classId) {
-      query = query.eq('class_id', classId);
-    }
+    // if (classId) {
+    //   query = query.eq('class_id', classId);
+    // }
 
-    if (isTeacher) {
-      query = query.eq('created_by', userId);
-    }
+    // if (isTeacher) {
+    //   query = query.eq('created_by', userId);
+    // }
 
     if (day) {
       query = query.eq('day', day);
