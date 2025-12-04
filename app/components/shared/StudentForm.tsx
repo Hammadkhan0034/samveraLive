@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import type { StudentFormData } from '@/lib/types/students';
+import { GuardianSelector } from './GuardianSelector';
 
 interface StudentFormProps {
   isOpen: boolean;
@@ -29,6 +30,7 @@ export function StudentForm({
   asPage,
 }: StudentFormProps) {
   const { t } = useLanguage();
+
   // Use lazy initialization to avoid setState in effect
   const [formData, setFormData] = useState<StudentFormData>(() => {
     if (initialData) {
@@ -376,7 +378,11 @@ export function StudentForm({
             </select>
           </div>
 
-          {/* Guardians removed from UI */}
+          <GuardianSelector
+            guardians={guardians}
+            value={formData.guardian_ids}
+            onChange={(guardianIds) => setFormData(prev => ({ ...prev, guardian_ids: guardianIds }))}
+          />
 
           <div>
             <label className="block text-ds-small font-medium text-ds-text-primary dark:text-slate-300 mb-ds-xs">

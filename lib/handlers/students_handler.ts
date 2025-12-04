@@ -390,14 +390,81 @@ export async function handlePostStudent(
     );
   }
 
-  // Linking guardians to student via API has been deprecated; handled by /api/guardian-students
-  // Intentionally no-op here
+  // Process guardian_ids to create relationships
+  const createdRelationships: any[] = [];
+  if (guardian_ids && guardian_ids.length > 0) {
+    const studentId = student.id;
+    
+    // Remove duplicates from guardian_ids array
+    const uniqueGuardianIds = Array.from(new Set(guardian_ids.filter(id => id && id.trim() !== '')));
+    
+    for (const guardianId of uniqueGuardianIds) {
+      try {
+        // Verify guardian exists and belongs to same org_id
+        const { data: guardian, error: guardianErr } = await adminClient
+          .from('users')
+          .select('id, org_id, role')
+          .eq('id', guardianId)
+          .eq('org_id', orgId)
+          .eq('role', 'guardian')
+          .maybeSingle();
+
+        if (guardianErr || !guardian) {
+          console.error(`❌ Guardian ${guardianId} not found or doesn't belong to org ${orgId}:`, guardianErr);
+          continue; // Skip invalid guardians but continue with student creation
+        }
+
+        // Check if relationship already exists
+        const { data: existingRel } = await adminClient
+          .from('guardian_students')
+          .select('id')
+          .eq('guardian_id', guardianId)
+          .eq('student_id', studentId)
+          .maybeSingle();
+
+        if (existingRel) {
+          console.log(`⚠️ Relationship already exists for guardian ${guardianId} and student ${studentId}`);
+          continue; // Skip if already exists
+        }
+
+        // Create relationship in guardian_students table
+        const { data: relationship, error: relError } = await adminClient
+          .from('guardian_students')
+          .insert({
+            guardian_id: guardianId,
+            student_id: studentId,
+            relation: 'parent',
+            org_id: orgId,
+          })
+          .select('id,guardian_id,student_id,relation,created_at')
+          .single();
+
+        if (relError) {
+          // Check if it's a duplicate (unique constraint violation)
+          if (relError.code === '23505') {
+            console.log(`⚠️ Relationship already exists for guardian ${guardianId} and student ${studentId}`);
+          } else {
+            console.error(`❌ Failed to create relationship for guardian ${guardianId}:`, relError);
+          }
+        } else if (relationship) {
+          createdRelationships.push(relationship);
+        }
+      } catch (err) {
+        console.error(`❌ Error processing guardian ${guardianId}:`, err);
+        // Continue with other guardians even if one fails
+      }
+    }
+  }
 
   console.log('✅ Student created successfully:', student.id);
+  if (createdRelationships.length > 0) {
+    console.log(`✅ Created ${createdRelationships.length} parent-student relationship(s)`);
+  }
 
   return NextResponse.json(
     {
       student,
+      relationships: createdRelationships,
       message: 'Student created successfully!',
     },
     { status: 201 },
@@ -521,13 +588,112 @@ export async function handlePutStudent(
     );
   }
 
-  // Guardian-student relationship updates are handled via /api/guardian-students; skipping here
+  // Sync guardian-student relationships
+  const updatedRelationships: any[] = [];
+  if (guardian_ids !== undefined) {
+    const studentId = student.id;
+    
+    try {
+      // Fetch existing relationships for this student
+      const { data: existingRelationships, error: fetchErr } = await adminClient
+        .from('guardian_students')
+        .select('id,guardian_id,student_id')
+        .eq('student_id', studentId);
+
+      if (fetchErr) {
+        console.error('❌ Failed to fetch existing relationships:', fetchErr);
+      } else {
+        const existingGuardianIds = (existingRelationships || []).map((r: any) => r.guardian_id);
+        // Remove duplicates from guardian_ids array
+        const uniqueGuardianIds = Array.from(new Set((guardian_ids || []).filter(id => id && id.trim() !== '')));
+        
+        // Find relationships to remove (in existing but not in new)
+        const toRemove = existingGuardianIds.filter((id: string) => !uniqueGuardianIds.includes(id));
+        for (const guardianId of toRemove) {
+          const { error: deleteErr } = await adminClient
+            .from('guardian_students')
+            .delete()
+            .eq('student_id', studentId)
+            .eq('guardian_id', guardianId);
+
+          if (deleteErr) {
+            console.error(`❌ Failed to remove relationship for guardian ${guardianId}:`, deleteErr);
+          }
+        }
+
+        // Find relationships to add (in new but not in existing)
+        const toAdd = uniqueGuardianIds.filter((id: string) => !existingGuardianIds.includes(id));
+        for (const guardianId of toAdd) {
+          try {
+            // Verify guardian exists and belongs to same org_id
+            const { data: guardian, error: guardianErr } = await adminClient
+              .from('users')
+              .select('id, org_id, role')
+              .eq('id', guardianId)
+              .eq('org_id', orgId)
+              .eq('role', 'guardian')
+              .maybeSingle();
+
+            if (guardianErr || !guardian) {
+              console.error(`❌ Guardian ${guardianId} not found or doesn't belong to org ${orgId}:`, guardianErr);
+              continue;
+            }
+
+            // Check if relationship already exists (shouldn't happen due to filtering, but double-check)
+            const { data: existingRel } = await adminClient
+              .from('guardian_students')
+              .select('id')
+              .eq('guardian_id', guardianId)
+              .eq('student_id', studentId)
+              .maybeSingle();
+
+            if (existingRel) {
+              console.log(`⚠️ Relationship already exists for guardian ${guardianId} and student ${studentId}`);
+              continue; // Skip if already exists
+            }
+
+            // Create relationship
+            const { data: relationship, error: relError } = await adminClient
+              .from('guardian_students')
+              .insert({
+                guardian_id: guardianId,
+                student_id: studentId,
+                relation: 'parent',
+                org_id: orgId,
+              })
+              .select('id,guardian_id,student_id,relation,created_at')
+              .single();
+
+            if (relError) {
+              // Check if it's a duplicate
+              if (relError.code === '23505') {
+                console.log(`⚠️ Relationship already exists for guardian ${guardianId} and student ${studentId}`);
+              } else {
+                console.error(`❌ Failed to create relationship for guardian ${guardianId}:`, relError);
+              }
+            } else if (relationship) {
+              updatedRelationships.push(relationship);
+            }
+          } catch (err) {
+            console.error(`❌ Error processing guardian ${guardianId}:`, err);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('❌ Error syncing guardian relationships:', err);
+      // Don't fail the entire update if relationship sync fails
+    }
+  }
 
   console.log('✅ Student updated successfully:', student.id);
+  if (updatedRelationships.length > 0) {
+    console.log(`✅ Updated ${updatedRelationships.length} parent-student relationship(s)`);
+  }
 
   return NextResponse.json(
     {
       student,
+      relationships: updatedRelationships,
       message: 'Student updated successfully!',
     },
     { status: 200 },

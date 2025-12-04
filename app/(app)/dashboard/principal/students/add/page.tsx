@@ -119,13 +119,16 @@ function AddStudentPageContent() {
       setError(null);
       setLoadingSubmit(true);
 
-      // Strip guardian_ids as it's not part of the student API payload
-      const { guardian_ids, ...studentOnly } = data;
+      // Include guardian_ids in the request - filter out empty strings
+      const payload = {
+        ...data,
+        guardian_ids: (data.guardian_ids || []).filter(id => id && id.trim() !== ''),
+      };
       
       const res = await fetch('/api/students', {
         method: data.id ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(studentOnly),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {

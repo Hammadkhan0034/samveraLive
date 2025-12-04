@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { getUserDataCacheHeaders } from '@/lib/cacheConfig';
 import { validateBody, validateQuery, studentIdSchema, userIdSchema, uuidSchema } from '@/lib/validation';
+import { getRequestAuthContext } from '@/lib/server-helpers';
 import type { AuthUser } from '@/lib/types/auth';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
@@ -80,12 +81,26 @@ export async function handleGetGuardianStudents(
 /**
  * Handler for POST /api/guardian-students
  * Creates a new guardian-student relationship
+ * Only principals can create these relationships
  */
 export async function handlePostGuardianStudent(
   request: Request,
   _user: AuthUser,
   adminClient: SupabaseClient,
 ) {
+  // Verify user has principal role
+  try {
+    await getRequestAuthContext({
+      allowedRoles: ['principal'],
+      requireOrg: true,
+    });
+  } catch (err) {
+    return NextResponse.json(
+      { error: 'Access denied. Only principals can manage parent-student relationships.' },
+      { status: 403 }
+    );
+  }
+
   const body = await request.json();
   
   const postGuardianStudentBodySchema = z.object({
@@ -141,12 +156,26 @@ export async function handlePostGuardianStudent(
 /**
  * Handler for DELETE /api/guardian-students
  * Deletes a guardian-student relationship by id or (guardianId and studentId)
+ * Only principals can delete these relationships
  */
 export async function handleDeleteGuardianStudent(
   request: Request,
   _user: AuthUser,
   adminClient: SupabaseClient,
 ) {
+  // Verify user has principal role
+  try {
+    await getRequestAuthContext({
+      allowedRoles: ['principal'],
+      requireOrg: true,
+    });
+  } catch (err) {
+    return NextResponse.json(
+      { error: 'Access denied. Only principals can manage parent-student relationships.' },
+      { status: 403 }
+    );
+  }
+
   const { searchParams } = new URL(request.url);
   
   const deleteGuardianStudentQuerySchema = z.object({
