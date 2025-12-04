@@ -168,7 +168,7 @@ export default function TeacherLayout({
                         return;
                       }
                       if (id === 'link_student') {
-                        router.push('/dashboard/link-student');
+                        router.push('/dashboard/teacher/link-student');
                         setSidebarOpen(false);
                         return;
                       }
