@@ -97,11 +97,10 @@ export function GuardianSelector({
       return guardians.find((g) => String(g.id) === String(guardianId));
     })();
 
-    // Fetch guardians from API when debounced query changes
+    // Fetch guardians from API when debounced query changes or when dropdown opens with empty query
     useEffect(() => {
-      if (!debouncedQuery.trim()) {
-        setFilteredGuardians([]);
-        setSearchError(null);
+      // Only fetch if dropdown is open
+      if (!isOpen) {
         return;
       }
 
@@ -113,7 +112,13 @@ export function GuardianSelector({
 
       const fetchGuardians = async () => {
         try {
-          const response = await fetch(`/api/search-guardians?q=${encodeURIComponent(debouncedQuery)}`, {
+          // If query is empty, fetch latest 5 guardians (no query param)
+          // Otherwise, search with the query
+          const queryParam = debouncedQuery.trim() 
+            ? `?q=${encodeURIComponent(debouncedQuery)}` 
+            : '';
+          
+          const response = await fetch(`/api/search-guardians${queryParam}`, {
             cache: 'no-store',
             signal: abortController.signal,
           });
@@ -157,7 +162,7 @@ export function GuardianSelector({
       return () => {
         abortController.abort();
       };
-    }, [debouncedQuery, selectedGuardianIds]);
+    }, [debouncedQuery, selectedGuardianIds, isOpen]);
 
     useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
@@ -257,7 +262,7 @@ export function GuardianSelector({
             )}
             {!isLoading && !searchError && filteredGuardians.length === 0 && (
               <div className="p-3 text-ds-small text-ds-text-muted dark:text-slate-400">
-                {searchQuery.trim() ? 'No parents found' : 'Start typing to search...'}
+                {searchQuery.trim() ? 'No parents found' : 'No parents available'}
               </div>
             )}
             {!isLoading && !searchError && filteredGuardians.length > 0 && (

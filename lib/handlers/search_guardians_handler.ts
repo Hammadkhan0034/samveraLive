@@ -32,21 +32,25 @@ export async function handleSearchGuardians(
   }
   const { q } = queryValidation.data;
 
-  if (!q || !q.trim()) {
-    return NextResponse.json({ guardians: [] }, { status: 200 });
-  }
-
   // Query guardians from users table
-  // Search across first_name, last_name, and email
-  // Limit to 5 results
   // Return only id, first_name, last_name, email
   let guardiansQuery = adminClient
     .from('users')
     .select('id, first_name, last_name, email')
     .eq('org_id', orgId)
-    .eq('role', 'guardian')
-    .or(`email.ilike.%${q}%,first_name.ilike.%${q}%,last_name.ilike.%${q}%`)
-    .limit(5);
+    .eq('role', 'guardian');
+
+  // If query is empty, return latest 5 guardians ordered by created_at DESC
+  // Otherwise, search across first_name, last_name, and email
+  if (!q || !q.trim()) {
+    guardiansQuery = guardiansQuery
+      .order('created_at', { ascending: false })
+      .limit(5);
+  } else {
+    guardiansQuery = guardiansQuery
+      .or(`email.ilike.%${q}%,first_name.ilike.%${q}%,last_name.ilike.%${q}%`)
+      .limit(5);
+  }
 
   const { data: guardiansData, error } = await guardiansQuery;
 
