@@ -13,6 +13,8 @@ import {
   type DeviceTokenProvider,
 } from '@/lib/services/deviceTokens';
 import { createEventSchema, updateEventSchema } from '@/lib/validation';
+import { createAnnouncementSchema, updateAnnouncementSchema } from '@/lib/validation/announcements';
+import { postMenuBodySchema } from '@/lib/validation/menus';
 import type { z } from 'zod';
 import { MissingOrgIdError, getCurrentUserOrgId } from '@/lib/server-helpers';
 
@@ -21,12 +23,15 @@ import { MissingOrgIdError, getCurrentUserOrgId } from '@/lib/server-helpers';
 export async function handleCreateAnnouncement(
   user: AuthUser,
   adminClient: SupabaseClient,
-  data: {
-    title: string;
-    body: string;
-    classId?: string;
-  }
+  data: z.infer<typeof createAnnouncementSchema>
 ) {
+  // Validate input
+  const validation = createAnnouncementSchema.safeParse(data);
+  if (!validation.success) {
+    throw new Error(`Validation failed: ${validation.error.errors.map(e => e.message).join(', ')}`);
+  }
+  const validatedData = validation.data;
+  
   // Priority: user metadata -> admin users table -> class fallback
   const userMetadata = user.user_metadata as UserMetadata | undefined;
   let orgId = userMetadata?.org_id;
@@ -43,11 +48,11 @@ export async function handleCreateAnnouncement(
     orgId = process.env.NEXT_PUBLIC_DEFAULT_ORG_ID;
   }
   // Fallback: if still missing and classId provided, try resolve via class
-  if (!orgId && data.classId) {
+  if (!orgId && validatedData.classId) {
     const { data: cls } = await adminClient
       .from('classes')
       .select('org_id')
-      .eq('id', data.classId)
+      .eq('id', validatedData.classId)
       .maybeSingle();
     orgId = (cls as any)?.org_id as string | undefined;
   }
@@ -99,9 +104,9 @@ export async function handleCreateAnnouncement(
 
   // Resolve class_id and week_start
   let classIdResolved: string | null = null;
-  if (data.classId !== undefined && data.classId !== null) {
-    classIdResolved = data.classId && data.classId.trim() !== '' ? data.classId : null;
-  } else if (data.classId === null) {
+  if (validatedData.classId !== undefined && validatedData.classId !== null) {
+    classIdResolved = validatedData.classId && validatedData.classId.trim() !== '' ? validatedData.classId : null;
+  } else if (validatedData.classId === null) {
     classIdResolved = null;
   } else {
     // classId was not provided (undefined), check class_memberships table as fallback
@@ -121,7 +126,7 @@ export async function handleCreateAnnouncement(
   
   // Only auto-provision a default class if classId was undefined (not provided) AND user is a teacher
   const userRoles: string[] = Array.isArray(user.user_metadata?.roles) ? user.user_metadata.roles : [];
-  if (userRoles.includes('teacher') && !classIdResolved && data.classId === undefined) {
+  if (userRoles.includes('teacher') && !classIdResolved && validatedData.classId === undefined) {
     const defaultClassName = 'Default Class';
     const { data: clsRow, error: clsErr } = await adminClient
       .from('classes')
@@ -141,8 +146,8 @@ export async function handleCreateAnnouncement(
   const insertPayload: Record<string, any> = {
     class_id: classIdResolved,
     author_id: authorIdForInsert,
-    title: data.title,
-    body: data.body,
+    title: validatedData.title,
+    body: validatedData.body,
     is_public: true,
     week_start: weekStartISO,
   };
@@ -191,8 +196,8 @@ export async function handleCreateAnnouncement(
         orgId,
         targetUserIds,
         notificationType,
-        data.title,
-        data.body,
+        validatedData.title,
+        validatedData.body,
         {
           announcement_id: announcement.id,
           class_id: classIdResolved,
@@ -211,12 +216,15 @@ export async function handleUpdateAnnouncement(
   user: AuthUser,
   adminClient: SupabaseClient,
   announcementId: string,
-  data: {
-    title: string;
-    body: string;
-    classId?: string;
-  }
+  data: z.infer<typeof updateAnnouncementSchema>
 ) {
+  // Validate input
+  const validation = updateAnnouncementSchema.safeParse(data);
+  if (!validation.success) {
+    throw new Error(`Validation failed: ${validation.error.errors.map(e => e.message).join(', ')}`);
+  }
+  const validatedData = validation.data;
+  
   // First check if user is admin or the author
   const { data: announcement } = await adminClient
     .from('announcements')
@@ -244,13 +252,17 @@ export async function handleUpdateAnnouncement(
   }
   
   const updatePayload: Record<string, any> = {
-    title: data.title.trim(),
-    body: data.body.trim(),
     updated_at: new Date().toISOString(),
   };
   
-  if (data.classId !== undefined) {
-    updatePayload.class_id = data.classId || null;
+  if (validatedData.title !== undefined) {
+    updatePayload.title = validatedData.title.trim();
+  }
+  if (validatedData.body !== undefined) {
+    updatePayload.body = validatedData.body.trim();
+  }
+  if (validatedData.classId !== undefined) {
+    updatePayload.class_id = validatedData.classId || null;
   }
   
   const { data: updated, error } = await adminClient
@@ -391,27 +403,27 @@ export async function handleGetClassData(
 export async function handleCreateMenu(
   user: AuthUser,
   adminClient: SupabaseClient,
-  data: {
-    orgId: string;
-    classId?: string;
-    day: string;
-    breakfast?: string;
-    lunch?: string;
-    snack?: string;
-    notes?: string;
-  }
+  data: z.infer<typeof postMenuBodySchema> & { orgId: string }
 ) {
+  // Validate input (excluding orgId which is added server-side)
+  const { orgId, ...menuData } = data;
+  const validation = postMenuBodySchema.safeParse(menuData);
+  if (!validation.success) {
+    throw new Error(`Validation failed: ${validation.error.errors.map(e => e.message).join(', ')}`);
+  }
+  const validatedData = validation.data;
+  
   const { data: menu, error } = await adminClient
     .from('menus')
     .insert({
-      org_id: data.orgId,
-      class_id: data.classId,
-      day: data.day,
-      breakfast: data.breakfast,
-      lunch: data.lunch,
-      snack: data.snack,
-      notes: data.notes,
-      is_public: true,
+      org_id: orgId,
+      class_id: validatedData.class_id || null,
+      day: validatedData.day,
+      breakfast: validatedData.breakfast || null,
+      lunch: validatedData.lunch || null,
+      snack: validatedData.snack || null,
+      notes: validatedData.notes || null,
+      is_public: validatedData.is_public ?? true,
     })
     .select()
     .single();
@@ -738,15 +750,15 @@ export async function handleUpdateEvent(
   user: AuthUser,
   adminClient: SupabaseClient,
   eventId: string,
-  data: {
-    title?: string;
-    description?: string | null;
-    start_at?: string;
-    end_at?: string | null;
-    location?: string | null;
-    class_id?: string | null;
-  }
+  data: z.infer<typeof updateEventSchema>
 ) {
+  // Validate input
+  const validation = updateEventSchema.safeParse(data);
+  if (!validation.success) {
+    throw new Error(`Validation failed: ${validation.error.errors.map(e => e.message).join(', ')}`);
+  }
+  const validatedData = validation.data;
+  
   const { data: existingEvent, error: fetchError } = await adminClient
     .from('events')
     .select('*, classes(name)')
@@ -778,19 +790,19 @@ export async function handleUpdateEvent(
       throw new Error('You are not assigned to this class');
     }
     
-    if (data.class_id !== undefined && data.class_id !== existingEvent.class_id) {
+    if (validatedData.class_id !== undefined && validatedData.class_id !== existingEvent.class_id) {
       throw new Error('Teachers cannot change event scope');
     }
   }
   
   const updateData: any = {};
-  if (data.title !== undefined) updateData.title = data.title;
-  if (data.description !== undefined) updateData.description = data.description;
-  if (data.start_at !== undefined) updateData.start_at = data.start_at;
-  if (data.end_at !== undefined) updateData.end_at = data.end_at;
-  if (data.location !== undefined) updateData.location = data.location;
-  if (data.class_id !== undefined && (userMetadata?.activeRole === 'principal' || userMetadata?.roles?.includes('principal'))) {
-    updateData.class_id = data.class_id;
+  if (validatedData.title !== undefined) updateData.title = validatedData.title;
+  if (validatedData.description !== undefined) updateData.description = validatedData.description;
+  if (validatedData.start_at !== undefined) updateData.start_at = validatedData.start_at;
+  if (validatedData.end_at !== undefined) updateData.end_at = validatedData.end_at;
+  if (validatedData.location !== undefined) updateData.location = validatedData.location;
+  if (validatedData.class_id !== undefined && (userMetadata?.activeRole === 'principal' || userMetadata?.roles?.includes('principal'))) {
+    updateData.class_id = validatedData.class_id;
   }
   
   const startAt = updateData.start_at || existingEvent.start_at;

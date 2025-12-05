@@ -2,12 +2,14 @@
 
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-import { type SamveraRole, type UserMetadata } from './types/auth';
-import { supabaseAdmin } from './supabaseClient';
-import { type DeviceTokenProvider } from './services/deviceTokens';
-import { createEventSchema } from './validation';
 import type { z } from 'zod';
-import { getRequestAuthContext, MissingOrgIdError } from './server-helpers';
+import { type SamveraRole, type UserMetadata } from '@/lib/types/auth';
+import { supabaseAdmin } from '@/lib/supabaseClient';
+import { type DeviceTokenProvider } from '@/lib/services/deviceTokens';
+import { createEventSchema, updateEventSchema } from '@/lib/validation';
+import { createAnnouncementSchema, updateAnnouncementSchema } from '@/lib/validation/announcements';
+import { postMenuBodySchema } from '@/lib/validation/menus';
+import { getRequestAuthContext, MissingOrgIdError } from '@/lib/server-helpers';
 import {
   handleCreateAnnouncement,
   handleUpdateAnnouncement,
@@ -32,15 +34,11 @@ import {
   handleGetUserPreferences,
   handleRegisterDeviceToken,
   handleUnregisterDeviceToken,
-} from './handlers/server_actions_handler';
+} from '@/lib/handlers/server_actions_handler';
 
 // Example server actions with role gating
 
-export async function createAnnouncement(data: {
-  title: string;
-  body: string;
-  classId?: string;
-}) {
+export async function createAnnouncement(data: z.infer<typeof createAnnouncementSchema>) {
   const { user } = await getRequestAuthContext({
     allowedRoles: ['teacher', 'principal', 'admin'],
     requireOrg: true,
@@ -53,6 +51,7 @@ export async function createAnnouncement(data: {
   const announcement = await handleCreateAnnouncement(user, supabaseAdmin, data);
   
   revalidatePath('/dashboard');
+  revalidatePath('/dashboard/announcements');
   return announcement;
 }
 
@@ -72,12 +71,9 @@ export async function updateUserRole(userId: string, newRoles: SamveraRole[], ac
   return result;
 }
 
-export async function updateAnnouncement(announcementId: string, data: {
-  title: string;
-  body: string;
-  classId?: string;
-}) {
+export async function updateAnnouncement(announcementId: string, data: z.infer<typeof updateAnnouncementSchema>) {
   const { user } = await getRequestAuthContext({
+    allowedRoles: ['teacher', 'principal', 'admin'],
     requireOrg: true,
   });
   
@@ -94,6 +90,7 @@ export async function updateAnnouncement(announcementId: string, data: {
 
 export async function deleteAnnouncement(announcementId: string) {
   const { user } = await getRequestAuthContext({
+    allowedRoles: ['teacher', 'principal', 'admin'],
     requireOrg: true,
   });
   
@@ -118,27 +115,10 @@ export async function getClassData(classId: string) {
     throw new Error('Admin client not configured');
   }
   
-  // Verify user has access to this class
-  const userMetadata = user.user_metadata as UserMetadata | undefined;
-  const userRoles = userMetadata?.roles || [];
-  const canAccessClass = userRoles.includes('teacher') || userRoles.includes('principal') || userRoles.includes('admin');
-  
-  if (!canAccessClass) {
-    throw new Error(`Access denied to class ${classId}`);
-  }
-  
   return await handleGetClassData(user, supabaseAdmin, classId);
 }
 
-export async function createMenu(data: {
-  orgId: string;
-  classId?: string;
-  day: string;
-  breakfast?: string;
-  lunch?: string;
-  snack?: string;
-  notes?: string;
-}) {
+export async function createMenu(data: z.infer<typeof postMenuBodySchema> & { orgId: string }) {
   const { user } = await getRequestAuthContext({
     allowedRoles: ['teacher', 'principal', 'admin'],
     requireOrg: true,
@@ -151,6 +131,8 @@ export async function createMenu(data: {
   const menu = await handleCreateMenu(user, supabaseAdmin, data);
   
   revalidatePath('/dashboard');
+  revalidatePath('/dashboard/menus');
+  revalidatePath('/dashboard/menus-list');
   return menu;
 }
 
@@ -179,11 +161,12 @@ export async function switchUserRole(newRole: SamveraRole) {
   await handleSwitchUserRole(user, supabaseAdmin, newRole);
   
   // Redirect to the new role's dashboard
-  const rolePaths = {
+  const rolePaths: Record<SamveraRole, string> = {
     teacher: '/dashboard/teacher',
     principal: '/dashboard/principal',
     guardian: '/dashboard/guardian',
     admin: '/dashboard/admin',
+    parent: '/dashboard/guardian', // parent is an alias for guardian
   };
   
   redirect(rolePaths[newRole]);
@@ -216,12 +199,13 @@ export async function hasAnyPermission(requiredRoles: SamveraRole[]): Promise<bo
 
 export async function hasMinimumPermission(minimumRole: SamveraRole): Promise<boolean> {
   try {
-    // Map role hierarchy: admin > principal > teacher > guardian
+    // Map role hierarchy: admin > principal > teacher > guardian/parent
     const roleHierarchy: Record<SamveraRole, SamveraRole[]> = {
       admin: ['admin'],
       principal: ['principal', 'admin'],
       teacher: ['teacher', 'principal', 'admin'],
       guardian: ['guardian', 'teacher', 'principal', 'admin'],
+      parent: ['parent', 'guardian', 'teacher', 'principal', 'admin'], // parent is equivalent to guardian
     };
     
     await getRequestAuthContext({
@@ -331,17 +315,11 @@ export async function createEvent(data: z.infer<typeof createEventSchema>) {
   const event = await handleCreateEvent(user, supabaseAdmin, data);
   
   revalidatePath('/dashboard');
+  revalidatePath('/dashboard/calendar');
   return event;
 }
 
-export async function updateEvent(eventId: string, data: {
-  title?: string;
-  description?: string | null;
-  start_at?: string;
-  end_at?: string | null;
-  location?: string | null;
-  class_id?: string | null;
-}) {
+export async function updateEvent(eventId: string, data: z.infer<typeof updateEventSchema>) {
   const { user } = await getRequestAuthContext({
     allowedRoles: ['principal', 'teacher'],
     requireOrg: true,
@@ -354,6 +332,7 @@ export async function updateEvent(eventId: string, data: {
   const updatedEvent = await handleUpdateEvent(user, supabaseAdmin, eventId, data);
   
   revalidatePath('/dashboard');
+  revalidatePath('/dashboard/calendar');
   return updatedEvent;
 }
 
@@ -370,6 +349,7 @@ export async function deleteEvent(eventId: string) {
   const result = await handleDeleteEvent(user, supabaseAdmin, eventId);
   
   revalidatePath('/dashboard');
+  revalidatePath('/dashboard/calendar');
   return result;
 }
 
