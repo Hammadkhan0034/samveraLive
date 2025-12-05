@@ -27,11 +27,19 @@ export async function getRequestAuthContext(
   const metadata = user.user_metadata as UserMetadata | undefined;
 
   const roles = (metadata?.roles ?? []) as SamveraRole[];
+  const activeRole = metadata?.activeRole as SamveraRole | undefined;
   const orgId = metadata?.org_id;
 
   if (options.allowedRoles && options.allowedRoles.length > 0) {
-    const hasAccess = roles.some((role) => options.allowedRoles!.includes(role));
-    if (!hasAccess) {
+    // Check if user has any of the required roles in their roles array
+    const hasAnyRequired = roles.length > 0 
+      ? roles.some((role) => options.allowedRoles!.includes(role))
+      : false;
+    
+    // Also check activeRole as fallback (similar to client-side logic)
+    const hasActiveRole = activeRole && options.allowedRoles!.includes(activeRole);
+    
+    if (!hasAnyRequired && !hasActiveRole) {
       throw new ForbiddenError();
     }
   }

@@ -57,7 +57,6 @@ export function useRequireAuth(requiredRole?: SamveraRole | SamveraRole[]) {
         const hasActiveRole = activeRole && required.includes(activeRole as SamveraRole);
         
         if (!hasAnyRequired && !hasActiveRole) {
-          // If user doesn't have required role, redirect to their default dashboard
           const defaultRole = activeRole || (userRoles.length > 0 ? userRoles[0] : null);
           if (defaultRole) {
             const path = defaultRole === 'principal'

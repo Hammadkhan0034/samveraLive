@@ -8,7 +8,6 @@ import { useLanguage } from '@/lib/contexts/LanguageContext';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 import type { HealthLogWithRelations } from '@/lib/types/health-logs';
 
-type Lang = 'is' | 'en';
 
 const HEALTH_LOG_TYPE_LABELS: Record<string, { en: string; is: string }> = {
   diaper_wet: { en: 'Diaper - Wet', is: 'Bleyja - Vot' },

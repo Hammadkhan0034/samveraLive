@@ -625,8 +625,25 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
       setLoading(true);
       try {
         const res = await fetch(`/api/messages?t=${Date.now()}`, { cache: 'no-store' });
+        
+        // Handle 403 errors gracefully - don't redirect, just show empty state
+        if (res.status === 403) {
+          console.warn('Access denied to messages API (403). User may not have proper role or org_id.');
+          setThreads([]);
+          setLoading(false);
+          return;
+        }
+        
+        // Handle other non-ok responses
+        if (!res.ok) {
+          console.error(`Error loading messages: ${res.status} ${res.statusText}`);
+          setThreads([]);
+          setLoading(false);
+          return;
+        }
+        
         const json = await res.json();
-        if (res.ok && json.threads) {
+        if (json.threads) {
           // Load all threads without filtering - filtering will happen in useMemo
           // This ensures guardian threads appear even if allowedGuardianIds loads later
           const guardianThreads = json.threads.filter((t: any) => {
