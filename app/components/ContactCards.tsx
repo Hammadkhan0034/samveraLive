@@ -73,26 +73,26 @@ export default function ContactCards({ contacts }: ContactCardsProps) {
                       </span>
                     )}
                   </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-ds-small text-ds-text-secondary dark:text-slate-400">
-                      <Phone className="h-4 w-4 text-mint-600 dark:text-mint-400 flex-shrink-0" />
-                      <span>{contact.phone}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-ds-small text-ds-text-secondary dark:text-slate-400">
-                      <Mail className="h-4 w-4 text-mint-600 dark:text-mint-400 flex-shrink-0" />
-                      <span className="truncate">{contact.email}</span>
-                    </div>
-                  </div>
                 </div>
               </div>
               {contact.address && (
-                <div className="mb-ds-md">
+                <div className="">
                   <div className="flex items-start gap-2 text-ds-small text-ds-text-secondary dark:text-slate-400">
                     <MapPin className="h-4 w-4 text-mint-600 dark:text-mint-400 flex-shrink-0 mt-0.5" />
                     <span>{contact.address}</span>
                   </div>
                 </div>
               )}
+              <div className="mb-ds-md">
+                <div className="flex items-center gap-2 text-ds-small text-ds-text-secondary dark:text-slate-400">
+                  <Phone className="h-4 w-4 text-mint-600 dark:text-mint-400 flex-shrink-0" />
+                  <span>{contact.phone}</span>
+                </div>
+                <div className="flex items-center gap-2 text-ds-small text-ds-text-secondary dark:text-slate-400">
+                  <Mail className="h-4 w-4 text-mint-600 dark:text-mint-400 flex-shrink-0" />
+                  <span className="truncate">{contact.email}</span>
+                </div>
+              </div>
             </div>
             <div className="flex flex-wrap gap-4 pt-ds-sm mt-auto">
               <button
