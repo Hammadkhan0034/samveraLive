@@ -1,10 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, Image as ImageIcon } from 'lucide-react';
-import { useAuth } from '@/lib/hooks/useAuth';
+import React, { useState, useEffect, Suspense } from 'react';
+import { Image as ImageIcon } from 'lucide-react';
+import { useRequireAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
+import GuardianPageLayout, { useGuardianPageLayout } from '@/app/components/shared/GuardianPageLayout';
+import { PageHeader } from '@/app/components/shared/PageHeader';
+import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 
 interface Photo {
   id: string;
@@ -53,10 +55,10 @@ interface LinkedStudent {
   class_id?: string | null;
 }
 
-export default function ParentMediaPage() {
+function GuardianMediaContent() {
   const { t, lang } = useLanguage();
-  const { session } = useAuth();
-  const router = useRouter();
+  const { sidebarRef } = useGuardianPageLayout();
+  const { user } = useRequireAuth();
 
   // State
   const [photos, setPhotos] = useState<Photo[]>([]);
@@ -70,17 +72,7 @@ export default function ParentMediaPage() {
     let isMounted = true;
 
     async function loadLinkedStudents() {
-      if (!session?.user?.id) {
-        if (isMounted) {
-          setLoadingStudents(false);
-        }
-        return;
-      }
-
-      const orgId = (session?.user?.user_metadata as any)?.org_id as string | undefined;
-      const guardianId = session?.user?.id;
-
-      if (!orgId || !guardianId) {
+      if (!user?.id) {
         if (isMounted) {
           setLoadingStudents(false);
         }
@@ -90,7 +82,7 @@ export default function ParentMediaPage() {
       try {
         // Try to load from cache first
         if (typeof window !== 'undefined') {
-          const studentsKey = `parent_students_${guardianId}`;
+          const studentsKey = `parent_students_${user.id}`;
           const cached = localStorage.getItem(studentsKey);
           if (cached) {
             const parsed = JSON.parse(cached) as LinkedStudent[];
@@ -103,8 +95,8 @@ export default function ParentMediaPage() {
           }
         }
 
-        // Fetch from API
-        const studentsRes = await fetch(`/api/guardian-students?guardianId=${guardianId}`);
+        // Fetch from API - server will get user_id and org_id from AuthResult
+        const studentsRes = await fetch(`/api/guardian-students`);
         
         if (!studentsRes.ok) {
           throw new Error('Failed to fetch guardian students');
@@ -140,7 +132,7 @@ export default function ParentMediaPage() {
             // Cache for instant load next time
             try {
               if (typeof window !== 'undefined') {
-                localStorage.setItem(`parent_students_${guardianId}`, JSON.stringify(linked));
+                localStorage.setItem(`parent_students_${user.id}`, JSON.stringify(linked));
               }
             } catch {}
             setLoadingStudents(false);
@@ -165,22 +157,14 @@ export default function ParentMediaPage() {
     return () => {
       isMounted = false;
     };
-  }, [session]);
+  }, [user]);
 
   // Fetch photos filtered by linked students' classes
   useEffect(() => {
     let isMounted = true;
 
     async function fetchPhotos() {
-      if (!session?.user?.id || loadingStudents) return;
-
-      const orgId = (session?.user?.user_metadata as any)?.org_id as string | undefined;
-      if (!orgId) {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-        return;
-      }
+      if (!user?.id || loadingStudents) return;
 
       // Get unique class IDs from linked students
       const classIds = Array.from(
@@ -258,125 +242,127 @@ export default function ParentMediaPage() {
     return () => {
       isMounted = false;
     };
-  }, [session, linkedStudents, loadingStudents]);
+  }, [user, linkedStudents, loadingStudents]);
+
+  const subtitle = linkedStudents.length > 0
+    ? 'Viewing photos for your linked students'
+    : 'View photos from your organization and linked students';
 
   return (
-    <div className="min-h-screen bg-mint-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      <main className="mx-auto max-w-6xl px-4 py-8 md:px-6">
-        {/* Header */}
-        <div className="mb-ds-md flex flex-col gap-ds-sm mt-14 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-ds-sm">
-            <button
-              onClick={() => router.back()}
-              className="inline-flex items-center gap-2 rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-            >
-              <ArrowLeft className="h-4 w-4" /> {t.back || 'Back'}
-            </button>
-            <div>
-              <h1 className="text-ds-h1 font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-                {t.media || 'Media'}
-              </h1>
-              {linkedStudents.length > 0 && (
-                <p className="text-ds-small text-slate-600 dark:text-slate-400 mt-1">
-                  Viewing photos for your linked students
-                </p>
-              )}
-            </div>
+    <>
+      <PageHeader
+        title={t.media || 'Media'}
+        subtitle={subtitle}
+        headingLevel="h1"
+        showMobileMenu={true}
+        onMobileMenuClick={() => sidebarRef.current?.open()}
+      />
+
+      {/* Photos Panel */}
+      <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+        {/* Error State */}
+        {error && (
+          <div className="mb-4 rounded-ds-md bg-red-50 border border-red-200 px-4 py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+            {error}
           </div>
-        </div>
+        )}
 
-        {/* Photos Panel */}
-        <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
-          {/* Error State */}
-          {error && (
-            <div className="mb-4 rounded-ds-md bg-red-50 border border-red-200 px-4 py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
-              {error}
-            </div>
-          )}
+        {/* Loading State */}
+        {isLoading || loadingStudents ? (
+          <LoadingSkeleton type="cards" rows={2} />
+        ) : photos.length === 0 ? (
+          <div className="text-center py-12 text-slate-500 dark:text-slate-400">
+            <ImageIcon className="h-12 w-12 mx-auto mb-3 text-slate-300 dark:text-slate-600" />
+            <p>{t.no_photos_uploaded || 'No photos uploaded yet'}</p>
+            <p className="text-ds-small mt-1">
+              {linkedStudents.length === 0
+                ? 'No org-wide photos available. Link a student to view class-specific photos.'
+                : 'No photos available for your linked students or organization'}
+            </p>
+          </div>
+        ) : (
+          /* Photos Grid */
+          <div className="grid grid-cols-1 gap-ds-sm sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {photos.map((photo) => (
+              <div
+                key={photo.id}
+                className="group relative aspect-square overflow-hidden rounded-ds-md bg-mint-50 dark:bg-slate-700 cursor-pointer"
+                onClick={() => {
+                  // Optional: Open photo in modal or full screen
+                  if (photo.url) {
+                    window.open(photo.url, '_blank');
+                  }
+                }}
+              >
+                {photo.url ? (
+                  <img
+                    src={photo.url}
+                    alt={photo.caption || 'Photo'}
+                    className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center">
+                    <ImageIcon className="h-8 w-8 text-slate-400" />
+                  </div>
+                )}
 
-          {/* Loading State */}
-          {isLoading || loadingStudents ? (
-            <div className="grid grid-cols-1 gap-ds-sm sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {Array.from({ length: 8 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="aspect-square rounded-ds-md overflow-hidden bg-mint-100 dark:bg-slate-700 animate-pulse"
-                />
-              ))}
-            </div>
-          ) : photos.length === 0 ? (
-            <div className="text-center py-12 text-slate-500 dark:text-slate-400">
-              <ImageIcon className="h-12 w-12 mx-auto mb-3 text-slate-300 dark:text-slate-600" />
-              <p>{t.no_photos_uploaded || 'No photos uploaded yet'}</p>
-              <p className="text-ds-small mt-1">
-                {linkedStudents.length === 0
-                  ? 'No org-wide photos available. Link a student to view class-specific photos.'
-                  : 'No photos available for your linked students or organization'}
-              </p>
-            </div>
-          ) : (
-            /* Photos Grid */
-            <div className="grid grid-cols-1 gap-ds-sm sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {photos.map((photo) => (
-                <div
-                  key={photo.id}
-                  className="group relative aspect-square overflow-hidden rounded-ds-md bg-mint-50 dark:bg-slate-700 cursor-pointer"
-                  onClick={() => {
-                    // Optional: Open photo in modal or full screen
-                    if (photo.url) {
-                      window.open(photo.url, '_blank');
-                    }
-                  }}
-                >
-                  {photo.url ? (
-                    <img
-                      src={photo.url}
-                      alt={photo.caption || 'Photo'}
-                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center">
-                      <ImageIcon className="h-8 w-8 text-slate-400" />
-                    </div>
-                  )}
-
-                  {/* Overlay with info */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="absolute bottom-0 left-0 right-0 p-3 text-white text-ds-small">
-                      {photo.caption && (
-                        <p className="truncate font-medium mb-1">{photo.caption}</p>
-                      )}
-                      <div className="flex items-center justify-between text-ds-tiny opacity-90">
-                        <span>
-                          {new Date(photo.created_at).toLocaleDateString(
-                            lang === 'is' ? 'is-IS' : 'en-US'
-                          )}
-                        </span>
-                        {photo.is_public && (
-                          <span className="px-2 py-0.5 bg-white/20 rounded-ds-sm">
-                            {t.public || 'Public'}
-                          </span>
+                {/* Overlay with info */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute bottom-0 left-0 right-0 p-3 text-white text-ds-small">
+                    {photo.caption && (
+                      <p className="truncate font-medium mb-1">{photo.caption}</p>
+                    )}
+                    <div className="flex items-center justify-between text-ds-tiny opacity-90">
+                      <span>
+                        {new Date(photo.created_at).toLocaleDateString(
+                          lang === 'is' ? 'is-IS' : 'en-US'
                         )}
-                      </div>
-                      {photo.classes && (
-                        <p className="text-ds-tiny opacity-75 mt-1 truncate">
-                          {photo.classes.name}
-                        </p>
-                      )}
-                      {photo.students && (
-                        <p className="text-ds-tiny opacity-75 mt-1 truncate">
-                          {photo.students.first_name} {photo.students.last_name}
-                        </p>
+                      </span>
+                      {photo.is_public && (
+                        <span className="px-2 py-0.5 bg-white/20 rounded-ds-sm">
+                          {t.public || 'Public'}
+                        </span>
                       )}
                     </div>
+                    {photo.classes && (
+                      <p className="text-ds-tiny opacity-75 mt-1 truncate">
+                        {photo.classes.name}
+                      </p>
+                    )}
+                    {photo.students && (
+                      <p className="text-ds-tiny opacity-75 mt-1 truncate">
+                        {photo.students.first_name} {photo.students.last_name}
+                      </p>
+                    )}
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </main>
-    </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </>
   );
 }
 
+function GuardianMediaPageContent() {
+  return (
+    <GuardianPageLayout>
+      <GuardianMediaContent />
+    </GuardianPageLayout>
+  );
+}
+
+export default function GuardianMediaPage() {
+  return (
+    <Suspense fallback={
+      <GuardianPageLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <LoadingSkeleton type="cards" rows={2} />
+        </div>
+      </GuardianPageLayout>
+    }>
+      <GuardianMediaPageContent />
+    </Suspense>
+  );
+}

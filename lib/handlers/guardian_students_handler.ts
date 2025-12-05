@@ -6,10 +6,7 @@ import type { AuthUser, UserMetadata } from '@/lib/types/auth';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 
-/**
- * Handler for GET /api/guardian-students
- * Fetches guardian-student relationships, optionally filtered by studentId or guardianId
- */
+
 export async function handleGetGuardianStudents(
   request: Request,
   user: AuthUser,
@@ -18,6 +15,7 @@ export async function handleGetGuardianStudents(
   const metadata = user.user_metadata as UserMetadata;
   const orgId = metadata.org_id;
   const userId = user.id;
+  const userRoles = metadata.roles || [];
 
   const { searchParams } = new URL(request.url);
   
@@ -32,6 +30,27 @@ export async function handleGetGuardianStudents(
   }
   
   const { studentId, guardianId } = queryValidation.data;
+  
+  // Check if user is a guardian (or parent, which is an alias)
+  const isGuardian = userRoles.includes('guardian') || userRoles.includes('parent');
+  
+  // For guardians: enforce that they can only see their own relationships
+  let effectiveGuardianId = guardianId;
+  if (isGuardian) {
+    if (guardianId) {
+      // Security check: guardians cannot query for other guardians' relationships
+      if (guardianId !== userId) {
+        return NextResponse.json(
+          { error: 'Access denied. You can only view your own guardian-student relationships.' },
+          { status: 403 }
+        );
+      }
+      effectiveGuardianId = userId;
+    } else {
+      // Auto-filter by authenticated user's ID for guardians
+      effectiveGuardianId = userId;
+    }
+  }
   
   // Simplified query - just get the relationships without user join
   // The join can fail if the foreign key doesn't exist or if full_name column doesn't exist
@@ -50,15 +69,15 @@ export async function handleGetGuardianStudents(
     query = query.eq('student_id', studentId);
   }
   
-  if (guardianId) {
-    query = query.eq('guardian_id', guardianId);
+  if (effectiveGuardianId) {
+    query = query.eq('guardian_id', effectiveGuardianId);
   }
 
   const { data: relationships, error } = await query;
 
   if (error) {
     console.error('❌ Error fetching guardian-student relationships:', error);
-    console.error('❌ Query details:', { studentId, guardianId });
+    console.error('❌ Query details:', { studentId, guardianId: effectiveGuardianId });
     console.error('❌ Full error:', JSON.stringify(error, null, 2));
     
     // Return empty array instead of error for better UX
