@@ -7,7 +7,6 @@ import {
   School,
   BookOpen,
   Settings,
-  Shield,
   UserPlus,
   GraduationCap,
   FileText,
@@ -1065,37 +1064,7 @@ export function AdminDashboard() {
 
 
   return (
-    <div className="max-w-7xl mx-auto animate-in fade-in duration-500 mt-10">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0 }}
-        className="mb-8"
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-2">
-              {t.adminDashboard}
-            </h1>
-            <p className="text-slate-600 dark:text-slate-400">
-              {t.manageUsersSchools}
-            </p>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
-              <Shield className="h-6 w-6 text-green-600 dark:text-green-400" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{t.adminAccess}</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">{t.fullPermissions}</p>
-            </div>
-            {/* Sign out button removed from Admin header; use Navbar sign out instead */}
-          </div>
-        </div>
-      </motion.div>
-
-
+    <div className="max-w-7xl mx-auto animate-in fade-in duration-500">
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
