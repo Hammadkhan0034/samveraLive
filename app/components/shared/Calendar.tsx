@@ -128,63 +128,66 @@ export function Calendar({
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
-    <div className="w-full rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">
+    <div className="w-full rounded-ds-lg bg-white p-3 sm:p-ds-md shadow-ds-card dark:bg-slate-800">
       {/* Calendar Header */}
-      <div className="mb-ds-lg flex items-center justify-between">
-        <div className="flex items-center gap-ds-md">
+      <div className="mb-3 sm:mb-ds-lg flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-0">
+        <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-ds-md">
           <button
             onClick={goToPreviousMonth}
-            className="rounded-ds-md p-2 hover:bg-mint-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors"
+            className="rounded-ds-md p-1.5 sm:p-2 hover:bg-mint-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors flex-shrink-0"
             aria-label="Previous month"
           >
-            <ChevronLeft className="h-5 w-5" />
+            <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
-          <h2 className="text-ds-h2 font-semibold text-slate-900 dark:text-slate-100">
-            {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+          <h2 className="text-ds-h3 sm:text-ds-h2 font-semibold text-slate-900 dark:text-slate-100 text-center sm:text-left flex-1 sm:flex-none">
+            <span className="hidden sm:inline">{monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}</span>
+            <span className="sm:hidden">{monthNames[currentDate.getMonth()].substring(0, 3)} {currentDate.getFullYear()}</span>
           </h2>
           <button
             onClick={goToNextMonth}
-            className="rounded-ds-md p-2 hover:bg-mint-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors"
+            className="rounded-ds-md p-1.5 sm:p-2 hover:bg-mint-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-colors flex-shrink-0"
             aria-label="Next month"
           >
-            <ChevronRight className="h-5 w-5" />
+            <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
           </button>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <button
             onClick={goToToday}
-            className="rounded-ds-md border border-slate-300 px-3 py-1.5 text-ds-small text-slate-700 hover:bg-mint-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 transition-colors"
+            className="rounded-ds-md border border-slate-300 dark:border-slate-600 px-2 sm:px-3 py-1.5 text-ds-small text-slate-700 hover:bg-mint-50 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 transition-colors"
           >
             Today
           </button>
           {canEdit && onCreateClick && (
             <button
               onClick={onCreateClick}
-              className="flex items-center gap-2 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small text-white hover:bg-mint-600 transition-colors"
+              className="flex items-center gap-1.5 sm:gap-2 rounded-ds-md bg-mint-500 px-2.5 sm:px-4 py-1.5 sm:py-2 text-ds-small text-white hover:bg-mint-600 transition-colors"
             >
-              <Plus className="h-4 w-4" />
-              {t.new_event || 'New Event'}
+              <Plus className="h-4 w-4 flex-shrink-0" />
+              <span className="hidden sm:inline">{t.new_event || 'New Event'}</span>
+              <span className="sm:hidden">{t.add || 'Add'}</span>
             </button>
           )}
         </div>
       </div>
 
       {/* Calendar Grid */}
-      <div className="w-full">
+      <div className="w-full overflow-x-auto">
         {/* Day names header */}
-        <div className="grid grid-cols-7 gap-1 mb-2">
+        <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-1 sm:mb-2 min-w-[320px]">
           {dayNames.map(day => (
             <div
               key={day}
-              className="p-2 text-center text-ds-small font-medium text-slate-600 dark:text-slate-400"
+              className="p-1 sm:p-2 text-center text-ds-tiny sm:text-ds-small font-medium text-slate-600 dark:text-slate-400"
             >
-              {day}
+              <span className="hidden sm:inline">{day}</span>
+              <span className="sm:hidden">{day.substring(0, 1)}</span>
             </div>
           ))}
         </div>
 
         {/* Calendar days */}
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-0.5 sm:gap-1 min-w-[320px]">
           {calendarDays.map(({ date, isCurrentMonth }, index) => {
             const dayEvents = isCurrentMonth ? getEventsForDate(date) : [];
             const isTodayDate = isToday(date);
@@ -198,16 +201,16 @@ export function Calendar({
                   }
                 }}
                 className={`
-                  min-h-[80px] p-2 rounded-ds-md border transition-colors
+                  min-h-[60px] sm:min-h-[80px] p-1 sm:p-2 rounded-ds-sm sm:rounded-ds-md border transition-colors
                   ${isCurrentMonth
-                    ? 'border-slate-200 dark:border-slate-700 hover:bg-mint-50 dark:hover:bg-slate-700/50 cursor-pointer'
+                    ? 'border-slate-200 dark:border-slate-700 hover:bg-mint-50 dark:hover:bg-slate-700/50 cursor-pointer active:bg-mint-100 dark:active:bg-slate-700'
                     : 'border-transparent opacity-40'
                   }
                   ${isTodayDate ? 'bg-mint-50 dark:bg-mint-900/20 border-mint-300 dark:border-mint-700' : ''}
                 `}
               >
                 <div className={`
-                  text-ds-small font-medium mb-1
+                  text-ds-tiny sm:text-ds-small font-medium mb-0.5 sm:mb-1
                   ${isCurrentMonth
                     ? isTodayDate
                       ? 'text-mint-600 dark:text-mint-400'
@@ -217,8 +220,8 @@ export function Calendar({
                 `}>
                   {date.getDate()}
                 </div>
-                <div className="space-y-1">
-                  {dayEvents.slice(0, 2).map(event => (
+                <div className="space-y-0.5 sm:space-y-1">
+                  {dayEvents.slice(0, 1).map(event => (
                     <div
                       key={event.id}
                       onClick={(e) => {
@@ -227,15 +230,17 @@ export function Calendar({
                           onEventClick(event);
                         }
                       }}
-                      className="text-ds-tiny px-1.5 py-0.5 rounded-ds-sm bg-mint-100 dark:bg-mint-900/40 text-mint-700 dark:text-mint-300 truncate cursor-pointer hover:bg-mint-200 dark:hover:bg-mint-900/60"
+                      className="text-ds-tiny px-1 sm:px-1.5 py-0.5 rounded-ds-sm bg-mint-100 dark:bg-mint-900/40 text-mint-700 dark:text-mint-300 truncate cursor-pointer hover:bg-mint-200 dark:hover:bg-mint-900/60 active:bg-mint-300 dark:active:bg-mint-900/80"
                       title={event.title}
                     >
-                      {event.title}
+                      <span className="hidden sm:inline">{event.title}</span>
+                      <span className="sm:hidden">•</span>
                     </div>
                   ))}
-                  {dayEvents.length > 2 && (
-                    <div className="text-ds-tiny text-slate-500 dark:text-slate-400 px-1.5">
-                      +{dayEvents.length - 2} more
+                  {dayEvents.length > 1 && (
+                    <div className="text-ds-tiny text-slate-500 dark:text-slate-400 px-1 sm:px-1.5">
+                      <span className="hidden sm:inline">+{dayEvents.length - 1} more</span>
+                      <span className="sm:hidden">+{dayEvents.length - 1}</span>
                     </div>
                   )}
                 </div>
