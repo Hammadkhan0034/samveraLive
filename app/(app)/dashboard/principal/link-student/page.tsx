@@ -26,7 +26,7 @@ function PrincipalLinkStudentContent() {
         onMobileMenuClick={() => sidebarRef.current?.open()}
       />
 
-      <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+      <div className="rounded-ds-lg border border-slate-200 bg-white p-3 sm:p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
         <LinkStudentGuardian lang={lang} />
       </div>
     </>

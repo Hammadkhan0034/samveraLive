@@ -185,22 +185,22 @@ export default function LinkStudentGuardian({ lang = 'en' }: { lang?: Lang }) {
   }
 
   return (
-    <div className="rounded-ds-lg p-2 dark:border-slate-700 dark:bg-slate-800 pb-12">
+    <div className="rounded-ds-lg p-0 sm:p-2 dark:border-slate-700 dark:bg-slate-800 pb-8 sm:pb-12">
       
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
         <div>
           <label className="mb-2 block text-ds-small font-medium text-slate-700 dark:text-slate-300">{t.guardianSearchLabel}</label>
           <div className="mb-2 flex gap-2">
-            <button className={`px-3 py-1 rounded-ds-md text-ds-small border transition-colors ${modeGuardian === 'email' ? 'bg-mint-500 text-white' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-mint-50'}`} onClick={() => setModeGuardian('email')}>{t.emailTab}</button>
-            <button className={`px-3 py-1 rounded-ds-md text-ds-small border transition-colors ${modeGuardian === 'name' ? 'bg-mint-500 text-white' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-mint-50'}`} onClick={() => setModeGuardian('name')}>{t.nameTab}</button>
+            <button className={`px-2 sm:px-3 py-1 rounded-ds-md text-ds-tiny sm:text-ds-small border transition-colors ${modeGuardian === 'email' ? 'bg-mint-500 text-white border-mint-500' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-600 hover:bg-mint-50 dark:hover:bg-slate-600'}`} onClick={() => setModeGuardian('email')}>{t.emailTab}</button>
+            <button className={`px-2 sm:px-3 py-1 rounded-ds-md text-ds-tiny sm:text-ds-small border transition-colors ${modeGuardian === 'name' ? 'bg-mint-500 text-white border-mint-500' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-600 hover:bg-mint-50 dark:hover:bg-slate-600'}`} onClick={() => setModeGuardian('name')}>{t.nameTab}</button>
           </div>
           <div className="relative">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+            <Search className="absolute left-2.5 sm:left-3 top-2.5 h-4 w-4 text-slate-400" />
             <input
               value={qGuardian}
               onChange={(e) => setQGuardian(e.target.value)}
               placeholder={modeGuardian === 'email' ? t.placeholderEmail : t.placeholderName}
-              className="w-full rounded-lg border border-[#D8EBD8] bg-[#F5FFF7] py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              className="w-full rounded-ds-md border border-input-stroke bg-input-fill py-2 pl-8 sm:pl-9 pr-3 text-ds-small text-slate-900 placeholder:text-slate-400 focus:border-mint-200 focus:outline-none focus:ring-2 focus:ring-mint-200/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-mint-300"
             />
           </div>
           {!qGuardian && (
@@ -214,32 +214,32 @@ export default function LinkStudentGuardian({ lang = 'en' }: { lang?: Lang }) {
             </div>
           )}
           {qGuardian && (
-            <div className="mt-2 max-h-56 overflow-auto rounded-lg border border-slate-200 dark:border-slate-700">
-              {loadingGuardian && <div className="p-3 text-sm text-slate-500">Loading…</div>}
+            <div className="mt-2 max-h-48 sm:max-h-56 overflow-auto rounded-ds-md border border-slate-200 dark:border-slate-700">
+              {loadingGuardian && <div className="p-2 sm:p-3 text-ds-small text-slate-500">Loading…</div>}
               {!loadingGuardian && guardianResults.length === 0 && (
-                <div className="p-3 text-sm text-slate-500">No results</div>
+                <div className="p-2 sm:p-3 text-ds-small text-slate-500">No results</div>
               )}
               {!loadingGuardian && guardianResults.map((r) => (
                 <button
                   key={`${r.role}-${r.id}`}
-                  className={`flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-700 ${selectedGuardian?.id === r.id ? 'bg-slate-50 dark:bg-slate-700' : ''}`}
+                  className={`flex w-full items-center justify-between px-2 sm:px-3 py-1.5 sm:py-2 text-left text-ds-small hover:bg-slate-50 dark:hover:bg-slate-700 active:bg-slate-100 dark:active:bg-slate-600 ${selectedGuardian?.id === r.id ? 'bg-slate-50 dark:bg-slate-700' : ''}`}
                   onClick={() => setSelectedGuardian(r)}
                 >
-                  <div>
-                    <div className="font-medium text-slate-900 dark:text-slate-100">{r.label}</div>
-                    <div className="text-xs text-slate-500">{r.email}</div>
+                  <div className="flex-1 min-w-0 pr-2">
+                    <div className="font-medium text-slate-900 dark:text-slate-100 truncate">{r.label}</div>
+                    <div className="text-ds-tiny text-slate-500 truncate">{r.email}</div>
                   </div>
-                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200">{t.roleGuardian}</span>
+                  <span className="rounded-full bg-emerald-100 px-1.5 sm:px-2 py-0.5 text-ds-tiny font-semibold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200 flex-shrink-0">{t.roleGuardian}</span>
                 </button>
               ))}
             </div>
           )}
           {selectedGuardian && (
-            <div className="mt-2 flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
-              <Check className="h-4 w-4 text-emerald-600" />
-              <span>{t.selected}:</span>
-              <span className="font-medium">{selectedGuardian.label}</span>
-              <button className="ml-auto text-slate-500 hover:text-slate-700" onClick={() => setSelectedGuardian(null)}>
+            <div className="mt-2 flex items-center gap-2 text-ds-small text-slate-700 dark:text-slate-200 flex-wrap">
+              <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+              <span className="flex-shrink-0">{t.selected}:</span>
+              <span className="font-medium truncate flex-1 min-w-0">{selectedGuardian.label}</span>
+              <button className="ml-auto text-slate-500 hover:text-slate-700 active:text-slate-900 flex-shrink-0" onClick={() => setSelectedGuardian(null)}>
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -249,16 +249,16 @@ export default function LinkStudentGuardian({ lang = 'en' }: { lang?: Lang }) {
         <div>
           <label className="mb-2 block text-ds-small font-medium text-slate-700 dark:text-slate-300">{t.studentSearchLabel}</label>
           <div className="mb-2 flex gap-2">
-            <button className={`px-3 py-1 rounded-ds-md text-ds-small border transition-colors ${modeStudent === 'email' ? 'bg-mint-500 text-white' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-mint-50'}`} onClick={() => setModeStudent('email')}>{t.emailTab}</button>
-            <button className={`px-3 py-1 rounded-ds-md text-ds-small border transition-colors ${modeStudent === 'name' ? 'bg-mint-500 text-white' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-mint-50'}`} onClick={() => setModeStudent('name')}>{t.nameTab}</button>
+            <button className={`px-2 sm:px-3 py-1 rounded-ds-md text-ds-tiny sm:text-ds-small border transition-colors ${modeStudent === 'email' ? 'bg-mint-500 text-white border-mint-500' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-600 hover:bg-mint-50 dark:hover:bg-slate-600'}`} onClick={() => setModeStudent('email')}>{t.emailTab}</button>
+            <button className={`px-2 sm:px-3 py-1 rounded-ds-md text-ds-tiny sm:text-ds-small border transition-colors ${modeStudent === 'name' ? 'bg-mint-500 text-white border-mint-500' : 'bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-600 hover:bg-mint-50 dark:hover:bg-slate-600'}`} onClick={() => setModeStudent('name')}>{t.nameTab}</button>
           </div>
           <div className="relative">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+            <Search className="absolute left-2.5 sm:left-3 top-2.5 h-4 w-4 text-slate-400" />
             <input
               value={qStudent}
               onChange={(e) => setQStudent(e.target.value)}
               placeholder={modeStudent === 'email' ? t.placeholderEmail : t.placeholderName}
-              className="w-full rounded-lg border border-[#D8EBD8] bg-[#F5FFF7] py-2 pl-9 pr-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-slate-500 focus:outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              className="w-full rounded-ds-md border border-input-stroke bg-input-fill py-2 pl-8 sm:pl-9 pr-3 text-ds-small text-slate-900 placeholder:text-slate-400 focus:border-mint-200 focus:outline-none focus:ring-2 focus:ring-mint-200/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:focus:border-mint-300"
             />
           </div>
           {!qStudent && (
@@ -272,32 +272,32 @@ export default function LinkStudentGuardian({ lang = 'en' }: { lang?: Lang }) {
             </div>
           )}
           {qStudent && (
-            <div className="mt-2 max-h-56 overflow-auto rounded-lg border border-slate-200 dark:border-slate-700">
-              {loadingStudent && <div className="p-3 text-sm text-slate-500">Loading…</div>}
+            <div className="mt-2 max-h-48 sm:max-h-56 overflow-auto rounded-ds-md border border-slate-200 dark:border-slate-700">
+              {loadingStudent && <div className="p-2 sm:p-3 text-ds-small text-slate-500">Loading…</div>}
               {!loadingStudent && studentResults.length === 0 && (
-                <div className="p-3 text-sm text-slate-500">No results</div>
+                <div className="p-2 sm:p-3 text-ds-small text-slate-500">No results</div>
               )}
               {!loadingStudent && studentResults.map((r) => (
                 <button
                   key={`${r.role}-${r.id}`}
-                  className={`flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-700 ${selectedStudent?.id === r.id ? 'bg-slate-50 dark:bg-slate-700' : ''}`}
+                  className={`flex w-full items-center justify-between px-2 sm:px-3 py-1.5 sm:py-2 text-left text-ds-small hover:bg-slate-50 dark:hover:bg-slate-700 active:bg-slate-100 dark:active:bg-slate-600 ${selectedStudent?.id === r.id ? 'bg-slate-50 dark:bg-slate-700' : ''}`}
                   onClick={() => setSelectedStudent(r)}
                 >
-                  <div>
-                    <div className="font-medium text-slate-900 dark:text-slate-100">{r.label}</div>
-                    <div className="text-xs text-slate-500">{r.email}</div>
+                  <div className="flex-1 min-w-0 pr-2">
+                    <div className="font-medium text-slate-900 dark:text-slate-100 truncate">{r.label}</div>
+                    <div className="text-ds-tiny text-slate-500 truncate">{r.email}</div>
                   </div>
-                  <span className="rounded-full bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-700 dark:bg-sky-900/40 dark:text-sky-200">{t.roleStudent}</span>
+                  <span className="rounded-full bg-sky-100 px-1.5 sm:px-2 py-0.5 text-ds-tiny font-semibold text-sky-700 dark:bg-sky-900/40 dark:text-sky-200 flex-shrink-0">{t.roleStudent}</span>
                 </button>
               ))}
             </div>
           )}
           {selectedStudent && (
-            <div className="mt-2 flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
-              <Check className="h-4 w-4 text-emerald-600" />
-              <span>{t.selected}:</span>
-              <span className="font-medium">{selectedStudent.label}</span>
-              <button className="ml-auto text-slate-500 hover:text-slate-700" onClick={() => setSelectedStudent(null)}>
+            <div className="mt-2 flex items-center gap-2 text-ds-small text-slate-700 dark:text-slate-200 flex-wrap">
+              <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+              <span className="flex-shrink-0">{t.selected}:</span>
+              <span className="font-medium truncate flex-1 min-w-0">{selectedStudent.label}</span>
+              <button className="ml-auto text-slate-500 hover:text-slate-700 active:text-slate-900 flex-shrink-0" onClick={() => setSelectedStudent(null)}>
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -305,49 +305,51 @@ export default function LinkStudentGuardian({ lang = 'en' }: { lang?: Lang }) {
         </div>
       </div>
 
-      <div className="mt-6 flex items-center gap-3">
+      <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
         <button
           disabled={!selectedGuardian || !selectedStudent}
           onClick={() => setConfirmOpen(true)}
-          className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-400 hover:bg-mint-600 transition-colors"
+          className="inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-ds-md bg-mint-500 px-3 sm:px-4 py-2 text-ds-small font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-400 hover:bg-mint-600 transition-colors"
         >
-          <LinkIcon className="h-4 w-4" />{t.linkButton}
+          <LinkIcon className="h-4 w-4 flex-shrink-0" />
+          <span className="hidden sm:inline">{t.linkButton}</span>
+          <span className="sm:hidden">{lang === 'is' ? 'Tengja' : 'Link'}</span>
         </button>
-        {message && <span className="text-sm text-slate-600 dark:text-slate-300">{message}</span>}
+        {message && <span className="text-ds-small text-slate-600 dark:text-slate-300 text-center sm:text-left">{message}</span>}
       </div>
 
       {confirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-lg dark:border-slate-700 dark:bg-slate-800">
-            <h4 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">{t.confirmTitle}</h4>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3 sm:p-4">
+          <div className="w-full max-w-md rounded-ds-lg border border-slate-200 bg-white p-4 sm:p-ds-md shadow-ds-lg dark:border-slate-700 dark:bg-slate-800">
+            <h4 className="text-ds-h3 sm:text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">{t.confirmTitle}</h4>
             <p className="mt-2 text-ds-small text-slate-600 dark:text-slate-300">{t.confirmText}</p>
-            <div className="mt-4 rounded-ds-md border border-slate-200 p-3 text-ds-small dark:border-slate-700">
-              <div className="flex justify-between">
-                <span className="font-medium">{t.roleGuardian}:</span>
-                <span>{selectedGuardian?.label} ({selectedGuardian?.email})</span>
+            <div className="mt-4 rounded-ds-md border border-slate-200 p-2 sm:p-3 text-ds-small dark:border-slate-700">
+              <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
+                <span className="font-medium flex-shrink-0">{t.roleGuardian}:</span>
+                <span className="text-right sm:text-left truncate">{selectedGuardian?.label} ({selectedGuardian?.email})</span>
               </div>
-              <div className="mt-2 flex justify-between">
-                <span className="font-medium">{t.roleStudent}:</span>
-                <span>{selectedStudent?.label} ({selectedStudent?.email})</span>
+              <div className="mt-2 flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-0">
+                <span className="font-medium flex-shrink-0">{t.roleStudent}:</span>
+                <span className="text-right sm:text-left truncate">{selectedStudent?.label} ({selectedStudent?.email})</span>
               </div>
             </div>
-            <div className="mt-6 flex items-center justify-end gap-3">
+            <div className="mt-4 sm:mt-6 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3">
               <button
                 disabled={linking}
-                className="rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small text-slate-700 hover:bg-mint-50 disabled:opacity-60 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700 transition-colors"
+                className="rounded-ds-md border border-slate-300 dark:border-slate-600 px-3 sm:px-4 py-2 text-ds-small text-slate-700 hover:bg-mint-50 disabled:opacity-60 dark:text-slate-200 dark:hover:bg-slate-700 transition-colors"
                 onClick={() => setConfirmOpen(false)}
               >
                 {t.no}
               </button>
               <button
                 disabled={linking}
-                className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small font-medium text-white hover:bg-mint-600 disabled:opacity-60 transition-colors"
+                className="inline-flex items-center justify-center gap-2 rounded-ds-md bg-mint-500 px-3 sm:px-4 py-2 text-ds-small font-medium text-white hover:bg-mint-600 disabled:opacity-60 transition-colors"
                 onClick={onConfirmLink}
                 aria-busy={linking}
               >
                 {linking ? (
                   <>
-                    <svg className="h-4 w-4 animate-spin text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg className="h-4 w-4 animate-spin text-white flex-shrink-0" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
@@ -355,7 +357,7 @@ export default function LinkStudentGuardian({ lang = 'en' }: { lang?: Lang }) {
                   </>
                 ) : (
                   <>
-                    <Check className="h-4 w-4" />
+                    <Check className="h-4 w-4 flex-shrink-0" />
                     {t.yes}
                   </>
                 )}
