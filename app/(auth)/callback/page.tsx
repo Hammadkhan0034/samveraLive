@@ -23,37 +23,45 @@ export default function AuthCallback() {
         if (user) {
           // User is authenticated, redirect based on role
           const userMetadata = user.user_metadata as UserMetadata | undefined;
-          const userRole: 'teacher' | 'principal' | 'guardian' | 'admin' = (userMetadata?.activeRole || userMetadata?.roles?.[0] || 'teacher') as 'teacher' | 'principal' | 'guardian' | 'admin';
+          const userRole: 'teacher' | 'principal' | 'guardian' | 'admin' | 'parent' = (userMetadata?.activeRole || userMetadata?.roles?.[0] || 'guardian') as 'teacher' | 'principal' | 'guardian' | 'admin' | 'parent';
           
-          // Update user as active in public.users table
-          const response = await fetch('/api/staff/verify', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              userId: user.id,
-              email: user.email
-            }),
-          });
+          // Only verify staff users (not guardians/parents)
+          if (userRole !== 'guardian' && userRole !== 'parent') {
+            // Update user as active in public.users table
+            const response = await fetch('/api/staff/verify', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                userId: user.id,
+                email: user.email
+              }),
+            });
 
-          if (response.ok) {
-            // Redirect to appropriate dashboard
-            switch (userRole) {
-              case 'teacher':
-                router.push('/dashboard/teacher');
-                break;
-              case 'principal':
-                router.push('/dashboard/principal');
-                break;
-              case 'admin':
-                router.push('/dashboard/admin');
-                break;
-              default:
-                router.push('/dashboard/teacher');
+            if (!response.ok) {
+              router.push('/signin?error=verification_failed');
+              return;
             }
-          } else {
-            router.push('/signin?error=verification_failed');
+          }
+
+          // Redirect to appropriate dashboard
+          switch (userRole) {
+            case 'teacher':
+              router.push('/dashboard/teacher');
+              break;
+            case 'principal':
+              router.push('/dashboard/principal');
+              break;
+            case 'admin':
+              router.push('/dashboard/admin');
+              break;
+            case 'guardian':
+            case 'parent':
+              router.push('/dashboard/guardian');
+              break;
+            default:
+              router.push('/dashboard/guardian');
           }
         } else {
           router.push('/signin?error=no_user');
