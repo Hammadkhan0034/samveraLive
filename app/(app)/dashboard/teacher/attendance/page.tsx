@@ -268,9 +268,9 @@ const AttendancePanel = React.memo<AttendancePanelProps>(function AttendancePane
   );
 
     return (
-      <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
-        <div className="mb-4 flex flex-col gap-ds-sm sm:flex-row sm:items-center sm:justify-end">
-          <div className="flex items-center gap-ds-sm">
+      <div className="rounded-ds-lg border border-slate-200 bg-white p-3 sm:p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+        <div className="mb-3 sm:mb-4 flex flex-col gap-2 sm:gap-ds-sm sm:flex-row sm:items-center sm:justify-end">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-ds-sm">
             <AttendanceFilters
               classes={teacherClasses}
               selectedClassId={selectedClassId}
@@ -295,13 +295,13 @@ const AttendancePanel = React.memo<AttendancePanelProps>(function AttendancePane
       {isLoading ? (
         <LoadingSkeleton type="cards" rows={6} />
       ) : filteredStudents.length === 0 ? (
-        <div className="text-center py-8 text-slate-500 dark:text-slate-400">
+        <div className="text-center py-6 sm:py-8 text-ds-small sm:text-ds-base text-slate-500 dark:text-slate-400">
           {selectedClassId === 'all'
             ? t.no_students_found || 'No students found in assigned classes'
             : t.no_students_assigned || 'No students assigned to this class'}
         </div>
       ) : (
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {filteredStudents.map((student) => {
             const status = attendance[student.id] || '';
             const record = attendanceRecords[student.id];
