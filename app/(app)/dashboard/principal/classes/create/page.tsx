@@ -318,14 +318,14 @@ function CreateClassPageContent() {
                 type="button"
                 onClick={() => router.push('/dashboard/principal/classes')}
                 disabled={loadingClass}
-                className="flex-1 rounded-ds-md rounded-full border  border-input-stroke dark:border-slate-600 px-ds-sm py-2 text-ds-small text-ds-text-primary hover:bg-mint-50 dark:hover:bg-slate-700 transition-colors "
+                className="flex-1 rounded-ds-md border  border-input-stroke dark:border-slate-600 px-ds-sm py-2 text-ds-small text-ds-text-primary hover:bg-mint-50 dark:hover:bg-slate-700 transition-colors "
               >
                 {t.cancel}
               </button>
               <button
                 type="submit"
                 disabled={loadingClass}
-                className="flex-1 rounded-ds-md rounded-full bg-mint-500 px-ds-md py-ds-sm text-ds-small text-white hover:bg-mint-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+                className="flex-1 rounded-ds-md bg-mint-500 px-ds-md py-ds-sm text-ds-small text-white hover:bg-mint-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
               >
                 {loadingClass ? (
                   <>
