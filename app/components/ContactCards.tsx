@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { Phone, Mail, MessageCircle, UserRound } from 'lucide-react';
+import { Phone, Mail, MessageCircle, UserRound, MapPin } from 'lucide-react';
 
 // Helper function to get initials from a name
 function getInitials(name: string): string {
@@ -18,8 +18,10 @@ export interface Contact {
   name: string;
   phone: string;
   email: string;
+  address?: string;
+  gender?: string;
+  status?: string;
   imageUrl?: string | null;
-  additionalDetails?: string[];
   onCall?: () => void;
   onMessage?: () => void;
   onViewProfile?: () => void;
@@ -59,6 +61,18 @@ export default function ContactCards({ contacts }: ContactCardsProps) {
                   <h3 className="text-ds-h3 font-bold text-mint-600 dark:text-mint-400 mb-ds-sm">
                     {contact.name}
                   </h3>
+                  <div className="flex flex-wrap items-center gap-2 mb-ds-sm">
+                    {contact.gender && (
+                      <span className="px-2 py-0.5 rounded-ds-sm text-ds-tiny font-medium bg-mint-100 dark:bg-mint-900/30 text-mint-700 dark:text-mint-300">
+                        {contact.gender}
+                      </span>
+                    )}
+                    {contact.status && (
+                      <span className="px-2 py-0.5 rounded-ds-sm text-ds-tiny font-medium bg-mint-100 dark:bg-mint-900/30 text-mint-700 dark:text-mint-300">
+                        {contact.status}
+                      </span>
+                    )}
+                  </div>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-ds-small text-ds-text-secondary dark:text-slate-400">
                       <Phone className="h-4 w-4 text-mint-600 dark:text-mint-400 flex-shrink-0" />
@@ -71,11 +85,12 @@ export default function ContactCards({ contacts }: ContactCardsProps) {
                   </div>
                 </div>
               </div>
-              {contact.additionalDetails && contact.additionalDetails.length > 0 && (
-                <div className="mb-ds-md space-y-1 text-ds-small text-ds-text-secondary dark:text-slate-400">
-                  {contact.additionalDetails.map((detail, index) => (
-                    <div key={index}>{detail}</div>
-                  ))}
+              {contact.address && (
+                <div className="mb-ds-md">
+                  <div className="flex items-start gap-2 text-ds-small text-ds-text-secondary dark:text-slate-400">
+                    <MapPin className="h-4 w-4 text-mint-600 dark:text-mint-400 flex-shrink-0 mt-0.5" />
+                    <span>{contact.address}</span>
+                  </div>
                 </div>
               )}
             </div>

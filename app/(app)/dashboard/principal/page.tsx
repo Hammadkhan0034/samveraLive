@@ -112,8 +112,10 @@ function PrincipalDashboardContent({
             name: 'Mária Jónsdóttir',
             phone: '777-1334',
             email: 'maria@domain.is',
+            address: 'Jhress: JJohanna 9',
+            gender: 'Female',
+            status: 'Active',
             imageUrl: undefined,
-            additionalDetails: ['A: Jhress: JJohanna 9', 'Aron (2023)'],
             onCall: () => {
               // Handle call action
               console.log('Call Mária Jónsdóttir');
@@ -132,8 +134,10 @@ function PrincipalDashboardContent({
             name: 'Ólafur Björnsson',
             phone: '661-9988',
             email: 'olafur@domain.is',
+            address: 'Reykjavík, Iceland',
+            gender: 'Male',
+            status: 'Active',
             imageUrl: undefined,
-            additionalDetails: ['• Child: Birkir (2022)'],
             onCall: () => {
               // Handle call action
               console.log('Call Ólafur Björnsson');
