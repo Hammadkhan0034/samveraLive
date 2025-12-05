@@ -605,7 +605,7 @@ export const enText = {
   notices_desc: 'Announcements and reminders from your child\'s class.',
   calendar: 'Calendar',
   calendar_desc: 'Upcoming events, trips and menus.',
-  messages: 'Messages',
+  messages: 'Conversations',
   messages_desc: 'Direct messages with staff.',
   media: 'Photos',
   media_desc: 'Albums shared with your class.',

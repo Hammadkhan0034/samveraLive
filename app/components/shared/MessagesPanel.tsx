@@ -1164,7 +1164,7 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
         {/* Header with New Conversation Button */}
         <div className="p-ds-sm border-b border-slate-200 dark:border-slate-700 bg-mint-50 dark:bg-slate-900">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">{t.messages || 'Messages'}</h2>
+            <h2 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">{t.messages || 'Conversations'}</h2>
             <button
               onClick={() => {
                 setShowNewConversation(!showNewConversation);
