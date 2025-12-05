@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
+import { AddStoryModal } from '@/app/components/shared/AddStoryModal';
 import TeacherPageLayout from '@/app/components/shared/TeacherPageLayout';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -70,66 +71,70 @@ export default function TeacherStoriesPage() {
   const [storyToDelete, setStoryToDelete] = useState<any>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  
+  // Add story modal state
+  const [isAddStoryModalOpen, setIsAddStoryModalOpen] = useState(false);
 
-  // Load stories
-  useEffect(() => {
+  // Load stories function
+  const loadStories = async () => {
     if (!session?.user?.id) return;
     
-    const loadStories = async () => {
-      try {
-        setLoading(true);
-        const userId = session.user.id;
-        const teacherClassIds = teacherClasses.map(c => c.id).filter(Boolean);
+    try {
+      setLoading(true);
+      const userId = session.user.id;
+      const teacherClassIds = teacherClasses.map(c => c.id).filter(Boolean);
+      
+      const params = new URLSearchParams();
+      params.set('audience', 'teacher');
+      params.set('teacherAuthorId', userId || '');
+      if (teacherClassIds.length > 0) {
+        params.set('teacherClassIds', teacherClassIds.join(','));
+      }
+      
+      const res = await fetch(`/api/stories?${params.toString()}`, { cache: 'no-store' });
+      const json = await res.json();
+      if (res.ok && json.stories) {
+        const storiesList = Array.isArray(json.stories) ? json.stories : [];
+        setStories(storiesList);
         
-        const params = new URLSearchParams();
-        params.set('audience', 'teacher');
-        params.set('teacherAuthorId', userId || '');
-        if (teacherClassIds.length > 0) {
-          params.set('teacherClassIds', teacherClassIds.join(','));
+        // Group stories by class
+        const orgWideStories = storiesList.filter((s: any) => !s.class_id);
+        const classSpecificStories = storiesList.filter((s: any) => s.class_id && teacherClassIds.includes(s.class_id));
+        
+        const grouped: Record<string, { class: any; stories: any[] }> = {};
+        
+        // Add org-wide stories (principal's stories)
+        if (orgWideStories.length > 0) {
+          grouped['org-wide'] = {
+            class: { id: null, name: 'Organization-wide' },
+            stories: orgWideStories
+          };
         }
         
-        const res = await fetch(`/api/stories?${params.toString()}`, { cache: 'no-store' });
-        const json = await res.json();
-        if (res.ok && json.stories) {
-          const storiesList = Array.isArray(json.stories) ? json.stories : [];
-          setStories(storiesList);
-          
-          // Group stories by class
-          const orgWideStories = storiesList.filter((s: any) => !s.class_id);
-          const classSpecificStories = storiesList.filter((s: any) => s.class_id && teacherClassIds.includes(s.class_id));
-          
-          const grouped: Record<string, { class: any; stories: any[] }> = {};
-          
-          // Add org-wide stories (principal's stories)
-          if (orgWideStories.length > 0) {
-            grouped['org-wide'] = {
-              class: { id: null, name: 'Organization-wide' },
-              stories: orgWideStories
+        // Group class-specific stories (teacher's own stories)
+        classSpecificStories.forEach((story: any) => {
+          const classId = story.class_id;
+          if (!grouped[classId]) {
+            const classInfo = teacherClasses.find(c => c.id === classId);
+            grouped[classId] = {
+              class: classInfo || { id: classId, name: `Class ${classId.substring(0, 8)}` },
+              stories: []
             };
           }
-          
-          // Group class-specific stories (teacher's own stories)
-          classSpecificStories.forEach((story: any) => {
-            const classId = story.class_id;
-            if (!grouped[classId]) {
-              const classInfo = teacherClasses.find(c => c.id === classId);
-              grouped[classId] = {
-                class: classInfo || { id: classId, name: `Class ${classId.substring(0, 8)}` },
-                stories: []
-              };
-            }
-            grouped[classId].stories.push(story);
-          });
-          
-          setStoriesByClass(grouped);
-        }
-      } catch (e) {
-        console.error('Error loading stories:', e);
-      } finally {
-        setLoading(false);
+          grouped[classId].stories.push(story);
+        });
+        
+        setStoriesByClass(grouped);
       }
-    };
-    
+    } catch (e) {
+      console.error('Error loading stories:', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load stories on mount and when dependencies change
+  useEffect(() => {
     loadStories();
   }, [teacherClasses, session?.user?.id]);
 
@@ -394,7 +399,7 @@ export default function TeacherStoriesPage() {
               <div className="mb-3 sm:mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
                 <h2 className="text-ds-small sm:text-ds-h3 font-medium text-slate-900 dark:text-slate-100">{t.stories_title}</h2>
                 <button
-                  onClick={() => router.push('/dashboard/add-story')}
+                  onClick={() => setIsAddStoryModalOpen(true)}
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-ds-md bg-mint-500 px-3 sm:px-4 py-1.5 sm:py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600 active:bg-mint-700 dark:active:bg-slate-500"
                 >
                   <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
@@ -405,7 +410,7 @@ export default function TeacherStoriesPage() {
 
               <div className="flex gap-2 sm:gap-ds-sm overflow-x-auto py-1 -mx-3 sm:-mx-0 px-3 sm:px-0">
                 <button
-                  onClick={() => router.push('/dashboard/add-story')}
+                  onClick={() => setIsAddStoryModalOpen(true)}
                   className="flex w-16 sm:w-20 flex-col items-center gap-1 flex-shrink-0"
                 >
                   <span className="rounded-ds-full bg-gradient-to-tr from-mint-300 to-mint-400 p-0.5">
@@ -631,6 +636,16 @@ export default function TeacherStoriesPage() {
                   </div>
                 </div>
               )}
+
+              {/* Add Story Modal */}
+              <AddStoryModal
+                isOpen={isAddStoryModalOpen}
+                onClose={() => setIsAddStoryModalOpen(false)}
+                onSuccess={() => {
+                  setIsAddStoryModalOpen(false);
+                  loadStories();
+                }}
+              />
 
               {/* Delete Confirmation Modal */}
               <DeleteConfirmationModal

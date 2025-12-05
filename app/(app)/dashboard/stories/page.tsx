@@ -7,6 +7,7 @@ import { useRequireAuth } from '@/lib/hooks/useAuth';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Plus, Edit, Trash2, Eye, Menu } from 'lucide-react';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
+import { AddStoryModal } from '@/app/components/shared/AddStoryModal';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
@@ -67,26 +68,7 @@ function StoriesPageContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const [teacherClassIds, setTeacherClassIds] = useState<string[]>([]);
-
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  // Remove tabs; use class dropdown in modal
-  const [classes, setClasses] = useState<Array<{ id: string; name: string }>>([]);
-  const [form, setForm] = useState({
-    org_id: '',
-    class_id: '' as string | null,
-    title: '',
-    caption: '',
-    is_public: true,
-    expires_at: '' as string,
-  });
-  const [items, setItems] = useState<Array<{
-    type: 'text' | 'image';
-    caption?: string;
-    url?: string;
-    mime_type?: string;
-    duration_ms?: number;
-  }>>([]);
+  const [isAddStoryModalOpen, setIsAddStoryModalOpen] = useState(false);
   type StoryItem = {
     id: string;
     story_id: string;
@@ -140,7 +122,6 @@ function StoriesPageContent() {
   useEffect(() => {
     if (orgId) {
       loadStories();
-      loadClasses();
     }
   }, [orgId, classId, teacherClassIds.length]); // Reload when teacher classes are loaded
   
@@ -333,18 +314,6 @@ function StoriesPageContent() {
     }
   }
 
-  async function loadClasses() {
-    if (!orgId) return;
-    try {
-      const res = await fetch(`/api/classes`, { cache: 'no-store' });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
-      const list = Array.isArray(json.classes) ? json.classes.map((c: any) => ({ id: c.id, name: c.name })) : [];
-      setClasses(list);
-    } catch (e) {
-      // no-op: dropdown can be empty
-    }
-  }
 
   function closeViewer(e?: React.MouseEvent) {
     if (e) {
@@ -564,59 +533,6 @@ function StoriesPageContent() {
     );
   }
 
-  function openCreate() {
-    setForm({
-      org_id: orgId || '',
-      class_id: '',
-      title: '',
-      caption: '',
-      is_public: true,
-      // default 24h from now
-      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-    });
-    setItems([]);
-    setIsModalOpen(true);
-  }
-
-  async function submit() {
-    if (!orgId || !form.expires_at) {
-      setError(t.missing_fields || 'Missing required fields');
-      return;
-    }
-    setSubmitting(true);
-    setError(null);
-    try {
-      const body = {
-        org_id: orgId,
-        class_id: form.class_id && form.class_id !== '' ? form.class_id : null,
-        author_id: user?.id || null,
-        title: form.title || null,
-        caption: form.caption || null,
-        is_public: form.is_public,
-        expires_at: form.expires_at,
-        items: items.map((it, idx) => ({
-          url: it.type === 'image' ? (it.url || null) : null,
-          order_index: idx,
-          duration_ms: it.duration_ms || null,
-          caption: it.caption || null,
-          mime_type: it.mime_type || (it.type === 'image' ? 'image/jpeg' : 'text/plain')
-        })),
-      };
-      const res = await fetch('/api/stories', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
-      setIsModalOpen(false);
-      await loadStories();
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
-      setSubmitting(false);
-    }
-  }
 
   function openDeleteModal(story: Story) {
     setStoryToDelete(story);
@@ -699,7 +615,7 @@ function StoriesPageContent() {
           {canCreateStory && (
             <div className="flex flex-wrap gap-2">
               <button
-                onClick={() => router.push('/dashboard/add-story')}
+                onClick={() => setIsAddStoryModalOpen(true)}
                 className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 hover:bg-mint-600 px-4 py-2 text-ds-small text-white transition-colors"
               >
                 <Plus className="h-4 w-4" /> {t.create_story}
@@ -881,8 +797,17 @@ function StoriesPageContent() {
             </div>
           )}
 
-        {/* Creation moved to /dashboard/add-story */}
       </main>
+
+      {/* Add Story Modal */}
+      <AddStoryModal
+        isOpen={isAddStoryModalOpen}
+        onClose={() => setIsAddStoryModalOpen(false)}
+        onSuccess={() => {
+          setIsAddStoryModalOpen(false);
+          loadStories();
+        }}
+      />
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmationModal
@@ -926,7 +851,7 @@ function StoriesPageContent() {
             <ProfileSwitcher />
             {canCreateStory && (
               <button
-                onClick={() => router.push('/dashboard/add-story')}
+                onClick={() => setIsAddStoryModalOpen(true)}
                 className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 hover:bg-mint-600 px-4 py-2 text-ds-small text-white transition-colors"
               >
                 <Plus className="h-4 w-4" /> {t.create_story}
@@ -1132,6 +1057,16 @@ function StoriesPageContent() {
             </div>
           </div>
         )}
+
+        {/* Add Story Modal */}
+        <AddStoryModal
+          isOpen={isAddStoryModalOpen}
+          onClose={() => setIsAddStoryModalOpen(false)}
+          onSuccess={() => {
+            setIsAddStoryModalOpen(false);
+            loadStories();
+          }}
+        />
 
         {/* Delete Confirmation Modal */}
         <DeleteConfirmationModal

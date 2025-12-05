@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useEffect, useState, useMemo, useRef } from 'react';
+import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Plus, Image as ImageIcon } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
+import { AddStoryModal } from '@/app/components/shared/AddStoryModal';
 
 type Story = {
   id: string;
@@ -49,6 +50,7 @@ export default function StoryColumn({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hydratedFromCache, setHydratedFromCache] = useState(false);
+  const [isAddStoryModalOpen, setIsAddStoryModalOpen] = useState(false);
 
   // Story viewer state
   const [viewerOpen, setViewerOpen] = useState(false);
@@ -98,8 +100,8 @@ export default function StoryColumn({
     }
   }, [effectiveUserId]);
 
-  // Fetch stories
-  useEffect(() => {
+  // Load stories function
+  const loadStories = useCallback(async () => {
     // Skip the call if we don't have a user ID (session might not be loaded yet)
     if (!effectiveUserId) {
       setLoading(false);
@@ -107,121 +109,122 @@ export default function StoryColumn({
       return;
     }
 
-    async function loadStories() {
-      // Don't show loading if we already have cached data
-      if (!hydratedFromCache) {
-        setLoading(true);
-      }
-      setError(null);
+    // Don't show loading if we already have cached data
+    if (!hydratedFromCache) {
+      setLoading(true);
+    }
+    setError(null);
+    try {
+      // Server will determine role from authenticated user's metadata
+      let res: Response;
       try {
-        // Server will determine role from authenticated user's metadata
-        let res: Response;
+        res = await fetch(`/api/stories`, { cache: 'no-store' });
+      } catch (fetchError: any) {
+        // Handle network errors (fetch failed)
+        console.error('❌ Network error fetching stories:', fetchError);
+        setStories([]);
+        setLoading(false);
+        return;
+      }
+      
+      // Clone response for error handling (response body can only be read once)
+      const resClone = res.clone();
+      
+      let json: any;
+      try {
+        json = await res.json();
+      } catch (e) {
+        // If JSON parsing fails, try to get text from cloned response
         try {
-          res = await fetch(`/api/stories`, { cache: 'no-store' });
-        } catch (fetchError: any) {
-          // Handle network errors (fetch failed)
-          console.error('❌ Network error fetching stories:', fetchError);
-          setStories([]);
-          setLoading(false);
-          return;
-        }
-        
-        // Clone response for error handling (response body can only be read once)
-        const resClone = res.clone();
-        
-        let json: any;
-        try {
-          json = await res.json();
-        } catch (e) {
-          // If JSON parsing fails, try to get text from cloned response
-          try {
-            const text = await resClone.text();
-            console.error('❌ Stories API: Failed to parse JSON response:', {
-              status: res.status,
-              statusText: res.statusText,
-              rawResponse: text.substring(0, 500), // First 500 chars
-            });
-            setStories([]);
-            setLoading(false);
-            return;
-          } catch (textError) {
-            console.error('❌ Stories API: Failed to parse response:', {
-              status: res.status,
-              statusText: res.statusText,
-              parseError: e,
-            });
-            setStories([]);
-            setLoading(false);
-            return;
-          }
-        }
-        
-        if (!res.ok) {
-          const errorMessage = json.error || (typeof json.details === 'string' ? json.details : (json.details ? JSON.stringify(json.details) : null)) || `Failed with status ${res.status}`;
-          console.error('❌ Stories API error:', {
+          const text = await resClone.text();
+          console.error('❌ Stories API: Failed to parse JSON response:', {
             status: res.status,
             statusText: res.statusText,
-            error: errorMessage,
-            details: json.details,
-            fullResponse: json,
-            url: '/api/stories'
+            rawResponse: text.substring(0, 500), // First 500 chars
           });
-          // Don't throw - just set empty stories and stop loading
+          setStories([]);
+          setLoading(false);
+          return;
+        } catch (textError) {
+          console.error('❌ Stories API: Failed to parse response:', {
+            status: res.status,
+            statusText: res.statusText,
+            parseError: e,
+          });
           setStories([]);
           setLoading(false);
           return;
         }
-
-        const storiesList = Array.isArray(json.stories) ? json.stories : [];
-        
-        // Fetch preview images for each story
-        const storiesWithPreviews = await Promise.all(
-          storiesList.map(async (story: Story) => {
-            try {
-              const itemsRes = await fetch(`/api/story-items?storyId=${story.id}`, { cache: 'no-store' });
-              const itemsJson = await itemsRes.json();
-              const items = Array.isArray(itemsJson.items) ? itemsJson.items : [];
-              
-              // Find first image item
-              const firstImageItem = items.find((item: any) => 
-                item.mime_type && item.mime_type.startsWith('image/') && item.url
-              );
-              
-              return {
-                ...story,
-                previewUrl: firstImageItem?.url || null,
-              };
-            } catch (e) {
-              return {
-                ...story,
-                previewUrl: null,
-              };
-            }
-          })
-        );
-
-        setStories(storiesWithPreviews);
-        
-        // Cache stories for instant load next time
-        if (effectiveUserId) {
-          try {
-            const cacheKey = `stories_column_cache_${effectiveUserId}`;
-            localStorage.setItem(cacheKey, JSON.stringify(storiesWithPreviews));
-          } catch (e) {
-            // Ignore cache errors
-          }
-        }
-      } catch (e: any) {
-        setError(e.message);
-        console.error('Error loading stories:', e);
-      } finally {
-        setLoading(false);
-        setHydratedFromCache(false); // Reset after first load
       }
-    }
+      
+      if (!res.ok) {
+        const errorMessage = json.error || (typeof json.details === 'string' ? json.details : (json.details ? JSON.stringify(json.details) : null)) || `Failed with status ${res.status}`;
+        console.error('❌ Stories API error:', {
+          status: res.status,
+          statusText: res.statusText,
+          error: errorMessage,
+          details: json.details,
+          fullResponse: json,
+          url: '/api/stories'
+        });
+        // Don't throw - just set empty stories and stop loading
+        setStories([]);
+        setLoading(false);
+        return;
+      }
 
+      const storiesList = Array.isArray(json.stories) ? json.stories : [];
+      
+      // Fetch preview images for each story
+      const storiesWithPreviews = await Promise.all(
+        storiesList.map(async (story: Story) => {
+          try {
+            const itemsRes = await fetch(`/api/story-items?storyId=${story.id}`, { cache: 'no-store' });
+            const itemsJson = await itemsRes.json();
+            const items = Array.isArray(itemsJson.items) ? itemsJson.items : [];
+            
+            // Find first image item
+            const firstImageItem = items.find((item: any) => 
+              item.mime_type && item.mime_type.startsWith('image/') && item.url
+            );
+            
+            return {
+              ...story,
+              previewUrl: firstImageItem?.url || null,
+            };
+          } catch (e) {
+            return {
+              ...story,
+              previewUrl: null,
+            };
+          }
+        })
+      );
+
+      setStories(storiesWithPreviews);
+      
+      // Cache stories for instant load next time
+      if (effectiveUserId) {
+        try {
+          const cacheKey = `stories_column_cache_${effectiveUserId}`;
+          localStorage.setItem(cacheKey, JSON.stringify(storiesWithPreviews));
+        } catch (e) {
+          // Ignore cache errors
+        }
+      }
+    } catch (e: any) {
+      setError(e.message);
+      console.error('Error loading stories:', e);
+    } finally {
+      setLoading(false);
+      setHydratedFromCache(false); // Reset after first load
+    }
+  }, [effectiveUserId, hydratedFromCache]);
+
+  // Fetch stories on mount and when dependencies change
+  useEffect(() => {
     loadStories();
-  }, [effectiveUserId, effectiveUserRole, hydratedFromCache, session]);
+  }, [loadStories, effectiveUserRole, session]);
 
   const handleStoryClick = (story: StoryWithPreview) => {
     openStoryViewer(story);
@@ -583,7 +586,7 @@ export default function StoryColumn({
   }
 
   const handleCreateStory = () => {
-    router.push('/dashboard/add-story');
+    setIsAddStoryModalOpen(true);
   };
 
   const canCreateStory = effectiveUserRole === 'guardian' || effectiveUserRole === 'teacher' || effectiveUserRole === 'principal';
@@ -747,6 +750,16 @@ export default function StoryColumn({
           </div>
         </div>
       )}
+
+      {/* Add Story Modal */}
+      <AddStoryModal
+        isOpen={isAddStoryModalOpen}
+        onClose={() => setIsAddStoryModalOpen(false)}
+        onSuccess={() => {
+          setIsAddStoryModalOpen(false);
+          loadStories();
+        }}
+      />
     </div>
   );
 }

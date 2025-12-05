@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     request,
     {
       requireOrg: true,
-      allowedRoles: ['principal', 'teacher'],
+      allowedRoles: ['principal', 'teacher', 'guardian'],
     },
     (user, adminClient) => handleGetStudents(request, user, adminClient)
   )
