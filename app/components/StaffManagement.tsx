@@ -397,9 +397,6 @@ export default function StaffManagement(_props: StaffManagementProps) {
 
       {/* Active Staff Table */}
       <div className="rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">
-        <h4 className="mb-ds-sm text-ds-h3 font-semibold text-ds-text-primary dark:text-slate-100">
-          {t.active_staff_members}
-        </h4>
         {loadingStaff ? (
           <LoadingSkeleton type="table" rows={5} />
         ) : staff.length === 0 ? (

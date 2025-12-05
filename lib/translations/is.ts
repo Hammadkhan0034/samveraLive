@@ -606,7 +606,7 @@ export const isText = {
   notices_desc: 'Tilkynningar og áminningar frá hópnum.',
   calendar: 'Dagatal',
   calendar_desc: 'Komandi viðburðir, ferðir og matseðlar.',
-  messages: 'Skilaboð',
+  messages: 'Samtal',
   messages_desc: 'Bein skilaboð við starfsfólk.',
   media: 'Myndir',
   media_desc: 'Albúm deilt með hópnum.',
