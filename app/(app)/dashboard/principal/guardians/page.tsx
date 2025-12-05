@@ -1,41 +1,45 @@
-import React, { Suspense } from 'react';
+'use client';
 
-import PrincipalPageLayout from '@/app/components/shared/PrincipalPageLayout';
+import React, { useRef } from 'react';
+import { Plus } from 'lucide-react';
+
+import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
+import { PageHeader } from '@/app/components/shared/PageHeader';
 import { GuardiansClient } from '@/app/components/shared/GuardiansClient';
-import { ServerRoleGuard } from '@/app/components/ServerRoleGuard';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
 
 function PrincipalGuardiansPageContent() {
+  const { t } = useLanguage();
+  const { sidebarRef } = usePrincipalPageLayout();
+  const createGuardianRef = useRef<(() => void) | null>(null);
+
   return (
-    <PrincipalPageLayout>
-      <GuardiansClient canManage />
-    </PrincipalPageLayout>
+    <>
+      <PageHeader
+        title={t.guardians || 'Guardians'}
+        subtitle={t.tile_guardians_desc || 'Manage guardians'}
+        headingLevel="h1"
+        showMobileMenu={true}
+        onMobileMenuClick={() => sidebarRef.current?.open()}
+        rightActions={
+          <button
+            onClick={() => createGuardianRef.current?.()}
+            className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-ds-sm py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600"
+          >
+            <Plus className="h-4 w-4" /> {t.add_guardian}
+          </button>
+        }
+      />
+      <GuardiansClient canManage onCreateClickRef={createGuardianRef} />
+    </>
   );
 }
 
-export default async function PrincipalGuardiansPage() {
+export default function PrincipalGuardiansPage() {
   return (
-    <ServerRoleGuard
-      requiredRole="principal"
-      fallback={
-        <PrincipalPageLayout>
-          <div className="flex min-h-[300px] items-center justify-center text-ds-body text-slate-500 dark:text-slate-300">
-            You do not have permission to view this page.
-          </div>
-        </PrincipalPageLayout>
-      }
-    >
-      <Suspense
-        fallback={
-          <PrincipalPageLayout>
-            <div className="flex min-h-[300px] items-center justify-center text-ds-body text-slate-500 dark:text-slate-300">
-              Loading guardians...
-            </div>
-          </PrincipalPageLayout>
-        }
-      >
-        <PrincipalGuardiansPageContent />
-      </Suspense>
-    </ServerRoleGuard>
+    <PrincipalPageLayout>
+      <PrincipalGuardiansPageContent />
+    </PrincipalPageLayout>
   );
 }
 

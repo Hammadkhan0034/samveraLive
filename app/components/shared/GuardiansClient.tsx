@@ -6,7 +6,6 @@ import React, {
   useMemo,
   useCallback,
 } from 'react';
-import { Plus } from 'lucide-react';
 
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { GuardianTable } from '@/app/components/shared/GuardianTable';
@@ -23,6 +22,10 @@ export interface GuardiansClientProps {
    * When false, render as read-only (no mutations or action buttons).
    */
   canManage?: boolean;
+  /**
+   * Optional ref to expose the create guardian function to parent components.
+   */
+  onCreateClickRef?: React.MutableRefObject<(() => void) | null>;
 }
 
 /**
@@ -49,7 +52,7 @@ function parseGuardianName(guardian: any): { first_name: string; last_name: stri
   };
 }
 
-export function GuardiansClient({ canManage = false }: GuardiansClientProps) {
+export function GuardiansClient({ canManage = false, onCreateClickRef }: GuardiansClientProps) {
   const { lang, t } = useLanguage();
 
   // Guardian state
@@ -116,11 +119,23 @@ export function GuardiansClient({ canManage = false }: GuardiansClientProps) {
     }
   }
 
-  function openCreateGuardianModal() {
+  const openCreateGuardianModal = useCallback(() => {
     if (!canManage) return;
     setGuardianForm({ first_name: '', last_name: '', email: '', phone: '', is_active: true });
     setIsGuardianModalOpen(true);
-  }
+  }, [canManage]);
+
+  // Expose the create function to parent via ref
+  useEffect(() => {
+    if (onCreateClickRef && canManage) {
+      onCreateClickRef.current = openCreateGuardianModal;
+    }
+    return () => {
+      if (onCreateClickRef) {
+        onCreateClickRef.current = null;
+      }
+    };
+  }, [onCreateClickRef, canManage, openCreateGuardianModal]);
 
   function openEditGuardianModal(guardian: any) {
     if (!canManage) return;
@@ -194,7 +209,7 @@ export function GuardiansClient({ canManage = false }: GuardiansClientProps) {
   }, [filteredGuardians, currentPage, itemsPerPage]);
 
   const totalPages = useMemo(
-    () => Math.ceil(filteredGuardians.length / itemsPerPage),
+    () => Math.max(1, Math.ceil(filteredGuardians.length / itemsPerPage)),
     [filteredGuardians.length, itemsPerPage],
   );
 
@@ -261,35 +276,22 @@ export function GuardiansClient({ canManage = false }: GuardiansClientProps) {
   const showManagementControls = canManage;
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
-        <div className="mb-4">
-          <h2 className="text-ds-h3 font-medium text-slate-900 dark:text-slate-100">
-            {t.guardians || 'Guardians'}
-          </h2>
-        </div>
-        <div className="mb-ds-sm flex items-center justify-between gap-ds-sm ml-6 mr-6">
-          {showManagementControls ? (
-            <button
-              onClick={openCreateGuardianModal}
-              className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600"
-            >
-              <Plus className="h-4 w-4" />{' '}
-              {lang === 'is' ? 'Bæta við forráðamanni' : 'Add Guardian'}
-            </button>
-          ) : (
-            <div />
-          )}
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setCurrentPage(1);
-            }}
-            placeholder={lang === 'is' ? 'Leita...' : 'Search guardians...'}
-            className="w-64 rounded-ds-md border border-slate-300 px-3 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
-          />
+    <>
+      {/* Guardians Table */}
+      <div className="rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">
+        <div className="flex items-center justify-between mb-ds-sm gap-ds-md">
+          <div className="relative">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              placeholder={lang === 'is' ? 'Leita...' : 'Search guardians...'}
+              className="h-12 px-ds-sm rounded-ds-xl bg-input-fill border border-input-stroke text-ds-body text-ds-text-primary focus:outline-none focus:border-mint-200 focus:ring-2 focus:ring-mint-200/20 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200 dark:placeholder-slate-400 dark:focus:border-mint-300 w-64"
+            />
+          </div>
         </div>
         {loadingGuardians ? (
           <LoadingSkeleton type="table" rows={5} />
@@ -303,24 +305,31 @@ export function GuardiansClient({ canManage = false }: GuardiansClientProps) {
             translations={tableTranslations}
           />
         )}
+        {/* Pagination controls */}
         {filteredGuardians.length > itemsPerPage && (
-          <div className="mt-4 flex justify-end gap-2">
+          <div className="mt-ds-sm w-full flex justify-end gap-ds-xs">
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="rounded-ds-md border border-slate-400 px-3 py-1.5 text-ds-small disabled:opacity-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+              className="inline-flex items-center rounded-ds-md border border-input-stroke bg-input-fill px-3 py-1.5 text-ds-small text-ds-text-primary disabled:opacity-60 disabled:cursor-not-allowed hover:bg-mint-50 hover:border-mint-200 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
             >
-              {lang === 'is' ? 'Fyrri' : 'Prev'}
+              {t.prev || 'Prev'}
             </button>
-            <span className="px-3 py-1.5 text-ds-small">
-              {currentPage} / {totalPages}
-            </span>
+            {Array.from({ length: totalPages }).map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentPage(idx + 1)}
+                className={`inline-flex items-center rounded-ds-md px-3 py-1.5 text-ds-small transition-colors ${currentPage === idx + 1 ? 'bg-mint-500 text-white border border-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600' : 'border border-input-stroke bg-input-fill text-ds-text-primary dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 hover:bg-mint-50 hover:border-mint-200 dark:hover:bg-slate-800'}`}
+              >
+                {idx + 1}
+              </button>
+            ))}
             <button
-              onClick={() => setCurrentPage((p) => p + 1)}
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage >= totalPages}
-              className="rounded-ds-md border border-slate-400 px-3 py-1.5 text-ds-small disabled:opacity-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+              className="inline-flex items-center rounded-ds-md border border-input-stroke bg-input-fill px-3 py-1.5 text-ds-small text-ds-text-primary disabled:opacity-60 disabled:cursor-not-allowed hover:bg-mint-50 hover:border-mint-200 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
             >
-              {lang === 'is' ? 'Næsta' : 'Next'}
+              {t.next || 'Next'}
             </button>
           </div>
         )}
@@ -353,7 +362,7 @@ export function GuardiansClient({ canManage = false }: GuardiansClientProps) {
           </>
         )}
       </div>
-    </div>
+    </>
   );
 }
 
