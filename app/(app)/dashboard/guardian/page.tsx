@@ -1,14 +1,14 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
-import { Menu, Users, MessageSquare, Camera, Baby, AlertCircle } from 'lucide-react';
-import ProfileSwitcher from '@/app/components/ProfileSwitcher';
-import { useRouter } from 'next/navigation';
+import { Users, MessageSquare, Camera, Baby, AlertCircle } from 'lucide-react';
 import GuardianPageLayout, { useGuardianPageLayout } from '@/app/components/shared/GuardianPageLayout';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import KPICardSkeleton from '@/app/components/loading-skeletons/KPICardSkeleton';
 import type { KPICard } from '@/lib/types/dashboard';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { PageHeader } from '@/app/components/shared/PageHeader';
+import StoryColumn from '@/app/components/shared/StoryColumn';
 
 interface GuardianDashboardContentProps {
   t: any;
@@ -26,29 +26,23 @@ function GuardianDashboardContent({
   onRetry,
 }: GuardianDashboardContentProps) {
   const { sidebarRef } = useGuardianPageLayout();
-  const router = useRouter();
 
   return (
     <>
-      {/* Content Header */}
-      <div className="mb-ds-md flex flex-col gap-ds-md md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-ds-md">
-          {/* Mobile menu button */}
-          <button
-            onClick={() => sidebarRef.current?.open()}
-            className="md:hidden p-2 rounded-ds-md hover:bg-mint-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
-            aria-label="Toggle sidebar"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-          <h1 className="text-ds-h1 font-bold tracking-tight text-ds-text-primary dark:text-slate-100">
-            {t.parent_dashboard_title || 'Guardian Dashboard'}
-          </h1>
-        </div>
-        <div className="flex items-center gap-ds-md">
-          <ProfileSwitcher />
-        </div>
-      </div>
+      <PageHeader
+        title={t.parent_dashboard_title || 'Guardian Dashboard'}
+        subtitle={t.parent_dashboard_subtitle || 'Stay connected with your child\'s learning journey'}
+        headingLevel="h1"
+        showMobileMenu={true}
+        onMobileMenuClick={() => sidebarRef.current?.open()}
+      />
+
+<StoryColumn
+  lang="en"
+  userRole="principal" // or "teacher" or "guardian"
+  teacherClassIds={[]} // optional, for teachers
+  parentClassIds={[]} // optional, for guardians
+/>
       {/* Error Message */}
       {error && (
         <div className="mb-ds-sm rounded-ds-md border border-red-200 bg-red-50 p-ds-sm dark:border-red-800 dark:bg-red-900/20">
@@ -231,7 +225,7 @@ function GuardianDashboardPageContent() {
       icon: icons.MessageSquare,
     },
     {
-      label: t.media || t.tile_media || 'Photos',
+      label: t.media || 'Photos',
       value: photosCount,
       icon: icons.Camera,
     },

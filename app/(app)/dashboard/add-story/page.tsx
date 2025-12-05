@@ -8,7 +8,6 @@ import { useRouter } from 'next/navigation';
 import { ArrowLeft, Save } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 
-type Lang = 'is' | 'en';
 
 export default function AddStoryPage() {
   const { t } = useLanguage();
