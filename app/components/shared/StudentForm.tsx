@@ -85,7 +85,7 @@ export function StudentForm({
     // AND user hasn't typed anything yet
     const currentId = initialData?.id;
     const prevId = prevInitialDataIdRef.current;
-    
+
     if (initialData && currentId && currentId !== prevId && !hasUserInputRef.current) {
       // Switching to edit a different student - update form only if no user input
       setFormData(initialData);
@@ -107,28 +107,28 @@ export function StudentForm({
   // Validate student age
   const validateStudentAge = (dob: string): boolean => {
     if (!dob) return true; // No DOB is valid
-    
+
     const birthDate = new Date(dob);
     const today = new Date();
     const age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
-    
+
     // Calculate actual age
-    const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate()) 
-      ? age - 1 
+    const actualAge = monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())
+      ? age - 1
       : age;
-    
+
     return actualAge >= 3 && actualAge <= 18;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate age before submitting
     if (formData.dob && !validateStudentAge(formData.dob)) {
       return; // Don't submit if age is invalid
     }
-    
+
     await onSubmit(formData);
   };
 
@@ -159,7 +159,7 @@ export function StudentForm({
 
   return (
     <div className={asPage ? "w-full" : "fixed inset-0 z-50 flex items-center justify-center bg-black/50"}>
-      <div className={asPage ? "w-[80%] ml-20 bg-white dark:bg-slate-800 p-ds-md shadow-ds-card rounded-ds-lg" : "w-full max-w-2xl rounded-ds-lg bg-white dark:bg-slate-800 p-ds-md shadow-ds-lg max-h-[90vh] overflow-y-auto"}>
+      <div className={asPage ? "w-[100%] bg-white dark:bg-slate-800 p-ds-md shadow-ds-card rounded-ds-lg" : "w-full max-w-2xl rounded-ds-lg bg-white dark:bg-slate-800 p-ds-md shadow-ds-lg max-h-[90vh] overflow-y-auto"}>
         {!asPage && (
           <div className="flex items-center justify-between">
             <h3 className="text-ds-h3 font-semibold text-ds-text-primary dark:text-slate-100">
@@ -213,17 +213,15 @@ export function StudentForm({
                 type="date"
                 value={formData.dob}
                 onChange={(e) => setFormData(prev => ({ ...prev, dob: e.target.value }))}
-                className={`w-full h-10 rounded-ds-md border px-ds-sm text-ds-body bg-input-fill text-ds-text-primary focus:outline-none focus:ring-1 dark:bg-slate-700 dark:text-slate-200 ${
-                  formData.dob && !validateStudentAge(formData.dob)
+                className={`w-full h-10 rounded-ds-md border px-ds-sm text-ds-body bg-input-fill text-ds-text-primary focus:outline-none focus:ring-1 dark:bg-slate-700 dark:text-slate-200 ${formData.dob && !validateStudentAge(formData.dob)
                     ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
                     : 'border-input-stroke dark:border-slate-600 focus:border-mint-500 focus:ring-mint-500'
-                }`}
+                  }`}
               />
-              <p className={`mt-ds-xs text-ds-tiny ${
-                formData.dob && !validateStudentAge(formData.dob)
+              <p className={`mt-ds-xs text-ds-tiny ${formData.dob && !validateStudentAge(formData.dob)
                   ? 'text-red-500 dark:text-red-400'
                   : 'text-ds-text-muted dark:text-slate-400'
-              }`}>
+                }`}>
                 {formData.dob && !validateStudentAge(formData.dob)
                   ? 'Student age must be between 3-18 years old'
                   : t.student_age_requirement
@@ -397,18 +395,18 @@ export function StudentForm({
             <div className="text-ds-small text-red-600 dark:text-red-400">{error}</div>
           )}
 
-          <div className="flex gap-ds-sm pt-ds-md">
+          <div className="flex sm:gap-ds-sm pt-ds-md">
             <button
               type="button"
               onClick={handleClose}
-              className="flex-1 rounded-ds-md border border-input-stroke dark:border-slate-600 px-ds-sm py-2 text-ds-small text-ds-text-primary hover:bg-mint-50 dark:hover:bg-slate-700 transition-colors"
+              className="flex-1 rounded-ds-md rounded-full border  border-input-stroke dark:border-slate-600 px-ds-sm py-2 text-ds-small text-ds-text-primary hover:bg-mint-50 dark:hover:bg-slate-700 transition-colors "
             >
               {t.cancel}
             </button>
             <button
               type="submit"
               disabled={loading || (!!formData.dob && !validateStudentAge(formData.dob))}
-              className="flex-1 rounded-ds-md bg-mint-500 hover:bg-mint-600 px-ds-sm py-2 text-ds-small text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-ds-xs transition-colors"
+              className="flex-1 rounded-ds-md rounded-full bg-mint-500 hover:bg-mint-600 px-ds-sm py-2 text-ds-small text-white disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-ds-xs transition-colors"
             >
               {loading ? (
                 <>
