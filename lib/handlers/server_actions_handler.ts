@@ -917,9 +917,34 @@ export async function handleGetEvents(
   const role = userMetadata?.activeRole || userMetadata?.roles?.[0];
   
   if (role === 'guardian') {
-    if (options?.classId) {
-      query = query.or(`class_id.eq.${options.classId},class_id.is.null`);
+    // Fetch guardian's linked students and their classes
+    const { data: relationships } = await adminClient
+      .from('guardian_students')
+      .select('student_id')
+      .eq('guardian_id', user.id);
+    
+    const studentIds = relationships?.map(r => r.student_id).filter(Boolean) || [];
+    
+    if (studentIds.length > 0) {
+      // Get class IDs from the guardian's students
+      const { data: students } = await adminClient
+        .from('students')
+        .select('class_id')
+        .in('id', studentIds)
+        .is('deleted_at', null)
+        .not('class_id', 'is', null);
+      
+      const classIds = [...new Set(students?.map(s => s.class_id).filter(Boolean) || [])];
+      
+      if (classIds.length > 0) {
+        // Show events for guardian's students' classes OR org-wide events
+        query = query.or(`class_id.in.(${classIds.join(',')}),class_id.is.null`);
+      } else {
+        // No class assignments, show org-wide events only
+        query = query.is('class_id', null);
+      }
     } else {
+      // No linked students, show org-wide events only
       query = query.is('class_id', null);
     }
   } else if (role === 'teacher') {

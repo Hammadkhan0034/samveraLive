@@ -1,6 +1,6 @@
 'use client';
 
-import  { useState, useEffect } from 'react';
+import  { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Calendar, type CalendarEvent } from '@/app/components/shared/Calendar';
 import { EventDetailsModal } from '@/app/components/shared/EventDetailsModal';
@@ -18,87 +18,22 @@ export default function ParentCalendarPage() {
   const [loadingEvents, setLoadingEvents] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [showEventDetails, setShowEventDetails] = useState(false);
-  const [linkedStudents, setLinkedStudents] = useState<Array<{ id: string; first_name: string; last_name: string | null; classes?: { name: string }; class_id?: string | null }>>([]);
-  const [derivedClassId, setDerivedClassId] = useState<string | null>(null);
 
-  // Load linked students
-  useEffect(() => {
-    let isMounted = true;
-
-    async function loadLinkedStudents() {
-      if (!session?.user?.id) return;
-
-      const orgId = (session?.user?.user_metadata as any)?.org_id as string | undefined;
-      const classId = (session?.user?.user_metadata as any)?.class_id as string | undefined;
-      const guardianId = session?.user?.id;
-
-      if (!orgId || !guardianId) return;
-
-      try {
-        const studentsRes = await fetch(`/api/guardian-students?guardianId=${guardianId}`);
-        
-        if (!studentsRes.ok) {
-          if (isMounted) {
-            setLinkedStudents([]);
-            setDerivedClassId(classId || null);
-          }
-          return;
-        }
-        
-        const studentsData = await studentsRes.json();
-        const relationships = studentsData.relationships || [];
-        const studentIds = relationships.map((r: any) => r.student_id).filter(Boolean);
-
-        if (studentIds.length > 0) {
-          const studentsDetailsRes = await fetch(`/api/students`);
-          
-          if (!studentsDetailsRes.ok) {
-            if (isMounted) {
-              setLinkedStudents([]);
-              setDerivedClassId(classId || null);
-            }
-            return;
-          }
-          
-          const studentsDetails = await studentsDetailsRes.json();
-          const allStudents = studentsDetails.students || [];
-          
-          const linked = allStudents
-            .filter((s: any) => studentIds.includes(s.id))
-            .map((s: any) => ({
-              id: s.id,
-              first_name: s.users?.first_name || s.first_name || '',
-              last_name: s.users?.last_name || s.last_name || null,
-              classes: s.classes || null,
-              class_id: s.class_id || s.classes?.id || null,
-            }));
-          
-          if (isMounted) {
-            setLinkedStudents(linked);
-            const effClassId = classId || (linked.find((s: { class_id?: string | null }) => !!s.class_id)?.class_id || null);
-            setDerivedClassId(effClassId);
-          }
-        } else {
-          if (isMounted) {
-            setLinkedStudents([]);
-            setDerivedClassId(classId || null);
-          }
-        }
-      } catch (e: any) {
-        console.error('❌ Error loading linked students:', e);
-        if (isMounted) {
-          setLinkedStudents([]);
-          setDerivedClassId(classId || null);
-        }
-      }
+  const loadCalendarEvents = useCallback(async () => {
+    const orgId = (session?.user?.user_metadata as any)?.org_id;
+    if (!orgId || !session?.user?.id) return;
+    
+    try {
+      setLoadingEvents(true);
+      // Handler now automatically fetches guardian's students' classes
+      const events = await getEvents();
+      setCalendarEvents(events as CalendarEvent[]);
+    } catch (e: any) {
+      console.error('❌ Error loading calendar events:', e.message);
+    } finally {
+      setLoadingEvents(false);
     }
-
-    loadLinkedStudents();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [session]);
+  }, [session?.user?.user_metadata, session?.user?.id]);
 
   // Load calendar events
   useEffect(() => {
@@ -106,24 +41,8 @@ export default function ParentCalendarPage() {
     if (orgId && session?.user?.id) {
       loadCalendarEvents();
     }
-  }, [session?.user?.id, derivedClassId]);
-
-  const loadCalendarEvents = async () => {
-    const orgId = (session?.user?.user_metadata as any)?.org_id;
-    if (!orgId || !session?.user?.id) return;
-    
-    try {
-      setLoadingEvents(true);
-      const events = await getEvents({
-        classId: derivedClassId,
-      });
-      setCalendarEvents(events as CalendarEvent[]);
-    } catch (e: any) {
-      console.error('❌ Error loading calendar events:', e.message);
-    } finally {
-      setLoadingEvents(false);
-    }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session?.user?.id, loadCalendarEvents]);
 
   return (
     <div className="min-h-screen bg-mint-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
@@ -201,7 +120,6 @@ export default function ParentCalendarPage() {
           event={selectedEvent}
           canEdit={false}
           canDelete={false}
-          classes={linkedStudents.map(s => s.classes ? { id: s.class_id || '', name: s.classes.name } : null).filter(Boolean) as Array<{ id: string; name: string }>}
         />
       </div>
     </div>
