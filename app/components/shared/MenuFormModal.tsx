@@ -122,7 +122,7 @@ export function MenuFormModal({
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
 
-      // Set flag to trigger refresh on menus-list and menus-view pages
+      // Set flag to trigger refresh on menus-list and guardian/menus pages
       if (typeof window !== 'undefined') {
         localStorage.setItem('menu_data_updated', 'true');
         // Dispatch custom event for instant update

@@ -29,7 +29,7 @@ export default function ParentDashboard() {
   
   // Prefetch routes for instant navigation
   useEffect(() => {
-    router.prefetch('/dashboard/menus-view');
+    router.prefetch('/dashboard/guardian/menus');
     router.prefetch('/dashboard/stories');
     router.prefetch('/dashboard/guardian/attendance');
     router.prefetch('/dashboard/guardian/messages');
@@ -547,7 +547,7 @@ export default function ParentDashboard() {
             if (item.href === '#' && (item.title === t.menu || item.title === t.stories || item.title === t.attendance || item.title === (t.di_title || 'Diapers & Health'))) {
               // Custom menu/stories/attendance/diapers tile with onClick
               const getRoute = () => {
-                if (item.title === t.menu) return '/dashboard/menus-view';
+                if (item.title === t.menu) return '/dashboard/guardian/menus';
                 if (item.title === t.stories) return '/dashboard/stories';
                 if (item.title === t.attendance) return '/dashboard/guardian/attendance';
                 if (item.title === (t.di_title || 'Diapers & Health')) return '/dashboard/guardian/diapers';
@@ -559,8 +559,8 @@ export default function ParentDashboard() {
                   onClick={() => {
                     // Instant navigation - prefetch if not already done
                     if (item.title === t.menu) {
-                      router.prefetch('/dashboard/menus-view');
-                      router.push('/dashboard/menus-view');
+                      router.prefetch('/dashboard/guardian/menus');
+                      router.push('/dashboard/guardian/menus');
                     } else if (item.title === t.stories) {
                       router.prefetch('/dashboard/stories');
                       router.push('/dashboard/stories');
