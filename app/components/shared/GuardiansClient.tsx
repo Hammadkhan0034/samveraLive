@@ -278,9 +278,9 @@ export function GuardiansClient({ canManage = false, onCreateClickRef }: Guardia
   return (
     <>
       {/* Guardians Table */}
-      <div className="rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">
-        <div className="flex items-center justify-between mb-ds-sm gap-ds-md">
-          <div className="relative">
+      <div className="rounded-ds-lg bg-white p-3 sm:p-ds-md shadow-ds-card dark:bg-slate-800">
+        <div className="flex items-center justify-between mb-ds-sm gap-ds-sm sm:gap-ds-md">
+          <div className="relative flex-1 sm:flex-initial sm:w-auto min-w-0">
             <input
               type="text"
               value={searchQuery}
@@ -289,7 +289,7 @@ export function GuardiansClient({ canManage = false, onCreateClickRef }: Guardia
                 setCurrentPage(1);
               }}
               placeholder={lang === 'is' ? 'Leita...' : 'Search guardians...'}
-              className="h-12 px-ds-sm rounded-ds-xl bg-input-fill border border-input-stroke text-ds-body text-ds-text-primary focus:outline-none focus:border-mint-200 focus:ring-2 focus:ring-mint-200/20 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200 dark:placeholder-slate-400 dark:focus:border-mint-300 w-64"
+              className="w-full sm:w-48 md:w-64 h-10 sm:h-12 px-ds-sm rounded-ds-md rounded-full bg-input-fill border border-input-stroke text-ds-small text-ds-text-primary focus:outline-none focus:border-mint-200 focus:ring-2 focus:ring-mint-200/20 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200 dark:placeholder-slate-400 dark:focus:border-mint-300"
             />
           </div>
         </div>
@@ -307,27 +307,29 @@ export function GuardiansClient({ canManage = false, onCreateClickRef }: Guardia
         )}
         {/* Pagination controls */}
         {filteredGuardians.length > itemsPerPage && (
-          <div className="mt-ds-sm w-full flex justify-end gap-ds-xs">
+          <div className="mt-ds-sm w-full flex flex-wrap justify-center sm:justify-end gap-ds-xs">
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="inline-flex items-center rounded-ds-md border border-input-stroke bg-input-fill px-3 py-1.5 text-ds-small text-ds-text-primary disabled:opacity-60 disabled:cursor-not-allowed hover:bg-mint-50 hover:border-mint-200 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+              className="inline-flex items-center rounded-ds-md border border-input-stroke bg-input-fill px-2 sm:px-3 py-1.5 text-ds-small text-ds-text-primary disabled:opacity-60 disabled:cursor-not-allowed hover:bg-mint-50 hover:border-mint-200 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
             >
               {t.prev || 'Prev'}
             </button>
-            {Array.from({ length: totalPages }).map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setCurrentPage(idx + 1)}
-                className={`inline-flex items-center rounded-ds-md px-3 py-1.5 text-ds-small transition-colors ${currentPage === idx + 1 ? 'bg-mint-500 text-white border border-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600' : 'border border-input-stroke bg-input-fill text-ds-text-primary dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 hover:bg-mint-50 hover:border-mint-200 dark:hover:bg-slate-800'}`}
-              >
-                {idx + 1}
-              </button>
-            ))}
+            <div className="flex gap-ds-xs flex-wrap justify-center">
+              {Array.from({ length: totalPages }).map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentPage(idx + 1)}
+                  className={`inline-flex items-center rounded-ds-md px-2 sm:px-3 py-1.5 text-ds-small transition-colors ${currentPage === idx + 1 ? 'bg-mint-500 text-white border border-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600' : 'border border-input-stroke bg-input-fill text-ds-text-primary dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 hover:bg-mint-50 hover:border-mint-200 dark:hover:bg-slate-800'}`}
+                >
+                  {idx + 1}
+                </button>
+              ))}
+            </div>
             <button
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage >= totalPages}
-              className="inline-flex items-center rounded-ds-md border border-input-stroke bg-input-fill px-3 py-1.5 text-ds-small text-ds-text-primary disabled:opacity-60 disabled:cursor-not-allowed hover:bg-mint-50 hover:border-mint-200 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+              className="inline-flex items-center rounded-ds-md border border-input-stroke bg-input-fill px-2 sm:px-3 py-1.5 text-ds-small text-ds-text-primary disabled:opacity-60 disabled:cursor-not-allowed hover:bg-mint-50 hover:border-mint-200 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
             >
               {t.next || 'Next'}
             </button>

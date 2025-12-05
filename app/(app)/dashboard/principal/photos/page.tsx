@@ -234,27 +234,28 @@ function PrincipalPhotosPageContent() {
         rightActions={
           <button
             onClick={() => setIsModalOpen(true)}
-            className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600"
+            className="inline-flex items-center gap-1.5 sm:gap-2 rounded-ds-md bg-mint-500 px-3 sm:px-4 py-1.5 sm:py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600"
           >
-            <Plus className="h-4 w-4" />
-            {t.upload_photo || 'Upload Photo'}
+            <Plus className="h-4 w-4 flex-shrink-0" />
+            <span className="hidden sm:inline">{t.upload_photo || 'Upload Photo'}</span>
+            <span className="sm:hidden">{t.upload || 'Upload'}</span>
           </button>
         }
       />
 
         {/* Photos Panel */}
-        <div className="rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">
+        <div className="rounded-ds-lg bg-white p-3 sm:p-ds-md shadow-ds-card dark:bg-slate-800">
           {/* Error State */}
           {error && (
-            <div className="mb-4 rounded-ds-md bg-red-50 border border-red-200 px-4 py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+            <div className="mb-3 sm:mb-4 rounded-ds-md bg-red-50 border border-red-200 px-3 sm:px-4 py-2 sm:py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
               {error}
             </div>
           )}
 
           {/* Loading State */}
           {isLoading ? (
-            <div className="grid grid-cols-1 gap-ds-sm sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-              {Array.from({ length: 8 }).map((_, index) => (
+            <div className="grid grid-cols-2 gap-2 sm:gap-ds-sm sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              {Array.from({ length: 10 }).map((_, index) => (
                 <div
                   key={index}
                   className="aspect-square rounded-ds-md overflow-hidden bg-mint-100 dark:bg-slate-700 animate-pulse"
@@ -263,64 +264,66 @@ function PrincipalPhotosPageContent() {
             </div>
           ) : (
             /* Photos Grid */
-            <div className="grid grid-cols-1 gap-ds-sm sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2 sm:gap-ds-sm sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
               {photos.length === 0 ? (
-                <div className="col-span-full text-center py-12 text-slate-500 dark:text-slate-400">
-                  <ImageIcon className="h-12 w-12 mx-auto mb-3 text-mint-300 dark:text-slate-600" />
-                  <p>{t.no_photos_uploaded || 'No photos uploaded yet'}</p>
-                  <p className="text-ds-small mt-1">{t.click_upload_photo || 'Click "Upload Photo" to get started'}</p>
+                <div className="col-span-full text-center py-8 sm:py-12 px-4 text-slate-500 dark:text-slate-400">
+                  <ImageIcon className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 text-mint-300 dark:text-slate-600" />
+                  <p className="text-ds-small sm:text-ds-body">{t.no_photos_uploaded || 'No photos uploaded yet'}</p>
+                  <p className="text-ds-tiny sm:text-ds-small mt-1">{t.click_upload_photo || 'Click "Upload Photo" to get started'}</p>
                 </div>
               ) : (
                 photos.map((photo) => (
                   <div
                     key={photo.id}
-                    className="group relative aspect-square overflow-hidden rounded-ds-md bg-slate-100 dark:bg-slate-700"
+                    className="group relative aspect-square overflow-hidden rounded-ds-md bg-slate-100 dark:bg-slate-700 cursor-pointer"
                   >
                     {photo.url ? (
                       <img
                         src={photo.url}
                         alt={photo.caption || 'Photo'}
                         className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                        loading="lazy"
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center">
-                        <ImageIcon className="h-8 w-8 text-slate-400" />
+                        <ImageIcon className="h-6 w-6 sm:h-8 sm:w-8 text-slate-400" />
                       </div>
                     )}
 
-                    {/* Delete button - top right */}
+                    {/* Delete button - visible on mobile, hover on desktop */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handleDeleteClick(photo);
                       }}
-                      className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-ds-full p-2 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                      className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2 bg-red-500 hover:bg-red-600 active:bg-red-700 text-white rounded-ds-full p-1.5 sm:p-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-10 shadow-lg"
                       title={t.delete_photo || 'Delete Photo'}
+                      aria-label={t.delete_photo || 'Delete Photo'}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </button>
 
-                    {/* Overlay with info */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="absolute bottom-0 left-0 right-0 p-3 text-white text-ds-small">
+                    {/* Overlay with info - visible on mobile tap, hover on desktop */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                      <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3 text-white">
                         {photo.caption && (
-                          <p className="truncate font-medium mb-1">{photo.caption}</p>
+                          <p className="truncate font-medium mb-0.5 sm:mb-1 text-ds-tiny sm:text-ds-small">{photo.caption}</p>
                         )}
-                        <div className="flex items-center justify-between text-ds-tiny opacity-90">
-                          <span>
+                        <div className="flex items-center justify-between text-ds-tiny opacity-90 flex-wrap gap-1">
+                          <span className="text-xs sm:text-ds-tiny">
                             {new Date(photo.created_at).toLocaleDateString()}
                           </span>
                           {photo.is_public && (
-                            <span className="px-2 py-0.5 bg-white/20 rounded-ds-sm">{t.public || 'Public'}</span>
+                            <span className="px-1.5 sm:px-2 py-0.5 bg-white/20 rounded-ds-sm text-xs sm:text-ds-tiny">{t.public || 'Public'}</span>
                           )}
                         </div>
                         {photo.classes && (
-                          <p className="text-ds-tiny opacity-75 mt-1 truncate">
+                          <p className="text-xs sm:text-ds-tiny opacity-75 mt-0.5 sm:mt-1 truncate">
                             {photo.classes.name}
                           </p>
                         )}
                         {photo.students && (
-                          <p className="text-ds-tiny opacity-75 mt-1 truncate">
+                          <p className="text-xs sm:text-ds-tiny opacity-75 mt-0.5 sm:mt-1 truncate">
                             {photo.students.first_name} {photo.students.last_name}
                           </p>
                         )}

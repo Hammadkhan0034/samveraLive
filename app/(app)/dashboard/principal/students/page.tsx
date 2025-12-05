@@ -234,50 +234,50 @@ function StudentsPageContent() {
 
       {/* Students Table */}
       <div className="rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">
-        <div className="flex items-center justify-between mb-ds-sm gap-ds-md">
-       
-            <div className="relative">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={'Search students...'}
-                className="h-12 px-ds-sm rounded-ds-xl bg-input-fill border border-input-stroke text-ds-body text-ds-text-primary focus:outline-none focus:border-mint-200 focus:ring-2 focus:ring-mint-200/20 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200 dark:placeholder-slate-400 dark:focus:border-mint-300 w-64"
-              />
-            </div>
-            {/* Filter Dropdown */}
-            <div className="relative" ref={filterDropdownRef}>
-              <button
-                onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
-                className="flex items-center gap-2 rounded-ds-md bg-input-fill border border-input-stroke text-ds-small px-3 py-1.5 text-ds-text-primary hover:bg-mint-50 hover:border-mint-200 transition-colors dark:text-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:hover:bg-slate-800"
-              >
-                <Filter className="h-4 w-4" />
-                <span className="hidden sm:inline">{filterOptions.find(opt => opt.value === selectedClassFilter)?.label || t.all_classes}</span>
-                <ChevronDown className={`h-4 w-4 transition-transform ${isFilterDropdownOpen ? 'rotate-180' : ''}`} />
-              </button>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between mb-ds-sm gap-ds-sm">
+          {/* Search Input */}
+          <div className="relative flex-1 sm:flex-initial sm:w-auto min-w-0">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={'Search students...'}
+              className="w-full sm:w-48 md:w-64 h-10 sm:h-12 px-ds-sm rounded-full rounded-ds-md bg-input-fill border border-input-stroke text-ds-small text-ds-text-primary focus:outline-none focus:border-mint-200 focus:ring-2 focus:ring-mint-200/20 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200 dark:placeholder-slate-400 dark:focus:border-mint-300"
+            />
+          </div>
+          {/* Filter Dropdown */}
+          <div className="relative flex-shrink-0" ref={filterDropdownRef}>
+            <button
+              onClick={() => setIsFilterDropdownOpen(!isFilterDropdownOpen)}
+              className="flex items-center gap-2 rounded-full rounded-ds-md bg-input-fill border border-input-stroke text-ds-small px-3 py-2 h-10 sm:h-12 text-ds-text-primary hover:bg-mint-50 hover:border-mint-200 transition-colors dark:text-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:hover:bg-slate-800 w-full sm:w-auto"
+            >
+              <Filter className="h-4 w-4 flex-shrink-0" />
+              <span className="hidden sm:inline truncate">{filterOptions.find(opt => opt.value === selectedClassFilter)?.label || t.all_classes}</span>
+              <span className="sm:hidden">{t.all_classes}</span>
+              <ChevronDown className={`h-4 w-4 flex-shrink-0 transition-transform ${isFilterDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
 
-              {isFilterDropdownOpen && (
-                <div className="absolute right-0 top-full mt-1 w-48 rounded-ds-md border border-input-stroke dark:border-slate-700 bg-ds-surface-white dark:bg-slate-800 shadow-ds-lg z-50">
-                  {filterOptions.map((option) => (
-                    <button
-                      key={option.value}
-                      onClick={() => {
-                        setSelectedClassFilter(option.value);
-                        setIsFilterDropdownOpen(false);
-                      }}
-                      className={`w-full px-3 py-2 text-ds-small text-left hover:bg-mint-50 dark:hover:bg-slate-700 first:rounded-t-ds-md last:rounded-b-ds-md transition-colors ${
-                        selectedClassFilter === option.value
-                          ? 'bg-mint-100 dark:bg-slate-700 text-mint-700 dark:text-slate-100'
-                          : 'text-ds-text-primary dark:text-slate-300'
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
+            {isFilterDropdownOpen && (
+              <div className="absolute right-0 sm:right-0 left-0 sm:left-auto top-full mt-1 w-full sm:w-48 rounded-ds-md border border-input-stroke dark:border-slate-700 bg-ds-surface-white dark:bg-slate-800 shadow-ds-lg z-50 max-h-60 overflow-y-auto">
+                {filterOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => {
+                      setSelectedClassFilter(option.value);
+                      setIsFilterDropdownOpen(false);
+                    }}
+                    className={`w-full px-3 py-2 text-ds-small text-left hover:bg-mint-50 dark:hover:bg-slate-700 first:rounded-t-ds-md last:rounded-b-ds-md transition-colors ${
+                      selectedClassFilter === option.value
+                        ? 'bg-mint-100 dark:bg-slate-700 text-mint-700 dark:text-slate-100'
+                        : 'text-ds-text-primary dark:text-slate-300'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
         <StudentTable
           students={paginatedStudents}
@@ -302,27 +302,29 @@ function StudentsPageContent() {
           }}
         />
         {/* Pagination controls */}
-        <div className="mt-ds-sm w-full flex justify-end gap-ds-xs">
+        <div className="mt-ds-sm w-full flex flex-wrap justify-center sm:justify-end gap-ds-xs">
           <button
             onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className="inline-flex items-center rounded-ds-md border border-input-stroke bg-input-fill px-3 py-1.5 text-ds-small text-ds-text-primary disabled:opacity-60 disabled:cursor-not-allowed hover:bg-mint-50 hover:border-mint-200 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+            className="inline-flex items-center rounded-ds-md border border-input-stroke bg-input-fill px-2 sm:px-3 py-1.5 text-ds-small text-ds-text-primary disabled:opacity-60 disabled:cursor-not-allowed hover:bg-mint-50 hover:border-mint-200 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
           >
             {t.prev || 'Prev'}
           </button>
-          {Array.from({ length: totalPages }).map((_, idx) => (
-            <button
-              key={idx}
-              onClick={() => setCurrentPage(idx + 1)}
-              className={`inline-flex items-center rounded-ds-md px-3 py-1.5 text-ds-small transition-colors ${currentPage === idx + 1 ? 'bg-mint-500 text-white border border-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600' : 'border border-input-stroke bg-input-fill text-ds-text-primary dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 hover:bg-mint-50 hover:border-mint-200 dark:hover:bg-slate-800'}`}
-            >
-              {idx + 1}
-            </button>
-          ))}
+          <div className="flex gap-ds-xs flex-wrap justify-center">
+            {Array.from({ length: totalPages }).map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentPage(idx + 1)}
+                className={`inline-flex items-center rounded-ds-md px-2 sm:px-3 py-1.5 text-ds-small transition-colors ${currentPage === idx + 1 ? 'bg-mint-500 text-white border border-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600' : 'border border-input-stroke bg-input-fill text-ds-text-primary dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 hover:bg-mint-50 hover:border-mint-200 dark:hover:bg-slate-800'}`}
+              >
+                {idx + 1}
+              </button>
+            ))}
+          </div>
           <button
             onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
-            className="inline-flex items-center rounded-ds-md border border-input-stroke bg-input-fill px-3 py-1.5 text-ds-small text-ds-text-primary disabled:opacity-60 disabled:cursor-not-allowed hover:bg-mint-50 hover:border-mint-200 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+            className="inline-flex items-center rounded-ds-md border border-input-stroke bg-input-fill px-2 sm:px-3 py-1.5 text-ds-small text-ds-text-primary disabled:opacity-60 disabled:cursor-not-allowed hover:bg-mint-50 hover:border-mint-200 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
           >
             {t.next || 'Next'}
           </button>

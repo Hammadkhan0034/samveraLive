@@ -68,7 +68,7 @@ export function PrincipalCalendarClient({
       />
 
       {/* Calendar Container */}
-      <div className="rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">
+      <div className="rounded-ds-lg bg-white p-0 sm:p-ds-md shadow-ds-card dark:bg-slate-800 overflow-hidden">
         <Calendar
           userRole="principal"
           canEdit={true}

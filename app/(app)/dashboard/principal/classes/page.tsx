@@ -292,23 +292,23 @@ function ClassesPageContent() {
         {/* Departments table */}
         <div className="mt-ds-md rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">
          
-          <div className="overflow-x-auto overflow-hidden border border-slate-200 dark:border-slate-700 rounded-ds-md">
-            <table className="min-w-full border-collapse">
+          <div className="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-ds-md">
+            <table className="w-full min-w-[640px] border-collapse">
               <thead>
                 <tr className="bg-mint-500">
-                  <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300 rounded-tl-ds-md">
+                  <th className="text-left py-2 px-2 sm:px-4 text-ds-small font-medium text-white dark:text-slate-300 rounded-tl-ds-md whitespace-nowrap">
                     {t.col_name}
                   </th>
-                  <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
+                  <th className="text-left py-2 px-2 sm:px-4 text-ds-small font-medium text-white dark:text-slate-300 whitespace-nowrap">
                     {t.col_students}
                   </th>
-                  <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
+                  <th className="text-left py-2 px-2 sm:px-4 text-ds-small font-medium text-white dark:text-slate-300 whitespace-nowrap hidden md:table-cell">
                     {t.col_staff}
                   </th>
-                  <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
+                  <th className="text-left py-2 px-2 sm:px-4 text-ds-small font-medium text-white dark:text-slate-300 whitespace-nowrap hidden lg:table-cell">
                     {t.col_visible}
                   </th>
-                  <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300 rounded-tr-ds-md">
+                  <th className="text-left py-2 px-2 sm:px-4 text-ds-small font-medium text-white dark:text-slate-300 rounded-tr-ds-md whitespace-nowrap">
                     {t.col_actions}
                   </th>
                 </tr>
@@ -316,45 +316,46 @@ function ClassesPageContent() {
               <tbody>
                 {classes.map((cls) => (
                   <tr key={cls.id} className="border-b border-slate-100 dark:border-slate-700 hover:bg-mint-50 dark:hover:bg-slate-700/50 transition-colors">
-                    <td className="text-left py-2 px-4 text-ds-small font-medium text-slate-900 dark:text-slate-100">{cls.name}</td>
-                    <td className="text-left py-2 px-4 text-ds-small text-slate-600 dark:text-slate-400">
+                    <td className="text-left py-2 px-2 sm:px-4 text-ds-small font-medium text-slate-900 dark:text-slate-100 whitespace-nowrap">{cls.name}</td>
+                    <td className="text-left py-2 px-2 sm:px-4 text-ds-small text-slate-600 dark:text-slate-400 whitespace-nowrap">
                       {classStudentCounts[cls.id] || 0}
                     </td>
-                    <td className="text-left py-2 px-4 text-ds-small text-slate-600 dark:text-slate-400">
+                    <td className="text-left py-2 px-2 sm:px-4 text-ds-small text-slate-600 dark:text-slate-400 hidden md:table-cell whitespace-nowrap">
                       {cls.assigned_teachers?.length || 0}
                     </td>
-                    <td className="text-left py-2 px-4 text-ds-small">
+                    <td className="text-left py-2 px-2 sm:px-4 text-ds-small hidden lg:table-cell">
                       <span
                         className={clsx(
-                          'inline-flex items-center gap-1 rounded-ds-full border px-2 py-0.5 text-ds-tiny',
+                          'inline-flex items-center gap-1 rounded-ds-full border px-2 py-0.5 text-ds-tiny whitespace-nowrap',
                           'border-mint-200 bg-mint-50 text-mint-700 dark:border-mint-600 dark:bg-mint-900/20 dark:text-mint-300'
                         )}
                       >
-                        <CheckCircle2 className="h-3.5 w-3.5" /> {t.visible_yes}
+                        <CheckCircle2 className="h-3.5 w-3.5 flex-shrink-0" /> 
+                        <span className="hidden xl:inline">{t.visible_yes}</span>
                       </span>
                     </td>
-                    <td className="text-left py-2 px-4 text-ds-small">
-                      <div className="flex items-center gap-2 flex-wrap">
+                    <td className="text-left py-2 px-2 sm:px-4 text-ds-small">
+                      <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
                         <button
                           onClick={() => openClassDetailsModal(cls)}
-                          className="inline-flex items-center gap-1 rounded-ds-sm border border-slate-300 px-2.5 py-1 text-ds-tiny hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                          className="inline-flex items-center gap-1 rounded-ds-sm border border-slate-300 px-1.5 sm:px-2.5 py-1 text-ds-tiny hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
                         >
-                          <Eye className="h-3.5 w-3.5" />
-                          {t.show}
+                          <Eye className="h-3.5 w-3.5 flex-shrink-0" />
+                          <span className="hidden sm:inline">{t.show}</span>
                         </button>
                         <button
                           onClick={() => openEditClass(cls)}
-                          className="inline-flex items-center gap-1 rounded-ds-sm border border-slate-300 px-2.5 py-1 text-ds-tiny hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                          className="inline-flex items-center gap-1 rounded-ds-sm border border-slate-300 px-1.5 sm:px-2.5 py-1 text-ds-tiny hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
                         >
-                          <Edit className="h-3.5 w-3.5" />
-                          {t.edit}
+                          <Edit className="h-3.5 w-3.5 flex-shrink-0" />
+                          <span className="hidden sm:inline">{t.edit}</span>
                         </button>
                         <button
                           onClick={() => openDeleteClassModal(cls)}
-                          className="inline-flex items-center gap-1 rounded-ds-sm border border-red-300 px-2.5 py-1 text-ds-tiny text-red-600 hover:bg-red-50 transition-colors dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20"
+                          className="inline-flex items-center gap-1 rounded-ds-sm border border-red-300 px-1.5 sm:px-2.5 py-1 text-ds-tiny text-red-600 hover:bg-red-50 transition-colors dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
-                          {t.delete}
+                          <Trash2 className="h-3.5 w-3.5 flex-shrink-0" />
+                          <span className="hidden sm:inline">{t.delete}</span>
                         </button>
                         <StudentAssignmentModal
                           classId={cls.id}
@@ -367,10 +368,10 @@ function ClassesPageContent() {
                           trigger={(open) => (
                             <button
                               onClick={open}
-                              className="inline-flex items-center gap-1 rounded-ds-sm border border-slate-300 px-2.5 py-1 text-ds-tiny hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                              className="inline-flex items-center gap-1 rounded-ds-sm border border-slate-300 px-1.5 sm:px-2.5 py-1 text-ds-tiny hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
                             >
-                              <UserPlus className="h-3.5 w-3.5" />
-                              {t.add_student}
+                              <UserPlus className="h-3.5 w-3.5 flex-shrink-0" />
+                              <span className="hidden sm:inline">{t.add_student}</span>
                             </button>
                           )}
                         />
@@ -384,10 +385,10 @@ function ClassesPageContent() {
                           trigger={(open) => (
                             <button
                               onClick={open}
-                              className="inline-flex items-center gap-1 rounded-ds-sm border border-slate-300 px-2.5 py-1 text-ds-tiny hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                              className="inline-flex items-center gap-1 rounded-ds-sm border border-slate-300 px-1.5 sm:px-2.5 py-1 text-ds-tiny hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
                             >
-                              <Users className="h-3.5 w-3.5" />
-                              {t.assign_teacher}
+                              <Users className="h-3.5 w-3.5 flex-shrink-0" />
+                              <span className="hidden sm:inline">{t.assign_teacher}</span>
                             </button>
                           )}
                         />

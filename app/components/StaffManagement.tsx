@@ -261,29 +261,31 @@ export default function StaffManagement(_props: StaffManagementProps) {
         className="h-12 hover:bg-mint-50 dark:hover:bg-slate-700/50 transition-colors"
         onClick={handleRowClick}
       >
-        <td className="py-2 pr-3 pl-3 text-slate-900 dark:text-slate-100">{firstName}</td>
-        <td className="py-2 pr-3 text-slate-900 dark:text-slate-100">{lastName}</td>
-        <td className="py-2 pr-3 text-slate-700 dark:text-slate-300">{staffMember.email}</td>
-        <td className="py-2 pr-3 text-slate-700 dark:text-slate-300">{role}</td>
-        <td className="py-2 pr-3">
-          <span className={`inline-block rounded-full px-2 py-0.5 text-xs ${statusClasses}`}>
+        <td className="py-2 px-2 sm:px-3 text-slate-900 dark:text-slate-100 whitespace-nowrap">{firstName}</td>
+        <td className="py-2 px-2 sm:px-3 text-slate-900 dark:text-slate-100 whitespace-nowrap">{lastName}</td>
+        <td className="py-2 px-2 sm:px-3 text-slate-700 dark:text-slate-300 hidden md:table-cell whitespace-nowrap">{staffMember.email}</td>
+        <td className="py-2 px-2 sm:px-3 text-slate-700 dark:text-slate-300 hidden lg:table-cell whitespace-nowrap">{role}</td>
+        <td className="py-2 px-2 sm:px-3">
+          <span className={`inline-block rounded-full px-2 py-0.5 text-xs whitespace-nowrap ${statusClasses}`}>
             {statusDisplay}
           </span>
         </td>
-        <td className="py-2 pr-3 text-slate-700 dark:text-slate-300">{formattedDate}</td>
-        <td className="py-2 pr-3">
-          <div className="flex items-center gap-2">
+        <td className="py-2 px-2 sm:px-3 text-slate-700 dark:text-slate-300 hidden xl:table-cell whitespace-nowrap">{formattedDate}</td>
+        <td className="py-2 px-2 sm:px-3">
+          <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
             <button 
               onClick={handleEditClick}
-              className="inline-flex items-center gap-1 rounded-md border px-2 py-1 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-600"
+              className="inline-flex items-center gap-1 rounded-md border px-1.5 sm:px-2 py-1 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-600 text-ds-small"
             >
-              <Edit className="h-3 w-3" /> {t.edit || 'Edit'}
+              <Edit className="h-3 w-3 flex-shrink-0" /> 
+              <span className="hidden sm:inline">{t.edit || 'Edit'}</span>
             </button>
             <button 
               onClick={handleDeleteClick}
-              className="inline-flex items-center gap-1 rounded-md border px-2 py-1 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 border-red-300 dark:border-red-600"
+              className="inline-flex items-center gap-1 rounded-md border px-1.5 sm:px-2 py-1 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 border-red-300 dark:border-red-600 text-ds-small"
             >
-              <Trash2 className="h-3 w-3" /> {t.delete}
+              <Trash2 className="h-3 w-3 flex-shrink-0" /> 
+              <span className="hidden sm:inline">{t.delete}</span>
             </button>
             {isPrincipal && onStatusChange && (
               <div className="relative status-dropdown">
@@ -292,12 +294,13 @@ export default function StaffManagement(_props: StaffManagementProps) {
                     e.stopPropagation();
                     setStatusDropdownOpen(statusDropdownOpen === staffMember.id ? null : staffMember.id);
                   }}
-                  className="inline-flex items-center gap-1 rounded-md border px-2 py-1 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-600"
+                  className="inline-flex items-center gap-1 rounded-md border px-1.5 sm:px-2 py-1 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-600 text-ds-small"
                 >
-                  {t.status || 'Status'} <ChevronDown className={`h-3 w-3 transition-transform ${statusDropdownOpen === staffMember.id ? 'rotate-180' : ''}`} />
+                  <span className="hidden sm:inline">{t.status || 'Status'}</span>
+                  <ChevronDown className={`h-3 w-3 flex-shrink-0 transition-transform ${statusDropdownOpen === staffMember.id ? 'rotate-180' : ''}`} />
                 </button>
                 {statusDropdownOpen === staffMember.id && (
-                  <div className="absolute right-0 top-full mt-1 w-48 rounded-ds-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-ds-md z-50">
+                  <div className="absolute right-0 sm:right-0 left-0 sm:left-auto top-full mt-1 w-48 sm:w-48 rounded-ds-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-ds-md z-50">
                     <div>
                       <button
                         onClick={(e) => {
@@ -404,17 +407,17 @@ export default function StaffManagement(_props: StaffManagementProps) {
             {t.no_staff_members || 'No staff members found'}
           </div>
         ) : (
-          <div className="rounded-t-ds-md overflow-hidden border border-slate-200 dark:border-slate-700">
-            <table className="w-full text-ds-small">
+          <div className="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-ds-md">
+            <table className="w-full min-w-[640px] text-ds-small">
               <thead className="sticky top-0 bg-mint-500 text-white z-10">
                 <tr className="text-left">
-                  <th className="py-2 pr-3 pl-3 text-white rounded-tl-ds-md">{t.first_name || 'First Name'}</th>
-                  <th className="py-2 pr-3 text-white">{t.last_name || 'Last Name'}</th>
-                  <th className="py-2 pr-3 text-white">{t.email}</th>
-                  <th className="py-2 pr-3 text-white">{t.staff_role || 'Role'}</th>
-                  <th className="py-2 pr-3 text-white">{t.status}</th>
-                  <th className="py-2 pr-3 text-white">{t.joined}</th>
-                  <th className="py-2 pr-3 text-white rounded-tr-ds-md">{t.actions}</th>
+                  <th className="py-2 px-2 sm:px-3 text-white rounded-tl-ds-md whitespace-nowrap">{t.first_name || 'First Name'}</th>
+                  <th className="py-2 px-2 sm:px-3 text-white whitespace-nowrap">{t.last_name || 'Last Name'}</th>
+                  <th className="py-2 px-2 sm:px-3 text-white whitespace-nowrap hidden md:table-cell">{t.email}</th>
+                  <th className="py-2 px-2 sm:px-3 text-white whitespace-nowrap hidden lg:table-cell">{t.staff_role || 'Role'}</th>
+                  <th className="py-2 px-2 sm:px-3 text-white whitespace-nowrap">{t.status}</th>
+                  <th className="py-2 px-2 sm:px-3 text-white whitespace-nowrap hidden xl:table-cell">{t.joined}</th>
+                  <th className="py-2 px-2 sm:px-3 text-white rounded-tr-ds-md whitespace-nowrap">{t.actions}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-600">
@@ -437,35 +440,37 @@ export default function StaffManagement(_props: StaffManagementProps) {
         )}
         {/* Pagination controls */}
         {staff.length > 0 && totalPages > 1 && (
-          <div className="mt-4 w-full flex justify-end gap-2">
+          <div className="mt-4 w-full flex flex-wrap justify-center sm:justify-end gap-2">
             <button
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="inline-flex items-center rounded-ds-md border border-slate-400 px-3 py-1.5 text-ds-small disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+              className="inline-flex items-center rounded-ds-md border border-slate-400 dark:border-slate-600 px-2 sm:px-3 py-1.5 text-ds-small disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
             >
               {t.prev || 'Prev'}
             </button>
-            {Array.from({ length: totalPages }, (_, idx) => {
-              const pageNum = idx + 1;
-              const isActive = currentPage === pageNum;
-              return (
-                <button
-                  key={pageNum}
-                  onClick={() => setCurrentPage(pageNum)}
-                  className={`inline-flex items-center rounded-ds-md px-3 py-1.5 text-ds-small transition-colors ${
-                    isActive
-                      ? 'bg-mint-500 text-white border border-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600'
-                      : 'border border-slate-400 dark:border-slate-600 dark:text-slate-200 hover:bg-mint-50'
-                  }`}
-                >
-                  {pageNum}
-                </button>
-              );
-            })}
+            <div className="flex gap-2 flex-wrap justify-center">
+              {Array.from({ length: totalPages }, (_, idx) => {
+                const pageNum = idx + 1;
+                const isActive = currentPage === pageNum;
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`inline-flex items-center rounded-ds-md px-2 sm:px-3 py-1.5 text-ds-small transition-colors ${
+                      isActive
+                        ? 'bg-mint-500 text-white border border-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600'
+                        : 'border border-slate-400 dark:border-slate-600 dark:text-slate-200 dark:bg-slate-700 hover:bg-mint-50 dark:hover:bg-slate-600'
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+            </div>
             <button
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="inline-flex items-center rounded-ds-md border border-slate-400 px-3 py-1.5 text-ds-small disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+              className="inline-flex items-center rounded-ds-md border border-slate-400 dark:border-slate-600 px-2 sm:px-3 py-1.5 text-ds-small disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
             >
               {t.next || 'Next'}
             </button>
