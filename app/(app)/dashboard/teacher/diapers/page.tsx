@@ -30,7 +30,6 @@ function TeacherDiapersContent({ t }: TeacherDiapersContentProps) {
         showMobileMenu={true}
         onMobileMenuClick={() => sidebarRef.current?.open()}
       />
-      <p className="mb-ds-sm text-ds-small text-slate-600 dark:text-slate-400">{t.di_hint}</p>
       {/* Diapers Panel */}
       <section>
         <DiaperPanel t={t} />
