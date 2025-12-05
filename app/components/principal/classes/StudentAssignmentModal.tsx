@@ -311,62 +311,62 @@ export function StudentAssignmentModal({
       {trigger(openModal)}
 
       {!isOpen ? null : (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="flex h-[700px] w-full max-w-2xl flex-col rounded-ds-lg bg-white shadow-ds-lg dark:bg-slate-800">
-            <div className="border-b border-slate-200 p-ds-md dark:border-slate-700">
-              <div className="flex items-center justify-between">
-                <h3 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3 sm:p-4">
+          <div className="flex max-h-[85vh] sm:max-h-[90vh] md:h-[700px] w-full max-w-2xl flex-col rounded-ds-lg bg-white shadow-ds-lg dark:bg-slate-800 overflow-hidden">
+            <div className="border-b border-slate-200 p-3 sm:p-ds-md dark:border-slate-700">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-ds-small sm:text-ds-h3 font-semibold text-slate-900 dark:text-slate-100 truncate">
                   {t.add_student_to_class} - {className}
                 </h3>
                 <button
                   onClick={closeModal}
-                  className="rounded-ds-md p-1 text-slate-600 dark:text-slate-400 hover:bg-mint-50 transition-colors"
+                  className="rounded-ds-md p-1 text-slate-600 dark:text-slate-400 hover:bg-mint-50 transition-colors flex-shrink-0 active:bg-mint-100 dark:active:bg-slate-700"
                   aria-label={t.close}
                 >
-                  <X className="h-5 w-5" />
+                  <X className="h-4 w-4 sm:h-5 sm:w-5" />
                 </button>
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-ds-md min-h-0">
+            <div className="flex-1 overflow-y-auto p-3 sm:p-ds-md min-h-0">
               {assignmentError && (
-                <div className="mb-4 rounded-ds-md border border-red-200 bg-red-50 px-4 py-3 text-ds-small text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
+                <div className="mb-3 sm:mb-4 rounded-ds-md border border-red-200 bg-red-50 px-3 sm:px-4 py-2 sm:py-3 text-ds-tiny sm:text-ds-small text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
                   {assignmentError}
                 </div>
               )}
 
               {assignmentSuccess && (
-                <div className="mb-4 flex items-center gap-2 rounded-ds-md border border-mint-200 bg-mint-50 px-4 py-3 text-ds-small text-mint-700 dark:border-mint-800 dark:bg-mint-900/20 dark:text-mint-400">
-                  <CheckCircle2 className="h-4 w-4" />
-                  {assignmentSuccess}
+                <div className="mb-3 sm:mb-4 flex items-center gap-2 rounded-ds-md border border-mint-200 bg-mint-50 px-3 sm:px-4 py-2 sm:py-3 text-ds-tiny sm:text-ds-small text-mint-700 dark:border-mint-800 dark:bg-mint-900/20 dark:text-mint-400">
+                  <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                  <span>{assignmentSuccess}</span>
                 </div>
               )}
 
-              <div className="mb-4">
+              <div className="mb-3 sm:mb-4">
                 <div className="relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Search className="absolute left-2.5 sm:left-4 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-400" />
                   <input
                     type="text"
                     value={studentSearchQuery}
                     onChange={(e) => setStudentSearchQuery(e.target.value)}
                     placeholder={t.search_students_placeholder}
-                    className="w-full h-14 pl-10 pr-4 rounded-ds-xl bg-[#F5FFF7] border border-[#D8EBD8] text-ds-body text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-mint-500/20 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 shadow-ds-sm"
+                    className="w-full h-10 sm:h-14 pl-8 sm:pl-10 pr-3 sm:pr-4 rounded-ds-xl bg-[#F5FFF7] border border-[#D8EBD8] text-ds-tiny sm:text-ds-body text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-mint-500/20 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 shadow-ds-sm"
                   />
                 </div>
               </div>
 
               {loadingStudents ? (
-                <div className="py-8 text-center">
-                  <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-4 border-mint-300 border-t-mint-600" />
-                  <p className="text-slate-600 dark:text-slate-400">{t.loading_students}</p>
+                <div className="py-6 sm:py-8 text-center">
+                  <div className="mx-auto mb-3 sm:mb-4 h-6 w-6 sm:h-8 sm:w-8 animate-spin rounded-full border-4 border-mint-300 border-t-mint-600" />
+                  <p className="text-ds-tiny sm:text-ds-small text-slate-600 dark:text-slate-400">{t.loading_students}</p>
                 </div>
               ) : filteredStudents.length === 0 ? (
-                <div className="py-8 text-center text-slate-500 dark:text-slate-400">
+                <div className="py-6 sm:py-8 text-center text-ds-tiny sm:text-ds-small text-slate-500 dark:text-slate-400">
                   {t.no_students_available}
                 </div>
               ) : (
                 <>
-                  <div className="h-[400px] space-y-2 overflow-y-auto">
+                  <div className="h-[300px] sm:h-[400px] space-y-2 overflow-y-auto">
                     {filteredStudents.map((student) => {
                       const isSelected = selectedStudentIds.has(student.id);
                       const isInOtherClass =
@@ -377,7 +377,7 @@ export function StudentAssignmentModal({
                           key={student.id}
                           onClick={() => toggleStudentSelection(student.id)}
                           disabled={assigningStudent}
-                          className={`flex w-full items-center justify-between rounded-ds-md border p-4 hover:bg-mint-50 dark:hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 transition-colors ${
+                          className={`flex w-full items-center justify-between rounded-ds-md border p-2.5 sm:p-4 hover:bg-mint-50 dark:hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 transition-colors active:bg-mint-100 dark:active:bg-slate-700 ${
                             isSelected
                               ? 'border-mint-500 bg-mint-50 dark:border-mint-400 dark:bg-mint-900/20'
                               : isInOtherClass
@@ -385,30 +385,30 @@ export function StudentAssignmentModal({
                                 : 'border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900'
                           }`}
                         >
-                          <div className="flex flex-1 items-center gap-3">
+                          <div className="flex flex-1 items-center gap-2 sm:gap-3 min-w-0">
                             <div
-                              className={`flex h-5 w-5 items-center justify-center rounded border ${
+                              className={`flex h-4 w-4 sm:h-5 sm:w-5 items-center justify-center rounded border flex-shrink-0 ${
                                 isSelected
                                   ? 'border-mint-500 bg-mint-500 dark:border-mint-400 dark:bg-mint-400'
                                   : 'border-slate-300 dark:border-slate-600'
                               }`}
                             >
                               {isSelected && (
-                                <Check className="h-3 w-3 text-white dark:text-slate-900" />
+                                <Check className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-white dark:text-slate-900" />
                               )}
                             </div>
-                            <div className="flex-1 text-left">
-                              <div className="font-medium text-slate-900 dark:text-slate-100">
+                            <div className="flex-1 text-left min-w-0">
+                              <div className="font-medium text-ds-tiny sm:text-ds-small text-slate-900 dark:text-slate-100 truncate">
                                 {student.full_name}
                               </div>
                               {isInOtherClass && (
-                                <div className="mt-1 flex items-center gap-1 text-ds-tiny text-amber-700 dark:text-amber-300">
-                                  <AlertTriangle className="h-3 w-3" />
-                                  {t.currently_in_class}: {student.current_class_name}
+                                <div className="mt-0.5 sm:mt-1 flex items-center gap-1 text-ds-tiny text-amber-700 dark:text-amber-300">
+                                  <AlertTriangle className="h-2.5 w-2.5 sm:h-3 sm:w-3 flex-shrink-0" />
+                                  <span className="truncate">{t.currently_in_class}: {student.current_class_name}</span>
                                 </div>
                               )}
                               {student.email && (
-                                <div className="mt-1 text-ds-tiny text-slate-500 dark:text-slate-400">
+                                <div className="mt-0.5 sm:mt-1 text-ds-tiny text-slate-500 dark:text-slate-400 truncate">
                                   {student.email}
                                 </div>
                               )}
@@ -425,9 +425,9 @@ export function StudentAssignmentModal({
             </div>
 
             {selectedStudentIds.size > 0 && (
-                    <div className="m-4 rounded-ds-md border border-mint-200 bg-mint-50 p-3 dark:border-slate-700 dark:bg-slate-800">
-                      <div className="flex items-center justify-between">
-                        <span className="text-ds-small text-slate-700 dark:text-slate-300">
+                    <div className="m-2 sm:m-4 rounded-ds-md border border-mint-200 bg-mint-50 p-2.5 sm:p-3 dark:border-slate-700 dark:bg-slate-800">
+                      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-0">
+                        <span className="text-ds-tiny sm:text-ds-small text-slate-700 dark:text-slate-300">
                           {selectedStudentIds.size}{' '}
                           {selectedStudentIds.size === 1
                             ? t.student_selected
@@ -436,17 +436,19 @@ export function StudentAssignmentModal({
                         <button
                           onClick={assignSelectedStudents}
                           disabled={assigningStudent}
-                          className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 hover:bg-mint-600 px-ds-md py-ds-sm text-ds-small text-white disabled:cursor-not-allowed disabled:opacity-50 transition-colors"
+                          className="inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-ds-md bg-mint-500 hover:bg-mint-600 px-3 sm:px-ds-md py-2 sm:py-ds-sm text-ds-tiny sm:text-ds-small text-white disabled:cursor-not-allowed disabled:opacity-50 transition-colors active:bg-mint-700 w-full sm:w-auto"
                         >
                           {assigningStudent ? (
                             <>
-                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                              {t.assigning}
+                              <div className="h-3.5 w-3.5 sm:h-4 sm:w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                              <span className="hidden sm:inline">{t.assigning}</span>
+                              <span className="sm:hidden">{t.assigning}</span>
                             </>
                           ) : (
                             <>
-                              <UserPlus className="h-4 w-4" />
-                              {t.assign_selected}
+                              <UserPlus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                              <span className="hidden sm:inline">{t.assign_selected}</span>
+                              <span className="sm:hidden">{t.assign_selected}</span>
                             </>
                           )}
                         </button>
