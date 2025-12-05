@@ -68,116 +68,118 @@ function StudentsPanel({
   }, [searchQuery]);
 
   return (
-    <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
-      <div className="mb-ds-lg">
-        <div className="flex items-center justify-between mb-ds-sm">
-          <h3 className="text-ds-body font-medium text-ds-text-primary dark:text-slate-100">{t.existing_students}</h3>
-          <div className="flex items-center gap-ds-xs">
-            <div className="relative">
-              <Search className="absolute left-ds-sm top-1/2 transform -translate-y-1/2 h-4 w-4 text-ds-text-muted dark:text-slate-400" />
+    <div className="rounded-ds-lg border border-slate-200 bg-white p-3 sm:p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+      <div className="mb-3 sm:mb-ds-lg">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-2 sm:mb-ds-sm">
+          <h3 className="text-ds-tiny sm:text-ds-body font-medium text-ds-text-primary dark:text-slate-100">{t.existing_students}</h3>
+          <div className="flex items-center gap-2 sm:gap-ds-xs">
+            <div className="relative flex-1 sm:flex-none">
+              <Search className="absolute left-2.5 sm:left-ds-sm top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-ds-text-muted dark:text-slate-400" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={t.search_students_placeholder || 'Search students...'}
-                className="h-12 pl-10 pr-ds-sm rounded-ds-xl bg-input-fill border border-input-stroke text-ds-body text-ds-text-primary focus:outline-none focus:border-mint-200 focus:ring-2 focus:ring-mint-200/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 dark:focus:border-mint-300 w-64"
+                className="w-full sm:w-48 md:w-64 h-10 sm:h-12 pl-8 sm:pl-10 pr-2 sm:pr-ds-sm rounded-ds-xl bg-input-fill border border-input-stroke text-ds-tiny sm:text-ds-body text-ds-text-primary focus:outline-none focus:border-mint-200 focus:ring-2 focus:ring-mint-200/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 dark:focus:border-mint-300"
               />
             </div>
           </div>
         </div>
         {studentError && (
-          <div className="mb-ds-md rounded-ds-md bg-red-50 border border-red-200 px-ds-md py-ds-sm text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+          <div className="mb-2 sm:mb-ds-md rounded-ds-md bg-red-50 border border-red-200 px-3 sm:px-ds-md py-2 sm:py-ds-sm text-ds-tiny sm:text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
             {studentError}
           </div>
         )}
-        <div className="overflow-x-auto overflow-hidden border border-slate-200 dark:border-slate-700 rounded-ds-lg">
+        <div className="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-ds-lg">
           {loadingStudents || !hasLoadedOnce ? (
             <LoadingSkeleton type="table" rows={5} />
           ) : filteredStudents.length === 0 ? (
-            <div className="text-center py-4 text-ds-text-muted dark:text-slate-400">
+            <div className="text-center py-4 sm:py-6 text-ds-tiny sm:text-ds-small text-ds-text-muted dark:text-slate-400">
               {searchQuery ? (t.no_students_found_search || 'No students found matching your search') : t.no_students_found}
             </div>
           ) : (
             <>
-              <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-mint-500">
-                  <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300 rounded-tl-ds-lg">
-                    {t.student_name}
-                  </th>
-                  <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
-                    {t.student_dob}
-                  </th>
-                  <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
-                    {t.student_gender}
-                  </th>
-                  <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
-                    {t.student_class}
-                  </th>
-                  <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300 rounded-tr-ds-lg">
-                    {t.guardians || 'Guardians'}
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedStudents.map((student) => (
-                  <tr key={student.id} className="border-b border-slate-100 dark:border-slate-700 hover:bg-mint-50 dark:hover:bg-slate-700/50 transition-colors">
-                    <td className="py-2 px-4">
-                      <div className="font-medium text-ds-tiny text-ds-text-primary dark:text-slate-100">
-                        {getStudentName(student)}
-                      </div>
-                    </td>
-                    <td className="py-2 px-4 text-ds-small text-ds-text-secondary dark:text-slate-400">
-                      <span suppressHydrationWarning>
-                        {formatDate(student.users?.dob || student.dob)}
-                      </span>
-                    </td>
-                    <td className="py-2 px-4 text-ds-small text-ds-text-secondary dark:text-slate-400">
-                      {student.users?.gender || student.gender || '-'}
-                    </td>
-                    <td className="py-2 px-4 text-ds-small text-ds-text-secondary dark:text-slate-400">
-                      {student.classes?.name || '-'}
-                    </td>
-                    <td className="py-2 px-4 text-ds-small text-ds-text-secondary dark:text-slate-400">
-                      {student.guardians && Array.isArray(student.guardians) && student.guardians.length > 0 ? (
-                        <div className="flex flex-col gap-1">
-                          {student.guardians.map((guardian: GuardianRelation, idx) => {
-                            const guardianName = guardian.users
-                              ? `${guardian.users.first_name || ''} ${guardian.users.last_name || ''}`.trim()
-                              : null;
-                            return guardianName ? (
-                              <span key={guardian.id || idx} className="text-ds-tiny">
-                                {guardianName}
-                                {guardian.relation ? ` (${guardian.relation})` : ''}
-                              </span>
-                            ) : null;
-                          })}
-                        </div>
-                      ) : (
-                        <span className="text-ds-text-muted dark:text-slate-400">-</span>
-                      )}
-                    </td>
+              <div className="min-w-[640px]">
+                <table className="w-full border-collapse">
+                <thead>
+                  <tr className="bg-mint-500">
+                    <th className="text-left py-2 px-2 sm:px-4 text-ds-tiny sm:text-ds-small font-medium text-white dark:text-slate-300 rounded-tl-ds-lg">
+                      {t.student_name}
+                    </th>
+                    <th className="text-left py-2 px-2 sm:px-4 text-ds-tiny sm:text-ds-small font-medium text-white dark:text-slate-300 hidden md:table-cell">
+                      {t.student_dob}
+                    </th>
+                    <th className="text-left py-2 px-2 sm:px-4 text-ds-tiny sm:text-ds-small font-medium text-white dark:text-slate-300 hidden lg:table-cell">
+                      {t.student_gender}
+                    </th>
+                    <th className="text-left py-2 px-2 sm:px-4 text-ds-tiny sm:text-ds-small font-medium text-white dark:text-slate-300 hidden sm:table-cell">
+                      {t.student_class}
+                    </th>
+                    <th className="text-left py-2 px-2 sm:px-4 text-ds-tiny sm:text-ds-small font-medium text-white dark:text-slate-300 rounded-tr-ds-lg">
+                      {t.guardians || 'Guardians'}
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-              </table>
+                </thead>
+                <tbody>
+                  {paginatedStudents.map((student) => (
+                    <tr key={student.id} className="border-b border-slate-100 dark:border-slate-700 hover:bg-mint-50 dark:hover:bg-slate-700/50 transition-colors">
+                      <td className="py-2 px-2 sm:px-4">
+                        <div className="font-medium text-ds-tiny text-ds-text-primary dark:text-slate-100">
+                          {getStudentName(student)}
+                        </div>
+                      </td>
+                      <td className="py-2 px-2 sm:px-4 text-ds-tiny sm:text-ds-small text-ds-text-secondary dark:text-slate-400 hidden md:table-cell">
+                        <span suppressHydrationWarning>
+                          {formatDate(student.users?.dob || student.dob)}
+                        </span>
+                      </td>
+                      <td className="py-2 px-2 sm:px-4 text-ds-tiny sm:text-ds-small text-ds-text-secondary dark:text-slate-400 hidden lg:table-cell">
+                        {student.users?.gender || student.gender || '-'}
+                      </td>
+                      <td className="py-2 px-2 sm:px-4 text-ds-tiny sm:text-ds-small text-ds-text-secondary dark:text-slate-400 hidden sm:table-cell">
+                        {student.classes?.name || '-'}
+                      </td>
+                      <td className="py-2 px-2 sm:px-4 text-ds-tiny sm:text-ds-small text-ds-text-secondary dark:text-slate-400">
+                        {student.guardians && Array.isArray(student.guardians) && student.guardians.length > 0 ? (
+                          <div className="flex flex-col gap-0.5 sm:gap-1">
+                            {student.guardians.map((guardian: GuardianRelation, idx) => {
+                              const guardianName = guardian.users
+                                ? `${guardian.users.first_name || ''} ${guardian.users.last_name || ''}`.trim()
+                                : null;
+                              return guardianName ? (
+                                <span key={guardian.id || idx} className="text-ds-tiny truncate">
+                                  {guardianName}
+                                  {guardian.relation ? ` (${guardian.relation})` : ''}
+                                </span>
+                              ) : null;
+                            })}
+                          </div>
+                        ) : (
+                          <span className="text-ds-text-muted dark:text-slate-400">-</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                </table>
+              </div>
 
               {filteredStudents.length > 0 && (
-                <div className="mt-ds-sm mb-ds-sm mr-ds-sm flex items-center justify-end gap-ds-xs">
+                <div className="mt-2 sm:mt-ds-sm mb-2 sm:mb-ds-sm mr-2 sm:mr-ds-sm flex items-center justify-center sm:justify-end gap-1 sm:gap-ds-xs flex-wrap px-2 sm:px-0">
                   <button
                     onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                     disabled={currentPage === 1}
-                    className="inline-flex items-center gap-ds-xs rounded-ds-md border border-input-stroke bg-input-fill px-3 py-1.5 text-ds-small text-ds-text-primary hover:bg-mint-50 hover:border-mint-200 disabled:opacity-60 disabled:cursor-not-allowed transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                    className="inline-flex items-center gap-1 sm:gap-ds-xs rounded-ds-md border border-input-stroke bg-input-fill px-2 sm:px-3 py-1.5 text-ds-tiny sm:text-ds-small text-ds-text-primary hover:bg-mint-50 hover:border-mint-200 disabled:opacity-60 disabled:cursor-not-allowed transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 active:bg-mint-100 dark:active:bg-slate-600"
                   >
                     {t.prev || 'Prev'}
                   </button>
 
-                  <div className="flex items-center gap-ds-xs">
+                  <div className="flex items-center gap-0.5 sm:gap-ds-xs flex-wrap justify-center">
                     {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                       <button
                         key={page}
                         onClick={() => setCurrentPage(page)}
-                        className={`px-3 py-1.5 text-ds-small rounded-ds-md transition-colors ${
+                        className={`px-2 sm:px-3 py-1.5 text-ds-tiny sm:text-ds-small rounded-ds-md transition-colors ${
                           currentPage === page
                             ? 'bg-mint-500 text-white border border-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600'
                             : 'border border-input-stroke bg-input-fill text-ds-text-primary hover:bg-mint-50 hover:border-mint-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-800'
@@ -191,7 +193,7 @@ function StudentsPanel({
                   <button
                     onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                     disabled={currentPage === totalPages}
-                    className="inline-flex items-center gap-ds-xs rounded-ds-md border border-input-stroke bg-input-fill px-3 py-1.5 text-ds-small text-ds-text-primary hover:bg-mint-50 hover:border-mint-200 disabled:opacity-60 disabled:cursor-not-allowed transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                    className="inline-flex items-center gap-1 sm:gap-ds-xs rounded-ds-md border border-input-stroke bg-input-fill px-2 sm:px-3 py-1.5 text-ds-tiny sm:text-ds-small text-ds-text-primary hover:bg-mint-50 hover:border-mint-200 disabled:opacity-60 disabled:cursor-not-allowed transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 active:bg-mint-100 dark:active:bg-slate-600"
                   >
                     {t.next || 'Next'}
                   </button>
@@ -413,11 +415,11 @@ export default function TeacherStudentsPage() {
         />
 
         {loadingClasses ? (
-          <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+          <div className="rounded-ds-lg border border-slate-200 bg-white p-3 sm:p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
             <LoadingSkeleton type="table" rows={3} />
           </div>
         ) : teacherClasses.length === 0 ? (
-          <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-lg shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+          <div className="rounded-ds-lg border border-slate-200 bg-white p-4 sm:p-ds-lg shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
             <EmptyState
               lang={lang}
               icon={BookOpen}
@@ -427,8 +429,8 @@ export default function TeacherStudentsPage() {
           </div>
         ) : (
           <>
-            <div className="mb-ds-md">
-              <label className="block text-ds-small font-medium text-ds-text-primary dark:text-slate-300 mb-ds-xs">
+            <div className="mb-3 sm:mb-ds-md">
+              <label className="block text-ds-tiny sm:text-ds-small font-medium text-ds-text-primary dark:text-slate-300 mb-1 sm:mb-ds-xs">
                 {t.select_class || 'Select a class'}
               </label>
               <select
@@ -438,7 +440,7 @@ export default function TeacherStudentsPage() {
                   // Ensure we never set "all" or empty string that might trigger loading all students
                   setSelectedClassId(value && value !== 'all' ? value : null);
                 }}
-                className="w-full max-w-md h-12 rounded-ds-xl bg-input-fill border border-input-stroke text-ds-body text-ds-text-primary focus:outline-none focus:border-mint-200 focus:ring-2 focus:ring-mint-200/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 dark:focus:border-mint-300 px-ds-sm"
+                className="w-full max-w-md h-10 sm:h-12 rounded-ds-xl bg-input-fill border border-input-stroke text-ds-tiny sm:text-ds-body text-ds-text-primary focus:outline-none focus:border-mint-200 focus:ring-2 focus:ring-mint-200/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 dark:focus:border-mint-300 px-3 sm:px-ds-sm"
               >
                 <option value="">{t.select_class_placeholder}</option>
                 {teacherClasses
@@ -452,7 +454,7 @@ export default function TeacherStudentsPage() {
             </div>
 
             {!selectedClassId ? (
-              <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-lg shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+              <div className="rounded-ds-lg border border-slate-200 bg-white p-4 sm:p-ds-lg shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
                 <EmptyState
                   lang={lang}
                   icon={Users}

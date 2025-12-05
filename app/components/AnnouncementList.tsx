@@ -102,6 +102,27 @@ export default function AnnouncementList({
           }
         }
         
+        // Check if error is authentication-related and handle gracefully
+        const authErrorKeywords = [
+          'authentication',
+          'auth',
+          'unauthorized',
+          'unauthenticated',
+          'session',
+          'login',
+          'token'
+        ];
+        const isAuthError = authErrorKeywords.some(keyword => 
+          errorMessage.toLowerCase().includes(keyword.toLowerCase())
+        );
+        
+        if (isAuthError) {
+          // For authentication-related errors, silently fail and keep cached data
+          console.warn('Authentication error loading announcements, using cached data if available:', errorMessage);
+          // Don't set error, just return - keep existing announcements from cache
+          return;
+        }
+        
         // For other errors, set error but don't throw - keep existing data
         console.error('❌ Error loading announcements:', errorMessage);
         setError(errorMessage);
@@ -206,13 +227,13 @@ export default function AnnouncementList({
 
   if (loading) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-4 animate-pulse">
-            <div className="h-4 bg-gray-200 dark:bg-slate-600 rounded w-3/4 mb-2"></div>
-            <div className="h-3 bg-gray-200 dark:bg-slate-600 rounded w-1/2 mb-3"></div>
-            <div className="h-3 bg-gray-200 dark:bg-slate-600 rounded w-full"></div>
-            <div className="h-3 bg-gray-200 dark:bg-slate-600 rounded w-2/3 mt-1"></div>
+          <div key={i} className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-3 sm:p-4 animate-pulse">
+            <div className="h-3 sm:h-4 bg-gray-200 dark:bg-slate-600 rounded w-3/4 mb-2"></div>
+            <div className="h-2.5 sm:h-3 bg-gray-200 dark:bg-slate-600 rounded w-1/2 mb-2 sm:mb-3"></div>
+            <div className="h-2.5 sm:h-3 bg-gray-200 dark:bg-slate-600 rounded w-full"></div>
+            <div className="h-2.5 sm:h-3 bg-gray-200 dark:bg-slate-600 rounded w-2/3 mt-1"></div>
           </div>
         ))}
       </div>
@@ -221,11 +242,11 @@ export default function AnnouncementList({
 
   if (error) {
     return (
-      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-        <p className="text-red-600 dark:text-red-400">{error}</p>
+      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 sm:p-4">
+        <p className="text-ds-tiny sm:text-sm text-red-600 dark:text-red-400">{error}</p>
         <button
           onClick={loadAnnouncements}
-          className="mt-2 text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 underline"
+          className="mt-2 text-ds-tiny sm:text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 underline active:text-red-900"
         >
           {t.try_again}
         </button>
@@ -235,9 +256,9 @@ export default function AnnouncementList({
 
   if (announcements.length === 0) {
     return (
-      <div className="bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-6 text-center">
-        <p className="text-gray-600 dark:text-slate-400">{t.no_announcements}</p>
-        <p className="text-sm text-gray-500 dark:text-slate-500 mt-1">
+      <div className="bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-4 sm:p-6 text-center">
+        <p className="text-ds-small sm:text-ds-base text-gray-600 dark:text-slate-400">{t.no_announcements}</p>
+        <p className="text-ds-tiny sm:text-sm text-gray-500 dark:text-slate-500 mt-1">
           {classId ? t.class_announcements_note : t.org_announcements_note}
         </p>
       </div>
@@ -245,26 +266,33 @@ export default function AnnouncementList({
   }
 
   return (
-    <div className="space-y-4" suppressHydrationWarning>
+    <div className="space-y-3 sm:space-y-4" suppressHydrationWarning>
       {announcements.map((announcement) => (
-        <div key={announcement.id} className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-4" suppressHydrationWarning>
-          <div className="flex items-center gap-3 overflow-hidden">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-slate-100 truncate flex-1 min-w-0">
+        <div key={announcement.id} className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-3 sm:p-4" suppressHydrationWarning>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 overflow-hidden">
+            <h3 className="text-ds-small sm:text-lg font-semibold text-gray-900 dark:text-slate-100 truncate flex-1 min-w-0">
               {announcement.title}
             </h3>
-            {announcement.class_id ? (
-              <span className="bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 px-2 py-1 rounded-full text-xs whitespace-nowrap flex-shrink-0">
-                {announcement.class_name || t.class_announcement}
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+              {announcement.class_id ? (
+                <span className="bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300 px-2 py-1 rounded-full text-ds-tiny sm:text-xs whitespace-nowrap flex-shrink-0">
+                  {announcement.class_name || t.class_announcement}
+                </span>
+              ) : (
+                <span className="bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300 px-2 py-1 rounded-full text-ds-tiny sm:text-xs whitespace-nowrap flex-shrink-0">
+                  {t.organization_wide}
+                </span>
+              )}
+              <span className="text-ds-tiny sm:text-sm text-gray-500 dark:text-slate-400 whitespace-nowrap flex-shrink-0">
+                {formatDate(announcement.created_at)}
               </span>
-            ) : (
-              <span className="bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-300 px-2 py-1 rounded-full text-xs whitespace-nowrap flex-shrink-0">
-                {t.organization_wide}
-              </span>
-            )}
-            <span className="text-sm text-gray-500 dark:text-slate-400 whitespace-nowrap flex-shrink-0">
-              {formatDate(announcement.created_at)}
-            </span>
+            </div>
           </div>
+          {announcement.body && (
+            <p className="mt-2 sm:mt-3 text-ds-tiny sm:text-sm text-gray-600 dark:text-slate-400 line-clamp-2 sm:line-clamp-none">
+              {announcement.body}
+            </p>
+          )}
         </div>
       ))}
     </div>

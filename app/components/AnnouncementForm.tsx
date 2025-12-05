@@ -149,17 +149,17 @@ export default function AnnouncementForm({
   };
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6">
-      <form onSubmit={handleSubmit} className="space-y-3">
+    <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-4 sm:p-6">
+      <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
         {showClassSelector && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+            <label className="block text-ds-tiny sm:text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5 sm:mb-2">
               {t.class_label}
             </label>
             <select
               value={selectedClassId}
               onChange={(e) => setSelectedClassId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-black dark:bg-slate-700 dark:text-slate-200"
+              className="w-full px-3 py-2 text-ds-tiny sm:text-sm border border-gray-300 dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200"
             >
               <option value="">{t.select_class_optional}</option>
               {loadingClasses ? (
@@ -174,65 +174,65 @@ export default function AnnouncementForm({
                 ))
               )}
             </select>
-            <p className="mt-1 text-xs text-gray-500 dark:text-slate-400">
+            <p className="mt-1 text-ds-tiny sm:text-xs text-gray-500 dark:text-slate-400">
               {selectedClassId ? t.class_announcement_note : t.org_announcement_note}
             </p>
           </div>
         )}
 
         {!showClassSelector && propClassId && (
-          <div className="text-sm text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-md">
+          <div className="text-ds-tiny sm:text-sm text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20 p-2 sm:p-3 rounded-md">
             {t.class_announcement_note}
           </div>
         )}
 
         {!showClassSelector && !propClassId && (
-          <div className="text-sm text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/20 p-3 rounded-md">
+          <div className="text-ds-tiny sm:text-sm text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-900/20 p-2 sm:p-3 rounded-md">
             {t.org_announcement_note}
           </div>
         )}
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+          <label className="block text-ds-tiny sm:text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5 sm:mb-2">
             {t.announcement_title_label}
           </label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full px-3 py-2 text-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-black dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+            className="w-full px-3 py-2 text-ds-tiny sm:text-sm border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
             placeholder={t.title_placeholder}
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-2">
+          <label className="block text-ds-tiny sm:text-sm font-medium text-gray-700 dark:text-slate-300 mb-1.5 sm:mb-2">
             {t.message}
           </label>
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
-            rows={2}
-            className="w-full px-3 py-2 border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-black dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+            rows={3}
+            className="w-full px-3 py-2 text-ds-tiny sm:text-sm border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 rounded-md focus:outline-none focus:ring-2 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 resize-y"
             placeholder={t.message_placeholder}
             required
           />
         </div>
 
         {error && (
-          <div className="text-red-600 dark:text-red-400 text-sm bg-red-50 dark:bg-red-900/20 p-3 rounded-md">
+          <div className="text-red-600 dark:text-red-400 text-ds-tiny sm:text-sm bg-red-50 dark:bg-red-900/20 p-2 sm:p-3 rounded-md">
             {error}
           </div>
         )}
 
         {success && (
-          <div className="text-green-600 dark:text-green-400 text-sm bg-green-50 dark:bg-green-900/20 p-3 rounded-md">
+          <div className="text-green-600 dark:text-green-400 text-ds-tiny sm:text-sm bg-green-50 dark:bg-green-900/20 p-2 sm:p-3 rounded-md">
             {success}
           </div>
         )}
 
-        <div className="flex justify-end space-x-3">
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-2 sm:pt-0">
           <button
             type="button"
             onClick={() => {
@@ -244,14 +244,14 @@ export default function AnnouncementForm({
                 setSelectedClassId('');
               }
             }}
-            className="px-4 py-2 text-md text-gray-700 dark:text-slate-300 bg-gray-100 dark:bg-slate-700 rounded-md hover:bg-gray-200 dark:hover:bg-slate-600"
+            className="w-full sm:w-auto px-3 sm:px-4 py-2 text-ds-tiny sm:text-sm text-gray-700 dark:text-slate-300 bg-gray-100 dark:bg-slate-700 rounded-md hover:bg-gray-200 dark:hover:bg-slate-600 active:bg-gray-300 dark:active:bg-slate-500 transition-colors"
           >
             {t.clear}
           </button>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="px-4 py-2 text-ds-body bg-mint-500 text-white rounded-ds-md hover:bg-mint-600 disabled:opacity-50 transition-colors"
+            className="w-full sm:w-auto px-3 sm:px-4 py-2 text-ds-tiny sm:text-ds-body bg-mint-500 text-white rounded-ds-md hover:bg-mint-600 disabled:opacity-50 transition-colors active:bg-mint-700"
           >
             {isSubmitting
               ? (mode === 'edit' ? t.updating : t.creating)

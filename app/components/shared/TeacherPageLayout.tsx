@@ -64,7 +64,7 @@ export default function TeacherPageLayout({
           
           {/* Main content area - below navbar */}
           <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900">
-            <div className="p-2 md:p-6 lg:p-8">
+            <div className="p-3 sm:p-4 md:p-6 lg:p-8">
               {children}
             </div>
           </main>

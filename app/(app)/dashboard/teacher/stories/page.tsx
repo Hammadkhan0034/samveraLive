@@ -390,43 +390,44 @@ export default function TeacherStoriesPage() {
   return (
     <TeacherPageLayout>
       {/* Stories Panel */}
-      <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-ds-h3 font-medium text-slate-900 dark:text-slate-100">{t.stories_title}</h2>
+      <div className="rounded-ds-lg border border-slate-200 bg-white p-3 sm:p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+              <div className="mb-3 sm:mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
+                <h2 className="text-ds-small sm:text-ds-h3 font-medium text-slate-900 dark:text-slate-100">{t.stories_title}</h2>
                 <button
                   onClick={() => router.push('/dashboard/add-story')}
-                  className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-ds-md bg-mint-500 px-3 sm:px-4 py-1.5 sm:py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600 active:bg-mint-700 dark:active:bg-slate-500"
                 >
-                  <Plus className="h-4 w-4" />
-                  {t.add_story}
+                  <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                  <span className="hidden sm:inline">{t.add_story}</span>
+                  <span className="sm:hidden">{t.add || 'Add'}</span>
                 </button>
               </div>
 
-              <div className="flex gap-ds-sm overflow-x-auto py-1">
+              <div className="flex gap-2 sm:gap-ds-sm overflow-x-auto py-1 -mx-3 sm:-mx-0 px-3 sm:px-0">
                 <button
                   onClick={() => router.push('/dashboard/add-story')}
-                  className="flex w-20 flex-col items-center gap-1"
+                  className="flex w-16 sm:w-20 flex-col items-center gap-1 flex-shrink-0"
                 >
                   <span className="rounded-ds-full bg-gradient-to-tr from-mint-300 to-mint-400 p-0.5">
                     <span className="block rounded-ds-full bg-white p-0.5">
-                      <span className="flex h-16 w-16 items-center justify-center rounded-ds-full border border-dashed">
-                        <Plus className="h-5 w-5" />
+                      <span className="flex h-12 w-12 sm:h-16 sm:w-16 items-center justify-center rounded-ds-full border border-dashed">
+                        <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
                       </span>
                     </span>
                   </span>
-                  <span className="truncate text-ds-tiny text-slate-600 dark:text-slate-400">{t.add}</span>
+                  <span className="truncate text-ds-tiny text-slate-600 dark:text-slate-400 max-w-[64px] sm:max-w-[80px]">{t.add}</span>
                 </button>
 
                 {loading ? (
                   <>
                     {Array.from({ length: 5 }).map((_, index) => (
-                      <div key={index} className="flex w-20 flex-col items-center gap-1">
+                      <div key={index} className="flex w-16 sm:w-20 flex-col items-center gap-1 flex-shrink-0">
                         <span className="rounded-ds-full bg-gradient-to-tr from-mint-300 to-mint-400 p-0.5">
                           <span className="block rounded-ds-full bg-white p-0.5">
-                            <span className="h-16 w-16 rounded-ds-full bg-mint-100 dark:bg-slate-600 animate-pulse"></span>
+                            <span className="h-12 w-12 sm:h-16 sm:w-16 rounded-ds-full bg-mint-100 dark:bg-slate-600 animate-pulse"></span>
                           </span>
                         </span>
-                        <span className="h-3 w-16 bg-mint-100 dark:bg-slate-600 rounded-ds-sm animate-pulse"></span>
+                        <span className="h-3 w-12 sm:w-16 bg-mint-100 dark:bg-slate-600 rounded-ds-sm animate-pulse"></span>
                       </div>
                     ))}
                   </>
@@ -436,16 +437,16 @@ export default function TeacherStoriesPage() {
                       <button
                         key={story.id}
                         onClick={() => openStory(story)}
-                        className="flex w-20 flex-col items-center gap-1"
+                        className="flex w-16 sm:w-20 flex-col items-center gap-1 flex-shrink-0"
                       >
                         <span className="rounded-ds-full bg-gradient-to-tr from-rose-400 to-amber-400 p-0.5">
                           <span className="block rounded-ds-full bg-white p-0.5">
-                            <span className="h-16 w-16 rounded-ds-full bg-mint-100 dark:bg-slate-600 flex items-center justify-center text-ds-tiny text-slate-600 dark:text-slate-300">
+                            <span className="h-12 w-12 sm:h-16 sm:w-16 rounded-ds-full bg-mint-100 dark:bg-slate-600 flex items-center justify-center text-ds-tiny sm:text-xs text-slate-600 dark:text-slate-300 font-medium">
                               {story.title ? story.title.charAt(0).toUpperCase() : 'S'}
                             </span>
                           </span>
                         </span>
-                        <span className="truncate text-ds-tiny text-slate-600 dark:text-slate-400 max-w-[80px]" title={group.class.name}>
+                        <span className="truncate text-ds-tiny text-slate-600 dark:text-slate-400 max-w-[64px] sm:max-w-[80px]" title={group.class.name}>
                           {group.class.name}
                         </span>
                       </button>
@@ -453,25 +454,25 @@ export default function TeacherStoriesPage() {
                   )).flat()
                 )}
               </div>
-              <p className="mt-4 text-sm text-slate-600 dark:text-slate-400">{t.stories_hint}</p>
+              <p className="mt-3 sm:mt-4 text-ds-tiny sm:text-sm text-slate-600 dark:text-slate-400">{t.stories_hint}</p>
               
               {/* Stories Table */}
-              <div className="mt-6 rounded-t-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
+              <div className="mt-4 sm:mt-6 rounded-t-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-800">
                 {loading && stories.length === 0 ? (
-                  <div className="p-6">
+                  <div className="p-3 sm:p-6">
                     <LoadingSkeleton type="table" rows={5} />
                   </div>
                 ) : stories.length === 0 ? (
-                  <div className="p-6 text-center text-slate-600 dark:text-slate-400">{t.empty_stories || 'No stories yet.'}</div>
+                  <div className="p-4 sm:p-6 text-center text-ds-small sm:text-ds-base text-slate-600 dark:text-slate-400">{t.empty_stories || 'No stories yet.'}</div>
                 ) : (
                   <div className="overflow-x-auto">
-                    <table className="w-full">
+                    <table className="w-full min-w-[640px]">
                       <thead className="bg-mint-500 text-white">
                         <tr>
-                          <th className="px-4 py-2 text-left text-ds-small font-semibold text-white rounded-tl-ds-md">{t.col_title}</th>
-                          <th className="px-4 py-2 text-left text-ds-small font-semibold text-white">{t.col_scope}</th>
-                          <th className="px-4 py-2 text-left text-ds-small font-semibold text-white">{t.col_caption}</th>
-                          <th className="px-4 py-2 text-left text-ds-small font-semibold text-white rounded-tr-ds-md">{t.actions || 'Actions'}</th>
+                          <th className="px-2 sm:px-4 py-2 text-left text-ds-tiny sm:text-ds-small font-semibold text-white rounded-tl-ds-md">{t.col_title}</th>
+                          <th className="px-2 sm:px-4 py-2 text-left text-ds-tiny sm:text-ds-small font-semibold text-white hidden md:table-cell">{t.col_scope}</th>
+                          <th className="px-2 sm:px-4 py-2 text-left text-ds-tiny sm:text-ds-small font-semibold text-white hidden lg:table-cell">{t.col_caption}</th>
+                          <th className="px-2 sm:px-4 py-2 text-left text-ds-tiny sm:text-ds-small font-semibold text-white rounded-tr-ds-md">{t.actions || 'Actions'}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
@@ -480,40 +481,40 @@ export default function TeacherStoriesPage() {
                           const className = classInfo ? classInfo.name : (s.class_id ? `Class ${s.class_id.substring(0, 8)}` : null);
                           return (
                           <tr key={s.id} className="hover:bg-mint-50 dark:hover:bg-slate-700/30 transition-colors">
-                            <td className="px-4 py-2 text-ds-small text-slate-900 dark:text-slate-100">
+                            <td className="px-2 sm:px-4 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:text-slate-100 whitespace-nowrap">
                               {s.title || '—'}
                             </td>
-                            <td className="px-4 py-2 text-ds-small text-slate-600 dark:text-slate-400">
+                            <td className="px-2 sm:px-4 py-2 text-ds-tiny sm:text-ds-small text-slate-600 dark:text-slate-400 hidden md:table-cell whitespace-nowrap">
                               {s.class_id ? (className || t.class_label) : t.org_wide}
                             </td>
-                            <td className="px-4 py-2 text-ds-small text-slate-600 dark:text-slate-400">
-                              {s.caption || t.no_caption}
+                            <td className="px-2 sm:px-4 py-2 text-ds-tiny sm:text-ds-small text-slate-600 dark:text-slate-400 hidden lg:table-cell">
+                              <span className="truncate block max-w-[200px]">{s.caption || t.no_caption}</span>
                             </td>
-                            <td className="px-4 py-2">
-                              <div className="flex items-center gap-2">
+                            <td className="px-2 sm:px-4 py-2">
+                              <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
                                 <button
                                   onClick={() => openStory(s)}
-                                  className="inline-flex items-center gap-1 rounded-ds-md border border-slate-300 px-2 py-1 text-ds-small hover:bg-mint-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 transition-colors"
+                                  className="inline-flex items-center gap-0.5 sm:gap-1 rounded-ds-md border border-slate-300 px-1.5 sm:px-2 py-1 text-ds-tiny sm:text-ds-small hover:bg-mint-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 transition-colors active:bg-mint-100 dark:active:bg-slate-500"
                                   title={t.view}
                                 >
-                                  <Eye className="h-3.5 w-3.5" />
-                                  <span>{t.view}</span>
+                                  <Eye className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" />
+                                  <span className="hidden sm:inline">{t.view}</span>
                                 </button>
                                 <button
                                   onClick={() => router.push(`/dashboard/edit-story/${s.id}`)}
-                                  className="inline-flex items-center gap-1 rounded-ds-md border border-slate-300 px-2 py-1 text-ds-small hover:bg-mint-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 transition-colors"
+                                  className="inline-flex items-center gap-0.5 sm:gap-1 rounded-ds-md border border-slate-300 px-1.5 sm:px-2 py-1 text-ds-tiny sm:text-ds-small hover:bg-mint-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 transition-colors active:bg-mint-100 dark:active:bg-slate-500"
                                   title={t.edit || 'Edit'}
                                 >
-                                  <Edit className="h-3.5 w-3.5" />
-                                  <span>{t.edit || 'Edit'}</span>
+                                  <Edit className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" />
+                                  <span className="hidden sm:inline">{t.edit || 'Edit'}</span>
                                 </button>
                                 <button
                                   onClick={() => openDeleteModal(s)}
-                                  className="inline-flex items-center gap-1 rounded-ds-md border border-red-300 px-2 py-1 text-ds-small text-red-600 hover:bg-red-50 dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors"
+                                  className="inline-flex items-center gap-0.5 sm:gap-1 rounded-ds-md border border-red-300 px-1.5 sm:px-2 py-1 text-ds-tiny sm:text-ds-small text-red-600 hover:bg-red-50 dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors active:bg-red-100 dark:active:bg-red-900/30"
                                   title={t.delete || 'Delete'}
                                 >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                  <span>{t.delete || 'Delete'}</span>
+                                  <Trash2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" />
+                                  <span className="hidden sm:inline">{t.delete || 'Delete'}</span>
                                 </button>
                               </div>
                             </td>
@@ -541,23 +542,23 @@ export default function TeacherStoriesPage() {
                   <div 
                     className="relative bg-black overflow-hidden rounded-lg mx-auto"
                     style={{ 
-                      width: '90%',
+                      width: '95%',
                       maxWidth: '500px',
-                      height: '90vh',
+                      height: '85vh',
                       maxHeight: '800px',
                       position: 'relative'
                     }}
                     onClick={(e) => e.stopPropagation()}
                   >
                     {/* Progress bars */}
-                    <div className="absolute top-2 left-2 right-2 z-10 flex gap-1">
+                    <div className="absolute top-1.5 sm:top-2 left-1.5 sm:left-2 right-1.5 sm:right-2 z-10 flex gap-0.5 sm:gap-1">
                       {activeItems.map((_, idx) => {
                         const isCompleted = idx < activeIndex;
                         const isActive = idx === activeIndex;
                         const fillPercent = isCompleted ? 100 : isActive ? progress : 0;
                         
                         return (
-                          <div key={idx} className="h-1 flex-1 rounded-full bg-white/20 overflow-hidden">
+                          <div key={idx} className="h-0.5 sm:h-1 flex-1 rounded-full bg-white/20 overflow-hidden">
                             <div 
                               className="h-full rounded-full bg-white"
                               style={{ width: `${fillPercent}%`, transition: 'width 0.1s linear' }}
@@ -603,7 +604,7 @@ export default function TeacherStoriesPage() {
                     
                     {/* Close button */}
                     <button 
-                      className="absolute top-2 right-2 z-30 w-8 h-8 flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-colors" 
+                      className="absolute top-1.5 sm:top-2 right-1.5 sm:right-2 z-30 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 active:bg-white/20 rounded-full transition-colors text-base sm:text-lg" 
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -617,7 +618,7 @@ export default function TeacherStoriesPage() {
                     
                     {/* Pause/Play button */}
                     <button
-                      className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-30 w-12 h-12 flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 rounded-full transition-colors bg-black/30"
+                      className="absolute bottom-3 sm:bottom-4 left-1/2 transform -translate-x-1/2 z-30 w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center text-white/90 hover:text-white hover:bg-white/10 active:bg-white/20 rounded-full transition-colors bg-black/30 text-base sm:text-lg"
                       onClick={(e) => {
                         e.stopPropagation();
                         togglePause();
