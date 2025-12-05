@@ -291,12 +291,7 @@ function ClassesPageContent() {
 
         {/* Departments table */}
         <div className="mt-ds-md rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">
-          <div className="mb-ds-sm flex items-center justify-between">
-            {/* <h2 className="text-ds-h3 font-semibold text-ds-text-primary dark:text-slate-100">{t.departments}</h2>
-            <div className="text-ds-small text-slate-500 dark:text-slate-400">
-              {t.overview_hint}
-            </div> */}
-          </div>
+         
           <div className="overflow-x-auto overflow-hidden border border-slate-200 dark:border-slate-700 rounded-ds-md">
             <table className="min-w-full border-collapse">
               <thead>
