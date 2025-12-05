@@ -1,13 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import  { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Calendar, type CalendarEvent } from '@/app/components/shared/Calendar';
 import { EventDetailsModal } from '@/app/components/shared/EventDetailsModal';
 import { getEvents } from '@/lib/server-actions';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
-import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 import { ArrowLeft } from 'lucide-react';
 
 export default function ParentCalendarPage() {
