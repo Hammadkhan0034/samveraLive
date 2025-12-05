@@ -33,16 +33,16 @@ interface ContactCardsProps {
 
 export default function ContactCards({ contacts }: ContactCardsProps) {
   return (
-    <section className="mb-ds-lg">
-      <div className="grid grid-cols-1 gap-ds-md sm:grid-cols-2 lg:grid-cols-3">
+    <section className="mb-4 sm:mb-ds-lg">
+      <div className="grid grid-cols-1 gap-3 sm:gap-ds-md sm:grid-cols-2 lg:grid-cols-3">
         {contacts.map((contact) => (
           <div
             key={contact.id}
-            className="bg-white dark:bg-slate-800 rounded-ds-lg p-ds-md shadow-ds-card flex flex-col h-full"
+            className="bg-white dark:bg-slate-800 rounded-ds-lg p-3 sm:p-ds-md shadow-ds-card flex flex-col h-full"
           >
             <div className="flex-1">
-              <div className="flex items-start gap-ds-md mb-ds-md">
-                <div className="w-16 h-16 rounded-full bg-mint-100 dark:bg-mint-900/30 flex items-center justify-center flex-shrink-0 overflow-hidden">
+              <div className="flex items-start gap-2 sm:gap-ds-md mb-2 sm:mb-ds-md">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-mint-100 dark:bg-mint-900/30 flex items-center justify-center flex-shrink-0 overflow-hidden">
                   {contact.imageUrl ? (
                     <Image
                       src={contact.imageUrl}
@@ -52,23 +52,23 @@ export default function ContactCards({ contacts }: ContactCardsProps) {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="text-lg font-bold text-mint-600 dark:text-mint-400">
+                    <span className="text-base sm:text-lg font-bold text-mint-600 dark:text-mint-400">
                       {getInitials(contact.name)}
                     </span>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-ds-h3 font-bold text-mint-600 dark:text-mint-400 mb-ds-sm">
+                  <h3 className="text-ds-small sm:text-ds-h3 font-bold text-mint-600 dark:text-mint-400 mb-1 sm:mb-ds-sm truncate">
                     {contact.name}
                   </h3>
-                  <div className="flex flex-wrap items-center gap-2 mb-ds-sm">
+                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1 sm:mb-ds-sm">
                     {contact.gender && (
-                      <span className="px-2 py-0.5 rounded-ds-sm text-ds-tiny font-medium bg-mint-100 dark:bg-mint-900/30 text-mint-700 dark:text-mint-300">
+                      <span className="px-1.5 sm:px-2 py-0.5 rounded-ds-sm text-ds-tiny font-medium bg-mint-100 dark:bg-mint-900/30 text-mint-700 dark:text-mint-300">
                         {contact.gender}
                       </span>
                     )}
                     {contact.status && (
-                      <span className="px-2 py-0.5 rounded-ds-sm text-ds-tiny font-medium bg-mint-100 dark:bg-mint-900/30 text-mint-700 dark:text-mint-300">
+                      <span className="px-1.5 sm:px-2 py-0.5 rounded-ds-sm text-ds-tiny font-medium bg-mint-100 dark:bg-mint-900/30 text-mint-700 dark:text-mint-300">
                         {contact.status}
                       </span>
                     )}
@@ -76,45 +76,46 @@ export default function ContactCards({ contacts }: ContactCardsProps) {
                 </div>
               </div>
               {contact.address && (
-                <div className="">
-                  <div className="flex items-start gap-2 text-ds-small text-ds-text-secondary dark:text-slate-400">
-                    <MapPin className="h-4 w-4 text-mint-600 dark:text-mint-400 flex-shrink-0 mt-0.5" />
-                    <span>{contact.address}</span>
+                <div className="mb-2 sm:mb-0">
+                  <div className="flex items-start gap-1.5 sm:gap-2 text-ds-tiny sm:text-ds-small text-ds-text-secondary dark:text-slate-400">
+                    <MapPin className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-mint-600 dark:text-mint-400 flex-shrink-0 mt-0.5" />
+                    <span className="break-words">{contact.address}</span>
                   </div>
                 </div>
               )}
-              <div className="mb-ds-md">
-                <div className="flex items-center gap-2 text-ds-small text-ds-text-secondary dark:text-slate-400">
-                  <Phone className="h-4 w-4 text-mint-600 dark:text-mint-400 flex-shrink-0" />
-                  <span>{contact.phone}</span>
+              <div className="mb-2 sm:mb-ds-md space-y-1">
+                <div className="flex items-center gap-1.5 sm:gap-2 text-ds-tiny sm:text-ds-small text-ds-text-secondary dark:text-slate-400">
+                  <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-mint-600 dark:text-mint-400 flex-shrink-0" />
+                  <span className="truncate">{contact.phone}</span>
                 </div>
-                <div className="flex items-center gap-2 text-ds-small text-ds-text-secondary dark:text-slate-400">
-                  <Mail className="h-4 w-4 text-mint-600 dark:text-mint-400 flex-shrink-0" />
+                <div className="flex items-center gap-1.5 sm:gap-2 text-ds-tiny sm:text-ds-small text-ds-text-secondary dark:text-slate-400">
+                  <Mail className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-mint-600 dark:text-mint-400 flex-shrink-0" />
                   <span className="truncate">{contact.email}</span>
                 </div>
               </div>
             </div>
-            <div className="flex flex-wrap gap-4 pt-ds-sm mt-auto">
+            <div className="flex flex-wrap gap-2 sm:gap-4 pt-2 sm:pt-ds-sm mt-auto">
               <button
                 onClick={contact.onCall}
-                className="flex-1 min-w-[100px] flex items-center justify-center gap-1.5 px-3 py-2 rounded-full border border-input-stroke dark:border-slate-700 bg-mint-50 dark:bg-mint-900/20 text-mint-600 dark:text-mint-400 hover:bg-mint-100 dark:hover:bg-mint-900/30 transition-colors text-ds-small font-medium"
+                className="flex-1 min-w-[80px] sm:min-w-[100px] flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-full border border-input-stroke dark:border-slate-700 bg-mint-50 dark:bg-mint-900/20 text-mint-600 dark:text-mint-400 hover:bg-mint-100 dark:hover:bg-mint-900/30 active:bg-mint-200 dark:active:bg-mint-900/40 transition-colors text-ds-tiny sm:text-ds-small font-medium"
               >
-                <Phone className="h-4 w-4" />
-                <span>Call</span>
+                <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                <span className="hidden sm:inline">Call</span>
               </button>
               <button
                 onClick={contact.onMessage}
-                className="flex-1 min-w-[100px] flex items-center justify-center gap-1.5 px-3 py-2 rounded-full border border-input-stroke dark:border-slate-700 bg-mint-50 dark:bg-mint-900/20 text-mint-600 dark:text-mint-400 hover:bg-mint-100 dark:hover:bg-mint-900/30 transition-colors text-ds-small font-medium"
+                className="flex-1 min-w-[80px] sm:min-w-[100px] flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-full border border-input-stroke dark:border-slate-700 bg-mint-50 dark:bg-mint-900/20 text-mint-600 dark:text-mint-400 hover:bg-mint-100 dark:hover:bg-mint-900/30 active:bg-mint-200 dark:active:bg-mint-900/40 transition-colors text-ds-tiny sm:text-ds-small font-medium"
               >
-                <MessageCircle className="h-4 w-4" />
-                <span>Message</span>
+                <MessageCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                <span className="hidden sm:inline">Message</span>
               </button>
               <button
                 onClick={contact.onViewProfile}
-                className="flex-1 min-w-[100px] flex items-center justify-center gap-1.5 px-3 py-2 rounded-full border border-input-stroke dark:border-slate-700 bg-mint-50 dark:bg-mint-900/20 text-mint-600 dark:text-mint-400 hover:bg-mint-100 dark:hover:bg-mint-900/30 transition-colors text-ds-small font-medium"
+                className="flex-1 min-w-[80px] sm:min-w-[100px] flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 rounded-full border border-input-stroke dark:border-slate-700 bg-mint-50 dark:bg-mint-900/20 text-mint-600 dark:text-mint-400 hover:bg-mint-100 dark:hover:bg-mint-900/30 active:bg-mint-200 dark:active:bg-mint-900/40 transition-colors text-ds-tiny sm:text-ds-small font-medium"
               >
-                <UserRound className="h-4 w-4" />
-                <span>View Profile</span>
+                <UserRound className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+                <span className="hidden sm:inline">View Profile</span>
+                <span className="sm:hidden">Profile</span>
               </button>
             </div>
           </div>
