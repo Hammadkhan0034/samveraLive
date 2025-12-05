@@ -514,7 +514,6 @@ export default function ParentDashboard() {
       <StoryColumn
         lang={lang}
         userRole="guardian"
-        parentClassIds={linkedStudents.map(s => s.class_id).filter(Boolean) as string[]}
       />
 
       {/* Shared FeatureGrid for tiles */}

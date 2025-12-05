@@ -39,9 +39,7 @@ function GuardianDashboardContent({
 
 <StoryColumn
   lang="en"
-  userRole="principal" // or "teacher" or "guardian"
-  teacherClassIds={[]} // optional, for teachers
-  parentClassIds={[]} // optional, for guardians
+  userRole="guardian"
 />
       {/* Error Message */}
       {error && (

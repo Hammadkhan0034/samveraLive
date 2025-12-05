@@ -166,7 +166,7 @@ const GuardianSidebarContent = forwardRef<GuardianSidebarRef, GuardianSidebarPro
 
           {/* Mobile close button */}
           <div className="mb-ds-sm flex items-center justify-between md:hidden">
-            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Menu</h2>
+            <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">{t.sidebar_menu || 'Menu'}</h2>
             <button
               onClick={handleSidebarClose}
               className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300"
@@ -209,7 +209,7 @@ const GuardianSidebarContent = forwardRef<GuardianSidebarRef, GuardianSidebarPro
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                  View dashboard overview
+                  {t.parent_dashboard_overview || 'View dashboard overview'}
                 </p>
               </div>
             </button>
@@ -416,10 +416,10 @@ const GuardianSidebarContent = forwardRef<GuardianSidebarRef, GuardianSidebarPro
                       ? 'text-slate-900 dark:text-slate-100'
                       : 'text-slate-700 dark:text-slate-300'
                   )}>
-                    {t.tile_diaper || t.di_title || 'Diapers & Health'}
+                    {t.tile_diaper  || 'Diapers & Health'}
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{t.tile_diaper_desc || t.di_hint || 'View health logs'}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{t.tile_diaper_desc  || 'View health logs'}</p>
               </div>
             </button>
 
