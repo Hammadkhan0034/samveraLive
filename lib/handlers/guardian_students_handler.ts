@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { getUserDataCacheHeaders } from '@/lib/cacheConfig';
 import { validateBody, validateQuery, studentIdSchema, userIdSchema, uuidSchema } from '@/lib/validation';
-import { getRequestAuthContext } from '@/lib/server-helpers';
-import type { AuthUser } from '@/lib/types/auth';
+import type { AuthUser, UserMetadata } from '@/lib/types/auth';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 
@@ -13,9 +12,13 @@ import { z } from 'zod';
  */
 export async function handleGetGuardianStudents(
   request: Request,
-  _user: AuthUser,
+  user: AuthUser,
   adminClient: SupabaseClient,
 ) {
+  const metadata = user.user_metadata as UserMetadata;
+  const orgId = metadata.org_id;
+  const userId = user.id;
+
   const { searchParams } = new URL(request.url);
   
   const getGuardianStudentsQuerySchema = z.object({
@@ -40,7 +43,8 @@ export async function handleGetGuardianStudents(
       student_id,
       relation,
       created_at
-    `);
+    `)
+    .eq('org_id', orgId);
 
   if (studentId) {
     query = query.eq('student_id', studentId);
@@ -85,21 +89,12 @@ export async function handleGetGuardianStudents(
  */
 export async function handlePostGuardianStudent(
   request: Request,
-  _user: AuthUser,
+  user: AuthUser,
   adminClient: SupabaseClient,
 ) {
-  // Verify user has principal role
-  try {
-    await getRequestAuthContext({
-      allowedRoles: ['principal'],
-      requireOrg: true,
-    });
-  } catch (err) {
-    return NextResponse.json(
-      { error: 'Access denied. Only principals can manage parent-student relationships.' },
-      { status: 403 }
-    );
-  }
+  const metadata = user.user_metadata as UserMetadata;
+  const orgId = metadata.org_id;
+  const userId = user.id;
 
   const body = await request.json();
   
@@ -116,26 +111,27 @@ export async function handlePostGuardianStudent(
   
   const { guardian_id, student_id, relation } = bodyValidation.data;
   
-  // Fetch org_id from student row
+  // Validate that the student belongs to the same organization for security
   const { data: studentRow, error: studentErr } = await adminClient
     .from('students')
     .select('org_id')
     .eq('id', student_id)
+    .eq('org_id', orgId)
     .maybeSingle();
 
-  if (studentErr || !studentRow?.org_id) {
-    console.error('❌ Could not resolve org_id for student', studentErr);
-    return NextResponse.json({ error: 'Could not resolve org for student' }, { status: 400 });
+  if (studentErr || !studentRow) {
+    console.error('❌ Student not found or does not belong to the same organization', studentErr);
+    return NextResponse.json({ error: 'Student not found or does not belong to your organization' }, { status: 400 });
   }
 
-  // Insert relationship with org_id, ignore duplicates
+  // Insert relationship with org_id from AuthUser
   const { data: upserted, error } = await adminClient
     .from('guardian_students')
     .insert({
       guardian_id,
       student_id,
       relation,
-      org_id: studentRow.org_id,
+      org_id: orgId,
     })
     .select('id,guardian_id,student_id,relation,created_at')
     .single();
@@ -160,21 +156,12 @@ export async function handlePostGuardianStudent(
  */
 export async function handleDeleteGuardianStudent(
   request: Request,
-  _user: AuthUser,
+  user: AuthUser,
   adminClient: SupabaseClient,
 ) {
-  // Verify user has principal role
-  try {
-    await getRequestAuthContext({
-      allowedRoles: ['principal'],
-      requireOrg: true,
-    });
-  } catch (err) {
-    return NextResponse.json(
-      { error: 'Access denied. Only principals can manage parent-student relationships.' },
-      { status: 403 }
-    );
-  }
+  const metadata = user.user_metadata as UserMetadata;
+  const orgId = metadata.org_id;
+  const userId = user.id;
 
   const { searchParams } = new URL(request.url);
   
@@ -195,7 +182,8 @@ export async function handleDeleteGuardianStudent(
 
   let deleteQuery = adminClient
     .from('guardian_students')
-    .delete();
+    .delete()
+    .eq('org_id', orgId);
 
   if (id) {
     deleteQuery = deleteQuery.eq('id', id);
