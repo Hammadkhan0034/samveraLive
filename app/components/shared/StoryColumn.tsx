@@ -586,7 +586,7 @@ export default function StoryColumn({
     router.push('/dashboard/add-story');
   };
 
-  const canCreateStory = effectiveUserRole === 'guardian' || effectiveUserRole === 'principal';
+  const canCreateStory = effectiveUserRole === 'guardian' || effectiveUserRole === 'teacher' || effectiveUserRole === 'principal';
 
   // Only show loading skeleton if no cache exists and we're actually loading
   if (loading && stories.length === 0 && !hydratedFromCache) {
