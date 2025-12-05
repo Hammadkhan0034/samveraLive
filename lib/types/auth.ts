@@ -1,6 +1,6 @@
 // Authentication and user types for Supabase integration
 
-export type SamveraRole = 'teacher' | 'principal' | 'admin' | 'guardian';
+export type SamveraRole = 'teacher' | 'principal' | 'admin' | 'guardian' | 'parent';
 
 /**
  * Standardized interface for Supabase user_metadata

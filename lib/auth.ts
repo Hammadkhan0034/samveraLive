@@ -1,5 +1,5 @@
 // /lib/auth.ts
-export type SamveraRole = 'teacher' | 'principal' | 'admin' | 'guardian';
+export type SamveraRole = 'teacher' | 'principal' | 'admin' | 'guardian' | 'parent';
 
 // Re-export UserMetadata from types
 export type { UserMetadata } from './types/auth';
@@ -49,11 +49,12 @@ export const ROLE_PATHS = {
   teacher: '/dashboard/teacher',
   principal: '/dashboard/principal',
   guardian: '/dashboard/guardian',
+  parent: '/dashboard/guardian',
   admin: '/dashboard/admin',
 } as const;
 
 export function routeForRole(role: SamveraRole): string {
-  return ROLE_PATHS[role];
+  return ROLE_PATHS[role as keyof typeof ROLE_PATHS];
 }
 
 export function getActiveRole(): SamveraRole | null {

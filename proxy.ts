@@ -6,6 +6,8 @@ const ROLE_PATHS: Record<SamveraRole, string> = {
   teacher: '/dashboard/teacher',
   principal: '/dashboard/principal',
   guardian: '/dashboard/guardian',
+  parent: '/dashboard/guardian',
+
   admin: '/dashboard/admin',
 };
 
@@ -15,14 +17,15 @@ const ROLE_HIERARCHY: Record<SamveraRole, number> = {
   principal: 3,
   teacher: 2,
   guardian: 1,
+  parent: 1,
 };
 
 // Protected routes and their required roles
 const PROTECTED_ROUTES = [
-  { path: '/dashboard/teacher', roles: ['teacher', 'principal', 'admin'] },
+  { path: '/dashboard/teacher', roles: ['teacher'] },
   { path: '/dashboard/principal/students', roles: ['principal'] },
-  { path: '/dashboard/principal', roles: ['principal', 'admin'] },
-  { path: '/dashboard/guardian', roles: ['guardian'] },
+  { path: '/dashboard/principal', roles: ['principal'] },
+  { path: '/dashboard/guardian', roles: ['guardian', 'parent'] },
   { path: '/dashboard/admin', roles: ['admin'] },
 ] as const;
 
@@ -58,16 +61,16 @@ export async function proxy(req: NextRequest) {
       // Handle fetch/network errors differently from authentication errors
       if (error) {
         // Check if it's a network/fetch error (retryable) vs auth error
-        const isNetworkError = error.message?.includes('fetch failed') || 
-                             error.message?.includes('timeout') ||
-                             error.name === 'AuthRetryableFetchError' ||
-                             error.status === 0;
-        
+        const isNetworkError = error.message?.includes('fetch failed') ||
+          error.message?.includes('timeout') ||
+          error.name === 'AuthRetryableFetchError' ||
+          error.status === 0;
+
         if (isNetworkError) {
           // For network errors, allow request to continue - client-side will handle retry
           return res;
         }
-        
+
         // For actual auth errors (not network), allow access to sign-in page
         return res;
       }
@@ -83,11 +86,12 @@ export async function proxy(req: NextRequest) {
           const preferredRole: SamveraRole = (activeRole && userRoles.includes(activeRole))
             ? activeRole
             : userRoles.length > 0
-            ? userRoles[0]
-            : 'guardian'; // fallback
-          
+              ? userRoles[0]
+              : 'guardian'; // fallback
+
+          const targetPath = ROLE_PATHS[preferredRole] || ROLE_PATHS['guardian'];
           const url = req.nextUrl.clone();
-          url.pathname = ROLE_PATHS[preferredRole];
+          url.pathname = targetPath;
           return NextResponse.redirect(url);
         }
       }
@@ -127,17 +131,17 @@ export async function proxy(req: NextRequest) {
     // Handle fetch/network errors differently from authentication errors
     if (error) {
       // Check if it's a network/fetch error (retryable) vs auth error
-      const isNetworkError = error.message?.includes('fetch failed') || 
-                           error.message?.includes('timeout') ||
-                           error.name === 'AuthRetryableFetchError' ||
-                           error.status === 0;
-      
+      const isNetworkError = error.message?.includes('fetch failed') ||
+        error.message?.includes('timeout') ||
+        error.name === 'AuthRetryableFetchError' ||
+        error.status === 0;
+
       if (isNetworkError) {
         // For network errors, allow request to continue - client-side will handle retry
         // Don't redirect on network failures as user might still be authenticated
         return res;
       }
-      
+
       // For actual auth errors (not network), redirect to signin
       const url = req.nextUrl.clone();
       url.pathname = '/signin';
@@ -173,23 +177,24 @@ export async function proxy(req: NextRequest) {
       const preferredRole: SamveraRole = (activeRole && userRoles.includes(activeRole))
         ? activeRole
         : userRoles[0];
-      
+
+      const targetPath = ROLE_PATHS[preferredRole] || ROLE_PATHS['guardian'];
       const url = req.nextUrl.clone();
-      url.pathname = ROLE_PATHS[preferredRole];
+      url.pathname = targetPath;
       return NextResponse.redirect(url);
     }
 
     // Check if user has access to the requested dashboard
     const route = PROTECTED_ROUTES.find(r => pathname.startsWith(r.path));
-    
+
     if (route) {
       const hasAccess = route.roles.some((role) => userRoles.includes(role as SamveraRole));
-      
+
       if (!hasAccess) {
         // Redirect to user's highest privilege dashboard
         const userMaxLevel = Math.max(...userRoles.map((role: SamveraRole) => ROLE_HIERARCHY[role] || 0));
         const highestRole = userRoles.find((role: SamveraRole) => ROLE_HIERARCHY[role] === userMaxLevel) as SamveraRole;
-        
+
         const url = req.nextUrl.clone();
         url.pathname = ROLE_PATHS[highestRole];
         return NextResponse.redirect(url);
@@ -204,16 +209,16 @@ export async function proxy(req: NextRequest) {
     return res;
   } catch (error: any) {
     // Check if it's a network/fetch error
-    const isNetworkError = error?.message?.includes('fetch failed') || 
-                          error?.message?.includes('timeout') ||
-                          error?.name === 'AuthRetryableFetchError' ||
-                          error?.status === 0;
-    
+    const isNetworkError = error?.message?.includes('fetch failed') ||
+      error?.message?.includes('timeout') ||
+      error?.name === 'AuthRetryableFetchError' ||
+      error?.status === 0;
+
     if (isNetworkError) {
       // For network errors, allow request to continue
       return NextResponse.next();
     }
-    
+
     // On other errors, redirect to signin
     const url = req.nextUrl.clone();
     url.pathname = '/signin';
@@ -221,7 +226,7 @@ export async function proxy(req: NextRequest) {
   }
 }
 
-export const config = { 
+export const config = {
   // Apply proxy to signin and all dashboard routes
   matcher: ['/signin', '/dashboard/:path*']
 };

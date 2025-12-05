@@ -35,7 +35,7 @@ export async function GET(request: Request) {
       }
     );
     const { data: sessionData, error: sessionError } = await supabase.auth.exchangeCodeForSession(code)
-    
+
     if (sessionError) {
       console.error('❌ Error exchanging code for session:', sessionError)
       return NextResponse.redirect(`${requestUrl.origin}/signin?error=session_error`)
@@ -55,7 +55,7 @@ export async function GET(request: Request) {
           activeRole: 'guardian',
           org_id: actualOrgId,
         };
-        
+
         await supabaseAdmin.auth.admin.updateUserById(sessionData.user.id, {
           password: defaultPassword,
           user_metadata: userMetadata,
@@ -64,10 +64,10 @@ export async function GET(request: Request) {
       } catch (updateError) {
         console.error('❌ Error setting default password:', updateError)
       }
-      
+
       // Redirect to signin page with email pre-filled
       const email = sessionData.user.email
-      return NextResponse.redirect(`${requestUrl.origin}/signin?email=${encodeURIComponent(email || '')}&password=test123456&role=parent`)
+      return NextResponse.redirect(`${requestUrl.origin}/signin?email=${encodeURIComponent(email || '')}&password=test123456&role=guardian`)
     }
 
     // Legacy invitation flow
@@ -76,7 +76,7 @@ export async function GET(request: Request) {
       return NextResponse.redirect(acceptUrl)
     }
   }
-  
+
   return NextResponse.redirect(`${requestUrl.origin}/signin`)
 }
 

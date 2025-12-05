@@ -40,10 +40,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       .then(({ data: { session }, error }) => {
         // Handle network errors gracefully
         if (error) {
-          const isNetworkError = error.name === 'AuthRetryableFetchError' || 
-                                error.message?.includes('fetch failed') ||
-                                error.status === 0;
-          
+          const isNetworkError = error.name === 'AuthRetryableFetchError' ||
+            error.message?.includes('fetch failed') ||
+            error.status === 0;
+
           if (isNetworkError) {
             console.warn('⚠️ Network error during initial session load - will retry. Error:', error.message);
             // Don't set loading to false immediately - allow retry
@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             return;
           }
         }
-        
+
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -87,10 +87,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
       .catch((error) => {
         // Handle any other errors
-        const isNetworkError = error?.name === 'AuthRetryableFetchError' || 
-                              error?.message?.includes('fetch failed') ||
-                              error?.status === 0;
-        
+        const isNetworkError = error?.name === 'AuthRetryableFetchError' ||
+          error?.message?.includes('fetch failed') ||
+          error?.status === 0;
+
         if (isNetworkError) {
           console.warn('⚠️ Network error during session initialization:', error.message);
         } else {
@@ -110,14 +110,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Reset refresh tracking on new login
           lastRefreshTime.current = Date.now();
           refreshBlocked.current = false;
-          
+
           // Mark login in supabase client to allow immediate refresh
           markUserLoggedIn();
-          
+
           setSession(session);
           setUser(session?.user ?? null);
           setLoading(false);
-          
+
           // Handle sign in success logic
           try {
             const hasRoles = Array.isArray(session.user.user_metadata?.roles) && session.user.user_metadata?.roles.length > 0;
@@ -153,6 +153,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 // Use replace instead of href to avoid adding to history
                 window.location.replace(path);
               }
+            } else if (userRole) {
+              console.warn(`⚠️ No path found for role: ${userRole}`);
             }
           } else {
             setIsSigningIn(false);
@@ -168,7 +170,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // First refresh or within 1 minute (likely after login)
             lastRefreshTime.current = now;
             refreshBlocked.current = false;
-            
+
             setSession((prevSession) => {
               if (!prevSession || !session) return session;
               if (prevSession.access_token !== session.access_token) {
@@ -189,7 +191,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (session?.expires_at) {
             const expiresAt = session.expires_at * 1000;
             const timeUntilExpiry = expiresAt - now;
-            
+
             // If token is still valid for more than 10 minutes, block the refresh
             if (timeUntilExpiry > 600000) { // 10 minutes
               refreshBlocked.current = true;
@@ -200,7 +202,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Allow refresh - update timestamp and session
           lastRefreshTime.current = now;
           refreshBlocked.current = false;
-          
+
           // Silently update session without triggering re-renders
           setSession((prevSession) => {
             if (!prevSession || !session) return session;
@@ -216,12 +218,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // For all other events (SIGNED_OUT, etc.), update state normally
         if (event === 'SIGNED_OUT') {
           console.log('🔄 SIGNED_OUT event received');
-          
+
           // Check if this is an explicit signout (user clicked signout button)
-          const explicitSignout = typeof window !== 'undefined' 
-            ? sessionStorage.getItem('explicit_signout') 
+          const explicitSignout = typeof window !== 'undefined'
+            ? sessionStorage.getItem('explicit_signout')
             : null;
-          
+
           // If this is an explicit signout, clear the flag and proceed with signout
           if (explicitSignout) {
             sessionStorage.removeItem('explicit_signout');
@@ -236,17 +238,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
             return;
           }
-          
+
           // Check if this might be due to a rate limit error (only if not explicit signout)
-          const rateLimitErrorTime = typeof window !== 'undefined' 
-            ? sessionStorage.getItem('supabase_rate_limit_error') 
+          const rateLimitErrorTime = typeof window !== 'undefined'
+            ? sessionStorage.getItem('supabase_rate_limit_error')
             : null;
-          
+
           // If we had a recent rate limit error (within last 5 seconds), check if session is still valid
           if (rateLimitErrorTime && typeof window !== 'undefined') {
             const errorTime = parseInt(rateLimitErrorTime, 10);
             const timeSinceError = Date.now() - errorTime;
-            
+
             // If rate limit error was recent (within 5 seconds), try to keep the session
             if (timeSinceError < 5000) {
               try {
@@ -272,13 +274,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               }
             }
           }
-          
+
           setIsSigningIn(false);
           // Clear session state
           setSession(null);
           setUser(null);
           setLoading(false);
-          
+
           // Only redirect if we're not already on signin page and not on parent dashboard
           if (typeof window !== 'undefined' && window.location.pathname !== '/signin' && !window.location.pathname.startsWith('/dashboard/parent')) {
             window.location.replace('/signin');
@@ -297,7 +299,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.debug('🔄 Refresh token already used (non-critical, Supabase will handle)');
           return;
         }
-        
+
         // Handle rate limit errors - don't clear session
         if (error?.status === 429 || error?.message?.includes('rate limit') || error?.message?.includes('Too Many Requests') || error?.code === 'rate_limit_exceeded') {
           console.warn('⚠️ Rate limit error in auth state change - keeping existing session');
@@ -315,7 +317,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           return;
         }
-        
+
         // For other errors, log them but don't break the app
         console.error('❌ Auth state change error:', error);
       }
@@ -336,16 +338,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email,
         password,
       });
-      
+
       if (error) {
         setIsSigningIn(false);
         // Check for rate limit errors
         if (error.status === 429 || error.message?.toLowerCase().includes('rate limit')) {
-          return { 
-            error: { 
-              ...error, 
-              message: 'Too many sign-in attempts. Please wait a few minutes before trying again.' 
-            } as AuthError 
+          return {
+            error: {
+              ...error,
+              message: 'Too many sign-in attempts. Please wait a few minutes before trying again.'
+            } as AuthError
           };
         }
       } else {
@@ -359,11 +361,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const authError = err as AuthError;
       // Check for rate limit errors in catch block
       if (authError.status === 429 || authError.message?.toLowerCase().includes('rate limit')) {
-        return { 
-          error: { 
-            ...authError, 
-            message: 'Too many sign-in attempts. Please wait a few minutes before trying again.' 
-          } as AuthError 
+        return {
+          error: {
+            ...authError,
+            message: 'Too many sign-in attempts. Please wait a few minutes before trying again.'
+          } as AuthError
         };
       }
       return { error: authError };
@@ -373,16 +375,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signUp = async (email: string, password: string, userRole: SamveraRole, fullName?: string) => {
     try {
       console.log('Attempting signup with:', { email, userRole });
-      
+
       // Try different email formats if the first one fails
       const emailVariations = [
         email, // Original email
         email.replace('@', '+test@'), // Add +test to bypass some filters
         email.toLowerCase().replace(/[^a-z0-9@.]/g, ''), // Clean email
       ];
-      
+
       let lastError = null;
-      
+
       for (const testEmail of emailVariations) {
         try {
           console.log('Trying email:', testEmail);
@@ -395,7 +397,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             activeRole: userRole,
             org_id: orgId,
           };
-          
+
           const { data, error } = await supabase.auth.signUp({
             email: testEmail,
             password,
@@ -403,13 +405,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               data: userMetadata,
             },
           });
-          
+
           if (error) {
             console.error('Signup error for', testEmail, ':', error);
             lastError = error;
             continue; // Try next email variation
           }
-          
+
           console.log('Signup successful with:', testEmail, data);
           return { error: null };
         } catch (err) {
@@ -418,7 +420,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           continue;
         }
       }
-      
+
       // If all variations failed, return the last error
       return { error: lastError };
     } catch (err) {
@@ -429,17 +431,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     console.log('🔄 Auth context signOut called...');
-    
+
     // Set flag to indicate explicit signout (prevents SIGNED_OUT handler from restoring session)
     if (typeof window !== 'undefined') {
       sessionStorage.setItem('explicit_signout', Date.now().toString());
     }
-    
+
     // Clear local state first
     setSession(null);
     setUser(null);
     setLoading(false);
-    
+
     // Try to sign out from Supabase
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -448,7 +450,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } else {
       console.log('✅ Supabase signOut successful');
     }
-    
+
     // Clear any local auth cookies
     if (typeof document !== 'undefined') {
       document.cookie = `samvera_email=; Path=/; Max-Age=0; SameSite=Lax`;
@@ -456,7 +458,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       document.cookie = `samvera_active_role=; Path=/; Max-Age=0; SameSite=Lax`;
       console.log('✅ Local cookies cleared');
     }
-    
+
     // Clear all application cache from localStorage (preserve language preference)
     if (typeof window !== 'undefined') {
       const cacheKeysToRemove = [
@@ -485,7 +487,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         'stories_data_updated',
         'classes_data_updated',
       ];
-      
+
       // Also clear any parent_menus_* keys (with orgId)
       const keysToRemove: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
@@ -494,7 +496,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           keysToRemove.push(key);
         }
       }
-      
+
       cacheKeysToRemove.forEach(key => {
         try {
           localStorage.removeItem(key);
@@ -502,7 +504,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Ignore errors
         }
       });
-      
+
       keysToRemove.forEach(key => {
         try {
           localStorage.removeItem(key);
@@ -510,7 +512,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Ignore errors
         }
       });
-      
+
       console.log('✅ Application cache cleared from localStorage');
     }
   };
@@ -528,7 +530,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (preferredRole && typeof window !== 'undefined') {
         localStorage.setItem('samvera_pending_role', preferredRole);
       }
-      
+
       // Send OTP - Supabase will send either magic link or 6-digit code
       // depending on your project's email settings in the dashboard
       const { error } = await supabase.auth.signInWithOtp({
@@ -537,7 +539,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           shouldCreateUser: true,
         },
       });
-      
+
       return { error };
     } catch (err) {
       return { error: err as AuthError };
@@ -551,7 +553,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         token,
         type: 'email',
       });
-      
+
       if (data?.user) {
         // Check if user has roles set, if not set from pending role
         const hasRoles = Array.isArray(data.user.user_metadata?.roles) && data.user.user_metadata?.roles.length > 0;
@@ -576,7 +578,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         }
       }
-      
+
       return { error };
     } catch (err) {
       return { error: err as AuthError };
@@ -608,11 +610,12 @@ export function useAuth() {
 }
 
 function getRolePath(role: SamveraRole): string {
-  const rolePaths = {
+  const rolePaths: Record<string, string> = {
     teacher: '/dashboard/teacher',
     principal: '/dashboard/principal',
     guardian: '/dashboard/guardian',
     admin: '/dashboard/admin',
+    parent: '/dashboard/guardian', // Handle legacy/alternate role name
   };
   return rolePaths[role];
 }
