@@ -23,10 +23,7 @@ const getStoriesQuerySchema = z.object({
   classId: classIdSchema.optional(),
   includeDeleted: z.coerce.boolean().optional(),
   onlyPublic: z.coerce.boolean().optional(),
-  audience: z.enum(['principal', 'teacher', 'guardian']).optional(),
   teacherClassId: uuidSchema.nullable().optional(),
-  teacherClassIds: z.string().optional(), // comma-separated class ids
-  parentClassIds: z.string().optional(), // comma-separated class ids
 });
 
 export async function handleGetStories(
@@ -44,13 +41,39 @@ export async function handleGetStories(
     );
   }
 
+  // Get user role from metadata activeRole field
+  const activeRole = metadata?.activeRole;
+  if (!activeRole) {
+    return NextResponse.json(
+      { error: 'User role not found in metadata' },
+      { status: 400 },
+    );
+  }
+
+  // Map role to audience type
+  let audience: 'principal' | 'teacher' | 'guardian' | null = null;
+  if (activeRole === 'principal' || activeRole === 'admin') {
+    audience = 'principal';
+  } else if (activeRole === 'teacher') {
+    audience = 'teacher';
+  } else if (activeRole === 'guardian' || activeRole === 'parent') {
+    audience = 'guardian';
+  }
+
+  if (!audience) {
+    return NextResponse.json(
+      { error: `Unsupported role: ${activeRole}` },
+      { status: 400 },
+    );
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const queryValidation = validateQuery(getStoriesQuerySchema, searchParams);
     if (!queryValidation.success) {
       return queryValidation.error;
     }
-    const { classId, includeDeleted, onlyPublic, audience, teacherClassIds, parentClassIds } = queryValidation.data;
+    const { classId, includeDeleted, onlyPublic } = queryValidation.data;
 
     // Use authenticated user's ID for any author/parent identity on the server side
     const parentUserId = user.id;
@@ -78,14 +101,32 @@ export async function handleGetStories(
       // Teachers should see:
       // 1. ALL org-wide stories (principal's stories) - class_id is null
       // 2. Class-specific stories ONLY for their assigned classes (strict filtering)
-      const teacherClassIdsArray = (teacherClassIds || '')
-        .split(',')
-        .map(s => s.trim())
-        .filter(Boolean);
+      
+      // Fetch teacher's assigned classes from database
+      let teacherClassIdsArray: string[] = [];
+      try {
+        const { data: memberships, error: membershipError } = await adminClient
+          .from('class_memberships')
+          .select('class_id')
+          .eq('user_id', user.id)
+          .eq('membership_role', 'teacher')
+          .eq('org_id', orgId);
+
+        if (!membershipError && memberships) {
+          teacherClassIdsArray = memberships
+            .map(m => m.class_id)
+            .filter((id): id is string => !!id && typeof id === 'string')
+            // Remove duplicates
+            .filter((id, index, self) => self.indexOf(id) === index);
+        }
+      } catch (e) {
+        console.error('Error fetching teacher class IDs:', e);
+      }
 
       console.log('🔍 Teacher story filtering:', {
-        teacherClassIds,
+        userId: user.id,
         teacherClassIdsArray,
+        count: teacherClassIdsArray.length,
       });
 
       if (teacherClassIdsArray.length > 0) {
@@ -98,7 +139,7 @@ export async function handleGetStories(
       } else {
         // Fallback: if no class IDs provided, show org-wide only (principal's stories)
         // This ensures teachers without assigned classes only see org-wide stories
-        console.log('⚠️ No teacher class IDs provided, showing org-wide stories only');
+        console.log('⚠️ No teacher class IDs found, showing org-wide stories only');
         query = query.is('class_id', null);
       }
     } else if (audience === 'guardian') {
@@ -107,46 +148,36 @@ export async function handleGetStories(
       // 2. Class-specific stories for their children (teacher's class stories)
       let parentClassIdsArray: string[] = [];
 
-      // First try to get from query params (from frontend metadata)
-      if (parentClassIds) {
-        parentClassIdsArray = parentClassIds
-          .split(',')
-          .map(s => s.trim())
-          .filter(Boolean);
-      }
+      // Always fetch from database using authenticated user
+      try {
+        // Get all students linked to this guardian
+        const { data: relationships, error: relError } = await adminClient
+          .from('guardian_students')
+          .select('student_id')
+          .eq('guardian_id', user.id);
 
-      // If no class IDs from params, fetch from database using authenticated user
-      if (parentClassIdsArray.length === 0) {
-        try {
-          // Get all students linked to this guardian
-          const { data: relationships, error: relError } = await adminClient
-            .from('guardian_students')
-            .select('student_id')
-            .eq('guardian_id', user.id);
+        if (!relError && relationships && relationships.length > 0) {
+          const studentIds = relationships.map(r => r.student_id).filter(Boolean);
 
-          if (!relError && relationships && relationships.length > 0) {
-            const studentIds = relationships.map(r => r.student_id).filter(Boolean);
+          if (studentIds.length > 0) {
+            // Get class_ids for these students
+            const { data: students, error: studentsError } = await adminClient
+              .from('students')
+              .select('class_id')
+              .in('id', studentIds)
+              .not('class_id', 'is', null);
 
-            if (studentIds.length > 0) {
-              // Get class_ids for these students
-              const { data: students, error: studentsError } = await adminClient
-                .from('students')
-                .select('class_id')
-                .in('id', studentIds)
-                .not('class_id', 'is', null);
-
-              if (!studentsError && students) {
-                parentClassIdsArray = students
-                  .map(s => s.class_id)
-                  .filter((id): id is string => !!id && typeof id === 'string')
-                  // Remove duplicates
-                  .filter((id, index, self) => self.indexOf(id) === index);
-              }
+            if (!studentsError && students) {
+              parentClassIdsArray = students
+                .map(s => s.class_id)
+                .filter((id): id is string => !!id && typeof id === 'string')
+                // Remove duplicates
+                .filter((id, index, self) => self.indexOf(id) === index);
             }
           }
-        } catch (e) {
-          console.error('Error fetching guardian class IDs:', e);
         }
+      } catch (e) {
+        console.error('Error fetching guardian class IDs:', e);
       }
 
       if (parentClassIdsArray.length > 0) {
@@ -157,25 +188,24 @@ export async function handleGetStories(
         query = query.is('class_id', null);
       }
     } else if (audience === 'principal') {
-      // Principals should see:
-      // 1. All org-wide stories they created (class_id is null)
-      // 2. All class-specific stories they created (for any class)
-      // Use authenticated user's ID as the principal author
-      console.log('🔍 Principal story filtering:', {
+      // Principals should see all stories in their organization
+      // No filtering needed - they see everything
+      console.log('🔍 Principal story filtering: showing all stories for org', {
         userId: user.id,
+        orgId,
       });
-      query = query.eq('author_id', user.id);
+      // No additional query filters - already filtered by org_id
     }
 
     // Note: Organization-wide stories (class_id is null) are visible to:
-    // - Principal (who created them)
+    // - Principal (all stories in org)
     // - All Teachers (via audience=teacher filter)
     // - All Guardians (via audience=guardian filter)
     //
     // Class-specific stories are visible to:
-    // - Principal (who created them)
-    // - Teachers of that class (via teacherClassIds filter)
-    // - Guardians of students in that class (via parentClassIds filter)
+    // - Principal (all stories in org)
+    // - Teachers of that class (fetched from class_memberships table)
+    // - Guardians of students in that class (fetched from guardian_students and students tables)
 
     let { data, error } = await query;
     if (error) {
@@ -194,13 +224,29 @@ export async function handleGetStories(
 
     // Post-process for teachers: STRICT filtering to ensure only assigned class stories are shown
     if (audience === 'teacher' && data) {
-      const teacherClassIdsArray = (teacherClassIds || '')
-        .split(',')
-        .map(s => s.trim())
-        .filter(Boolean);
+      // Re-fetch teacher class IDs for post-processing validation
+      let teacherClassIdsArray: string[] = [];
+      try {
+        const { data: memberships, error: membershipError } = await adminClient
+          .from('class_memberships')
+          .select('class_id')
+          .eq('user_id', user.id)
+          .eq('membership_role', 'teacher')
+          .eq('org_id', orgId);
+
+        if (!membershipError && memberships) {
+          teacherClassIdsArray = memberships
+            .map(m => m.class_id)
+            .filter((id): id is string => !!id && typeof id === 'string')
+            // Remove duplicates
+            .filter((id, index, self) => self.indexOf(id) === index);
+        }
+      } catch (e) {
+        console.error('Error fetching teacher class IDs for post-processing:', e);
+      }
 
       console.log('🔍 Post-processing teacher stories:', {
-        teacherClassIds,
+        userId: user.id,
         teacherClassIdsArray,
         totalStoriesBeforeFilter: data.length,
         storiesBeforeFilter: data.map((s: any) => ({

@@ -37,15 +37,10 @@ type StoryItem = {
 interface StoryColumnProps {
   lang?: 'en' | 'is';
   userRole?: 'principal' | 'teacher' | 'guardian';
-  teacherClassIds?: string[];
-  parentClassIds?: string[];
 }
 
 export default function StoryColumn({
-  lang = 'en',
   userRole,
-  teacherClassIds = [],
-  parentClassIds = [],
 }: StoryColumnProps) {
   const { t } = useLanguage();
   const router = useRouter();
@@ -75,7 +70,7 @@ export default function StoryColumn({
     if (userRole) return userRole;
     const userMetadata = session?.user?.user_metadata as any;
     const roleRaw = String(
-      userMetadata?.role || userMetadata?.user_type || userMetadata?.account_type || userMetadata?.type || userMetadata?.activeRole || ''
+     userMetadata?.activeRole || ''
     ).toLowerCase();
     if (/principal|admin|head/.test(roleRaw)) return 'principal';
     if (/teacher/.test(roleRaw)) return 'teacher';
@@ -105,16 +100,10 @@ export default function StoryColumn({
 
   // Fetch stories
   useEffect(() => {
-    // For teachers, API requires either teacherClassIds or teacherAuthorId
-    // Skip the call if we don't have either (session might not be loaded yet)
-    if (effectiveUserRole === 'teacher' && !effectiveUserId && teacherClassIds.length === 0) {
+    // Skip the call if we don't have a user ID (session might not be loaded yet)
+    if (!effectiveUserId) {
       setLoading(false);
       setError(null); // Don't show error, just don't fetch
-      console.log('⚠️ StoryColumn: Skipping API call - teacher needs either userId or teacherClassIds', {
-        effectiveUserId,
-        teacherClassIdsLength: teacherClassIds.length,
-        hasSession: !!session
-      });
       return;
     }
 
@@ -125,48 +114,10 @@ export default function StoryColumn({
       }
       setError(null);
       try {
-        const params = new URLSearchParams();
-        
-        if (effectiveUserRole === 'teacher') {
-          params.set('audience', 'teacher');
-          
-          // Ensure we have at least one class before making the call
-          const hasTeacherClassIds = teacherClassIds.length > 0;
-          
-          if (!hasTeacherClassIds) {
-            console.error('❌ StoryColumn: Cannot fetch stories - teacher needs teacherClassIds', {
-              teacherClassIdsLength: teacherClassIds.length,
-              hasSession: !!session,
-            });
-            setError(null); // Don't show error to user
-            setLoading(false);
-            return;
-          }
-
-          // Include teacherClassIds if available
-          if (hasTeacherClassIds) {
-            const classIdsString = teacherClassIds.join(',');
-            params.set('teacherClassIds', classIdsString);
-            console.log('📤 StoryColumn: Sending teacherClassIds to API:', {
-              teacherClassIds,
-              classIdsString,
-              userId: effectiveUserId
-            });
-          } else {
-            console.log('⚠️ StoryColumn: No teacherClassIds provided, using teacherAuthorId only');
-          }
-        } else if (effectiveUserRole === 'guardian') {
-          params.set('audience', 'guardian');
-          if (parentClassIds.length > 0) {
-            params.set('parentClassIds', parentClassIds.join(','));
-          }
-        } else if (effectiveUserRole === 'principal') {
-          params.set('audience', 'principal');
-        }
-
+        // Server will determine role from authenticated user's metadata
         let res: Response;
         try {
-          res = await fetch(`/api/stories?${params.toString()}`, { cache: 'no-store' });
+          res = await fetch(`/api/stories`, { cache: 'no-store' });
         } catch (fetchError: any) {
           // Handle network errors (fetch failed)
           console.error('❌ Network error fetching stories:', fetchError);
@@ -189,7 +140,6 @@ export default function StoryColumn({
               status: res.status,
               statusText: res.statusText,
               rawResponse: text.substring(0, 500), // First 500 chars
-              params: params.toString()
             });
             setStories([]);
             setLoading(false);
@@ -199,7 +149,6 @@ export default function StoryColumn({
               status: res.status,
               statusText: res.statusText,
               parseError: e,
-              params: params.toString()
             });
             setStories([]);
             setLoading(false);
@@ -215,8 +164,7 @@ export default function StoryColumn({
             error: errorMessage,
             details: json.details,
             fullResponse: json,
-            params: params.toString(),
-            url: `/api/stories?${params.toString()}`
+            url: '/api/stories'
           });
           // Don't throw - just set empty stories and stop loading
           setStories([]);
@@ -273,7 +221,7 @@ export default function StoryColumn({
     }
 
     loadStories();
-  }, [effectiveUserId, effectiveUserRole, teacherClassIds, parentClassIds, hydratedFromCache, session]);
+  }, [effectiveUserId, effectiveUserRole, hydratedFromCache, session]);
 
   const handleStoryClick = (story: StoryWithPreview) => {
     openStoryViewer(story);
@@ -638,7 +586,7 @@ export default function StoryColumn({
     router.push('/dashboard/add-story');
   };
 
-  const canCreateStory = effectiveUserRole === 'teacher' || effectiveUserRole === 'principal';
+  const canCreateStory = effectiveUserRole === 'guardian' || effectiveUserRole === 'principal';
 
   // Only show loading skeleton if no cache exists and we're actually loading
   if (loading && stories.length === 0 && !hydratedFromCache) {
@@ -657,9 +605,8 @@ export default function StoryColumn({
     return null; // Don't show error, just hide component
   }
 
-  if (stories.length === 0 && !canCreateStory) {
-    return null; // Don't show empty state if no stories and can't create
-  }
+  // Always render the component - guardians should see it even when empty
+  // The component will show stories when available, or create button for teachers/principals
 
   return (
     <div className="mb-6">

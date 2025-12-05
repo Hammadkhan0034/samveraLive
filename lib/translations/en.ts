@@ -600,6 +600,8 @@ export const enText = {
   // Parent Dashboard
   parent_dashboard_title: 'Parent Dashboard',
   parent_dashboard_subtitle: 'Stay connected with your child\'s learning journey',
+  parent_dashboard_overview: 'View dashboard overview',
+  sidebar_menu: 'Menu',
   welcome_message: 'Stay connected with your child\'s learning journey',
   notices: 'Notices',
   notices_desc: 'Announcements and reminders from your child\'s class.',
