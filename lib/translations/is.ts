@@ -385,6 +385,11 @@ export const isText = {
   student_guardians_help: 'Veldu einn eða fleiri forráðamenn fyrir þennan nemanda',
   student_guardians_dropdown_help: 'Halda Ctrl/Cmd niðri til að velja marga forráðamenn',
   no_guardians_available: 'Engir forráðamenn tiltækir',
+  no_classes_assigned_title: 'Engir hópar úthlutaðir',
+  no_classes_assigned_description: 'Þú hefur enga hópa úthlutaða þér ennþá.',
+  select_class_placeholder: 'Veldu hóp...',
+  no_class_selected_title: 'Veldu hóp',
+  no_class_selected_description: 'Vinsamlegast veldu hóp úr fellilistanum hér að ofan til að skoða nemendur.',
 
   // Student form specific translations
   back: 'Til baka',

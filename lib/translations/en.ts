@@ -384,6 +384,11 @@ export const enText = {
   student_guardians_help: 'Select one or more guardians for this student',
   student_guardians_dropdown_help: 'Hold Ctrl/Cmd to select multiple guardians',
   no_guardians_available: 'No guardians available',
+  no_classes_assigned_title: 'No Classes Assigned',
+  no_classes_assigned_description: 'You have no classes assigned to you yet.',
+  select_class_placeholder: 'Select a class...',
+  no_class_selected_title: 'Select a Class',
+  no_class_selected_description: 'Please select a class from the dropdown above to view students.',
 
   // Student form specific translations
   back: 'Back',

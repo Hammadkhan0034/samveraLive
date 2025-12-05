@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
-import { Users, Search, CalendarDays } from 'lucide-react';
+import { Users, Search, CalendarDays, BookOpen } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { enText } from '@/lib/translations/en';
@@ -9,6 +9,7 @@ import { isText } from '@/lib/translations/is';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 import TeacherPageLayout, { useTeacherPageLayout } from '@/app/components/shared/TeacherPageLayout';
 import { PageHeader } from '@/app/components/shared/PageHeader';
+import EmptyState from '@/app/components/EmptyState';
 import type { Student, TeacherClass, GuardianRelation } from '@/lib/types/attendance';
 import { getStudentName } from '@/lib/utils/studentUtils';
 
@@ -209,35 +210,59 @@ export default function TeacherStudentsPage() {
   const { session } = useAuth();
 
   const [teacherClasses, setTeacherClasses] = useState<TeacherClass[]>([]);
+  const [loadingClasses, setLoadingClasses] = useState(true);
+  const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
   const [students, setStudents] = useState<Student[]>([]);
-  const [loadingStudents, setLoadingStudents] = useState(true);
+  const [loadingStudents, setLoadingStudents] = useState(false);
   const [studentError, setStudentError] = useState<string | null>(null);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  
+  // Ensure students array is empty on initial mount - never load all students by default
+  useEffect(() => {
+    setStudents([]);
+    setHasLoadedOnce(false);
+    setLoadingStudents(false);
+  }, []); // Only run on mount
 
   const loadTeacherClasses = useCallback(async () => {
     const userId = session?.user?.id;
-    if (!userId) return;
+    if (!userId) {
+      setLoadingClasses(false);
+      return;
+    }
 
     try {
+      setLoadingClasses(true);
       const response = await fetch(`/api/teacher-classes?userId=${userId}&t=${Date.now()}`, { cache: 'no-store' });
       const data = await response.json();
 
       if (response.ok) {
         const classesData = (data.classes || []) as TeacherClass[];
-        setTeacherClasses(classesData);
+        // Filter out any "AllClasses" or org-wide options - only show actual assigned classes
+        const validClasses = classesData.filter(cls => 
+          cls && 
+          cls.id && 
+          cls.name && 
+          !cls.name.toLowerCase().includes('all classes') &&
+          !cls.name.toLowerCase().includes('org-wide') &&
+          !cls.name.toLowerCase().includes('organization-wide')
+        );
+        setTeacherClasses(validClasses);
         if (typeof window !== 'undefined') {
-          localStorage.setItem('teacher_classes_cache', JSON.stringify(classesData));
+          localStorage.setItem('teacher_classes_cache', JSON.stringify(validClasses));
         }
       } else {
         setTeacherClasses([]);
       }
     } catch (error) {
       setTeacherClasses([]);
+    } finally {
+      setLoadingClasses(false);
     }
   }, [session?.user?.id]);
 
-  const loadStudents = useCallback(async (showLoading = true) => {
-    if (teacherClasses.length === 0) {
+  const loadStudents = useCallback(async (classId: string | null, showLoading = true) => {
+    if (!classId) {
       setStudents([]);
       setHasLoadedOnce(true);
       if (showLoading) setLoadingStudents(false);
@@ -248,50 +273,43 @@ export default function TeacherStudentsPage() {
       if (showLoading) setLoadingStudents(true);
       setStudentError(null);
 
-      const classIds = teacherClasses.map(cls => cls.id);
       const timestamp = Date.now();
 
-      const studentPromises = classIds.map(async (classId) => {
-        try {
-          const response = await fetch(`/api/students?classId=${classId}&t=${timestamp}`, {
-            cache: 'no-store',
-            credentials: 'include'
-          });
-
-          if (!response.ok) {
-            if (response.status === 401) {
-              return null;
-            }
-            return null;
-          }
-
-          const data = await response.json();
-          if (data.students && Array.isArray(data.students)) {
-            return data.students.map((student: Student) => {
-              const classInfo = teacherClasses.find(cls => cls.id === student.class_id);
-              return {
-                ...student,
-                classes: {
-                  id: student.class_id || '',
-                  name: classInfo?.name || `Class ${student.class_id?.slice(0, 8)}...`
-                }
-              };
-            });
-          }
-          return null;
-        } catch {
-          return null;
-        }
+      const response = await fetch(`/api/students?classId=${classId}&t=${timestamp}`, {
+        cache: 'no-store',
+        credentials: 'include'
       });
 
-      const results = await Promise.all(studentPromises);
-      const allStudents = results.flat().filter((student): student is Student => student !== null);
+      if (!response.ok) {
+        if (response.status === 401) {
+          setStudents([]);
+          setHasLoadedOnce(true);
+          if (showLoading) setLoadingStudents(false);
+          return;
+        }
+        throw new Error(`Failed to load students: ${response.status}`);
+      }
 
-      setStudents(allStudents);
-      setHasLoadedOnce(true);
+      const data = await response.json();
+      if (data.students && Array.isArray(data.students)) {
+        const classInfo = teacherClasses.find(cls => cls.id === classId);
+        const studentsWithClassInfo = data.students.map((student: Student) => ({
+          ...student,
+          classes: {
+            id: student.class_id || '',
+            name: classInfo?.name || `Class ${student.class_id?.slice(0, 8)}...`
+          }
+        }));
 
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('teacher_students_cache', JSON.stringify(allStudents));
+        setStudents(studentsWithClassInfo);
+        setHasLoadedOnce(true);
+
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(`teacher_students_cache_${classId}`, JSON.stringify(studentsWithClassInfo));
+        }
+      } else {
+        setStudents([]);
+        setHasLoadedOnce(true);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to load students';
@@ -300,7 +318,7 @@ export default function TeacherStudentsPage() {
 
       if (typeof window !== 'undefined') {
         try {
-          const cached = localStorage.getItem('teacher_students_cache');
+          const cached = localStorage.getItem(`teacher_students_cache_${classId}`);
           if (cached) {
             const cachedStudents = JSON.parse(cached) as Student[];
             setStudents(cachedStudents);
@@ -317,21 +335,34 @@ export default function TeacherStudentsPage() {
   useEffect(() => {
     if (!session?.user?.id) return;
 
+    // Clear any old cached students to prevent loading all students on mount
     if (typeof window !== 'undefined') {
       try {
-        const cachedClasses = localStorage.getItem('teacher_classes_cache');
-        const cachedStudents = localStorage.getItem('teacher_students_cache');
+        // Clear old cache keys that might have all students
+        // Remove the old general cache key, but keep class-specific ones (teacher_students_cache_${classId})
+        const oldCacheKey = 'teacher_students_cache';
+        if (localStorage.getItem(oldCacheKey)) {
+          localStorage.removeItem(oldCacheKey);
+        }
         
+        // Clear any cached selected class to prevent auto-selection
+        localStorage.removeItem('teacher_selected_class_id');
+
+        const cachedClasses = localStorage.getItem('teacher_classes_cache');
         if (cachedClasses) {
           const parsed = JSON.parse(cachedClasses);
-          if (Array.isArray(parsed)) setTeacherClasses(parsed);
-        }
-        if (cachedStudents) {
-          const parsed = JSON.parse(cachedStudents);
           if (Array.isArray(parsed)) {
-            setStudents(parsed);
-            setHasLoadedOnce(true);
-            setLoadingStudents(false);
+            // Filter out any invalid classes from cache too
+            const validClasses = parsed.filter((cls: TeacherClass) => 
+              cls && 
+              cls.id && 
+              cls.name && 
+              !cls.name.toLowerCase().includes('all classes') &&
+              !cls.name.toLowerCase().includes('org-wide') &&
+              !cls.name.toLowerCase().includes('organization-wide')
+            );
+            setTeacherClasses(validClasses);
+            setLoadingClasses(false);
           }
         }
       } catch {
@@ -343,16 +374,22 @@ export default function TeacherStudentsPage() {
   }, [session?.user?.id, loadTeacherClasses]);
 
   useEffect(() => {
-    if (teacherClasses.length > 0) {
-      loadStudents(false);
-    } else if (teacherClasses.length === 0 && hasLoadedOnce) {
+    // Only load students when a class is explicitly selected
+    // Never load students on initial mount or when no class is selected
+    if (selectedClassId) {
+      loadStudents(selectedClassId, true);
+    } else {
+      // Clear students when no class is selected
       setStudents([]);
-      setHasLoadedOnce(true);
+      setHasLoadedOnce(false);
+      setLoadingStudents(false);
+      setStudentError(null);
     }
-  }, [teacherClasses.length, loadStudents, hasLoadedOnce]);
+  }, [selectedClassId, loadStudents]);
 
   function TeacherStudentsContent() {
     const { sidebarRef } = useTeacherPageLayout();
+    const lang = typeof t === typeof enText ? 'en' : 'is';
 
     return (
       <>
@@ -375,13 +412,65 @@ export default function TeacherStudentsPage() {
           }
         />
 
-        <StudentsPanel 
-          t={t} 
-          students={students} 
-          loadingStudents={loadingStudents} 
-          studentError={studentError} 
-          hasLoadedOnce={hasLoadedOnce}
-        />
+        {loadingClasses ? (
+          <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+            <LoadingSkeleton type="table" rows={3} />
+          </div>
+        ) : teacherClasses.length === 0 ? (
+          <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-lg shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+            <EmptyState
+              lang={lang}
+              icon={BookOpen}
+              title={t.no_classes_assigned_title}
+              description={t.no_classes_assigned_description}
+            />
+          </div>
+        ) : (
+          <>
+            <div className="mb-ds-md">
+              <label className="block text-ds-small font-medium text-ds-text-primary dark:text-slate-300 mb-ds-xs">
+                {t.select_class || 'Select a class'}
+              </label>
+              <select
+                value={selectedClassId || ''}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  // Ensure we never set "all" or empty string that might trigger loading all students
+                  setSelectedClassId(value && value !== 'all' ? value : null);
+                }}
+                className="w-full max-w-md h-12 rounded-ds-xl bg-input-fill border border-input-stroke text-ds-body text-ds-text-primary focus:outline-none focus:border-mint-200 focus:ring-2 focus:ring-mint-200/20 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 dark:focus:border-mint-300 px-ds-sm"
+              >
+                <option value="">{t.select_class_placeholder}</option>
+                {teacherClasses
+                  .filter(cls => cls && cls.id && cls.name) // Additional safety filter
+                  .map((cls) => (
+                    <option key={cls.id} value={cls.id}>
+                      {cls.name}
+                    </option>
+                  ))}
+              </select>
+            </div>
+
+            {!selectedClassId ? (
+              <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-lg shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+                <EmptyState
+                  lang={lang}
+                  icon={Users}
+                  title={t.no_class_selected_title}
+                  description={t.no_class_selected_description}
+                />
+              </div>
+            ) : (
+              <StudentsPanel 
+                t={t} 
+                students={students} 
+                loadingStudents={loadingStudents} 
+                studentError={studentError} 
+                hasLoadedOnce={hasLoadedOnce}
+              />
+            )}
+          </>
+        )}
       </>
     );
   }

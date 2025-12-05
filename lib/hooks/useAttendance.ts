@@ -35,7 +35,7 @@ export function useAttendance(
           try {
             const response = await fetch(
               `/api/attendance?classId=${classId}&date=${date}`,
-              { next: { revalidate: 120 } }
+              { cache: 'no-store' }
             );
             const data = await response.json();
 
