@@ -7,25 +7,55 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { useTeacherClasses } from '@/lib/hooks/useTeacherClasses';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import type { EventFormData } from '@/app/components/shared/EventFormModal';
-import TeacherPageLayout from '@/app/components/shared/TeacherPageLayout';
-import PrincipalPageLayout from '@/app/components/shared/PrincipalPageLayout';
-import ProfileSwitcher from '@/app/components/ProfileSwitcher';
+import TeacherPageLayout, { useTeacherPageLayout } from '@/app/components/shared/TeacherPageLayout';
+import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
+import { PageHeader } from '@/app/components/shared/PageHeader';
 
 export interface AddEventPageProps {
   userRole: 'principal' | 'teacher';
   calendarRoute: string;
 }
 
-export function AddEventPage({ userRole, calendarRoute }: AddEventPageProps) {
+function AddEventContentTeacher({ calendarRoute }: { calendarRoute: string }) {
+  const { sidebarRef } = useTeacherPageLayout();
+  const { classes: teacherClasses } = useTeacherClasses();
+  
+  return <AddEventContentInner userRole="teacher" calendarRoute={calendarRoute} classes={teacherClasses} sidebarRef={sidebarRef} />;
+}
+
+function AddEventContentPrincipal({ calendarRoute }: { calendarRoute: string }) {
+  const { sidebarRef } = usePrincipalPageLayout();
+  const [principalClasses, setPrincipalClasses] = useState<Array<{ id: string; name: string }>>([]);
+  
+  // Load classes
+  useEffect(() => {
+    fetch(`/api/classes?t=${Date.now()}`, { cache: 'no-store', credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.classes) {
+          setPrincipalClasses(data.classes.map((c: any) => ({ id: c.id, name: c.name })));
+        }
+      })
+      .catch(err => console.error('Failed to fetch classes:', err));
+  }, []);
+  
+  return <AddEventContentInner userRole="principal" calendarRoute={calendarRoute} classes={principalClasses} sidebarRef={sidebarRef} />;
+}
+
+function AddEventContentInner({ 
+  userRole, 
+  calendarRoute, 
+  classes,
+  sidebarRef 
+}: { 
+  userRole: 'principal' | 'teacher';
+  calendarRoute: string;
+  classes: Array<{ id: string; name: string }>;
+  sidebarRef: React.RefObject<{ open: () => void }>;
+}) {
   const router = useRouter();
   const { t } = useLanguage();
   const { session } = useAuth();
-  
-  // Teacher-specific hooks
-  const { classes: teacherClasses } = useTeacherClasses();
-  
-  // Principal-specific state
-  const [principalClasses, setPrincipalClasses] = useState<Array<{ id: string; name: string }>>([]);
   
   const [formData, setFormData] = useState<EventFormData>({
     title: '',
@@ -37,22 +67,6 @@ export function AddEventPage({ userRole, calendarRoute }: AddEventPageProps) {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const classes = userRole === 'teacher' ? teacherClasses : principalClasses;
-
-  // Principal: Load classes
-  useEffect(() => {
-    if (userRole === 'principal') {
-      fetch(`/api/classes?t=${Date.now()}`, { cache: 'no-store', credentials: 'include' })
-        .then(res => res.json())
-        .then(data => {
-          if (data.classes) {
-            setPrincipalClasses(data.classes.map((c: any) => ({ id: c.id, name: c.name })));
-          }
-        })
-        .catch(err => console.error('Failed to fetch classes:', err));
-    }
-  }, [userRole]);
 
   // Initialize default start time
   useEffect(() => {
@@ -114,20 +128,15 @@ export function AddEventPage({ userRole, calendarRoute }: AddEventPageProps) {
 
   const content = (
     <>
-      {/* Content Header */}
-      <div className="mb-3 flex flex-col gap-2 sm:gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <h2 className="text-ds-small sm:text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-            {t.create_event}
-          </h2>
-        </div>
-        <div className="flex items-center gap-2 sm:gap-3">
-          <ProfileSwitcher />
-        </div>
-      </div>
+      <PageHeader
+        title={t.create_event}
+        subtitle={t.create_event}
+        showMobileMenu={true}
+        onMobileMenuClick={() => sidebarRef?.current?.open()}
+      />
 
           {error && (
-            <div className="mb-3 sm:mb-4 rounded-lg bg-red-50 border border-red-200 px-3 sm:px-4 py-2 sm:py-3 text-ds-tiny sm:text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+            <div className="mb-3 sm:mb-4 rounded-ds-md bg-red-50 border border-red-200 px-3 sm:px-4 py-2 sm:py-3 text-ds-tiny sm:text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
               {error}
             </div>
           )}
@@ -137,7 +146,7 @@ export function AddEventPage({ userRole, calendarRoute }: AddEventPageProps) {
             <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
               {/* Title */}
               <div>
-                <label className="block text-ds-tiny sm:text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-ds-tiny sm:text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1 sm:mb-1.5">
                   {t.event_title} <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -152,7 +161,7 @@ export function AddEventPage({ userRole, calendarRoute }: AddEventPageProps) {
 
               {/* Class Selection */}
               <div>
-                <label className="block text-ds-tiny sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-ds-tiny sm:text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1 sm:mb-1.5">
                   {userRole === 'teacher' ? (
                     <>
                       {t.event_scope_class} <span className="text-red-500">*</span>
@@ -165,7 +174,7 @@ export function AddEventPage({ userRole, calendarRoute }: AddEventPageProps) {
                   required={userRole === 'teacher'}
                   value={formData.class_id || ''}
                   onChange={(e) => setFormData({ ...formData, class_id: e.target.value || null })}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-ds-tiny sm:text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
+                  className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
                 >
                   {userRole === 'principal' && (
                     <option value="">{t.event_scope_org_wide}</option>
@@ -183,7 +192,7 @@ export function AddEventPage({ userRole, calendarRoute }: AddEventPageProps) {
 
               {/* Start Date/Time */}
               <div>
-                <label className="block text-ds-tiny sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-ds-tiny sm:text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1 sm:mb-1.5">
                   {t.event_start_date} <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -191,13 +200,13 @@ export function AddEventPage({ userRole, calendarRoute }: AddEventPageProps) {
                   required
                   value={formData.start_at}
                   onChange={(e) => setFormData({ ...formData, start_at: e.target.value })}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-ds-tiny sm:text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
+                  className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
                 />
               </div>
 
               {/* End Date/Time */}
               <div>
-                <label className="block text-ds-tiny sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-ds-tiny sm:text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1 sm:mb-1.5">
                   {t.event_end_date} ({t.optional})
                 </label>
                 <input
@@ -205,34 +214,34 @@ export function AddEventPage({ userRole, calendarRoute }: AddEventPageProps) {
                   value={formData.end_at || ''}
                   onChange={(e) => setFormData({ ...formData, end_at: e.target.value || null })}
                   min={formData.start_at}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-ds-tiny sm:text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
+                  className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
                 />
               </div>
 
               {/* Location */}
               <div>
-                <label className="block text-ds-tiny sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-ds-tiny sm:text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1 sm:mb-1.5">
                   {t.event_location} ({t.optional})
                 </label>
                 <input
                   type="text"
                   value={formData.location || ''}
                   onChange={(e) => setFormData({ ...formData, location: e.target.value || null })}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-ds-tiny sm:text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
+                  className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
                   placeholder={t.event_location_placeholder}
                 />
               </div>
 
               {/* Description */}
               <div>
-                <label className="block text-ds-tiny sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-ds-tiny sm:text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1 sm:mb-1.5">
                   {t.event_description} ({t.optional})
                 </label>
                 <textarea
                   value={formData.description || ''}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value || null })}
                   rows={3}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-ds-tiny sm:text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 resize-y"
+                  className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 resize-y"
                   placeholder={t.event_description_placeholder}
                 />
               </div>
@@ -271,12 +280,22 @@ export function AddEventPage({ userRole, calendarRoute }: AddEventPageProps) {
     </>
   );
 
-  // Wrap in appropriate layout based on role
+  return content;
+}
+
+export function AddEventPage({ userRole, calendarRoute }: AddEventPageProps) {
   if (userRole === 'teacher') {
-    return <TeacherPageLayout>{content}</TeacherPageLayout>;
+    return (
+      <TeacherPageLayout>
+        <AddEventContentTeacher calendarRoute={calendarRoute} />
+      </TeacherPageLayout>
+    );
   }
 
-  // Principal uses PrincipalPageLayout
-  return <PrincipalPageLayout>{content}</PrincipalPageLayout>;
+  return (
+    <PrincipalPageLayout>
+      <AddEventContentPrincipal calendarRoute={calendarRoute} />
+    </PrincipalPageLayout>
+  );
 }
 

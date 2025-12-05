@@ -9,9 +9,9 @@ import { useLanguage } from '@/lib/contexts/LanguageContext';
 import Loading from '@/app/components/shared/Loading';
 import type { EventFormData } from '@/app/components/shared/EventFormModal';
 import type { CalendarEvent } from '@/app/components/shared/Calendar';
-import TeacherPageLayout from '@/app/components/shared/TeacherPageLayout';
-import PrincipalPageLayout from '@/app/components/shared/PrincipalPageLayout';
-import ProfileSwitcher from '@/app/components/ProfileSwitcher';
+import TeacherPageLayout, { useTeacherPageLayout } from '@/app/components/shared/TeacherPageLayout';
+import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
+import { PageHeader } from '@/app/components/shared/PageHeader';
 
 export interface EditEventPageProps {
   userRole: 'principal' | 'teacher';
@@ -19,16 +19,48 @@ export interface EditEventPageProps {
   eventId: string;
 }
 
-export function EditEventPage({ userRole, calendarRoute, eventId }: EditEventPageProps) {
+function EditEventContentTeacher({ calendarRoute, eventId }: { calendarRoute: string; eventId: string }) {
+  const { sidebarRef } = useTeacherPageLayout();
+  const { classes: teacherClasses } = useTeacherClasses();
+  
+  return <EditEventContentInner userRole="teacher" calendarRoute={calendarRoute} eventId={eventId} classes={teacherClasses} sidebarRef={sidebarRef} />;
+}
+
+function EditEventContentPrincipal({ calendarRoute, eventId }: { calendarRoute: string; eventId: string }) {
+  const { sidebarRef } = usePrincipalPageLayout();
+  const [principalClasses, setPrincipalClasses] = useState<Array<{ id: string; name: string }>>([]);
+  
+  // Load classes
+  useEffect(() => {
+    fetch(`/api/classes?t=${Date.now()}`, { cache: 'no-store', credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.classes) {
+          setPrincipalClasses(data.classes.map((c: any) => ({ id: c.id, name: c.name })));
+        }
+      })
+      .catch(err => console.error('Failed to fetch classes:', err));
+  }, []);
+  
+  return <EditEventContentInner userRole="principal" calendarRoute={calendarRoute} eventId={eventId} classes={principalClasses} sidebarRef={sidebarRef} />;
+}
+
+function EditEventContentInner({ 
+  userRole, 
+  calendarRoute, 
+  eventId,
+  classes,
+  sidebarRef 
+}: { 
+  userRole: 'principal' | 'teacher';
+  calendarRoute: string;
+  eventId: string;
+  classes: Array<{ id: string; name: string }>;
+  sidebarRef: React.RefObject<{ open: () => void }>;
+}) {
   const router = useRouter();
   const { t } = useLanguage();
   const { session } = useAuth();
-  
-  // Teacher-specific hooks
-  const { classes: teacherClasses } = useTeacherClasses();
-  
-  // Principal-specific state
-  const [principalClasses, setPrincipalClasses] = useState<Array<{ id: string; name: string }>>([]);
   
   const [event, setEvent] = useState<CalendarEvent | null>(null);
   const [formData, setFormData] = useState<EventFormData>({
@@ -42,22 +74,6 @@ export function EditEventPage({ userRole, calendarRoute, eventId }: EditEventPag
   const [loading, setLoading] = useState(false);
   const [loadingEvent, setLoadingEvent] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const classes = userRole === 'teacher' ? teacherClasses : principalClasses;
-
-  // Principal: Load classes
-  useEffect(() => {
-    if (userRole === 'principal') {
-      fetch(`/api/classes?t=${Date.now()}`, { cache: 'no-store', credentials: 'include' })
-        .then(res => res.json())
-        .then(data => {
-          if (data.classes) {
-            setPrincipalClasses(data.classes.map((c: any) => ({ id: c.id, name: c.name })));
-          }
-        })
-        .catch(err => console.error('Failed to fetch classes:', err));
-    }
-  }, [userRole]);
 
   // Load event data
   useEffect(() => {
@@ -147,41 +163,25 @@ export function EditEventPage({ userRole, calendarRoute, eventId }: EditEventPag
   };
 
   if (loadingEvent) {
-    const loadingContent = <Loading fullScreen text="Loading event..." />;
-    if (userRole === 'teacher') {
-      return <TeacherPageLayout>{loadingContent}</TeacherPageLayout>;
-    }
-    return <PrincipalPageLayout>{loadingContent}</PrincipalPageLayout>;
+    return <Loading fullScreen text="Loading event..." />;
   }
 
   if (!event) {
-    const errorContent = (
-      <>
-        <div className="rounded-ds-lg border border-slate-200 bg-white p-3 sm:p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
-          <p className="text-ds-small sm:text-ds-base text-slate-600 dark:text-slate-400">{error || 'Event not found'}</p>
-        </div>
-      </>
+    return (
+      <div className="rounded-ds-lg border border-slate-200 bg-white p-3 sm:p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+        <p className="text-ds-small sm:text-ds-base text-slate-600 dark:text-slate-400">{error || 'Event not found'}</p>
+      </div>
     );
-    
-    if (userRole === 'teacher') {
-      return <TeacherPageLayout>{errorContent}</TeacherPageLayout>;
-    }
-    return <PrincipalPageLayout>{errorContent}</PrincipalPageLayout>;
   }
 
   const content = (
     <>
-      {/* Content Header */}
-      <div className="mb-3 flex flex-col gap-2 sm:gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <h2 className="text-ds-small sm:text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-            {t.edit_event}
-          </h2>
-        </div>
-        <div className="flex items-center gap-2 sm:gap-3">
-          <ProfileSwitcher />
-        </div>
-      </div>
+      <PageHeader
+        title={t.edit_event}
+        subtitle={t.edit_event}
+        showMobileMenu={true}
+        onMobileMenuClick={() => sidebarRef?.current?.open()}
+      />
 
         {error && (
           <div className="mb-3 sm:mb-4 rounded-ds-md bg-red-50 border border-red-200 px-3 sm:px-4 py-2 sm:py-3 text-ds-tiny sm:text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
@@ -194,7 +194,7 @@ export function EditEventPage({ userRole, calendarRoute, eventId }: EditEventPag
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             {/* Title */}
             <div>
-              <label className="block text-ds-tiny sm:text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-ds-tiny sm:text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1 sm:mb-1.5">
                 {t.event_title} <span className="text-red-500">*</span>
               </label>
               <input
@@ -209,7 +209,7 @@ export function EditEventPage({ userRole, calendarRoute, eventId }: EditEventPag
 
             {/* Class Selection */}
             <div>
-              <label className="block text-ds-tiny sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-ds-tiny sm:text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1 sm:mb-1.5">
                 {userRole === 'teacher' ? (
                   <>
                     {t.event_scope_class} <span className="text-red-500">*</span>
@@ -222,7 +222,7 @@ export function EditEventPage({ userRole, calendarRoute, eventId }: EditEventPag
                 required={userRole === 'teacher'}
                 value={formData.class_id || ''}
                 onChange={(e) => setFormData({ ...formData, class_id: e.target.value || null })}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-ds-tiny sm:text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
+                className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
               >
                 {userRole === 'principal' && (
                   <option value="">{t.event_scope_org_wide}</option>
@@ -240,7 +240,7 @@ export function EditEventPage({ userRole, calendarRoute, eventId }: EditEventPag
 
             {/* Start Date/Time */}
             <div>
-              <label className="block text-ds-tiny sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-ds-tiny sm:text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1 sm:mb-1.5">
                 {t.event_start_date} <span className="text-red-500">*</span>
               </label>
               <input
@@ -248,13 +248,13 @@ export function EditEventPage({ userRole, calendarRoute, eventId }: EditEventPag
                 required
                 value={formData.start_at}
                 onChange={(e) => setFormData({ ...formData, start_at: e.target.value })}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-ds-tiny sm:text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
+                className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
               />
             </div>
 
             {/* End Date/Time */}
             <div>
-              <label className="block text-ds-tiny sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-ds-tiny sm:text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1 sm:mb-1.5">
                 {t.event_end_date} ({t.optional})
               </label>
               <input
@@ -262,34 +262,34 @@ export function EditEventPage({ userRole, calendarRoute, eventId }: EditEventPag
                 value={formData.end_at || ''}
                 onChange={(e) => setFormData({ ...formData, end_at: e.target.value || null })}
                 min={formData.start_at}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-ds-tiny sm:text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
+                className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
               />
             </div>
 
             {/* Location */}
             <div>
-              <label className="block text-ds-tiny sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-ds-tiny sm:text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1 sm:mb-1.5">
                 {t.event_location} ({t.optional})
               </label>
               <input
                 type="text"
                 value={formData.location || ''}
                 onChange={(e) => setFormData({ ...formData, location: e.target.value || null })}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-ds-tiny sm:text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
+                className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500"
                 placeholder={t.event_location_placeholder}
               />
             </div>
 
             {/* Description */}
             <div>
-              <label className="block text-ds-tiny sm:text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label className="block text-ds-tiny sm:text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1 sm:mb-1.5">
                 {t.event_description} ({t.optional})
               </label>
               <textarea
                 value={formData.description || ''}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value || null })}
                 rows={3}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-ds-tiny sm:text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 resize-y"
+                className="w-full rounded-ds-md border border-slate-300 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 resize-y"
                 placeholder={t.event_description_placeholder}
               />
             </div>
@@ -328,12 +328,22 @@ export function EditEventPage({ userRole, calendarRoute, eventId }: EditEventPag
     </>
   );
 
-  // Wrap in appropriate layout based on role
+  return content;
+}
+
+export function EditEventPage({ userRole, calendarRoute, eventId }: EditEventPageProps) {
   if (userRole === 'teacher') {
-    return <TeacherPageLayout>{content}</TeacherPageLayout>;
+    return (
+      <TeacherPageLayout>
+        <EditEventContentTeacher calendarRoute={calendarRoute} eventId={eventId} />
+      </TeacherPageLayout>
+    );
   }
 
-  // Principal uses PrincipalPageLayout
-  return <PrincipalPageLayout>{content}</PrincipalPageLayout>;
+  return (
+    <PrincipalPageLayout>
+      <EditEventContentPrincipal calendarRoute={calendarRoute} eventId={eventId} />
+    </PrincipalPageLayout>
+  );
 }
 
