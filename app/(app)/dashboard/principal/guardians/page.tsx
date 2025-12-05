@@ -24,9 +24,11 @@ function PrincipalGuardiansPageContent() {
         rightActions={
           <button
             onClick={() => createGuardianRef.current?.()}
-            className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-ds-sm py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600"
+            className="inline-flex items-center gap-1.5 sm:gap-2 rounded-ds-md bg-mint-500 px-3 sm:px-ds-sm py-1.5 sm:py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600"
           >
-            <Plus className="h-4 w-4" /> {t.add_guardian}
+            <Plus className="h-4 w-4 flex-shrink-0" />
+            <span className="hidden sm:inline">{t.add_guardian}</span>
+            <span className="sm:hidden">{t.add || 'Add'}</span>
           </button>
         }
       />
