@@ -2,6 +2,7 @@
 
 import React, { useState, useImperativeHandle, forwardRef, useEffect, Suspense } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import Image from 'next/image';
 import { X } from 'lucide-react';
 import {
   SquareCheck as CheckSquare,
@@ -168,7 +169,6 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
         className={clsx(
           'flex-shrink-0 w-[280px] bg-white dark:bg-slate-800 shadow-ds-card transition-transform duration-300 ease-in-out',
           'scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]',
-          'rounded-tr-[24px] rounded-br-[24px]',
           sidebarOpen
             ? 'fixed top-0 bottom-0 left-0 z-50 translate-x-0 md:sticky md:top-0 md:h-screen md:overflow-y-auto md:translate-x-0'
             : 'fixed top-0 bottom-0 left-0 z-50 -translate-x-full md:sticky md:top-0 md:h-screen md:overflow-y-auto md:translate-x-0'
@@ -177,10 +177,17 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
       >
         <div className="py-6">
           {/* App Logo */}
-          <div className="py-4 mb-6 flex items-center justify-start px-6">
-            <div className="flex items-center gap-2 font-semibold text-slate-900 dark:text-slate-100">
-              <span className="inline-block rounded-lg bg-mint-200 dark:bg-mint-500 text-slate-900 dark:text-white py-2 px-4 text-2xl font-bold">S</span>
-              <span className="text-2xl ml-2">Samvera</span>
+          <div className="py-4 mb-6 flex items-center justify-start px-6 w-full">
+            <div className="flex items-center justify-center w-full font-semibold text-slate-900 dark:text-slate-100">
+              <div className="relative w-40 h-16 sm:h-20 flex-shrink-0">
+                <Image
+                  src="/logo.png"
+                  alt="Samvera Logo"
+                  fill
+                  className="object-contain rounded-lg"
+                  priority
+                />
+              </div>
             </div>
           </div>
 
