@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { getRealtimeDataCacheHeaders, getUserDataCacheHeaders } from '@/lib/cacheConfig';
-import { getCurrentUserOrgId } from '@/lib/server-helpers';
 import { z } from 'zod';
 import { validateBody, validateQuery, validateParams, userIdSchema, threadTypeSchema, uuidSchema } from '@/lib/validation';
 import type { AuthUser, UserMetadata, SamveraRole } from '@/lib/types/auth';
@@ -11,8 +10,8 @@ export async function handleGetMessages(
   user: AuthUser,
   adminClient: SupabaseClient,
 ) {
-  const metadata = user.user_metadata as UserMetadata | undefined;
-  const orgId = metadata?.org_id || await getCurrentUserOrgId(user);
+  const metadata = user.user_metadata as UserMetadata;
+  const orgId = metadata.org_id;
   const userId = user.id;
 
   // Fetch message threads where user is a participant
@@ -135,8 +134,9 @@ export async function handlePostMessage(
   user: AuthUser,
   adminClient: SupabaseClient,
 ) {
-  const metadata = user.user_metadata as UserMetadata | undefined;
-  const orgId = metadata?.org_id || await getCurrentUserOrgId(user);
+  const metadata = user.user_metadata as UserMetadata;
+  const orgId = metadata.org_id;
+  const userId = user.id;
 
   const body = await request.json();
   // POST body schema
@@ -157,7 +157,7 @@ export async function handlePostMessage(
 
   // For individual/DM threads, check if a thread already exists between these participants
   if ((thread_type === 'individual' || thread_type === 'dm') && recipient_id) {
-    const participantIds = [user.id, recipient_id].sort();
+    const participantIds = [userId, recipient_id].sort();
     
     // Find all threads where both users are participants
     const { data: existingParticipants } = await adminClient
@@ -202,7 +202,7 @@ export async function handlePostMessage(
       org_id: orgId,
       thread_type,
       subject: subject || null,
-      created_by: user.id
+      created_by: userId
     })
     .select()
     .single();
@@ -214,13 +214,13 @@ export async function handlePostMessage(
 
   // Add participants (sender and recipient(s))
   const participantIds = recipient_ids || [recipient_id];
-  const allParticipantIds = [user.id, ...participantIds].filter((id, index, self) => self.indexOf(id) === index);
+  const allParticipantIds = [userId, ...participantIds].filter((id, index, self) => self.indexOf(id) === index);
 
   const participants = allParticipantIds.map((participantId) => ({
     org_id: orgId,
     message_id: message.id,
     user_id: participantId,
-    unread: participantId !== user.id, // Only mark as unread if not the sender
+    unread: participantId !== userId, // Only mark as unread if not the sender
     role: null
   }));
 
@@ -243,8 +243,9 @@ export async function handlePutMessage(
   user: AuthUser,
   adminClient: SupabaseClient,
 ) {
-  const metadata = user.user_metadata as UserMetadata | undefined;
-  const orgId = metadata?.org_id || await getCurrentUserOrgId(user);
+  const metadata = user.user_metadata as UserMetadata;
+  const orgId = metadata.org_id;
+  const userId = user.id;
 
   const body = await request.json();
   // PUT body schema
@@ -264,7 +265,7 @@ export async function handlePutMessage(
   const { data: participant } = await adminClient
     .from('message_participants')
     .select('message_id, messages!inner(org_id)')
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .eq('message_id', id)
     .eq('org_id', orgId)
     .maybeSingle();
@@ -297,8 +298,9 @@ export async function handleDeleteMessage(
   user: AuthUser,
   adminClient: SupabaseClient,
 ) {
-  const metadata = user.user_metadata as UserMetadata | undefined;
-  const orgId = metadata?.org_id || await getCurrentUserOrgId(user);
+  const metadata = user.user_metadata as UserMetadata;
+  const orgId = metadata.org_id;
+  const userId = user.id;
 
   const { searchParams } = new URL(request.url);
   const id = searchParams.get('id');
@@ -311,7 +313,7 @@ export async function handleDeleteMessage(
   const { data: participant } = await adminClient
     .from('message_participants')
     .select('message_id')
-    .eq('user_id', user.id)
+    .eq('user_id', userId)
     .eq('message_id', id)
     .eq('org_id', orgId)
     .maybeSingle();
@@ -339,9 +341,10 @@ export async function handleGetRecipients(
   user: AuthUser,
   adminClient: SupabaseClient,
 ) {
-  const metadata = user.user_metadata as UserMetadata | undefined;
-  const orgId = metadata?.org_id || await getCurrentUserOrgId(user);
-  const roles = (metadata?.roles ?? []) as SamveraRole[];
+  const metadata = user.user_metadata as UserMetadata;
+  const orgId = metadata.org_id;
+  const userId = user.id;
+  const roles = (metadata.roles ?? []) as SamveraRole[];
   
   // Determine user's role (use first role or default)
   const userRole = roles[0] || 'guardian';
@@ -413,8 +416,8 @@ export async function handleGetMessageItems(
   adminClient: SupabaseClient,
   messageId: string,
 ) {
-  const metadata = user.user_metadata as UserMetadata | undefined;
-  const orgId = metadata?.org_id || await getCurrentUserOrgId(user);
+  const metadata = user.user_metadata as UserMetadata;
+  const orgId = metadata.org_id;
   const userId = user.id;
 
   const { searchParams } = new URL(request.url);
@@ -502,8 +505,8 @@ export async function handlePostMessageItem(
   adminClient: SupabaseClient,
   messageId: string,
 ) {
-  const metadata = user.user_metadata as UserMetadata | undefined;
-  const orgId = metadata?.org_id || await getCurrentUserOrgId(user);
+  const metadata = user.user_metadata as UserMetadata;
+  const orgId = metadata.org_id;
   const userId = user.id;
 
   const body = await request.json();
