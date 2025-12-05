@@ -86,13 +86,13 @@ export async function fetchAttendanceByFilters({
       query = query.eq('date', date);
     }
 
-    const { data, error } = await query.returns<AttendanceRecord[]>();
+    const { data, error } = await query;
 
     if (error) {
       throw new AttendanceServiceError('Failed to fetch attendance', error);
     }
 
-    return data ?? [];
+    return (data ?? []) as unknown as AttendanceRecord[];
   } catch (error) {
     if (error instanceof AttendanceServiceError) {
       throw error;
