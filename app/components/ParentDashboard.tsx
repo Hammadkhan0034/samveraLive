@@ -31,7 +31,7 @@ export default function ParentDashboard() {
   useEffect(() => {
     router.prefetch('/dashboard/menus-view');
     router.prefetch('/dashboard/stories');
-    router.prefetch('/dashboard/attendance');
+    router.prefetch('/dashboard/guardian/attendance');
     router.prefetch('/dashboard/guardian/messages');
     router.prefetch('/dashboard/guardian/calendar');
     router.prefetch('/dashboard/guardian/diapers');
@@ -549,7 +549,7 @@ export default function ParentDashboard() {
               const getRoute = () => {
                 if (item.title === t.menu) return '/dashboard/menus-view';
                 if (item.title === t.stories) return '/dashboard/stories';
-                if (item.title === t.attendance) return '/dashboard/attendance';
+                if (item.title === t.attendance) return '/dashboard/guardian/attendance';
                 if (item.title === (t.di_title || 'Diapers & Health')) return '/dashboard/guardian/diapers';
                 return '#';
               };
@@ -565,8 +565,8 @@ export default function ParentDashboard() {
                       router.prefetch('/dashboard/stories');
                       router.push('/dashboard/stories');
                     } else if (item.title === t.attendance) {
-                      router.prefetch('/dashboard/attendance');
-                      router.push('/dashboard/attendance');
+                      router.prefetch('/dashboard/guardian/attendance');
+                      router.push('/dashboard/guardian/attendance');
                     } else if (item.title === (t.di_title || 'Diapers & Health')) {
                       router.prefetch('/dashboard/guardian/diapers');
                       router.push('/dashboard/guardian/diapers');

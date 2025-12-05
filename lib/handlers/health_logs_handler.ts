@@ -52,19 +52,10 @@ export async function handleGetHealthLogs(
   user: AuthUser,
   adminClient: SupabaseClient,
 ) {
-  const metadata = user.user_metadata as UserMetadata | undefined;
-  const orgId = metadata?.org_id;
+  const metadata = user.user_metadata as UserMetadata;
+  const orgId = metadata.org_id;
+  const userId = user.id;
   const roles = (metadata?.roles ?? []) as SamveraRole[];
-
-  if (!orgId) {
-    return NextResponse.json(
-      { healthLogs: [], total_logs: 0 },
-      {
-        status: 200,
-        headers: getStableDataCacheHeaders(),
-      },
-    );
-  }
 
   const { searchParams } = new URL(request.url);
   const queryValidation = validateQuery(getHealthLogsQuerySchema, searchParams);
@@ -132,7 +123,7 @@ export async function handleGetHealthLogs(
       const { data: relationships, error: relError } = await adminClient
         .from('guardian_students')
         .select('student_id')
-        .eq('guardian_id', user.id);
+        .eq('guardian_id', userId);
 
       if (relError) {
         console.error('❌ Error fetching guardian-student relationships:', relError);
@@ -164,7 +155,7 @@ export async function handleGetHealthLogs(
       query = query.in('student_id', linkedStudentIds);
     } else if (isTeacher && !isAdminOrPrincipal) {
       // Teachers only see their own logs
-      query = query.eq('recorded_by', user.id);
+      query = query.eq('recorded_by', userId);
     }
     // Admins/Principals see all logs in the org (no additional filter)
 
@@ -218,15 +209,9 @@ export async function handlePostHealthLog(
   user: AuthUser,
   adminClient: SupabaseClient,
 ) {
-  const metadata = user.user_metadata as UserMetadata | undefined;
-  const orgId = metadata?.org_id;
-
-  if (!orgId) {
-    return NextResponse.json(
-      { error: 'Organization not found for user' },
-      { status: 400 },
-    );
-  }
+  const metadata = user.user_metadata as UserMetadata;
+  const orgId = metadata.org_id;
+  const userId = user.id;
 
   const body = await request.json();
   const bodyValidation = validateBody(createHealthLogSchema, body);
@@ -292,7 +277,7 @@ export async function handlePostHealthLog(
         data: data || {},
         notes: notes || null,
         severity: severity || null,
-        recorded_by: user.id, // Always use authenticated user
+        recorded_by: userId, // Always use authenticated user
         deleted_at: null,
       })
       .select(
@@ -350,16 +335,10 @@ export async function handlePutHealthLog(
   user: AuthUser,
   adminClient: SupabaseClient,
 ) {
-  const metadata = user.user_metadata as UserMetadata | undefined;
-  const orgId = metadata?.org_id;
+  const metadata = user.user_metadata as UserMetadata;
+  const orgId = metadata.org_id;
+  const userId = user.id;
   const roles = (metadata?.roles ?? []) as SamveraRole[];
-
-  if (!orgId) {
-    return NextResponse.json(
-      { error: 'Organization not found for user' },
-      { status: 400 },
-    );
-  }
 
   const body = await request.json();
   const bodyValidation = validateBody(updateHealthLogSchema, body);
@@ -400,7 +379,7 @@ export async function handlePutHealthLog(
       ['admin', 'principal'].includes(role),
     );
 
-    if (existing.recorded_by !== user.id && !isAdminOrPrincipal) {
+    if (existing.recorded_by !== userId && !isAdminOrPrincipal) {
       throw new HealthLogsServiceError(
         'Access denied. You can only update your own health logs.',
         403,
@@ -485,16 +464,10 @@ export async function handleDeleteHealthLog(
   user: AuthUser,
   adminClient: SupabaseClient,
 ) {
-  const metadata = user.user_metadata as UserMetadata | undefined;
-  const orgId = metadata?.org_id;
+  const metadata = user.user_metadata as UserMetadata;
+  const orgId = metadata.org_id;
+  const userId = user.id;
   const roles = (metadata?.roles ?? []) as SamveraRole[];
-
-  if (!orgId) {
-    return NextResponse.json(
-      { error: 'Organization not found for user' },
-      { status: 400 },
-    );
-  }
 
   const { searchParams } = new URL(request.url);
   const queryValidation = validateQuery(deleteHealthLogQuerySchema, searchParams);
@@ -534,7 +507,7 @@ export async function handleDeleteHealthLog(
       ['admin', 'principal'].includes(role),
     );
 
-    if (existing.recorded_by !== user.id && !isAdminOrPrincipal) {
+    if (existing.recorded_by !== userId && !isAdminOrPrincipal) {
       throw new HealthLogsServiceError(
         'Access denied. You can only delete your own health logs.',
         403,
