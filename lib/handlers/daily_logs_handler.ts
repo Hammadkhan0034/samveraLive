@@ -151,7 +151,42 @@ export async function handlePutDailyLog(
   }
 
   try {
-    const updated = await updateDailyLog(adminClient, bodyValidation.data);
+    // First, fetch the existing log to verify ownership
+    const { data: existingLog, error: fetchError } = await adminClient
+      .from('daily_logs')
+      .select('id, created_by')
+      .eq('id', bodyValidation.data.id)
+      .is('deleted_at', null)
+      .maybeSingle();
+
+    if (fetchError) {
+      throw new DailyLogsServiceError(
+        `Failed to fetch daily log: ${fetchError.message}`,
+        500,
+        {
+          error: `Failed to fetch daily log: ${fetchError.message}`,
+        },
+      );
+    }
+
+    if (!existingLog) {
+      throw new DailyLogsServiceError('Daily log not found', 404, {
+        error: 'Daily log not found',
+      });
+    }
+
+    // Verify the user is the creator
+    if (existingLog.created_by !== user.id) {
+      throw new DailyLogsServiceError(
+        'You can only edit activities you created',
+        403,
+        {
+          error: 'You can only edit activities you created',
+        },
+      );
+    }
+
+    const updated = await updateDailyLog(adminClient, user.id, bodyValidation.data);
 
     return NextResponse.json(
       {
@@ -178,6 +213,7 @@ export async function handlePutDailyLog(
  */
 export async function handleDeleteDailyLog(
   request: Request,
+  user: AuthUser,
   adminClient: SupabaseClient,
 ) {
   const { searchParams } = new URL(request.url);
@@ -189,7 +225,42 @@ export async function handleDeleteDailyLog(
   const { id } = queryValidation.data;
 
   try {
-    await softDeleteDailyLog(adminClient, id);
+    // First, fetch the existing log to verify ownership
+    const { data: existingLog, error: fetchError } = await adminClient
+      .from('daily_logs')
+      .select('id, created_by')
+      .eq('id', id)
+      .is('deleted_at', null)
+      .maybeSingle();
+
+    if (fetchError) {
+      throw new DailyLogsServiceError(
+        `Failed to fetch daily log: ${fetchError.message}`,
+        500,
+        {
+          error: `Failed to fetch daily log: ${fetchError.message}`,
+        },
+      );
+    }
+
+    if (!existingLog) {
+      throw new DailyLogsServiceError('Daily log not found', 404, {
+        error: 'Daily log not found',
+      });
+    }
+
+    // Verify the user is the creator
+    if (existingLog.created_by !== user.id) {
+      throw new DailyLogsServiceError(
+        'You can only delete activities you created',
+        403,
+        {
+          error: 'You can only delete activities you created',
+        },
+      );
+    }
+
+    await softDeleteDailyLog(adminClient, user.id, id);
 
     return NextResponse.json(
       {
@@ -417,6 +488,7 @@ async function createDailyLog(
 
 async function updateDailyLog(
   adminClient: SupabaseClient,
+  userId: string,
   payload: PutDailyLogBody,
 ) {
   const {
@@ -451,6 +523,8 @@ async function updateDailyLog(
       .from('daily_logs')
       .update(updatePayload)
       .eq('id', id)
+      .eq('created_by', userId)
+      .is('deleted_at', null)
       .select(
         `
         id,
@@ -490,6 +564,16 @@ async function updateDailyLog(
       );
     }
 
+    if (!updated) {
+      throw new DailyLogsServiceError(
+        'Daily log not found or you do not have permission to edit it',
+        403,
+        {
+          error: 'Daily log not found or you do not have permission to edit it',
+        },
+      );
+    }
+
     return updated;
   } catch (error) {
     if (error instanceof DailyLogsServiceError) {
@@ -503,13 +587,17 @@ async function updateDailyLog(
 
 async function softDeleteDailyLog(
   adminClient: SupabaseClient,
+  userId: string,
   id: string,
 ) {
   try {
-    const { error: deleteError } = await adminClient
+    const { data: deleted, error: deleteError } = await adminClient
       .from('daily_logs')
       .update({ deleted_at: new Date().toISOString() })
-      .eq('id', id);
+      .eq('id', id)
+      .eq('created_by', userId)
+      .is('deleted_at', null)
+      .select('id');
 
     if (deleteError) {
       throw new DailyLogsServiceError(
@@ -517,6 +605,16 @@ async function softDeleteDailyLog(
         500,
         {
           error: `Failed to delete daily log: ${deleteError.message}`,
+        },
+      );
+    }
+
+    if (!deleted || deleted.length === 0) {
+      throw new DailyLogsServiceError(
+        'Daily log not found or you do not have permission to delete it',
+        403,
+        {
+          error: 'Daily log not found or you do not have permission to delete it',
         },
       );
     }

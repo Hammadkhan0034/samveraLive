@@ -46,7 +46,7 @@ export async function DELETE(request: Request) {
       requireOrg: true,
       allowedRoles: ['principal', 'admin', 'teacher'],
     },
-    (_user, adminClient) => handleDeleteDailyLog(request, adminClient),
+    (user, adminClient) => handleDeleteDailyLog(request, user, adminClient),
   );
 }
 

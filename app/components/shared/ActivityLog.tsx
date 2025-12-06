@@ -201,10 +201,10 @@ export function ActivityLog({
               <thead className="sticky top-0 bg-mint-500 text-white z-10">
                 <tr>
                   <th className="text-left py-2 px-2 sm:px-ds-md text-ds-small font-medium text-white dark:text-slate-300 rounded-tl-ds-md whitespace-nowrap">
-                    Image
+                    Note
                   </th>
                   <th className="text-left py-2 px-2 sm:px-ds-md text-ds-small font-medium text-white dark:text-slate-300 whitespace-nowrap">
-                    Note
+                    Image
                   </th>
                   <th className="text-left py-2 px-2 sm:px-ds-md text-ds-small font-medium text-white dark:text-slate-300 whitespace-nowrap">
                     Creator
@@ -221,10 +221,10 @@ export function ActivityLog({
                 {[1, 2, 3, 4, 5].map((i) => (
                   <tr key={i} className="border-b border-slate-100 dark:border-slate-700">
                     <td className="text-left py-2 px-2 sm:px-ds-md">
-                      <div className="h-12 w-12 bg-slate-200 dark:bg-slate-700 rounded-ds-md animate-pulse"></div>
+                      <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-48 animate-pulse"></div>
                     </td>
                     <td className="text-left py-2 px-2 sm:px-ds-md">
-                      <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-48 animate-pulse"></div>
+                      <div className="h-12 w-12 bg-slate-200 dark:bg-slate-700 rounded-ds-md animate-pulse"></div>
                     </td>
                     <td className="text-left py-2 px-2 sm:px-ds-md">
                       <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded w-24 animate-pulse"></div>
@@ -263,10 +263,10 @@ export function ActivityLog({
               <thead className="sticky top-0 bg-mint-500 text-white z-10">
                 <tr>
                   <th className="text-left py-2 px-2 sm:px-ds-md text-ds-small font-medium text-white dark:text-slate-300 rounded-tl-ds-md whitespace-nowrap">
-                    Image
+                    Note
                   </th>
                   <th className="text-left py-2 px-2 sm:px-ds-md text-ds-small font-medium text-white dark:text-slate-300 whitespace-nowrap">
-                    Note
+                    Image
                   </th>
                   <th className="text-left py-2 px-2 sm:px-ds-md text-ds-small font-medium text-white dark:text-slate-300 whitespace-nowrap">
                     Creator
@@ -284,25 +284,13 @@ export function ActivityLog({
                 const isNoteExpanded = expandedNotes.has(activity.id);
                 const noteTruncated = activity.note ? truncateNote(activity.note) : null;
                 const shouldTruncate = activity.note && activity.note.length > 100;
+                const canEditActivity = activity.created_by === user?.id;
 
                 return (
                   <tr
                     key={activity.id}
                     className="border-b border-slate-100 dark:border-slate-700 hover:bg-mint-50 dark:hover:bg-slate-700/50"
                   >
-                    <td className="text-left py-2 px-2 sm:px-ds-md">
-                      {activity.image ? (
-                        <img
-                          src={activity.image}
-                          alt="Activity"
-                          className="h-12 w-12 object-cover rounded-ds-md border border-slate-200 dark:border-slate-700 cursor-pointer hover:opacity-80 transition-opacity"
-                          onClick={() => window.open(activity.image || '', '_blank')}
-                          title="Click to view full image"
-                        />
-                      ) : (
-                        <span className="text-ds-text-muted dark:text-slate-400">—</span>
-                      )}
-                    </td>
                     <td className="text-left py-2 px-2 sm:px-ds-md text-ds-small text-ds-text-primary dark:text-slate-100 max-w-md">
                       {activity.note ? (
                         <div>
@@ -332,6 +320,19 @@ export function ActivityLog({
                         <span className="text-ds-text-muted dark:text-slate-400">—</span>
                       )}
                     </td>
+                    <td className="text-left py-2 px-2 sm:px-ds-md">
+                      {activity.image ? (
+                        <img
+                          src={activity.image}
+                          alt="Activity"
+                          className="h-12 w-12 object-cover rounded-ds-md border border-slate-200 dark:border-slate-700 cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => window.open(activity.image || '', '_blank')}
+                          title="Click to view full image"
+                        />
+                      ) : (
+                        <span className="text-ds-text-muted dark:text-slate-400">—</span>
+                      )}
+                    </td>
                     <td className="text-left py-2 px-2 sm:px-ds-md text-ds-small text-ds-text-primary dark:text-slate-100">
                       <div className="flex items-center gap-2">
                         <User className="h-4 w-4 text-slate-500 dark:text-slate-400 flex-shrink-0" />
@@ -345,7 +346,7 @@ export function ActivityLog({
                       </div>
                     </td>
                     <td className="text-left py-2 px-2 sm:px-ds-md">
-                      {(canEdit || canDelete) && (
+                      {canEditActivity && (canEdit || canDelete) && (
                         <div className="flex items-center gap-ds-xs flex-wrap">
                           {canEdit && (
                             <button
