@@ -136,7 +136,7 @@ function GuardianDiapersContent() {
           <select
             value={selectedFilterType}
             onChange={handleFilterChange}
-            className="rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+            className="w-full sm:w-auto rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] px-3 sm:px-4 py-2 text-ds-tiny sm:text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
           >
             <option value="all">{lang === 'is' ? 'Allt' : 'All'}</option>
             {Object.entries(HEALTH_LOG_TYPE_LABELS).map(([type, labels]) => (
@@ -150,18 +150,18 @@ function GuardianDiapersContent() {
 
       {/* Error Message */}
       {error && (
-        <div className="mb-4 rounded-ds-md bg-red-50 border border-red-200 px-4 py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+        <div className="mb-3 sm:mb-4 rounded-ds-md bg-red-50 border border-red-200 px-3 sm:px-4 py-2 sm:py-3 text-ds-tiny sm:text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
           <strong>{t.error || 'Error'}:</strong> {error}
         </div>
       )}
 
       {/* Health Logs Table */}
-      <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+      <div className="rounded-ds-lg border border-slate-200 bg-white p-3 sm:p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
         {loadingLogs ? (
           <LoadingSkeleton type="table" rows={10} className="border-0 p-0" />
         ) : healthLogs.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-slate-600 dark:text-slate-400 mb-2">
+          <div className="text-center py-6 sm:py-12">
+            <p className="text-ds-tiny sm:text-ds-base text-slate-600 dark:text-slate-400 mb-2">
               {selectedFilterType === 'all'
                 ? (lang === 'is'
                     ? 'Engar heilsuskráningar fundust.'
@@ -170,7 +170,7 @@ function GuardianDiapersContent() {
                     ? 'Engar heilsuskráningar fundust fyrir valda gerð.'
                     : 'No health logs found for the selected type.')}
             </p>
-            <p className="text-ds-small text-slate-500 dark:text-slate-500">
+            <p className="text-ds-tiny sm:text-ds-small text-slate-500 dark:text-slate-500 px-2">
               {lang === 'is'
                 ? 'Engar heilsuskráningar fundust fyrir tengda nemendur.'
                 : 'No health logs found for your linked students.'}
@@ -178,20 +178,20 @@ function GuardianDiapersContent() {
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto overflow-hidden border border-slate-200 dark:border-slate-700 rounded-ds-lg">
-              <table className="w-full border-collapse">
+            <div className="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-ds-lg">
+              <table className="w-full border-collapse min-w-[640px]">
                 <thead>
                   <tr className="bg-mint-500 sticky top-0 z-10">
-                    <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300 rounded-tl-ds-lg">
+                    <th className="text-left py-2 px-2 sm:px-4 text-ds-tiny sm:text-ds-small font-medium text-white dark:text-slate-300 rounded-tl-ds-lg">
                       {lang === 'is' ? 'Dagsetning/Tími' : 'Date/Time'}
                     </th>
-                    <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
+                    <th className="text-left py-2 px-2 sm:px-4 text-ds-tiny sm:text-ds-small font-medium text-white dark:text-slate-300">
                       {t.child || 'Child'}
                     </th>
-                    <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300">
+                    <th className="text-left py-2 px-2 sm:px-4 text-ds-tiny sm:text-ds-small font-medium text-white dark:text-slate-300">
                       {t.di_type || 'Type'}
                     </th>
-                    <th className="text-left py-2 px-4 text-ds-small font-medium text-white dark:text-slate-300 rounded-tr-ds-lg">
+                    <th className="text-left py-2 px-2 sm:px-4 text-ds-tiny sm:text-ds-small font-medium text-white dark:text-slate-300 rounded-tr-ds-lg">
                       {t.notes || 'Notes'}
                     </th>
                   </tr>
@@ -200,23 +200,25 @@ function GuardianDiapersContent() {
                   {paginatedLogs.map((log) => {
                     return (
                       <tr key={log.id} className="border-b border-slate-100 dark:border-slate-700 hover:bg-mint-50 dark:hover:bg-slate-700/50 transition-colors">
-                        <td className="text-left py-2 px-4 text-ds-small text-slate-900 dark:text-slate-100">
+                        <td className="text-left py-2 px-2 sm:px-4 text-ds-tiny sm:text-ds-small text-slate-900 dark:text-slate-100">
                           <span suppressHydrationWarning>
                             {formatHealthLogDate(log.recorded_at, lang)}
                           </span>
                         </td>
-                        <td className="text-left py-2 px-4 text-ds-small text-slate-900 dark:text-slate-100">
+                        <td className="text-left py-2 px-2 sm:px-4 text-ds-tiny sm:text-ds-small text-slate-900 dark:text-slate-100 truncate max-w-[120px] sm:max-w-none">
                           {getStudentName(log)}
                         </td>
-                        <td className="text-left py-2 px-4 text-ds-small text-slate-600 dark:text-slate-400">
-                          {HEALTH_LOG_TYPE_LABELS[log.type]?.[lang] || log.type}
+                        <td className="text-left py-2 px-2 sm:px-4 text-ds-tiny sm:text-ds-small text-slate-600 dark:text-slate-400">
+                          <span className="truncate block">
+                            {HEALTH_LOG_TYPE_LABELS[log.type]?.[lang] || log.type}
+                          </span>
                           {log.temperature_celsius && (
-                            <span className="ml-2 text-ds-tiny text-slate-500 dark:text-slate-400">
+                            <span className="ml-1 sm:ml-2 text-ds-tiny text-slate-500 dark:text-slate-400">
                               ({log.temperature_celsius}°C)
                             </span>
                           )}
                         </td>
-                        <td className="text-left py-2 px-4 text-ds-small text-slate-600 dark:text-slate-400">
+                        <td className="text-left py-2 px-2 sm:px-4 text-ds-tiny sm:text-ds-small text-slate-600 dark:text-slate-400">
                           {log.notes ? (
                             <span className="line-clamp-2" title={log.notes}>
                               {log.notes}
@@ -234,24 +236,24 @@ function GuardianDiapersContent() {
 
             {/* Pagination */}
             {healthLogs.length >= 1 && (
-              <div className="mt-4 flex items-center justify-end gap-2">
+              <div className="mt-3 sm:mt-4 flex items-center justify-center sm:justify-end gap-1.5 sm:gap-2 flex-wrap">
                 <button
                   onClick={handlePrevPage}
                   disabled={currentPage === 1}
-                  className="inline-flex items-center rounded-ds-md border border-slate-400 px-3 py-1.5 text-ds-small disabled:opacity-50 disabled:cursor-not-allowed hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                  className="inline-flex items-center rounded-ds-md border border-slate-400 px-2 sm:px-3 py-1.5 text-ds-tiny sm:text-ds-small disabled:opacity-50 disabled:cursor-not-allowed hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 active:bg-mint-100 dark:active:bg-slate-500"
                 >
                   {t.prev || 'Prev'}
                 </button>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 flex-wrap">
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                     <button
                       key={page}
                       onClick={() => handlePageClick(page)}
-                      className={`inline-flex items-center rounded-ds-md px-3 py-1.5 text-ds-small transition-colors ${
+                      className={`inline-flex items-center rounded-ds-md px-2 sm:px-3 py-1.5 text-ds-tiny sm:text-ds-small transition-colors ${
                         currentPage === page
                           ? 'bg-mint-500 text-white border border-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600'
                           : 'border border-slate-400 dark:border-slate-600 dark:text-slate-200 hover:bg-mint-50 dark:hover:bg-slate-700'
-                      }`}
+                      } active:bg-mint-100 dark:active:bg-slate-500`}
                     >
                       {page}
                     </button>
@@ -260,7 +262,7 @@ function GuardianDiapersContent() {
                 <button
                   onClick={handleNextPage}
                   disabled={currentPage === totalPages}
-                  className="inline-flex items-center rounded-ds-md border border-slate-400 px-3 py-1.5 text-ds-small disabled:opacity-50 disabled:cursor-not-allowed hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                  className="inline-flex items-center rounded-ds-md border border-slate-400 px-2 sm:px-3 py-1.5 text-ds-tiny sm:text-ds-small disabled:opacity-50 disabled:cursor-not-allowed hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 active:bg-mint-100 dark:active:bg-slate-500"
                 >
                   {t.next || 'Next'}
                 </button>

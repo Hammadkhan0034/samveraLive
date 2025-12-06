@@ -1000,23 +1000,23 @@ export function AdminDashboard() {
     const bgColor = statCardBgColors[index % statCardBgColors.length];
     return (
       <div
-        className={`rounded-ds-lg p-ds-md shadow-ds-card h-36 ${bgColor} ${onClick ? 'cursor-pointer hover:shadow-ds-lg transition-all duration-200' : ''}`}
+        className={`rounded-ds-lg p-2 sm:p-3 lg:p-ds-md shadow-ds-card h-24 sm:h-28 lg:h-36 ${bgColor} ${onClick ? 'cursor-pointer hover:shadow-ds-lg transition-all duration-200' : ''}`}
         onClick={onClick}
         role={onClick ? 'button' : undefined}
         tabIndex={onClick ? 0 : -1}
       >
         <div className="flex items-start justify-between h-full">
-          <div className="flex-1">
-            <p className="text-ds-small font-medium text-slate-600 dark:text-slate-400 mb-1">{title}</p>
-            <p className="text-ds-h2 font-bold text-slate-900 dark:text-slate-100 mb-1">{value.toLocaleString()}</p>
-            <div className="h-4">
+          <div className="flex-1 min-w-0">
+            <p className="text-ds-tiny sm:text-ds-small font-medium text-slate-600 dark:text-slate-400 mb-0.5 sm:mb-1 truncate">{title}</p>
+            <p className="text-lg sm:text-xl lg:text-ds-h2 font-bold text-slate-900 dark:text-slate-100 mb-0.5 sm:mb-1">{value.toLocaleString()}</p>
+            <div className="h-3 sm:h-4">
               {trend && (
-                <p className="text-ds-tiny text-mint-600 dark:text-green-400">{trend}</p>
+                <p className="text-ds-tiny text-mint-600 dark:text-green-400 truncate">{trend}</p>
               )}
             </div>
           </div>
-          <div className="rounded-ds-md bg-white/50 dark:bg-slate-700 p-3 flex-shrink-0">
-            <Icon className="h-4 w-4 text-slate-700 dark:text-slate-300" />
+          <div className="rounded-ds-md bg-white/50 dark:bg-slate-700 p-1.5 sm:p-2 lg:p-3 flex-shrink-0">
+            <Icon className="h-3 w-3 sm:h-3.5 sm:w-3.5 lg:h-4 lg:w-4 text-slate-700 dark:text-slate-300" />
           </div>
         </div>
       </div>
@@ -1051,13 +1051,15 @@ export function AdminDashboard() {
     };
 
     return (
-      <div className="flex items-center space-x-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-        {getActivityIcon()}
+      <div className="flex items-center space-x-2 sm:space-x-3 p-2 sm:p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
+        <div className="flex-shrink-0">
+          {getActivityIcon()}
+        </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">
+          <p className="text-ds-tiny sm:text-ds-small font-medium text-slate-900 dark:text-slate-100 truncate">
             {getActivityText()}
           </p>
-          <p className="text-xs text-slate-500 dark:text-slate-400">{activity.time}</p>
+          <p className="text-ds-tiny sm:text-xs text-slate-500 dark:text-slate-400">{activity.time}</p>
         </div>
       </div>
     );
@@ -1065,30 +1067,30 @@ export function AdminDashboard() {
 
 
   return (
-    <div className="max-w-7xl mx-auto animate-in fade-in duration-500 mt-10">
+    <div className="max-w-7xl mx-auto animate-in fade-in duration-500 mt-4 sm:mt-6 lg:mt-10 px-3 sm:px-4">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0 }}
-        className="mb-8"
+        className="mb-4 sm:mb-6 lg:mb-8"
       >
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-2">
+            <h1 className="text-ds-h2 sm:text-2xl lg:text-3xl font-bold text-slate-900 dark:text-slate-100 mb-1 sm:mb-2">
               {t.adminDashboard}
             </h1>
-            <p className="text-slate-600 dark:text-slate-400">
+            <p className="text-ds-tiny sm:text-ds-small text-slate-600 dark:text-slate-400">
               {t.manageUsersSchools}
             </p>
           </div>
           <div className="flex items-center space-x-2">
-            <div className="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
-              <Shield className="h-6 w-6 text-green-600 dark:text-green-400" />
+            <div className="p-1.5 sm:p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
+              <Shield className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-green-600 dark:text-green-400" />
             </div>
-            <div>
-              <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{t.adminAccess}</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">{t.fullPermissions}</p>
+            <div className="hidden sm:block">
+              <p className="text-ds-tiny sm:text-ds-small font-medium text-slate-900 dark:text-slate-100">{t.adminAccess}</p>
+              <p className="text-ds-tiny text-slate-500 dark:text-slate-400">{t.fullPermissions}</p>
             </div>
             {/* Sign out button removed from Admin header; use Navbar sign out instead */}
           </div>
@@ -1100,7 +1102,7 @@ export function AdminDashboard() {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0 }}
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-ds-md mb-ds-lg"
+        className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-2 sm:gap-3 lg:gap-ds-md mb-4 sm:mb-6 lg:mb-ds-lg"
       >
         <StatCard
           title={t.totalUsers}
@@ -1150,7 +1152,7 @@ export function AdminDashboard() {
         />
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-ds-md">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-ds-md">
         {/* Organizations Manager */}
         <motion.div
           initial={false}
@@ -1158,51 +1160,51 @@ export function AdminDashboard() {
           transition={{ duration: 0.4, delay: 0 }}
           className="lg:col-span-1"
         >
-          <div className="bg-white dark:bg-slate-800 rounded-ds-lg p-ds-md shadow-ds-card">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">{t.organizations}</h3>
+          <div className="bg-white dark:bg-slate-800 rounded-ds-lg p-3 sm:p-4 lg:p-ds-md shadow-ds-card">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-4 gap-2 sm:gap-0">
+              <h3 className="text-ds-small sm:text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">{t.organizations}</h3>
               <button
                 onClick={openCreateOrgModal}
-                className="inline-flex items-center gap-0.5 rounded-ds-md bg-mint-500 hover:bg-mint-600 text-white px-3 py-2 text-ds-small transition-colors"
+                className="inline-flex items-center gap-0.5 rounded-ds-md bg-mint-500 hover:bg-mint-600 text-white px-2 sm:px-3 py-1.5 sm:py-2 text-ds-tiny sm:text-ds-small transition-colors w-full sm:w-auto justify-center"
               >
-                <Plus className="h-3.5 w-3.5 mt-0.5" />
+                <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                 {t.create}
               </button>
             </div>
-            <div className="overflow-y-auto max-h-64 rounded-ds-md border border-slate-200 dark:border-slate-700">
-              <table className="w-full text-sm">
+            <div className="overflow-x-auto max-h-64 rounded-ds-md border border-slate-200 dark:border-slate-700">
+              <table className="w-full text-ds-tiny sm:text-sm min-w-[500px]">
                 <thead className="sticky top-0 bg-white dark:bg-slate-800 z-10">
                   <tr className="text-left text-slate-600 dark:text-slate-300">
-                    <th className="py-2 pr-3">{t.table_name}</th>
-                    <th className="py-2 pr-3">{t.table_slug}</th>
-                    <th className="py-2 pr-3">{t.table_timezone}</th>
-                    <th className="py-2 pr-3">{t.table_actions}</th>
+                    <th className="py-2 px-2 sm:pr-3">{t.table_name}</th>
+                    <th className="py-2 px-2 sm:pr-3 hidden md:table-cell">{t.table_slug}</th>
+                    <th className="py-2 px-2 sm:pr-3 hidden lg:table-cell">{t.table_timezone}</th>
+                    <th className="py-2 px-2 sm:pr-3">{t.table_actions}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
                   {orgs.length === 0 ? (
-                    <tr><td colSpan={4} className="py-4">{t.table_no_data}</td></tr>
+                    <tr><td colSpan={4} className="py-4 px-2 sm:px-3 text-ds-tiny sm:text-ds-small">{t.table_no_data}</td></tr>
                   ) : (
                     orgs.map((o) => (
                       <tr key={o.id} className="h-12 hover:bg-slate-50/50 dark:hover:bg-slate-700/30 dark:text-slate-100">
-                        <td className="py-2 pr-3">{o.name}</td>
-                        <td className="py-2 pr-3">{o.slug}</td>
-                        <td className="py-2 pr-3">{o.timezone}</td>
-                        <td className="py-2 pr-3 space-x-2">
-                          <button
-                            onClick={() => openEditOrgModal(o)}
-                            className="inline-flex items-center gap-1 rounded-md border px-2 py-1 dark:border-slate-700 dark:hover:bg-slate-700"
-                          >
-                            <Edit className="h-3 w-3" />
-                            {/* {t.table_edit} */}
-                          </button>
-                          <button
-                            onClick={() => openDeleteOrgModal(o.id)}
-                            className="inline-flex items-center gap-1 rounded-md border px-2 py-1 hover:bg-red-50 text-red-600 border-red-300 dark:border-red-700 dark:hover:bg-red-900/20"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                            {/* {t.table_delete} */}
-                          </button>
+                        <td className="py-2 px-2 sm:pr-3 text-ds-tiny sm:text-ds-small truncate max-w-[120px] sm:max-w-none">{o.name}</td>
+                        <td className="py-2 px-2 sm:pr-3 text-ds-tiny sm:text-ds-small hidden md:table-cell truncate">{o.slug}</td>
+                        <td className="py-2 px-2 sm:pr-3 text-ds-tiny sm:text-ds-small hidden lg:table-cell">{o.timezone}</td>
+                        <td className="py-2 px-2 sm:pr-3">
+                          <div className="flex items-center gap-1 sm:space-x-2">
+                            <button
+                              onClick={() => openEditOrgModal(o)}
+                              className="inline-flex items-center gap-1 rounded-md border px-1.5 sm:px-2 py-1 dark:border-slate-700 dark:hover:bg-slate-700"
+                            >
+                              <Edit className="h-3 w-3" />
+                            </button>
+                            <button
+                              onClick={() => openDeleteOrgModal(o.id)}
+                              className="inline-flex items-center gap-1 rounded-md border px-1.5 sm:px-2 py-1 hover:bg-red-50 text-red-600 border-red-300 dark:border-red-700 dark:hover:bg-red-900/20"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -1220,55 +1222,55 @@ export function AdminDashboard() {
           transition={{ duration: 0.4, delay: 0 }}
           className="lg:col-span-1"
         >
-          <div className="bg-white dark:bg-slate-800 rounded-ds-md p-ds-md shadow-ds-card border border-slate-200 dark:border-slate-700">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">{t.principals}</h3>
+          <div className="bg-white dark:bg-slate-800 rounded-ds-md p-3 sm:p-4 lg:p-ds-md shadow-ds-card border border-slate-200 dark:border-slate-700">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-3 sm:mb-4 gap-2 sm:gap-0">
+              <h3 className="text-ds-small sm:text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">{t.principals}</h3>
               <button
                 onClick={openCreatePrincipalModal}
-                className="inline-flex items-center gap-0.5 rounded-ds-md bg-mint-500 text-white px-3 py-2 text-ds-small hover:bg-mint-600 transition-colors"
+                className="inline-flex items-center gap-0.5 rounded-ds-md bg-mint-500 text-white px-2 sm:px-3 py-1.5 sm:py-2 text-ds-tiny sm:text-ds-small hover:bg-mint-600 transition-colors w-full sm:w-auto justify-center"
               >
-                <Plus className="h-3.5 w-3.5 mt-0.5" />
+                <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                 {t.create}
               </button>
             </div>
-            <div className="overflow-y-auto max-h-64 rounded-md border border-slate-200 dark:border-slate-700">
-              <table className="w-full text-sm">
+            <div className="overflow-x-auto max-h-64 rounded-md border border-slate-200 dark:border-slate-700">
+              <table className="w-full text-ds-tiny sm:text-sm min-w-[600px]">
                 <thead className="sticky top-0 bg-white dark:bg-slate-800 z-10">
                   <tr className="text-left text-slate-600 dark:text-slate-300">
-                    <th className="py-2 pr-3">{t.table_name}</th>
-                    <th className="py-2 pr-3">{t.principal_email}</th>
-                    <th className="py-2 pr-3">{t.principal_phone}</th>
-                    <th className="py-2 pr-3">{t.principal_org}</th>
-                    <th className="py-2 pr-3">{t.principal_status}</th>
-                    <th className="py-2 pr-3">{t.table_actions}</th>
+                    <th className="py-2 px-2 sm:pr-3">{t.table_name}</th>
+                    <th className="py-2 px-2 sm:pr-3 hidden md:table-cell">{t.principal_email}</th>
+                    <th className="py-2 px-2 sm:pr-3 hidden lg:table-cell">{t.principal_phone}</th>
+                    <th className="py-2 px-2 sm:pr-3 hidden xl:table-cell">{t.principal_org}</th>
+                    <th className="py-2 px-2 sm:pr-3 hidden lg:table-cell">{t.principal_status}</th>
+                    <th className="py-2 px-2 sm:pr-3">{t.table_actions}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
                   {principals.length === 0 ? (
-                    <tr><td colSpan={6} className="py-4">{t.table_no_data}</td></tr>
+                    <tr><td colSpan={6} className="py-4 px-2 sm:px-3 text-ds-tiny sm:text-ds-small">{t.table_no_data}</td></tr>
                   ) : (
                     principals.map((p) => (
                       <tr key={p.id} className="h-12 hover:bg-slate-50/50 dark:hover:bg-slate-700/30 dark:text-slate-100">
-                        <td className="py-2 pr-3">{(p as any).name || p.email || '—'}</td>
-                        <td className="py-2 pr-3">{p.email || '—'}</td>
-                        <td className="py-2 pr-3">{p.phone || '—'}</td>
-                        <td className="py-2 pr-3">{orgs.find(o => o.id === p.org_id)?.name || p.org_id}</td>
-                        <td className="py-2 pr-3">{p.is_active ? t.active : t.inactive}</td>
-                        <td className="py-2 pr-3 space-x-2">
-                          <button
-                            onClick={() => openEditPrincipalModal(p)}
-                            className="inline-flex items-center gap-1 rounded-md border px-2 py-1 dark:border-slate-700 dark:hover:bg-slate-700"
-                          >
-                            <Edit className="h-3 w-3" />
-                            {/* {t.table_edit} */}
-                          </button>
-                          <button
-                            onClick={() => openDeletePrincipalModal(p.id)}
-                            className="inline-flex items-center gap-1 rounded-md border px-2 py-1 hover:bg-red-50 text-red-600 border-red-300 dark:border-red-700 dark:hover:bg-red-900/20"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                            {/* {t.table_delete} */}
-                          </button>
+                        <td className="py-2 px-2 sm:pr-3 text-ds-tiny sm:text-ds-small truncate max-w-[120px] sm:max-w-none">{(p as any).name || p.email || '—'}</td>
+                        <td className="py-2 px-2 sm:pr-3 text-ds-tiny sm:text-ds-small hidden md:table-cell truncate">{p.email || '—'}</td>
+                        <td className="py-2 px-2 sm:pr-3 text-ds-tiny sm:text-ds-small hidden lg:table-cell">{p.phone || '—'}</td>
+                        <td className="py-2 px-2 sm:pr-3 text-ds-tiny sm:text-ds-small hidden xl:table-cell truncate">{orgs.find(o => o.id === p.org_id)?.name || p.org_id}</td>
+                        <td className="py-2 px-2 sm:pr-3 text-ds-tiny sm:text-ds-small hidden lg:table-cell">{p.is_active ? t.active : t.inactive}</td>
+                        <td className="py-2 px-2 sm:pr-3">
+                          <div className="flex items-center gap-1 sm:space-x-2">
+                            <button
+                              onClick={() => openEditPrincipalModal(p)}
+                              className="inline-flex items-center gap-1 rounded-md border px-1.5 sm:px-2 py-1 dark:border-slate-700 dark:hover:bg-slate-700"
+                            >
+                              <Edit className="h-3 w-3" />
+                            </button>
+                            <button
+                              onClick={() => openDeletePrincipalModal(p.id)}
+                              className="inline-flex items-center gap-1 rounded-md border px-1.5 sm:px-2 py-1 hover:bg-red-50 text-red-600 border-red-300 dark:border-red-700 dark:hover:bg-red-900/20"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -1282,18 +1284,18 @@ export function AdminDashboard() {
       </div>
 
       {/* Recent Activities and Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 mt-4 sm:mt-6 lg:mt-8">
         {/* Recent Activities */}
         <motion.div
           initial={false}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0 }}
         >
-          <div className="bg-white dark:bg-slate-800 rounded-ds-md p-ds-md shadow-ds-card border border-slate-200 dark:border-slate-700">
-            <h3 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100 mb-4">
+          <div className="bg-white dark:bg-slate-800 rounded-ds-md p-3 sm:p-4 lg:p-ds-md shadow-ds-card border border-slate-200 dark:border-slate-700">
+            <h3 className="text-ds-small sm:text-ds-h3 font-semibold text-slate-900 dark:text-slate-100 mb-3 sm:mb-4">
               Recent Activities
             </h3>
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {recentActivities.map((activity, index) => (
                 <ActivityItem key={index} activity={activity} />
               ))}
@@ -1307,11 +1309,11 @@ export function AdminDashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0 }}
         >
-          <div className="bg-white dark:bg-slate-800 rounded-ds-md p-ds-md shadow-ds-card border border-slate-200 dark:border-slate-700">
-            <h3 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100 mb-4">
+          <div className="bg-white dark:bg-slate-800 rounded-ds-md p-3 sm:p-4 lg:p-ds-md shadow-ds-card border border-slate-200 dark:border-slate-700">
+            <h3 className="text-ds-small sm:text-ds-h3 font-semibold text-slate-900 dark:text-slate-100 mb-3 sm:mb-4">
               {t.quickActions}
             </h3>
-            <div className="space-y-0.5">
+            <div className="space-y-0.5 sm:space-y-1">
               {quickActions.map((action, index) => (
                 <motion.button
                   key={action.title}
@@ -1319,14 +1321,14 @@ export function AdminDashboard() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.6 + index * 0.1 }}
                   onClick={action.action}
-                  className="w-full flex items-center space-x-3 p-3 rounded-ds-md hover:bg-mint-50 dark:hover:bg-slate-700/50 transition-colors text-left"
+                  className="w-full flex items-center space-x-2 sm:space-x-3 p-2 sm:p-3 rounded-ds-md hover:bg-mint-50 dark:hover:bg-slate-700/50 transition-colors text-left"
                 >
-                  <div className={`p-2 rounded-ds-md ${action.color}`}>
-                    <action.icon className="h-5 w-5 text-white" />
+                  <div className={`p-1.5 sm:p-2 rounded-ds-md ${action.color} flex-shrink-0`}>
+                    <action.icon className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                   </div>
-                  <div>
-                    <p className="font-medium text-slate-900 dark:text-slate-100">{action.title}</p>
-                    <p className="text-ds-small text-slate-500 dark:text-slate-400">{action.description}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-ds-tiny sm:text-ds-small font-medium text-slate-900 dark:text-slate-100 truncate">{action.title}</p>
+                    <p className="text-ds-tiny sm:text-ds-small text-slate-500 dark:text-slate-400 line-clamp-1">{action.description}</p>
                   </div>
                 </motion.button>
               ))}
@@ -1340,38 +1342,38 @@ export function AdminDashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0 }}
-        className="mt-8"
+        className="mt-4 sm:mt-6 lg:mt-8"
       >
-        <div className="bg-white dark:bg-slate-800 rounded-ds-md p-ds-md shadow-ds-card border border-slate-200 dark:border-slate-700">
-          <h3 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100 mb-4">
+        <div className="bg-white dark:bg-slate-800 rounded-ds-md p-3 sm:p-4 lg:p-ds-md shadow-ds-card border border-slate-200 dark:border-slate-700">
+          <h3 className="text-ds-small sm:text-ds-h3 font-semibold text-slate-900 dark:text-slate-100 mb-3 sm:mb-4">
             {t.systemStatus}
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center space-x-3 p-3 rounded-ds-md bg-green-50 dark:bg-green-900/20">
-              <div className="p-2 bg-green-500 rounded-ds-md">
-                <Database className="h-5 w-5 text-white" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+            <div className="flex items-center space-x-2 sm:space-x-3 p-2 sm:p-3 rounded-ds-md bg-green-50 dark:bg-green-900/20">
+              <div className="p-1.5 sm:p-2 bg-green-500 rounded-ds-md flex-shrink-0">
+                <Database className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
               </div>
-              <div>
-                <p className="font-medium text-green-900 dark:text-green-100">{t.database}</p>
-                <p className="text-sm text-green-600 dark:text-green-400">{t.operational}</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3 p-3 rounded-lg bg-green-50 dark:bg-green-900/20">
-              <div className="p-2 bg-green-500 rounded-lg">
-                <Activity className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <p className="font-medium text-green-900 dark:text-green-100">{t.api}</p>
-                <p className="text-sm text-green-600 dark:text-green-400">{t.healthy}</p>
+              <div className="min-w-0">
+                <p className="text-ds-tiny sm:text-ds-small font-medium text-green-900 dark:text-green-100">{t.database}</p>
+                <p className="text-ds-tiny sm:text-sm text-green-600 dark:text-green-400">{t.operational}</p>
               </div>
             </div>
-            <div className="flex items-center space-x-3 p-3 rounded-lg bg-yellow-50 dark:bg-yellow-900/20">
-              <div className="p-2 bg-yellow-500 rounded-lg">
-                <AlertTriangle className="h-5 w-5 text-white" />
+            <div className="flex items-center space-x-2 sm:space-x-3 p-2 sm:p-3 rounded-lg bg-green-50 dark:bg-green-900/20">
+              <div className="p-1.5 sm:p-2 bg-green-500 rounded-lg flex-shrink-0">
+                <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
               </div>
-              <div>
-                <p className="font-medium text-yellow-900 dark:text-yellow-100">{t.backup}</p>
-                <p className="text-sm text-yellow-600 dark:text-yellow-400">{t.pending}</p>
+              <div className="min-w-0">
+                <p className="text-ds-tiny sm:text-ds-small font-medium text-green-900 dark:text-green-100">{t.api}</p>
+                <p className="text-ds-tiny sm:text-sm text-green-600 dark:text-green-400">{t.healthy}</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-2 sm:space-x-3 p-2 sm:p-3 rounded-lg bg-yellow-50 dark:bg-yellow-900/20">
+              <div className="p-1.5 sm:p-2 bg-yellow-500 rounded-lg flex-shrink-0">
+                <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-ds-tiny sm:text-ds-small font-medium text-yellow-900 dark:text-yellow-100">{t.backup}</p>
+                <p className="text-ds-tiny sm:text-sm text-yellow-600 dark:text-yellow-400">{t.pending}</p>
               </div>
             </div>
           </div>
@@ -1380,23 +1382,23 @@ export function AdminDashboard() {
 
       {/* Organization Create/Edit Modal */}
       {isOrgModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-md rounded-ds-lg bg-white dark:bg-slate-800 p-ds-md shadow-ds-lg">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3 sm:p-4">
+          <div className="w-full max-w-md rounded-ds-lg bg-white dark:bg-slate-800 p-4 sm:p-6 lg:p-ds-md shadow-ds-lg max-h-[90vh] overflow-y-auto">
+            <div className="mb-3 sm:mb-4 flex items-center justify-between gap-2">
+              <h3 className="text-ds-small sm:text-ds-h3 font-semibold text-slate-900 dark:text-slate-100 truncate">
                 {orgForm.id ? t.edit_organization : t.create_organization}
               </h3>
               <button
                 onClick={() => setIsOrgModalOpen(false)}
-                className="rounded-ds-md p-1 hover:bg-mint-100 dark:hover:bg-slate-700 transition-colors"
+                className="rounded-ds-md p-1 hover:bg-mint-100 dark:hover:bg-slate-700 transition-colors flex-shrink-0"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
             </div>
 
-            <form onSubmit={submitOrg} className="space-y-4">
+            <form onSubmit={submitOrg} className="space-y-3 sm:space-y-4">
               <div>
-                <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-ds-tiny sm:text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
                   {t.organization_name}
                 </label>
                 <input
@@ -1404,13 +1406,13 @@ export function AdminDashboard() {
                   value={orgForm.name}
                   onChange={(e) => setOrgForm((p) => ({ ...p, name: e.target.value }))}
                   placeholder={t.organization_name_placeholder}
-                  className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
+                  className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-ds-tiny sm:text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
                   {t.organization_slug}
                 </label>
                 <input
@@ -1418,13 +1420,13 @@ export function AdminDashboard() {
                   value={orgForm.slug}
                   onChange={(e) => setOrgForm((p) => ({ ...p, slug: e.target.value }))}
                   placeholder={t.organization_slug_placeholder}
-                  className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
+                  className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-ds-tiny sm:text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
                   {t.organization_timezone}
                 </label>
                 <input
@@ -1432,26 +1434,26 @@ export function AdminDashboard() {
                   value={orgForm.timezone}
                   onChange={(e) => setOrgForm((p) => ({ ...p, timezone: e.target.value }))}
                   placeholder={t.organization_timezone_placeholder}
-                  className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
+                  className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
                 />
               </div>
 
               {orgError && (
-                <div className="text-ds-small text-red-600 dark:text-red-400">{orgError}</div>
+                <div className="text-ds-tiny sm:text-ds-small text-red-600 dark:text-red-400 px-3 sm:px-4 py-2 sm:py-3">{orgError}</div>
               )}
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 pt-3 sm:pt-4">
                 <button
                   type="button"
                   onClick={() => setIsOrgModalOpen(false)}
-                  className="flex-1 rounded-ds-md border border-slate-300 dark:border-slate-600 px-4 py-2 text-ds-small hover:bg-mint-50 dark:hover:bg-slate-700 transition-colors"
+                  className="flex-1 rounded-ds-md border border-slate-300 dark:border-slate-600 px-3 sm:px-4 py-2 text-ds-tiny sm:text-ds-small hover:bg-mint-50 dark:hover:bg-slate-700 transition-colors"
                 >
                   {t.cancel_delete}
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmittingOrg}
-                  className="flex-1 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small text-white hover:bg-mint-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+                  className="flex-1 rounded-ds-md bg-mint-500 px-3 sm:px-4 py-2 text-ds-tiny sm:text-ds-small text-white hover:bg-mint-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
                 >
                   {isSubmittingOrg ? (
                     <>
@@ -1486,10 +1488,10 @@ export function AdminDashboard() {
 
       {/* Principal Create/Edit Modal */}
       {isPrincipalModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="w-full max-w-md rounded-ds-lg bg-white dark:bg-slate-800 p-ds-md shadow-ds-lg">
-            <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3 sm:p-4">
+          <div className="w-full max-w-md rounded-ds-lg bg-white dark:bg-slate-800 p-4 sm:p-6 lg:p-ds-md shadow-ds-lg max-h-[90vh] overflow-y-auto">
+            <div className="mb-3 sm:mb-4 flex items-center justify-between gap-2">
+              <h3 className="text-ds-small sm:text-ds-h3 font-semibold text-slate-900 dark:text-slate-100 truncate">
                 {principalForm.id ? t.edit_principal : t.create_principal}
               </h3>
               <button
@@ -1497,16 +1499,16 @@ export function AdminDashboard() {
                   setIsPrincipalModalOpen(false);
                   setPrincipalPhoneError(null);
                 }}
-                className="rounded-ds-md p-1 hover:bg-mint-100 dark:hover:bg-slate-700 transition-colors"
+                className="rounded-ds-md p-1 hover:bg-mint-100 dark:hover:bg-slate-700 transition-colors flex-shrink-0"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
             </div>
 
-            <form onSubmit={submitPrincipal} className="space-y-4">
+            <form onSubmit={submitPrincipal} className="space-y-3 sm:space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-ds-tiny sm:text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
                     {t.principal_first_name}
                   </label>
                   <input
@@ -1514,12 +1516,12 @@ export function AdminDashboard() {
                     value={principalForm.first_name || ''}
                     onChange={(e) => setPrincipalForm((p) => ({ ...p, first_name: e.target.value, full_name: `${e.target.value} ${p.last_name || ''}`.trim() }))}
                     placeholder={t.principal_first_name_placeholder}
-                    className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
+                    className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
+                  <label className="block text-ds-tiny sm:text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
                     {t.principal_last_name}
                   </label>
                   <input
@@ -1527,14 +1529,14 @@ export function AdminDashboard() {
                     value={principalForm.last_name || ''}
                     onChange={(e) => setPrincipalForm((p) => ({ ...p, last_name: e.target.value, full_name: `${p.first_name || ''} ${e.target.value}`.trim() }))}
                     placeholder={t.principal_last_name_placeholder}
-                    className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
+                    className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-ds-tiny sm:text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
                   {t.principal_email}
                 </label>
                 <input
@@ -1542,12 +1544,12 @@ export function AdminDashboard() {
                   value={principalForm.email || ''}
                   onChange={(e) => setPrincipalForm((p) => ({ ...p, email: e.target.value }))}
                   placeholder={t.principal_email_placeholder}
-                  className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
+                  className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
                 />
               </div>
 
               <div>
-                <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-ds-tiny sm:text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
                   {t.principal_phone}
                 </label>
                 <input
@@ -1572,7 +1574,7 @@ export function AdminDashboard() {
                     }
                   }}
                   placeholder={t.principal_phone_placeholder}
-                  className={`w-full rounded-ds-md border bg-white dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-1 dark:text-white ${
+                  className={`w-full rounded-ds-md border bg-white dark:bg-slate-900 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-1 dark:text-white ${
                     principalPhoneError
                       ? 'border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-500'
                       : 'border-slate-300 dark:border-slate-600 focus:border-mint-500 focus:ring-mint-500'
@@ -1584,13 +1586,13 @@ export function AdminDashboard() {
               </div>
 
               <div>
-                <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-ds-tiny sm:text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
                   {t.principal_org}
                 </label>
                 <select
                   value={principalForm.org_id}
                   onChange={(e) => setPrincipalForm((p) => ({ ...p, org_id: e.target.value }))}
-                  className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
+                  className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
                   required
                 >
                   <option value="">Select organization</option>
@@ -1601,13 +1603,13 @@ export function AdminDashboard() {
               </div>
 
               <div>
-                <label className="block text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
+                <label className="block text-ds-tiny sm:text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
                   {t.status}
                 </label>
                 <select
                   value={principalForm.is_active ? 'true' : 'false'}
                   onChange={(e) => setPrincipalForm((p) => ({ ...p, is_active: e.target.value === 'true' }))}
-                  className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
+                  className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
                 >
                   <option value="true">Active</option>
                   <option value="false">Inactive</option>
@@ -1615,24 +1617,24 @@ export function AdminDashboard() {
               </div>
 
               {principalError && (
-                <div className="text-ds-small text-red-600 dark:text-red-400">{principalError}</div>
+                <div className="text-ds-tiny sm:text-ds-small text-red-600 dark:text-red-400 px-3 sm:px-4 py-2 sm:py-3">{principalError}</div>
               )}
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 pt-3 sm:pt-4">
                 <button
                   type="button"
                   onClick={() => {
                     setIsPrincipalModalOpen(false);
                     setPrincipalPhoneError(null);
                   }}
-                  className="flex-1 rounded-ds-md border border-slate-300 dark:border-slate-600 px-4 py-2 text-ds-small hover:bg-mint-50 dark:hover:bg-slate-700 transition-colors"
+                  className="flex-1 rounded-ds-md border border-slate-300 dark:border-slate-600 px-3 sm:px-4 py-2 text-ds-tiny sm:text-ds-small hover:bg-mint-50 dark:hover:bg-slate-700 transition-colors"
                 >
                   {t.cancel_delete}
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmittingPrincipal}
-                  className="flex-1 rounded-ds-md bg-mint-500 px-4 py-2 text-ds-small text-white hover:bg-mint-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
+                  className="flex-1 rounded-ds-md bg-mint-500 px-3 sm:px-4 py-2 text-ds-tiny sm:text-ds-small text-white hover:bg-mint-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
                 >
                   {isSubmittingPrincipal ? (
                     <>
