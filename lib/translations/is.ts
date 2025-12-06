@@ -415,7 +415,7 @@ export const isText = {
   last_name: 'Eftirnafn',
   dob: 'Fæðingardagur',
   gender: 'Kyn',
-  class: 'Hópur',
+
   medical_notes: 'Læknisfræðilegar athugasemdir',
   allergies: 'Ofnæmi',
   emergency_contact: 'Neyðarsamband',
@@ -610,7 +610,7 @@ export const isText = {
   parent_dashboard_subtitle: 'Vertu tengdur við námsferil barnsins þíns',
   parent_dashboard_overview: 'Skoða yfirlit',
   sidebar_menu: 'Valmynd',
-  sidebar_menu: 'Valmynd',
+
   welcome_message: 'Vertu tengdur við námsferil barnsins þíns',
   notices: 'Tilkynningar',
   notices_desc: 'Tilkynningar og áminningar frá hópnum.',

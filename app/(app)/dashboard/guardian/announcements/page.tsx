@@ -138,7 +138,7 @@ function GuardianAnnouncementsContent() {
     <>
       <PageHeader
         title={t.announcements || 'Announcements'}
-        subtitle={t.announcements_subtitle_guardian || t.announcements_subtitle || 'View school announcements and updates'}
+        subtitle={t.announcements_subtitle_guardian || 'View school announcements and updates'}
         headingLevel="h1"
         showMobileMenu={true}
         onMobileMenuClick={() => sidebarRef.current?.open()}

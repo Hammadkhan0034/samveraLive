@@ -289,10 +289,10 @@ const GuardianSidebarContent = forwardRef<GuardianSidebarRef, GuardianSidebarPro
                       ? 'text-slate-900 dark:text-slate-100'
                       : 'text-slate-700 dark:text-slate-300'
                   )}>
-                    {t.tile_media || t.media || 'Media'}
+                    {t.tile_media || 'Media'}
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{t.tile_media_desc || t.media_desc || 'View photos and albums'}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{t.tile_media_desc || 'View photos and albums'}</p>
               </div>
             </button>
 

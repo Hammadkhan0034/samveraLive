@@ -414,7 +414,6 @@ export const enText = {
   last_name: 'Last Name',
   dob: 'Date of Birth',
   gender: 'Gender',
-  class: 'Class',
   medical_notes: 'Medical Notes',
   allergies: 'Allergies',
   emergency_contact: 'Emergency Contact',

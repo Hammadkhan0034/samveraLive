@@ -139,6 +139,7 @@ const ROLE_HIERARCHY: Record<SamveraRole, number> = {
   principal: 3,
   teacher: 2,
   guardian: 1,
+  parent: 1,
 };
 
 export async function requireServerRoleLevel(minimumRole: SamveraRole) {

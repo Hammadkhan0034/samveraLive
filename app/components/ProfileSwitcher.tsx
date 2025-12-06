@@ -10,6 +10,7 @@ const roleToPath: Record<SamveraRole, string> = {
   principal: '/dashboard/principal',
   guardian: '/dashboard/guardian',
   admin: '/dashboard/admin',
+  parent: '/dashboard/guardian',
 };
 
 type Props = {
