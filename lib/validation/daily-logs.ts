@@ -33,8 +33,6 @@ export const postDailyLogBodySchema = z.object({
   image: z.string().url().nullable().optional(),
   kind: dailyLogKindSchema.default('activity'),
   public: z.boolean().default(false),
-  value: z.string().nullable().optional(),
-  rating: z.number().int().min(1).max(5).nullable().optional(),
 });
 
 /**
@@ -47,8 +45,6 @@ export const putDailyLogBodySchema = z.object({
   note: notesSchema.optional(),
   image: z.string().url().nullable().optional(),
   public: z.boolean().optional(),
-  value: z.string().nullable().optional(),
-  rating: z.number().int().min(1).max(5).nullable().optional(),
 });
 
 /**

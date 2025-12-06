@@ -420,9 +420,7 @@ CREATE TABLE IF NOT EXISTS daily_logs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   org_id uuid NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
   class_id uuid REFERENCES classes(id) ON DELETE CASCADE,
-  kind daily_log_kind NOT NULL DEFAULT 'note',
-  value text,
-  rating smallint,
+  kind daily_log_kind NOT NULL DEFAULT 'activity',
   recorded_at timestamptz NOT NULL DEFAULT now(),
   created_by uuid REFERENCES users(id) ON DELETE SET NULL,
   creator_name text NOT NULL,
@@ -432,10 +430,23 @@ CREATE TABLE IF NOT EXISTS daily_logs (
   updated_at timestamptz NOT NULL DEFAULT now(),
   note text
 );
+
+-- Storage bucket for daily log activity images
+-- Create the storage bucket for activity images (used by daily_logs.image column)
+-- For complete setup with RLS policies, see: db/storage/activity-images-bucket.sql
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'chk_daily_logs_rating_range') THEN
-    ALTER TABLE daily_logs ADD CONSTRAINT chk_daily_logs_rating_range CHECK (rating IS NULL OR (rating BETWEEN 1 AND 5));
+  IF NOT EXISTS (
+    SELECT 1 FROM storage.buckets WHERE id = 'activity-images'
+  ) THEN
+    INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+    VALUES (
+      'activity-images',
+      'activity-images',
+      true,
+      10485760, -- 10MB limit
+      ARRAY['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
+    );
   END IF;
 END $$;
 

@@ -509,6 +509,7 @@ export const enText = {
   link_student: 'Link Student',
   tile_menus: 'Menus',
   tile_menus_desc: 'Manage daily menus.',
+  tile_activity_log_desc: 'View and manage daily activity logs',
 
   // Attendance
   att_title: 'Attendance & Check-in',

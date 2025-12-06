@@ -511,6 +511,7 @@ export const isText = {
   link_student: 'Tengja nemanda',
   tile_menus: 'Matseðillar',
   tile_menus_desc: 'Sýsla með daglega matseðla.',
+  tile_activity_log_desc: 'Skoða og stjórna daglegum aðgerðaskrám',
 
   // Attendance
   att_title: 'Mæting & Inn-/útstimplun',

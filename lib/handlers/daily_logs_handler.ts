@@ -240,8 +240,6 @@ async function fetchDailyLogs(
         org_id,
         class_id,
         kind,
-        value,
-        rating,
         recorded_at,
         created_by,
         creator_name,
@@ -344,8 +342,6 @@ async function createDailyLog(
     image,
     kind,
     public: isPublic,
-    value,
-    rating,
   } = payload;
 
   const finalClassId = class_id && class_id.trim() !== '' ? class_id : null;
@@ -362,8 +358,6 @@ async function createDailyLog(
         note: note || null,
         image: image || null,
         public: isPublic !== undefined ? isPublic : false,
-        value: value || null,
-        rating: rating || null,
         created_by: userId,
         creator_name: creatorName,
         deleted_at: null,
@@ -374,8 +368,6 @@ async function createDailyLog(
         org_id,
         class_id,
         kind,
-        value,
-        rating,
         recorded_at,
         created_by,
         creator_name,
@@ -434,8 +426,6 @@ async function updateDailyLog(
     note,
     image,
     public: isPublic,
-    value,
-    rating,
   } = payload;
 
   try {
@@ -456,12 +446,6 @@ async function updateDailyLog(
     if (isPublic !== undefined) {
       updatePayload.public = isPublic;
     }
-    if (value !== undefined) {
-      updatePayload.value = value || null;
-    }
-    if (rating !== undefined) {
-      updatePayload.rating = rating || null;
-    }
 
     const { data: updated, error: updateError } = await adminClient
       .from('daily_logs')
@@ -473,8 +457,6 @@ async function updateDailyLog(
         org_id,
         class_id,
         kind,
-        value,
-        rating,
         recorded_at,
         created_by,
         creator_name,

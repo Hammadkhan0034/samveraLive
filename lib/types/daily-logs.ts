@@ -17,8 +17,6 @@ export interface DailyLog {
   org_id: string;
   class_id?: string | null;
   kind: DailyLogKind;
-  value?: string | null;
-  rating?: number | null;
   recorded_at: string;
   created_by?: string | null;
   creator_name: string;
@@ -63,8 +61,6 @@ export type CreateDailyLogPayload = {
   note?: string | null;
   image?: string | null;
   public?: boolean;
-  value?: string | null;
-  rating?: number | null;
 };
 
 /**
@@ -77,8 +73,6 @@ export type UpdateDailyLogPayload = {
   note?: string | null;
   image?: string | null;
   public?: boolean;
-  value?: string | null;
-  rating?: number | null;
 };
 
 /**
