@@ -19,7 +19,7 @@
   "devDependencies": {
     "baseline-browser-mapping": "^2.8.32",
     "eslint": "^9.39.1",
-    "eslint-config-next": "^16.0.3",
+    "eslint-config-next": "^16.0.6",
     "tsx": "^4.19.1"
   },
   "dependencies": {
@@ -37,7 +37,7 @@
     "firebase-admin": "^13.6.0",
     "framer-motion": "^11.0.0",
     "lucide-react": "^0.542.0",
-    "next": "^16.0.0",
+    "next": "^16.0.6",
     "nodemailer": "^7.0.9",
     "postcss": "8.4.30",
     "react": "^18.3.0",
