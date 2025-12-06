@@ -5,32 +5,40 @@ import { Plus, X } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import AnnouncementForm from '@/app/components/AnnouncementForm';
 import AnnouncementList from '@/app/components/AnnouncementList';
-import PrincipalPageLayout from '@/app/components/shared/PrincipalPageLayout';
+import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
+import { PageHeader } from '@/app/components/shared/PageHeader';
 
-export default function PrincipalAnnouncementsPage() {
+function PrincipalAnnouncementsContent() {
   const { t, lang } = useLanguage();
+  const { sidebarRef } = usePrincipalPageLayout();
 
   // State for form visibility
   const [showForm, setShowForm] = useState(false);
 
   return (
-    <PrincipalPageLayout>
+    <>
+      {/* Page Header */}
+      <PageHeader
+        title={t.announcements || 'Announcements'}
+        subtitle={t.announcements_subtitle || 'View and manage school announcements'}
+        headingLevel="h1"
+        showMobileMenu={true}
+        onMobileMenuClick={() => sidebarRef.current?.open()}
+        rightActions={
+          <button
+            onClick={() => setShowForm(true)}
+            className="inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-ds-md bg-mint-500 px-3 sm:px-4 py-1.5 sm:py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600 active:bg-mint-700 dark:active:bg-slate-500"
+          >
+            <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="hidden sm:inline">{t.create_announcement}</span>
+            <span className="sm:hidden">{t.create || 'Create'}</span>
+          </button>
+        }
+      />
+
       {/* Announcements Panel */}
       <div className="space-y-4 sm:space-y-6">
         <div className="rounded-ds-lg border border-slate-200 bg-white p-3 sm:p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
-          <div className="mb-3 sm:mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4">
-            <h2 className="text-ds-small sm:text-ds-h3 font-medium text-slate-900 dark:text-slate-100">
-              {t.announcements_title}
-            </h2>
-            <button
-              onClick={() => setShowForm(true)}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-ds-md bg-mint-500 px-3 sm:px-4 py-1.5 sm:py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600 active:bg-mint-700 dark:active:bg-slate-500"
-            >
-              <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
-              <span className="hidden sm:inline">{t.create_announcement}</span>
-              <span className="sm:hidden">{t.create || 'Create'}</span>
-            </button>
-          </div>
           <AnnouncementList
             userRole="principal"
             lang={lang}
@@ -74,6 +82,14 @@ export default function PrincipalAnnouncementsPage() {
           </div>
         </div>
       )}
+    </>
+  );
+}
+
+export default function PrincipalAnnouncementsPage() {
+  return (
+    <PrincipalPageLayout>
+      <PrincipalAnnouncementsContent />
     </PrincipalPageLayout>
   );
 }
