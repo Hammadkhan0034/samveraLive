@@ -326,7 +326,7 @@ export function ActivityModal({
               type="datetime-local"
               value={formData.recorded_at}
               onChange={(e) => setFormData({ ...formData, recorded_at: e.target.value })}
-              className="w-full rounded-ds-md border border-slate-300 px-3 sm:px-4 py-2 text-ds-tiny sm:text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+              className="w-full h-10 sm:h-12 rounded-ds-sm border border-input-stroke bg-input-fill px-3 sm:px-4 py-3 text-ds-body text-ds-text-primary focus:border-mint-500 focus:outline-none focus:ring-2 focus:ring-mint-500/20 hover:border-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
               required
               disabled={submitting || uploadingImage}
             />
@@ -345,7 +345,7 @@ export function ActivityModal({
               <select
                 value={formData.class_id}
                 onChange={(e) => setFormData({ ...formData, class_id: e.target.value })}
-                className="w-full rounded-ds-md border border-slate-300 px-3 sm:px-4 py-2 text-ds-tiny sm:text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                className="w-full h-10 sm:h-12 rounded-ds-sm border border-input-stroke bg-input-fill px-3 sm:px-4 py-3 text-ds-body text-ds-text-primary focus:border-mint-500 focus:outline-none focus:ring-2 focus:ring-mint-500/20 hover:border-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                 disabled={submitting || uploadingImage}
               >
                 <option value="">{t.all_classes || 'All Classes'}</option>
@@ -367,7 +367,7 @@ export function ActivityModal({
               value={formData.note}
               onChange={(e) => setFormData({ ...formData, note: e.target.value })}
               rows={4}
-              className="w-full rounded-ds-md border border-slate-300 px-3 sm:px-4 py-2 text-ds-tiny sm:text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+              className="w-full min-h-[120px] rounded-ds-sm border border-input-stroke bg-input-fill px-3 sm:px-4 py-3 text-ds-body text-ds-text-primary focus:border-mint-500 focus:outline-none focus:ring-2 focus:ring-mint-500/20 hover:border-mint-500 resize-y dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
               placeholder={t.activity_description_placeholder || 'Enter activity description...'}
               required
               disabled={submitting || uploadingImage}
@@ -385,7 +385,7 @@ export function ActivityModal({
                   <img
                     src={imagePreview}
                     alt="Preview"
-                    className="w-full h-48 object-cover rounded-ds-md border border-slate-300 dark:border-slate-600"
+                    className="w-full h-48 object-cover rounded-ds-sm border border-input-stroke dark:border-slate-600"
                   />
                   <button
                     type="button"
@@ -402,7 +402,7 @@ export function ActivityModal({
                 </div>
               )}
               {!imagePreview && (
-                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-ds-md cursor-pointer hover:border-mint-400 dark:hover:border-slate-500 transition-colors">
+                <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-input-stroke dark:border-slate-600 rounded-ds-sm cursor-pointer hover:border-mint-500 dark:hover:border-slate-500 transition-colors bg-input-fill dark:bg-slate-700">
                   <div className="flex flex-col items-center justify-center pt-5 pb-6">
                     <ImageIcon className="w-8 h-8 mb-2 text-slate-400" />
                     <p className="text-ds-tiny sm:text-ds-small text-slate-500 dark:text-slate-400">
@@ -429,7 +429,7 @@ export function ActivityModal({
             <input
               type="text"
               value={teacherName}
-              className="w-full rounded-ds-md border border-slate-300 px-3 sm:px-4 py-2 text-ds-tiny sm:text-ds-small bg-slate-50 dark:bg-slate-700 dark:border-slate-600 text-slate-600 dark:text-slate-400 cursor-not-allowed"
+              className="w-full h-10 sm:h-12 rounded-ds-sm border border-input-stroke bg-input-fill px-3 sm:px-4 py-3 text-ds-body text-ds-text-primary cursor-not-allowed opacity-60 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-400"
               readOnly
               disabled
             />
@@ -447,7 +447,7 @@ export function ActivityModal({
             </button>
             <button
               type="submit"
-              className="flex-1 sm:flex-initial px-4 py-2 rounded-ds-md bg-mint-600 text-white text-ds-tiny sm:text-ds-small font-medium hover:bg-mint-700 dark:bg-mint-500 dark:hover:bg-mint-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 sm:flex-initial px-4 py-2 rounded-ds-md bg-mint-500 text-white text-ds-small font-medium hover:bg-mint-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed dark:bg-slate-700 dark:hover:bg-slate-600"
               disabled={submitting || uploadingImage}
             >
               {uploadingImage

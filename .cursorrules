@@ -242,10 +242,26 @@ export async function createSomething(data: z.infer<typeof createSomethingSchema
 
 ## Styling & UI
 
+### Design System
+- **ALWAYS** follow the design system specifications defined in `design/principal_dashboard_json_design_system.json` when creating or modifying UI components.
+- Before creating any new UI component, review the design system for:
+  - **Color palette**: Use the specified colors (mint `#C5E8D5`, pale blue `#D4E4F7`, pale yellow `#FFD966`, pale peach `#F5D5C8`, input fill `#F5FFF7`, input stroke `#D8EBD8`, etc.).
+  - **Typography**: Follow font sizes, weights, and line heights as specified (heading1: 32px, heading2: 24px, heading3: 20px, body: 16px, etc.).
+  - **Spacing**: Use the 8px base unit scale (xs: 8px, sm: 16px, md: 24px, lg: 32px, xl: 48px, 2xl: 64px).
+  - **Border radius**: Apply appropriate border radius values (sm: 8px, md: 12px, lg: 16px, xl: 24px, full: 9999px).
+  - **Shadows**: Use the specified shadow values for cards and elevated elements.
+  - **Component patterns**: Follow the structure and styling guidelines for cards, navigation, stat displays, search bars, text inputs, textareas, content sections, and list displays.
+  - **Layout patterns**: Adhere to the dashboard grid structure, sidebar layout (280px width, 24px padding, 24px border radius), and main content area specifications.
+  - **Interaction states**: Implement hover, active, and disabled states as defined in the design system.
+- Map design system values to Tailwind classes (e.g., use `rounded-xl` for 24px border radius, `p-6` for 24px padding, etc.).
+- When the design system specifies exact values, use those values rather than arbitrary Tailwind classes.
+- Maintain consistency with the design principles: spaciousness, softness, hierarchy, color usage, minimalism, and consistency.
+
 ### Tailwind CSS
 - Use Tailwind utility classes for styling; avoid custom CSS unless required.
 - Use responsive classes (e.g. `sm:`, `md:`, `lg:`) to maintain mobile-first design.
 - Prefer composition via `className` and shared primitives (e.g. buttons, cards) in `app/components/shared/`.
+- When design system values don't map directly to Tailwind defaults, use arbitrary values (e.g. `bg-[#C5E8D5]` for mint color, `rounded-[24px]` for xl border radius).
 
 ### Layout & Skeletons
 - Use `LayoutWrapper`, `Navbar`, `ThemeToggle`, and other layout components rather than re-inventing layout logic.
@@ -299,15 +315,16 @@ import type { User } from '@/lib/types/auth';
 - Add JSDoc for complex components, hooks, and handlers, especially those in `lib/services/` and `lib/handlers/`.
 
 ## Important Reminders
-1. **Reuse existing patterns** in `lib/server-actions.ts`, `lib/handlers/`, `lib/services/`, and `lib/validation/` when adding new features.
-2. **Centralize business logic** in handlers/services, not in components or route handlers.
-3. **Use Server Components by default**, and `'use client'` only when needed.
-4. **Validate all inbound data** with Zod schemas from `lib/validation/**`.
-5. **Enforce roles and org membership** with `getRequestAuthContext` for every protected operation.
-6. **Keep components small, focused, and reusable**, and prefer `app/components/shared/` when patterns repeat.
-7. **Use Tailwind CSS** and shared layout components for consistent, responsive UI.
-8. **Leverage Supabase and Firebase helpers** instead of adding new clients or ad‑hoc integrations.
-9. **Keep routes, handlers, and actions in sync** by revalidating relevant dashboard paths after mutations.
-10. **Never commit secrets**; always use environment variables and keep security and RLS policies in mind.
+1. **Always follow the design system** in `design/principal_dashboard_json_design_system.json` when creating or modifying UI components.
+2. **Reuse existing patterns** in `lib/server-actions.ts`, `lib/handlers/`, `lib/services/`, and `lib/validation/` when adding new features.
+3. **Centralize business logic** in handlers/services, not in components or route handlers.
+4. **Use Server Components by default**, and `'use client'` only when needed.
+5. **Validate all inbound data** with Zod schemas from `lib/validation/**`.
+6. **Enforce roles and org membership** with `getRequestAuthContext` for every protected operation.
+7. **Keep components small, focused, and reusable**, and prefer `app/components/shared/` when patterns repeat.
+8. **Use Tailwind CSS** and shared layout components for consistent, responsive UI, mapping design system values to Tailwind classes.
+9. **Leverage Supabase and Firebase helpers** instead of adding new clients or ad‑hoc integrations.
+10. **Keep routes, handlers, and actions in sync** by revalidating relevant dashboard paths after mutations.
+11. **Never commit secrets**; always use environment variables and keep security and RLS policies in mind.
 
 

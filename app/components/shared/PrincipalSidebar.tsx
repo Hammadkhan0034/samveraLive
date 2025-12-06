@@ -4,7 +4,7 @@ import React, { useState, useImperativeHandle, forwardRef, useEffect, Suspense }
 import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { X } from 'lucide-react';
-import { LayoutDashboard, Users, School, ChartBar as BarChart3, MessageSquare, Camera, CalendarDays, Shield, Link as LinkIcon, Utensils, Megaphone } from 'lucide-react';
+import { LayoutDashboard, Users, School, ChartBar as BarChart3, MessageSquare, Camera, CalendarDays, Shield, Link as LinkIcon, Utensils, Megaphone, Activity } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 
 // Small helper
@@ -42,7 +42,8 @@ type BuiltInTileId =
   | 'guardians'
   | 'link_student'
   | 'menus'
-  | 'announcements';
+  | 'announcements'
+  | 'daily_logs';
 
 interface BuiltInTileConfig {
   id: BuiltInTileId;
@@ -61,6 +62,7 @@ const builtInTileRoutes: BuiltInTileConfig[] = [
   { id: 'link_student', route: '/dashboard/principal/link-student' },
   { id: 'menus', route: '/dashboard/principal/menus' },
   { id: 'announcements', route: '/dashboard/principal/announcements' },
+  { id: 'daily_logs', route: '/dashboard/principal/daily-logs' },
 ];
 
 const getRouteForTileId = (tileId: string): string | undefined => {
@@ -571,6 +573,40 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{t.tile_announcements_desc}</p>
+              </div>
+            </button>
+
+            {/* Daily Logs tile */}
+            <button
+              onClick={() => handleBuiltInTileClick('daily_logs')}
+              className={clsx(
+                'w-full flex items-center gap-3 px-ds-sm py-ds-sm rounded-ds-md text-left transition-all duration-200',
+                'hover:bg-slate-100 dark:hover:bg-slate-700',
+                isTileActive('daily_logs')
+                  ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
+                  : 'border-l-4 border-transparent'
+              )}
+            >
+              <span className={clsx(
+                'flex-shrink-0 rounded-lg p-2',
+                isTileActive('daily_logs')
+                  ? 'bg-mint-500 text-white'
+                  : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
+              )}>
+                <Activity className="h-5 w-5" />
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <span className={clsx(
+                    'font-medium truncate',
+                    isTileActive('daily_logs')
+                      ? 'text-slate-900 dark:text-slate-100'
+                      : 'text-slate-700 dark:text-slate-300'
+                  )}>
+                    {t.activity_log || 'Activity Log'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{t.tile_activity_log_desc || 'View and manage daily activity logs'}</p>
               </div>
             </button>
 
