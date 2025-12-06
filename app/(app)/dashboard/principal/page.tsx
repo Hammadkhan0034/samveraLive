@@ -1,15 +1,16 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
-import { Menu, Users, School, ChartBar as BarChart3, Utensils, AlertCircle } from 'lucide-react';
-import ProfileSwitcher from '@/app/components/ProfileSwitcher';
+import { Users, School, ChartBar as BarChart3, Utensils, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
+import { PageHeader } from '@/app/components/shared/PageHeader';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import KPICardSkeleton from '@/app/components/loading-skeletons/KPICardSkeleton';
 import type { KPICard } from '@/lib/types/dashboard';
 import { useAuth } from '@/lib/hooks/useAuth';
 import ContactCards, { type Contact } from '@/app/components/ContactCards';
+import StoryColumn from '@/app/components/shared/StoryColumn';
 
 interface PrincipalDashboardContentProps {
   t: any;
@@ -32,24 +33,17 @@ function PrincipalDashboardContent({
   return (
     <>
       {/* Content Header */}
-      <div className="mb-ds-md flex flex-col gap-ds-md md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-ds-md">
-          {/* Mobile menu button */}
-          <button
-            onClick={() => sidebarRef.current?.open()}
-            className="md:hidden p-2 rounded-ds-md hover:bg-mint-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
-            aria-label="Toggle sidebar"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-          <h1 className="text-ds-h1 font-bold tracking-tight text-ds-text-primary dark:text-slate-100">
-            {t.title || 'Principal Dashboard'}
-          </h1>
-        </div>
-        <div className="flex items-center gap-ds-md">
-          <ProfileSwitcher />
-        </div>
-      </div>
+      <PageHeader
+        title={t.title || 'Principal Dashboard'}
+        subtitle={t.subtitle || 'Manage groups, staff and visibility.'}
+        headingLevel="h1"
+        showMobileMenu={true}
+        onMobileMenuClick={() => sidebarRef.current?.open()}
+      />
+
+      <StoryColumn
+        userRole="principal"
+      />
       {/* Error Message */}
       {error && (
         <div className="mb-ds-sm rounded-ds-md border border-red-200 bg-red-50 p-ds-sm dark:border-red-800 dark:bg-red-900/20">
