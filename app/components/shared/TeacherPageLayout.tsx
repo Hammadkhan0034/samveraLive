@@ -63,7 +63,12 @@ export default function TeacherPageLayout({
           <Navbar variant="static" />
           
           {/* Main content area - below navbar */}
-          <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-slate-900">
+          <main 
+            className="flex-1 overflow-y-auto"
+            style={{
+              backgroundColor: 'var(--ds-mint)',
+            }}
+          >
             <div className="p-3 sm:p-4 md:p-6 lg:p-8">
               {children}
             </div>
