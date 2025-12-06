@@ -280,11 +280,6 @@ export function ActivityModal({
     }
   };
 
-  // Get teacher name from user
-  const teacherName = userMetadata?.first_name && userMetadata?.last_name
-    ? `${userMetadata.first_name} ${userMetadata.last_name}`
-    : userMetadata?.first_name || user?.email || 'Unknown';
-
   if (!isOpen) return null;
 
   return (
@@ -419,20 +414,6 @@ export function ActivityModal({
                 </label>
               )}
             </div>
-          </div>
-
-          {/* Teacher Name (read-only) */}
-          <div>
-            <label className="block text-ds-tiny sm:text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
-              {t.teacher || 'Teacher'}
-            </label>
-            <input
-              type="text"
-              value={teacherName}
-              className="w-full h-10 sm:h-12 rounded-ds-sm border border-input-stroke bg-input-fill px-3 sm:px-4 py-3 text-ds-body text-ds-text-primary cursor-not-allowed opacity-60 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-400"
-              readOnly
-              disabled
-            />
           </div>
 
           {/* Submit Button */}
