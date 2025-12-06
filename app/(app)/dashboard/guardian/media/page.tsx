@@ -259,10 +259,10 @@ function GuardianMediaContent() {
       />
 
       {/* Photos Panel */}
-      <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+      <div className="rounded-ds-lg border border-slate-200 bg-white p-3 sm:p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
         {/* Error State */}
         {error && (
-          <div className="mb-4 rounded-ds-md bg-red-50 border border-red-200 px-4 py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+          <div className="mb-3 sm:mb-4 rounded-ds-md bg-red-50 border border-red-200 px-3 sm:px-4 py-2 sm:py-3 text-ds-tiny sm:text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
             {error}
           </div>
         )}
@@ -271,10 +271,10 @@ function GuardianMediaContent() {
         {isLoading || loadingStudents ? (
           <LoadingSkeleton type="cards" rows={2} />
         ) : photos.length === 0 ? (
-          <div className="text-center py-12 text-slate-500 dark:text-slate-400">
-            <ImageIcon className="h-12 w-12 mx-auto mb-3 text-slate-300 dark:text-slate-600" />
-            <p>{t.no_photos_uploaded || 'No photos uploaded yet'}</p>
-            <p className="text-ds-small mt-1">
+          <div className="text-center py-6 sm:py-12 text-slate-500 dark:text-slate-400">
+            <ImageIcon className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-2 sm:mb-3 text-slate-300 dark:text-slate-600" />
+            <p className="text-ds-tiny sm:text-ds-base">{t.no_photos_uploaded || 'No photos uploaded yet'}</p>
+            <p className="text-ds-tiny sm:text-ds-small mt-1 px-2">
               {linkedStudents.length === 0
                 ? 'No org-wide photos available. Link a student to view class-specific photos.'
                 : 'No photos available for your linked students or organization'}
@@ -282,7 +282,7 @@ function GuardianMediaContent() {
           </div>
         ) : (
           /* Photos Grid */
-          <div className="grid grid-cols-1 gap-ds-sm sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:gap-ds-sm sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {photos.map((photo) => (
               <div
                 key={photo.id}
@@ -299,18 +299,19 @@ function GuardianMediaContent() {
                     src={photo.url}
                     alt={photo.caption || 'Photo'}
                     className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                    loading="lazy"
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center">
-                    <ImageIcon className="h-8 w-8 text-slate-400" />
+                    <ImageIcon className="h-6 w-6 sm:h-8 sm:w-8 text-slate-400" />
                   </div>
                 )}
 
                 {/* Overlay with info */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="absolute bottom-0 left-0 right-0 p-3 text-white text-ds-small">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                  <div className="absolute bottom-0 left-0 right-0 p-2 sm:p-3 text-white text-ds-tiny sm:text-ds-small">
                     {photo.caption && (
-                      <p className="truncate font-medium mb-1">{photo.caption}</p>
+                      <p className="truncate font-medium mb-0.5 sm:mb-1">{photo.caption}</p>
                     )}
                     <div className="flex items-center justify-between text-ds-tiny opacity-90">
                       <span>
@@ -319,18 +320,18 @@ function GuardianMediaContent() {
                         )}
                       </span>
                       {photo.is_public && (
-                        <span className="px-2 py-0.5 bg-white/20 rounded-ds-sm">
+                        <span className="px-1.5 sm:px-2 py-0.5 bg-white/20 rounded-ds-sm text-ds-tiny">
                           {t.public || 'Public'}
                         </span>
                       )}
                     </div>
                     {photo.classes && (
-                      <p className="text-ds-tiny opacity-75 mt-1 truncate">
+                      <p className="text-ds-tiny opacity-75 mt-0.5 sm:mt-1 truncate">
                         {photo.classes.name}
                       </p>
                     )}
                     {photo.students && (
-                      <p className="text-ds-tiny opacity-75 mt-1 truncate">
+                      <p className="text-ds-tiny opacity-75 mt-0.5 sm:mt-1 truncate">
                         {photo.students.first_name} {photo.students.last_name}
                       </p>
                     )}
