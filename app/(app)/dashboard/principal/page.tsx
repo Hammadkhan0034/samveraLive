@@ -105,7 +105,9 @@ function PrincipalDashboardContent({
         )}
       </section>
 
-      <ContactCards
+      {/* contact cards section */}
+
+      {/* <ContactCards
         contact={{
           id: '1',
           name: 'Mária Jónsdóttir',
@@ -128,7 +130,7 @@ function PrincipalDashboardContent({
             console.log('View profile Mária Jónsdóttir');
           },
         }}
-      />
+      /> */}
     </>
   );
 }
