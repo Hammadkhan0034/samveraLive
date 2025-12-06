@@ -268,10 +268,8 @@ export async function handleGetAnnouncements(
       query = query.is('class_id', null);
     }
   } else if (userRole === 'principal' || userRole === 'admin') {
-    // For principals: only show org-wide announcements (class_id is null) OR their own announcements
-    // Exclude teacher's class-specific announcements
-    // Query: org-wide (class_id is null) OR principal's own (author_id = userId)
-    query = query.or(`and(class_id.is.null),and(author_id.eq.${userId})`);
+    // For principals: show all announcements in the org (org-wide and class-specific)
+    // No filtering needed - get everything for the organization
   } else if (userRole === 'teacher') {
     // For teachers: show principal's org-wide announcements AND class-specific announcements for ALL their assigned classes
     // Also show org-wide announcements created by the teacher themselves
@@ -361,58 +359,6 @@ export async function handleGetAnnouncements(
     });
   }
 
-  // Post-process for principals: filter out teacher's class-specific announcements
-  if (!error && data && userId && (userRole === 'principal' || userRole === 'admin')) {
-    const teacherIdsSet = new Set<string>();
-
-    // Get teacher IDs from multiple sources
-    try {
-      const { data: membershipTeachers } = await adminClient
-        .from('class_membersments')
-        .select('user_id')
-        .eq('membership_role', 'teacher');
-
-      if (membershipTeachers) {
-        membershipTeachers.forEach((m) => {
-          if (m.user_id) teacherIdsSet.add(m.user_id);
-        });
-      }
-    } catch (e) {
-      console.warn('Could not fetch teachers from class_memberships:', e);
-    }
-
-    try {
-      const { data: roleBasedTeachers } = await adminClient
-        .from('users')
-        .select('id')
-        .in('role', ['teacher']);
-
-      if (roleBasedTeachers) {
-        roleBasedTeachers.forEach((u) => {
-          if (u.id) teacherIdsSet.add(u.id);
-        });
-      }
-    } catch (e) {
-      console.warn('Could not fetch teachers by role:', e);
-    }
-
-    const teacherIds = Array.from(teacherIdsSet);
-
-    // Filter: keep only org-wide (class_id is null) OR principal's own announcements
-    // Exclude teacher's class-specific announcements (class_id is not null AND author is teacher)
-    data = data.filter((ann: any) => {
-      // Keep org-wide announcements (visible to all)
-      if (!ann.class_id) return true;
-      // Keep principal's own announcements
-      if (ann.author_id === userId) return true;
-      // Exclude teacher's class-specific announcements
-      if (teacherIds.length > 0 && teacherIds.includes(ann.author_id)) {
-        return false; // Teacher's class-specific announcement - exclude
-      }
-      // Keep other non-teacher announcements (if any)
-      return true;
-    });
-  }
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
