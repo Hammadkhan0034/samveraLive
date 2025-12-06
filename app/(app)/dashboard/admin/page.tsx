@@ -19,7 +19,7 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="min-h-screen bg-mint-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <main className="container mx-auto px-4 py-ds-lg">
+      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-ds-lg">
         <AdminDashboard />
       </main>
     </div>
