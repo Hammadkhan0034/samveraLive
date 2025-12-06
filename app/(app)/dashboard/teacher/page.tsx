@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
-import { ClipboardCheck, Users, MessageSquare, FileText, Megaphone, Utensils, AlertCircle } from 'lucide-react';
+import { ClipboardCheck, Users, MessageSquare, FileText, Megaphone, Utensils, AlertCircle, Plus } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import TeacherPageLayout, { useTeacherPageLayout } from '@/app/components/shared/TeacherPageLayout';
 import { PageHeader } from '@/app/components/shared/PageHeader';
@@ -8,6 +8,9 @@ import { useLanguage } from '@/lib/contexts/LanguageContext';
 import KPICardSkeleton from '@/app/components/loading-skeletons/KPICardSkeleton';
 import type { KPICard, TeacherDashboardContentProps, TeacherMetrics } from '@/lib/types/dashboard';
 import StoryColumn from '@/app/components/shared/StoryColumn';
+import { ActivityLog } from '@/app/components/shared/ActivityLog';
+import { ActivityModal } from '@/app/components/shared/ActivityModal';
+import type { DailyLogWithRelations } from '@/lib/types/daily-logs';
 
 function TeacherDashboardContent({
   t,
@@ -86,6 +89,107 @@ function TeacherDashboardContent({
         )}
       </section>
     </>
+  );
+}
+
+function ActivityLogSection() {
+  const { t } = useLanguage();
+  const [activities, setActivities] = useState<DailyLogWithRelations[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingActivity, setEditingActivity] = useState<DailyLogWithRelations | null>(null);
+
+  const loadActivities = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch(`/api/daily-logs?kind=activity&t=${Date.now()}`, {
+        cache: 'no-store',
+        credentials: 'include',
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({} as any));
+        throw new Error(err.error || `Failed with ${res.status}`);
+      }
+
+      const { dailyLogs } = await res.json();
+      // Show only recent activities (last 10)
+      const recentActivities = (dailyLogs || []).slice(0, 10);
+      setActivities(recentActivities);
+    } catch (err: any) {
+      console.error('Failed to load activities:', err);
+      setError(err.message || 'Failed to load activities');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadActivities();
+  }, [loadActivities]);
+
+  const handleAddClick = () => {
+    setEditingActivity(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = (activity: DailyLogWithRelations) => {
+    setEditingActivity(activity);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = () => {
+    loadActivities();
+  };
+
+  const handleModalSuccess = () => {
+    loadActivities();
+  };
+
+  return (
+    <section className="mb-ds-md">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">
+          {t.activity_log || 'Activity Log'}
+        </h2>
+        <button
+          onClick={handleAddClick}
+          className="flex items-center gap-2 rounded-ds-md bg-mint-600 px-4 py-2 text-ds-small font-medium text-white hover:bg-mint-700 dark:bg-mint-500 dark:hover:bg-mint-600 transition-colors"
+        >
+          <Plus className="h-4 w-4" />
+          {t.add_activity || 'Add Activity'}
+        </button>
+      </div>
+
+      {error && (
+        <div className="mb-4 rounded-ds-md border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-900/20">
+          <p className="text-ds-small text-red-800 dark:text-red-200">{error}</p>
+        </div>
+      )}
+
+      <ActivityLog
+        activities={activities}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        canEdit={true}
+        canDelete={true}
+        loading={loading}
+        onRefresh={loadActivities}
+      />
+
+      <ActivityModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingActivity(null);
+        }}
+        onSuccess={handleModalSuccess}
+        initialData={editingActivity}
+      />
+    </section>
   );
 }
 
@@ -299,6 +403,7 @@ function TeacherDashboardPageContent() {
         error={error}
         onRetry={handleRetry}
       />
+      <ActivityLogSection />
     </TeacherPageLayout>
   );
 }

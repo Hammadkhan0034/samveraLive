@@ -518,6 +518,19 @@ export const isText = {
   att_mark_all_in: 'Skrá alla inn',
   save_attendance: 'Vista mæting',
 
+  // Activity Log
+  activity_log: 'Aðgerðaskrá',
+  add_activity: 'Bæta við aðgerð',
+  edit_activity: 'Breyta aðgerð',
+  no_activities: 'Engar aðgerðir skráðar enn',
+  delete_activity: 'Eyða aðgerð',
+  delete_activity_confirmation: 'Ertu viss um að þú viljir eyða þessari aðgerð? Þessa aðgerð er ekki hægt að afturkalla.',
+  activity_description_placeholder: 'Sláðu inn lýsingu aðgerðar...',
+  description: 'Lýsing',
+  photo: 'Mynd',
+  teacher: 'Kennari',
+  click_to_upload: 'Smelltu til að hlaða upp',
+
   // Diapers/Health
   di_title: 'Bleyju- og heilsuskráning',
   diapers_subtitle: 'Fylgjast með bleyjum, svefni, lyfjum og heilsuskrám',

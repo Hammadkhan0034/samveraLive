@@ -516,6 +516,19 @@ export const enText = {
   att_mark_all_in: 'Mark all present',
   save_attendance: 'Save Attendance',
 
+  // Activity Log
+  activity_log: 'Activity Log',
+  add_activity: 'Add Activity',
+  edit_activity: 'Edit Activity',
+  no_activities: 'No activities recorded yet',
+  delete_activity: 'Delete Activity',
+  delete_activity_confirmation: 'Are you sure you want to delete this activity? This action cannot be undone.',
+  activity_description_placeholder: 'Enter activity description...',
+  description: 'Description',
+  photo: 'Photo',
+  teacher: 'Teacher',
+  click_to_upload: 'Click to upload',
+
   // Diapers/Health
   di_title: 'Diapers & Health Log',
   diapers_subtitle: 'Track diapers, naps, medications and health records',
