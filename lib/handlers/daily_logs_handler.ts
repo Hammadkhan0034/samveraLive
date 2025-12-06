@@ -308,28 +308,11 @@ async function fetchDailyLogs(
       .select(
         `
         id,
-        org_id,
-        class_id,
-        kind,
         recorded_at,
-        created_by,
         creator_name,
         image,
-        public,
-        deleted_at,
-        updated_at,
         note,
-        classes:class_id (
-          id,
-          name,
-          code
-        ),
-        users:created_by (
-          id,
-          first_name,
-          last_name,
-          email
-        )
+        created_by
       `,
       )
       .eq('org_id', orgId)
@@ -337,23 +320,12 @@ async function fetchDailyLogs(
       .is('deleted_at', null)
       .order('recorded_at', { ascending: false });
 
-    // If teacher, filter by their assigned classes
+    // If teacher, only fetch logs created by them
     if (isTeacher) {
-      // Get teacher's class memberships
-      const { data: memberships } = await adminClient
-        .from('class_memberships')
-        .select('class_id')
-        .eq('user_id', userId);
-
-      if (memberships && memberships.length > 0) {
-        const classIds = memberships.map((m) => m.class_id);
-        query = query.in('class_id', classIds);
-      } else {
-        // Teacher has no classes, return empty array
-        return [];
-      }
+      query = query.eq('created_by', userId);
     }
 
+    // Filter by class if specified (for principals)
     if (classId) {
       query = query.eq('class_id', classId);
     }
@@ -392,6 +364,7 @@ async function fetchDailyLogs(
     });
   }
 }
+
 
 async function createDailyLog(
   adminClient: SupabaseClient,
@@ -436,28 +409,11 @@ async function createDailyLog(
       .select(
         `
         id,
-        org_id,
-        class_id,
-        kind,
         recorded_at,
-        created_by,
         creator_name,
         image,
-        public,
-        deleted_at,
-        updated_at,
         note,
-        classes:class_id (
-          id,
-          name,
-          code
-        ),
-        users:created_by (
-          id,
-          first_name,
-          last_name,
-          email
-        )
+        created_by
       `,
       )
       .single();
@@ -528,28 +484,11 @@ async function updateDailyLog(
       .select(
         `
         id,
-        org_id,
-        class_id,
-        kind,
         recorded_at,
-        created_by,
         creator_name,
         image,
-        public,
-        deleted_at,
-        updated_at,
         note,
-        classes:class_id (
-          id,
-          name,
-          code
-        ),
-        users:created_by (
-          id,
-          first_name,
-          last_name,
-          email
-        )
+        created_by
       `,
       )
       .single();

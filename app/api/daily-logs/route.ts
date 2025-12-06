@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     request,
     {
       requireOrg: true,
-      allowedRoles: ['principal', 'admin', 'teacher'],
+      allowedRoles: ['principal',  'teacher'],
     },
     (user, adminClient) => handleGetDailyLogs(request, user, adminClient),
   );

@@ -346,7 +346,7 @@ export function ActivityLog({
                       </div>
                     </td>
                     <td className="text-left py-2 px-2 sm:px-ds-md">
-                      {canEditActivity && (canEdit || canDelete) && (
+                      {canEditActivity && (canEdit || canDelete) ? (
                         <div className="flex items-center gap-ds-xs flex-wrap">
                           {canEdit && (
                             <button
@@ -369,6 +369,8 @@ export function ActivityLog({
                             </button>
                           )}
                         </div>
+                      ) : (
+                        <span className="text-ds-text-muted dark:text-slate-400">—</span>
                       )}
                     </td>
                   </tr>
