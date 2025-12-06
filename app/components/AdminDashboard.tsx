@@ -36,9 +36,7 @@ interface AdminStats {
 }
 
 export function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState('overview');
-  const { lang, t } = useLanguage();
-  const router = useRouter();
+  const { t } = useLanguage();
   const [orgs, setOrgs] = useState<Array<{ id: string; name: string; slug: string; timezone: string }>>([]);
   const [loadingOrgs, setLoadingOrgs] = useState(false);
   const [orgForm, setOrgForm] = useState<{ id?: string; name: string; slug: string; timezone: string }>({ name: '', slug: '', timezone: 'UTC' });
@@ -101,29 +99,6 @@ export function AdminDashboard() {
   const [isDeleteStudentModalOpen, setIsDeleteStudentModalOpen] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState<string | null>(null);
 
-  async function loadOrgs() {
-    try {
-      setLoadingOrgs(true);
-      setOrgError(null);
-      console.log('🔄 Loading organizations...');
-      const res = await fetch('/api/orgs', { cache: 'no-store' });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
-      setOrgs(json.orgs || []);
-      try {
-        if (typeof window !== 'undefined') {
-          sessionStorage.setItem('admin_orgs', JSON.stringify(json.orgs || []));
-        }
-      } catch { }
-      console.log('✅ Organizations loaded:', json.orgs?.length || 0, 'Organizations:', json.orgs);
-    } catch (e: any) {
-      setOrgError(e.message);
-      console.error('❌ Error loading organizations:', e.message);
-      // Keep existing orgs on error to avoid table flicker
-    } finally {
-      setLoadingOrgs(false);
-    }
-  }
 
   async function submitOrg(e: React.FormEvent) {
     e.preventDefault();
@@ -297,32 +272,6 @@ export function AdminDashboard() {
 
   // loadClasses removed to reduce unnecessary code and requests
 
-  async function loadPrincipals() {
-    try {
-      setLoadingPrincipals(true);
-      setPrincipalError(null);
-      console.log('🔄 Loading principals...');
-      const res = await fetch('/api/principals', { cache: 'no-store' });
-      const json = await res.json();
-
-      console.log('📥 Principals API response:', json);
-
-      if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
-      setPrincipals(json.principals || []);
-      try {
-        if (typeof window !== 'undefined') {
-          sessionStorage.setItem('admin_principals', JSON.stringify(json.principals || []));
-        }
-      } catch { }
-      console.log('✅ Principals loaded:', json.principals?.length || 0, 'Principals:', json.principals);
-    } catch (e: any) {
-      setPrincipalError(e.message);
-      console.error('❌ Error loading principals:', e.message);
-      // Keep existing principals on error to avoid table flicker
-    } finally {
-      setLoadingPrincipals(false);
-    }
-  }
 
   // Validate phone number (optional but must be valid if provided)
   // Must match database constraint: ^\+?[1-9]\d{1,14}$ with length 7-15
@@ -577,234 +526,17 @@ export function AdminDashboard() {
   }
 
   // Teachers functions - Load teachers from ALL organizations
-  async function loadTeachers(showLoading = true) {
-    try {
-      if (showLoading) {
-        setLoadingTeachers(true);
-      }
-
-      console.log('🔄 Loading teachers from ALL organizations. Available orgs:', orgs);
-
-      if (orgs.length === 0) {
-        console.log('⚠️ No organizations available, skipping teachers load');
-        setTeachers([]);
-        return;
-      }
-
-      // Load teachers from ALL organizations
-      const allTeachers = [];
-
-      for (const org of orgs) {
-        try {
-          console.log(`🔄 Loading teachers for org: ${org.name} (${org.id})`);
-          const res = await fetch(`/api/staff-management?t=${Date.now()}`, { cache: 'no-store' });
-          const json = await res.json();
-
-          if (res.ok && json.staff) {
-            const orgTeachers = json.staff.map((teacher: any) => ({
-              id: teacher.id,
-              email: teacher.email || null,
-              phone: teacher.phone || null,
-              first_name: teacher.first_name || '',
-              last_name: teacher.last_name || '',
-              org_id: teacher.org_id || org.id,
-              is_active: teacher.is_active !== false,
-              created_at: teacher.created_at || new Date().toISOString(),
-              org_name: org.name // Add organization name for display
-            }));
-            allTeachers.push(...orgTeachers);
-            console.log(`✅ Loaded ${orgTeachers.length} teachers from ${org.name}`);
-          } else {
-            console.log(`⚠️ No teachers found for ${org.name}`);
-          }
-        } catch (orgError) {
-          console.error(`❌ Error loading teachers for ${org.name}:`, orgError);
-        }
-      }
-
-      console.log('📋 Total teachers from all orgs:', allTeachers.length);
-      setTeachers(allTeachers);
-      // Cache teachers for instant loading on refresh
-      if (typeof window !== 'undefined') {
-        try {
-          sessionStorage.setItem('admin_teachers', JSON.stringify(allTeachers));
-        } catch { }
-      }
-      console.log('✅ All teachers loaded and state updated');
-
-    } catch (e: any) {
-      console.error('❌ Error loading teachers:', e.message);
-    } finally {
-      if (showLoading) {
-        setLoadingTeachers(false);
-      }
-    }
-  }
 
   // Guardian functions - Load guardians from ALL organizations
-  async function loadGuardians(showLoading = true) {
-    try {
-      if (showLoading) {
-        setLoadingGuardians(true);
-      }
-      setGuardianError(null);
-
-      console.log('🔄 Loading guardians from ALL organizations. Available orgs:', orgs);
-
-      if (orgs.length === 0) {
-        console.log('⚠️ No organizations available, using default org');
-        const res = await fetch(`/api/guardians?t=${Date.now()}`, { cache: 'no-store' });
-        const json = await res.json();
-
-        if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
-
-        const guardiansList = json.guardians || [];
-        setGuardians(guardiansList);
-        console.log('✅ Default guardians loaded:', guardiansList.length);
-        return;
-      }
-
-      // Load guardians from ALL organizations
-      const allGuardians = [];
-
-      for (const org of orgs) {
-        try {
-          console.log(`🔄 Loading guardians for org: ${org.name} (${org.id})`);
-          const res = await fetch(`/api/guardians?t=${Date.now()}`, { cache: 'no-store' });
-          const json = await res.json();
-
-          if (res.ok && json.guardians) {
-            const orgGuardians = json.guardians.map((guardian: any) => ({
-              ...guardian,
-              org_name: org.name // Add organization name for display
-            }));
-            allGuardians.push(...orgGuardians);
-            console.log(`✅ Loaded ${orgGuardians.length} guardians from ${org.name}`);
-          } else {
-            console.log(`⚠️ No guardians found for ${org.name}`);
-          }
-        } catch (orgError) {
-          console.error(`❌ Error loading guardians for ${org.name}:`, orgError);
-        }
-      }
-
-      console.log('📋 Total guardians from all orgs:', allGuardians.length);
-      console.log('📋 All guardians:', allGuardians);
-
-      setGuardians(allGuardians);
-      // Cache guardians for instant loading on refresh
-      if (typeof window !== 'undefined') {
-        try {
-          sessionStorage.setItem('admin_guardians', JSON.stringify(allGuardians));
-        } catch { }
-      }
-      console.log('✅ All guardians loaded and state updated');
-
-    } catch (e: any) {
-      console.error('❌ Error loading guardians:', e.message);
-      setGuardianError(e.message);
-    } finally {
-      if (showLoading) {
-        setLoadingGuardians(false);
-      }
-    }
-  }
-
-  async function submitGuardian(e: React.FormEvent) {
-    e.preventDefault();
-    e.stopPropagation();
-    try {
-      setIsSubmittingGuardian(true);
-      setGuardianError(null);
-      const method = guardianForm.id ? 'PUT' : 'POST';
-      // Remove org_id and created_by - server will extract from authenticated user
-      const { org_id, ...requestData } = guardianForm;
-
-      const res = await fetch('/api/guardians', {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestData),
-      });
-      const json = await res.json();
-      console.log('📥 Guardian API response:', json);
-
-      if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
-
-      // Optimistically update guardians list immediately for instant KPI update
-      if (json.guardian || json.user) {
-        const newGuardian = json.guardian || json.user;
-        setGuardians(prev => {
-          // Check if already exists (update) or add new
-          const exists = prev.find(g => g.id === newGuardian.id);
-          if (exists) {
-            return prev.map(g => g.id === newGuardian.id ? { ...g, ...newGuardian } : g);
-          } else {
-            return [...prev, { ...newGuardian, org_name: orgs.find(o => o.id === newGuardian.org_id)?.name || '' }];
-          }
-        });
-      }
-
-      setIsGuardianModalOpen(false);
-      setGuardianForm({ first_name: '', last_name: '', email: '', phone: '', org_id: '', is_active: true });
-
-      // Force refresh dashboard data in background to ensure data is in sync
-      console.log('🔄 Refreshing dashboard data in background...');
-      loadDashboardData().catch(err => console.error('Error refreshing dashboard:', err));
-
-      // Guardian created successfully - data already refreshed in table
-    } catch (e: any) {
-      console.error('❌ Error submitting guardian:', e.message);
-      setGuardianError(e.message);
-    } finally {
-      setIsSubmittingGuardian(false);
-    }
-  }
-
-  function openCreateGuardianModal() {
-    const orgId = orgs.length > 0 ? orgs[0].id : '1';
-    setGuardianForm({ first_name: '', last_name: '', email: '', phone: '', org_id: orgId, is_active: true });
-    setGuardianError(null);
-    setIsGuardianModalOpen(true);
-  }
 
 
 
-  function openEditGuardianModal(guardian: any) {
-    const [fn, ...rest] = (guardian.full_name || '').trim().split(/\s+/);
-    setGuardianForm({
-      id: guardian.id,
-      first_name: guardian.first_name ?? fn ?? '',
-      last_name: guardian.last_name ?? rest.join(' ') ?? '',
-      email: guardian.email || '',
-      phone: guardian.phone || '',
-      org_id: guardian.org_id || (orgs.length > 0 ? orgs[0].id : '1'),
-      is_active: guardian.is_active
-    });
-    setGuardianError(null);
-    setIsGuardianModalOpen(true);
-  }
 
 
 
-  function openDeleteGuardianModal(id: string) {
-    setGuardianToDelete(id);
-    setIsDeleteGuardianModalOpen(true);
-  }
 
-  async function confirmDeleteGuardian() {
-    if (!guardianToDelete) return;
-    try {
-      setGuardianError(null);
-      const res = await fetch(`/api/guardians?id=${encodeURIComponent(guardianToDelete)}`, { method: 'DELETE' });
-      const json = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
-      setIsDeleteGuardianModalOpen(false);
-      setGuardianToDelete(null);
-      await loadDashboardData();
-    } catch (e: any) {
-      setGuardianError(e.message);
-    }
-  }
+
+
 
   // Student functions - Load students from ALL organizations
   async function loadStudents(showLoading = true) {
@@ -892,23 +624,6 @@ export function AdminDashboard() {
   }
 
   // Load guardians and classes when student modal opens
-  async function loadGuardiansForStudent() {
-    try {
-      const orgId = orgs.length > 0 ? orgs[0].id : '1';
-
-      const res = await fetch(`/api/guardians?t=${Date.now()}`, { cache: 'no-store' });
-      const json = await res.json();
-
-      if (!res.ok) throw new Error(json.error || `Failed with ${res.status}`);
-
-      const guardiansList = json.guardians || [];
-      setGuardians(guardiansList);
-
-      // Also refresh classes
-    } catch (e: any) {
-      console.error('❌ Error loading guardians for student:', e.message);
-    }
-  }
 
   // Validate student age
   function validateStudentAge(dob: string): boolean {
@@ -998,44 +713,8 @@ export function AdminDashboard() {
     }
   }
 
-  function openCreateStudentModal() {
-    setStudentForm({ first_name: '', last_name: '', dob: '', gender: 'unknown', class_id: '', medical_notes: '', allergies: '', emergency_contact: '', guardian_ids: [],  address: '', start_date: '', barngildi: 0, student_language: '', social_security_number: '' });
-    setStudentError(null);
-    setIsStudentModalOpen(true);
-    // Load guardians when opening the modal
-    loadGuardiansForStudent();
-  }
 
-  function openEditStudentModal(student: any) {
-    setStudentForm({
-      id: student.id,
-      first_name: student.first_name,
-      last_name: student.last_name || '',
-      dob: student.dob || '',
-      gender: student.gender || 'unknown',
-      class_id: student.class_id || '',
-      medical_notes: student.medical_notes_encrypted || '',
-      allergies: student.allergies_encrypted || '',
-      emergency_contact: student.emergency_contact_encrypted || '',
-      guardian_ids: [],
 
-      // required fields to satisfy StudentFormData
-      address: student.address || '',
-      start_date: student.start_date || '',
-      barngildi: student.barngildi ?? 0,
-      student_language: student.student_language || '',
-      social_security_number: student.social_security_number || ''
-    });
-    setStudentError(null);
-    setIsStudentModalOpen(true);
-    // Load guardians when opening the modal
-    loadGuardiansForStudent();
-  }
-
-  function openDeleteStudentModal(id: string) {
-    setStudentToDelete(id);
-    setIsDeleteStudentModalOpen(true);
-  }
 
   async function confirmDeleteStudent() {
     if (!studentToDelete) return;
@@ -1114,7 +793,7 @@ export function AdminDashboard() {
     'bg-mint-100 dark:bg-slate-800',
   ];
 
-  const StatCard = ({ title, value, icon: Icon, color, trend, onClick, index = 0 }: {
+  const StatCard = ({ title, value, icon: Icon, trend, onClick, index = 0 }: {
     title: string;
     value: number;
     icon: React.ComponentType<any>;
