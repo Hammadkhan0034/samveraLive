@@ -251,7 +251,7 @@ function TeacherDashboardPageContent() {
     students: () => router.push('/dashboard/teacher/students'),
     messages: () => router.push('/dashboard/teacher/messages'),
     stories: () => router.push('/dashboard/stories'),
-    announcements: () => router.push('/dashboard/announcements'),
+    announcements: () => router.push('/dashboard/teacher/announcements'),
     menus: () => router.push('/dashboard/teacher/menus'),
   }), [router]);
 

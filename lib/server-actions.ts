@@ -51,7 +51,7 @@ export async function createAnnouncement(data: z.infer<typeof createAnnouncement
   const announcement = await handleCreateAnnouncement(user, supabaseAdmin, data);
   
   revalidatePath('/dashboard');
-  revalidatePath('/dashboard/announcements');
+  revalidatePath('/dashboard/principal/announcements');
   return announcement;
 }
 
@@ -84,7 +84,7 @@ export async function updateAnnouncement(announcementId: string, data: z.infer<t
   const updated = await handleUpdateAnnouncement(user, supabaseAdmin, announcementId, data);
   
   revalidatePath('/dashboard');
-  revalidatePath('/dashboard/announcements');
+  revalidatePath('/dashboard/principal/announcements');
   return updated;
 }
 
@@ -101,7 +101,7 @@ export async function deleteAnnouncement(announcementId: string) {
   const result = await handleDeleteAnnouncement(user, supabaseAdmin, announcementId);
   
   revalidatePath('/dashboard');
-  revalidatePath('/dashboard/announcements');
+  revalidatePath('/dashboard/principal/announcements');
   return result;
 }
 

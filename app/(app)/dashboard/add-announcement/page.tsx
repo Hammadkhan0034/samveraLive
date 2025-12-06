@@ -58,7 +58,7 @@ function AddAnnouncementContent() {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new Event('announcements-refresh'));
     }
-    router.push('/dashboard/announcements');
+    router.push('/dashboard/principal/announcements');
   };
 
   const showInitialLoading = loading && !user && isSigningIn;
