@@ -106,52 +106,28 @@ function PrincipalDashboardContent({
       </section>
 
       <ContactCards
-        contacts={[
-          {
-            id: '1',
-            name: 'Mária Jónsdóttir',
-            phone: '777-1334',
-            email: 'maria@domain.is',
-            address: 'Jhress: JJohanna 9',
-            gender: 'Female',
-            status: 'Active',
-            imageUrl: undefined,
-            onCall: () => {
-              // Handle call action
-              console.log('Call Mária Jónsdóttir');
-            },
-            onMessage: () => {
-              // Handle message action
-              console.log('Message Mária Jónsdóttir');
-            },
-            onViewProfile: () => {
-              // Handle view profile action
-              console.log('View profile Mária Jónsdóttir');
-            },
+        contact={{
+          id: '1',
+          name: 'Mária Jónsdóttir',
+          phone: '777-1334',
+          email: 'maria@domain.is',
+          address: 'Jhress: JJohanna 9',
+          gender: 'Female',
+          status: 'Active',
+          imageUrl: undefined,
+          onCall: () => {
+            // Handle call action
+            console.log('Call Mária Jónsdóttir');
           },
-          {
-            id: '2',
-            name: 'Ólafur Björnsson',
-            phone: '661-9988',
-            email: 'olafur@domain.is',
-            address: 'Reykjavík, Iceland',
-            gender: 'Male',
-            status: 'Active',
-            imageUrl: undefined,
-            onCall: () => {
-              // Handle call action
-              console.log('Call Ólafur Björnsson');
-            },
-            onMessage: () => {
-              // Handle message action
-              console.log('Message Ólafur Björnsson');
-            },
-            onViewProfile: () => {
-              // Handle view profile action
-              console.log('View profile Ólafur Björnsson');
-            },
+          onMessage: () => {
+            // Handle message action
+            console.log('Message Mária Jónsdóttir');
           },
-        ]}
+          onViewProfile: () => {
+            // Handle view profile action
+            console.log('View profile Mária Jónsdóttir');
+          },
+        }}
       />
     </>
   );
