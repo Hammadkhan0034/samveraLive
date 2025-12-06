@@ -5,6 +5,7 @@ import { validateBody, validateQuery, userIdSchema, firstNameSchema, lastNameSch
 import type { AuthUser, UserMetadata } from '@/lib/types/auth';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
+import { getCurrentUserOrgId } from '@/lib/server-helpers';
 
 /**
  * Handler for GET /api/guardians
@@ -66,15 +67,10 @@ export async function handlePostGuardian(
   user: AuthUser,
   adminClient: SupabaseClient,
 ) {
-  const metadata = user.user_metadata as UserMetadata | undefined;
-  const orgId = metadata?.org_id;
-
-  if (!orgId) {
-    return NextResponse.json(
-      { error: 'Organization not found for user' },
-      { status: 400 }
-    );
-  }
+  // Extract org_id from authenticated user (prefer metadata, fallback to getCurrentUserOrgId)
+  const metadata = user.user_metadata as UserMetadata 
+  const orgId = metadata.org_id;
+ 
 
   const body = await request.json();
   const bodyValidation = validateBody(postGuardianBodySchema, body);

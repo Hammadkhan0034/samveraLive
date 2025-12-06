@@ -14,6 +14,7 @@ import {
 } from '@/lib/validation';
 import type { AuthUser, UserMetadata } from '@/lib/types/auth';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { getCurrentUserOrgId } from '@/lib/server-helpers';
 
 // Note: Some databases may not have a dedicated role_id column on public.users
 // We'll avoid relying on role_id in this route
@@ -31,9 +32,9 @@ const postPrincipalBodySchema = z.object({
   phone: phoneSchema,
   first_name: firstNameSchema,
   last_name: lastNameSchema.optional(),
-  org_id: orgIdSchema,
+  org_id: orgIdSchema.optional(), // Optional - will be extracted from authenticated user if not provided
   is_active: z.boolean().optional(),
-  created_by: uuidSchema.optional(),
+  created_by: uuidSchema.optional(), // Optional - will use authenticated user.id if not provided
 });
 
 // PUT body schema
@@ -53,6 +54,56 @@ const deletePrincipalQuerySchema = z.object({
 });
 
 const usersColumnCache: Record<string, boolean> = {};
+
+/**
+ * Detects if an error is related to phone format constraint violation
+ * and returns a human-readable error message
+ */
+function getPhoneFormatErrorMessage(error: any): string | null {
+  if (!error) return null;
+
+  const errorMessage = error.message || '';
+  const errorDetails = error.details || '';
+  const errorHint = error.hint || '';
+  const combinedError = `${errorMessage} ${errorDetails} ${errorHint}`.toLowerCase();
+
+  // Check for phone format constraint violation
+  if (
+    combinedError.includes('chk_users_phone_format') ||
+    (combinedError.includes('check constraint') && combinedError.includes('phone')) ||
+    (combinedError.includes('violates check constraint') && combinedError.includes('phone_format'))
+  ) {
+    return 'Phone number must be in international format: optional + sign followed by 7-15 digits (first digit cannot be 0). Examples: +1234567890 or 1234567890';
+  }
+
+  return null;
+}
+
+/**
+ * Detects if an error is related to foreign key constraint violation
+ * and returns a human-readable error message
+ */
+function getForeignKeyErrorMessage(error: any): string | null {
+  if (!error) return null;
+
+  const errorCode = error.code || '';
+  const errorMessage = error.message || '';
+  const errorDetails = error.details || '';
+  const combinedError = `${errorMessage} ${errorDetails}`.toLowerCase();
+
+  // Check for foreign key constraint violation (PostgreSQL error code 23503)
+  if (errorCode === '23503' || combinedError.includes('foreign key constraint')) {
+    // Check if it's an org_id foreign key violation
+    if (combinedError.includes('org_id') || combinedError.includes('orgs')) {
+      const orgIdMatch = errorDetails.match(/\(org_id\)=\(([^)]+)\)/);
+      const orgId = orgIdMatch ? orgIdMatch[1] : 'unknown';
+      return `Organization with ID ${orgId} does not exist. Please provide a valid organization ID.`;
+    }
+    return 'Foreign key constraint violation. Please ensure all referenced records exist.';
+  }
+
+  return null;
+}
 
 async function hasUsersColumn(
   columnName: string,
@@ -376,10 +427,55 @@ export async function handlePostPrincipal(
       phone,
       first_name,
       last_name,
-      org_id,
+      org_id: clientOrgId,
       is_active,
-      created_by,
+      created_by: clientCreatedBy,
     } = bodyValidation.data;
+
+    // Extract org_id from authenticated user
+    // For admin users, they can specify org_id in the request (clientOrgId)
+    // Otherwise, extract from user metadata or getCurrentUserOrgId
+    const metadata = user.user_metadata as UserMetadata | undefined;
+    let orgId = clientOrgId || metadata?.org_id;
+    if (!orgId) {
+      orgId = await getCurrentUserOrgId(user);
+    }
+
+    // Validate that org_id exists in orgs table
+    if (orgId) {
+      const { data: org, error: orgError } = await adminClient
+        .from('orgs')
+        .select('id')
+        .eq('id', orgId)
+        .maybeSingle();
+
+      if (orgError) {
+        console.error('❌ Error checking org existence:', orgError);
+        return NextResponse.json(
+          { error: 'Failed to validate organization' },
+          { status: 500 },
+        );
+      }
+
+      if (!org) {
+        console.error('❌ Organization not found:', orgId);
+        return NextResponse.json(
+          { 
+            error: `Organization with ID ${orgId} does not exist. Please provide a valid organization ID.`,
+            details: 'The specified organization ID is not present in the orgs table.'
+          },
+          { status: 400 },
+        );
+      }
+    } else {
+      return NextResponse.json(
+        { error: 'Organization ID is required. Unable to determine organization from user context.' },
+        { status: 400 },
+      );
+    }
+
+    // Use authenticated user.id for created_by (ignore client-provided created_by)
+    const createdBy = user.id;
 
     // Email is required for principals (non-student users can login)
     if (!email) {
@@ -423,7 +519,7 @@ export async function handlePostPrincipal(
       const userMetadata: UserMetadata = {
         roles: ['principal'],
         activeRole: 'principal',
-        org_id,
+        org_id: orgId,
       };
 
       await adminClient.auth.admin.updateUserById(principalId, {
@@ -440,7 +536,7 @@ export async function handlePostPrincipal(
       phone: phone || null,
       first_name: first_name,
       last_name: last_name || null,
-      org_id,
+      org_id: orgId,
       is_active: is_active !== undefined ? is_active : true,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -508,6 +604,28 @@ export async function handlePostPrincipal(
 
     if (error) {
       console.error('❌ Error creating principal:', error);
+      
+      // Check for phone format constraint violation
+      const phoneFormatError = getPhoneFormatErrorMessage(error);
+      if (phoneFormatError) {
+        return NextResponse.json(
+          { error: phoneFormatError },
+          { status: 400 },
+        );
+      }
+      
+      // Check for foreign key constraint violation
+      const foreignKeyError = getForeignKeyErrorMessage(error);
+      if (foreignKeyError) {
+        return NextResponse.json(
+          { 
+            error: foreignKeyError,
+            details: error.details || '',
+          },
+          { status: 400 },
+        );
+      }
+      
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
@@ -540,6 +658,28 @@ export async function handlePostPrincipal(
     );
   } catch (err: any) {
     console.error('💥 Error in principal creation:', err);
+    
+    // Check for phone format constraint violation
+    const phoneFormatError = getPhoneFormatErrorMessage(err);
+    if (phoneFormatError) {
+      return NextResponse.json(
+        { error: phoneFormatError },
+        { status: 400 },
+      );
+    }
+    
+    // Check for foreign key constraint violation
+    const foreignKeyError = getForeignKeyErrorMessage(err);
+    if (foreignKeyError) {
+      return NextResponse.json(
+        { 
+          error: foreignKeyError,
+          details: err.details || '',
+        },
+        { status: 400 },
+      );
+    }
+    
     return NextResponse.json(
       { error: err.message || 'Unknown error' },
       { status: 500 },
@@ -590,6 +730,16 @@ export async function handlePutPrincipal(
 
     if (error) {
       console.error('❌ Error updating principal:', error);
+      
+      // Check for phone format constraint violation
+      const phoneFormatError = getPhoneFormatErrorMessage(error);
+      if (phoneFormatError) {
+        return NextResponse.json(
+          { error: phoneFormatError },
+          { status: 400 },
+        );
+      }
+      
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
@@ -621,6 +771,16 @@ export async function handlePutPrincipal(
     );
   } catch (err: any) {
     console.error('💥 Error in principal update:', err);
+    
+    // Check for phone format constraint violation
+    const phoneFormatError = getPhoneFormatErrorMessage(err);
+    if (phoneFormatError) {
+      return NextResponse.json(
+        { error: phoneFormatError },
+        { status: 400 },
+      );
+    }
+    
     return NextResponse.json(
       { error: err.message || 'Unknown error' },
       { status: 500 },

@@ -10,6 +10,7 @@ import {
   deleteStudentQuerySchema,
 } from '@/lib/validation/students';
 import type { AuthUser, UserMetadata, SamveraRole } from '@/lib/types/auth';
+import { getCurrentUserOrgId } from '@/lib/server-helpers';
 
 export async function handleGetStudents(
   request: Request,
@@ -19,13 +20,10 @@ export async function handleGetStudents(
   const metadata = user.user_metadata as UserMetadata | undefined;
   const roles = (metadata?.roles ?? []) as SamveraRole[];
   const activeRole = metadata?.activeRole;
-  const orgId = metadata?.org_id;
-
+  // Extract org_id from authenticated user (prefer metadata, fallback to getCurrentUserOrgId)
+  let orgId = metadata?.org_id;
   if (!orgId) {
-    return NextResponse.json(
-      { error: 'Organization not found for user' },
-      { status: 400 },
-    );
+    orgId = await getCurrentUserOrgId(user);
   }
 
   // Check if user has principal, admin, teacher, or parent/guardian role
@@ -195,14 +193,11 @@ export async function handlePostStudent(
   user: AuthUser,
   adminClient: SupabaseClient,
 ): Promise<NextResponse> {
+  // Extract org_id from authenticated user (prefer metadata, fallback to getCurrentUserOrgId)
   const metadata = user.user_metadata as UserMetadata | undefined;
-  const orgId = metadata?.org_id;
-
+  let orgId = metadata?.org_id;
   if (!orgId) {
-    return NextResponse.json(
-      { error: 'Organization not found for user' },
-      { status: 400 },
-    );
+    orgId = await getCurrentUserOrgId(user);
   }
 
   // Validate Supabase URL is configured
@@ -471,14 +466,11 @@ export async function handlePutStudent(
   user: AuthUser,
   adminClient: SupabaseClient,
 ): Promise<NextResponse> {
+  // Extract org_id from authenticated user (prefer metadata, fallback to getCurrentUserOrgId)
   const metadata = user.user_metadata as UserMetadata | undefined;
-  const orgId = metadata?.org_id;
-
+  let orgId = metadata?.org_id;
   if (!orgId) {
-    return NextResponse.json(
-      { error: 'Organization not found for user' },
-      { status: 400 },
-    );
+    orgId = await getCurrentUserOrgId(user);
   }
 
   const body = await request.json();

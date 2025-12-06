@@ -43,6 +43,7 @@ export function AdminDashboard() {
   const [loadingOrgs, setLoadingOrgs] = useState(false);
   const [orgForm, setOrgForm] = useState<{ id?: string; name: string; slug: string; timezone: string }>({ name: '', slug: '', timezone: 'UTC' });
   const [orgError, setOrgError] = useState<string | null>(null);
+  const [orgSlugError, setOrgSlugError] = useState<string | null>(null);
   const [isSubmittingOrg, setIsSubmittingOrg] = useState(false);
   const [isDeletingOrg, setIsDeletingOrg] = useState(false);
   const [principals, setPrincipals] = useState<Array<{ id: string; email: string | null; phone: string | null; full_name?: string; first_name?: string | null; last_name?: string | null; name?: string | null; org_id: string; is_active: boolean; created_at: string }>>([]);
@@ -52,6 +53,10 @@ export function AdminDashboard() {
   const [isDeletingPrincipal, setIsDeletingPrincipal] = useState(false);
   const [principalForm, setPrincipalForm] = useState<{ id?: string; first_name?: string; last_name?: string; full_name: string; email?: string; phone?: string; org_id: string; is_active?: boolean }>({ first_name: '', last_name: '', full_name: '', email: '', phone: '', org_id: '', is_active: true });
   const [principalPhoneError, setPrincipalPhoneError] = useState<string | null>(null);
+  const [principalFirstNameError, setPrincipalFirstNameError] = useState<string | null>(null);
+  const [principalLastNameError, setPrincipalLastNameError] = useState<string | null>(null);
+  const [principalEmailError, setPrincipalEmailError] = useState<string | null>(null);
+  const [principalOrgError, setPrincipalOrgError] = useState<string | null>(null);
 
   // Guardian states
   const [guardians, setGuardians] = useState<Array<{ id: string; email: string | null; phone: string | null; full_name: string; org_id: string; is_active: boolean; created_at: string; metadata?: any; org_name?: string }>>([]);
@@ -126,6 +131,14 @@ export function AdminDashboard() {
     try {
       setIsSubmittingOrg(true);
       setOrgError(null);
+      setOrgSlugError(null);
+
+      // Validate slug before submitting
+      if (!validateSlug(orgForm.slug)) {
+        setOrgSlugError('Slug must contain only lowercase letters, numbers, and hyphens');
+        setIsSubmittingOrg(false);
+        return;
+      }
 
       console.log('🔄 Submitting organization:', orgForm);
 
@@ -167,12 +180,14 @@ export function AdminDashboard() {
   function openCreateOrgModal() {
     setOrgForm({ name: '', slug: '', timezone: 'UTC' });
     setOrgError(null);
+    setOrgSlugError(null);
     setIsOrgModalOpen(true);
   }
 
   function openEditOrgModal(org: { id: string; name: string; slug: string; timezone: string }) {
     setOrgForm(org);
     setOrgError(null);
+    setOrgSlugError(null);
     setIsOrgModalOpen(true);
   }
 
@@ -310,13 +325,84 @@ export function AdminDashboard() {
   }
 
   // Validate phone number (optional but must be valid if provided)
-  function validatePhoneNumber(phone: string | undefined): boolean {
-    if (!phone || phone.trim() === '') return true; // Phone is optional
-    // Allow various phone formats: digits, spaces, dashes, parentheses, plus sign
-    // Minimum 7 digits, maximum 20 characters
-    const phoneRegex = /^[\+]?[(]?[0-9]{1,4}[)]?[-\s\.]?[(]?[0-9]{1,4}[)]?[-\s\.]?[0-9]{1,9}$/;
-    const digitsOnly = phone.replace(/\D/g, '');
-    return phoneRegex.test(phone.trim()) && digitsOnly.length >= 7 && digitsOnly.length <= 15;
+  // Must match database constraint: ^\+?[1-9]\d{1,14}$ with length 7-15
+  function validatePhoneNumber(phone: string | undefined): { valid: boolean; error: string | null } {
+    if (!phone || phone.trim() === '') {
+      return { valid: true, error: null }; // Phone is optional
+    }
+    
+    const trimmedPhone = phone.trim();
+    const length = trimmedPhone.length;
+    
+    // Check length constraint
+    if (length < 7 || length > 15) {
+      return {
+        valid: false,
+        error: 'Phone number must be between 7 and 15 characters'
+      };
+    }
+    
+    // Check format: optional +, first digit 1-9, then 1-14 more digits
+    // Database constraint: ^\+?[1-9]\d{1,14}$
+    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+    if (!phoneRegex.test(trimmedPhone)) {
+      return {
+        valid: false,
+        error: 'Phone number must be in international format: optional + sign followed by 7-15 digits (first digit cannot be 0). Examples: +1234567890 or 1234567890'
+      };
+    }
+    
+    return { valid: true, error: null };
+  }
+
+  // Validate first name
+  function validateFirstName(firstName: string | undefined): { valid: boolean; error: string | null } {
+    if (!firstName || firstName.trim() === '') {
+      return { valid: false, error: 'First name is required' };
+    }
+    if (firstName.trim().length > 100) {
+      return { valid: false, error: 'First name must be 100 characters or less' };
+    }
+    return { valid: true, error: null };
+  }
+
+  // Validate last name
+  function validateLastName(lastName: string | undefined): { valid: boolean; error: string | null } {
+    if (!lastName || lastName.trim() === '') {
+      return { valid: true, error: null }; // Last name is optional
+    }
+    if (lastName.trim().length > 100) {
+      return { valid: false, error: 'Last name must be 100 characters or less' };
+    }
+    return { valid: true, error: null };
+  }
+
+  // Validate email
+  function validateEmail(email: string | undefined): { valid: boolean; error: string | null } {
+    if (!email || email.trim() === '') {
+      return { valid: true, error: null }; // Email is optional for principals (though typically required)
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      return { valid: false, error: 'Please enter a valid email address' };
+    }
+    return { valid: true, error: null };
+  }
+
+  // Validate organization
+  function validateOrg(orgId: string | undefined): { valid: boolean; error: string | null } {
+    if (!orgId || orgId.trim() === '') {
+      return { valid: false, error: 'Organization is required' };
+    }
+    return { valid: true, error: null };
+  }
+
+  // Validate slug format: lowercase letters, numbers, and hyphens only
+  function validateSlug(slug: string): boolean {
+    if (!slug || slug.trim() === '') return false; // Slug is required
+    // Must be 1-100 characters and contain only lowercase letters, numbers, and hyphens
+    const slugRegex = /^[a-z0-9-]+$/;
+    return slug.length >= 1 && slug.length <= 100 && slugRegex.test(slug);
   }
 
   async function submitPrincipal(e: React.FormEvent) {
@@ -325,10 +411,39 @@ export function AdminDashboard() {
     try {
       setIsSubmittingPrincipal(true);
       setPrincipalError(null);
+      setPrincipalFirstNameError(null);
+      setPrincipalLastNameError(null);
+      setPrincipalEmailError(null);
+      setPrincipalPhoneError(null);
+      setPrincipalOrgError(null);
 
-      // Validate phone number if provided
-      if (principalForm.phone && !validatePhoneNumber(principalForm.phone)) {
-        setPrincipalError(t.principal_phone_invalid || 'Please enter a valid phone number');
+      // Validate all fields
+      const firstNameValidation = validateFirstName(principalForm.first_name);
+      const lastNameValidation = validateLastName(principalForm.last_name);
+      const emailValidation = validateEmail(principalForm.email);
+      const phoneValidation = validatePhoneNumber(principalForm.phone);
+      const orgValidation = validateOrg(principalForm.org_id);
+
+      // Set field-level errors
+      if (!firstNameValidation.valid) {
+        setPrincipalFirstNameError(firstNameValidation.error);
+      }
+      if (!lastNameValidation.valid) {
+        setPrincipalLastNameError(lastNameValidation.error);
+      }
+      if (!emailValidation.valid) {
+        setPrincipalEmailError(emailValidation.error);
+      }
+      if (!phoneValidation.valid) {
+        setPrincipalPhoneError(phoneValidation.error);
+      }
+      if (!orgValidation.valid) {
+        setPrincipalOrgError(orgValidation.error);
+      }
+
+      // If any validation fails, stop submission
+      if (!firstNameValidation.valid || !lastNameValidation.valid || 
+          !emailValidation.valid || !phoneValidation.valid || !orgValidation.valid) {
         setIsSubmittingPrincipal(false);
         return;
       }
@@ -336,6 +451,8 @@ export function AdminDashboard() {
       console.log('🔄 Submitting principal:', principalForm);
 
       const method = principalForm.id ? 'PUT' : 'POST';
+      // Include org_id from the form so the selected organization is used
+      // The handler will use clientOrgId if provided, otherwise fall back to admin's org
       const res = await fetch('/api/principals', {
         method,
         headers: { 'content-type': 'application/json' },
@@ -361,8 +478,12 @@ export function AdminDashboard() {
       }
 
       // Close modal and reset form
-      setPrincipalForm({ id: undefined, full_name: '', email: '', org_id: '', is_active: true });
+      setPrincipalForm({ id: undefined, first_name: '', last_name: '', full_name: '', email: '', phone: '', org_id: '', is_active: true });
       setPrincipalPhoneError(null);
+      setPrincipalFirstNameError(null);
+      setPrincipalLastNameError(null);
+      setPrincipalEmailError(null);
+      setPrincipalOrgError(null);
       setIsPrincipalModalOpen(false);
 
       // Force refresh dashboard data in background to ensure data is in sync
@@ -379,6 +500,10 @@ export function AdminDashboard() {
     setPrincipalForm({ first_name: '', last_name: '', full_name: '', email: '', phone: '', org_id: (orgs[0]?.id || ''), is_active: true });
     setPrincipalError(null);
     setPrincipalPhoneError(null);
+    setPrincipalFirstNameError(null);
+    setPrincipalLastNameError(null);
+    setPrincipalEmailError(null);
+    setPrincipalOrgError(null);
     setIsPrincipalModalOpen(true);
   }
 
@@ -408,6 +533,10 @@ export function AdminDashboard() {
     });
     setPrincipalError(null);
     setPrincipalPhoneError(null);
+    setPrincipalFirstNameError(null);
+    setPrincipalLastNameError(null);
+    setPrincipalEmailError(null);
+    setPrincipalOrgError(null);
     setIsPrincipalModalOpen(true);
   }
 
@@ -588,10 +717,8 @@ export function AdminDashboard() {
       setIsSubmittingGuardian(true);
       setGuardianError(null);
       const method = guardianForm.id ? 'PUT' : 'POST';
-      const requestData = {
-        ...guardianForm,
-        created_by: 'admin-user-id' // In real app, get from session
-      };
+      // Remove org_id and created_by - server will extract from authenticated user
+      const { org_id, ...requestData } = guardianForm;
 
       const res = await fetch('/api/guardians', {
         method,
@@ -814,10 +941,9 @@ export function AdminDashboard() {
       }
 
       const method = studentForm.id ? 'PUT' : 'POST';
-      const requestData = {
-        ...studentForm,
-        created_by: 'admin-user-id' // In real app, get from session
-      };
+      // Remove created_by - server will extract from authenticated user
+      // org_id is not part of StudentFormData, so we don't need to remove it
+      const requestData = studentForm;
 
       const res = await fetch('/api/students', {
         method,
@@ -1389,7 +1515,10 @@ export function AdminDashboard() {
                 {orgForm.id ? t.edit_organization : t.create_organization}
               </h3>
               <button
-                onClick={() => setIsOrgModalOpen(false)}
+                onClick={() => {
+                  setIsOrgModalOpen(false);
+                  setOrgSlugError(null);
+                }}
                 className="rounded-ds-md p-1 hover:bg-mint-100 dark:hover:bg-slate-700 transition-colors flex-shrink-0"
               >
                 <X className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -1418,11 +1547,35 @@ export function AdminDashboard() {
                 <input
                   type="text"
                   value={orgForm.slug}
-                  onChange={(e) => setOrgForm((p) => ({ ...p, slug: e.target.value }))}
+                  onChange={(e) => {
+                    const slugValue = e.target.value.toLowerCase(); // Convert to lowercase
+                    setOrgForm((p) => ({ ...p, slug: slugValue }));
+                    // Validate on change
+                    if (slugValue && !validateSlug(slugValue)) {
+                      setOrgSlugError('Slug must contain only lowercase letters, numbers, and hyphens');
+                    } else {
+                      setOrgSlugError(null);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    // Validate on blur
+                    if (e.target.value && !validateSlug(e.target.value)) {
+                      setOrgSlugError('Slug must contain only lowercase letters, numbers, and hyphens');
+                    } else {
+                      setOrgSlugError(null);
+                    }
+                  }}
                   placeholder={t.organization_slug_placeholder}
-                  className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
+                  className={`w-full rounded-ds-md border bg-white dark:bg-slate-900 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-1 dark:text-white ${
+                    orgSlugError
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-500'
+                      : 'border-[#D8EBD8] dark:border-slate-600 focus:border-mint-500 focus:ring-mint-500'
+                  }`}
                   required
                 />
+                {orgSlugError && (
+                  <p className="mt-1 text-ds-tiny text-red-600 dark:text-red-400">{orgSlugError}</p>
+                )}
               </div>
 
               <div>
@@ -1445,14 +1598,17 @@ export function AdminDashboard() {
               <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 pt-3 sm:pt-4">
                 <button
                   type="button"
-                  onClick={() => setIsOrgModalOpen(false)}
+                  onClick={() => {
+                    setIsOrgModalOpen(false);
+                    setOrgSlugError(null);
+                  }}
                   className="flex-1 rounded-ds-md border border-slate-300 dark:border-slate-600 px-3 sm:px-4 py-2 text-ds-tiny sm:text-ds-small hover:bg-mint-50 dark:hover:bg-slate-700 transition-colors"
                 >
                   {t.cancel_delete}
                 </button>
                 <button
                   type="submit"
-                  disabled={isSubmittingOrg}
+                  disabled={isSubmittingOrg || !!orgSlugError}
                   className="flex-1 rounded-ds-md bg-mint-500 px-3 sm:px-4 py-2 text-ds-tiny sm:text-ds-small text-white hover:bg-mint-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
                 >
                   {isSubmittingOrg ? (
@@ -1498,6 +1654,10 @@ export function AdminDashboard() {
                 onClick={() => {
                   setIsPrincipalModalOpen(false);
                   setPrincipalPhoneError(null);
+                  setPrincipalFirstNameError(null);
+                  setPrincipalLastNameError(null);
+                  setPrincipalEmailError(null);
+                  setPrincipalOrgError(null);
                 }}
                 className="rounded-ds-md p-1 hover:bg-mint-100 dark:hover:bg-slate-700 transition-colors flex-shrink-0"
               >
@@ -1514,11 +1674,36 @@ export function AdminDashboard() {
                   <input
                     type="text"
                     value={principalForm.first_name || ''}
-                    onChange={(e) => setPrincipalForm((p) => ({ ...p, first_name: e.target.value, full_name: `${e.target.value} ${p.last_name || ''}`.trim() }))}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setPrincipalForm((p) => ({ ...p, first_name: value, full_name: `${value} ${p.last_name || ''}`.trim() }));
+                      // Validate on change
+                      const validation = validateFirstName(value);
+                      if (!validation.valid) {
+                        setPrincipalFirstNameError(validation.error);
+                      } else {
+                        setPrincipalFirstNameError(null);
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const validation = validateFirstName(e.target.value);
+                      if (!validation.valid) {
+                        setPrincipalFirstNameError(validation.error);
+                      } else {
+                        setPrincipalFirstNameError(null);
+                      }
+                    }}
                     placeholder={t.principal_first_name_placeholder}
-                    className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
+                    className={`w-full rounded-ds-md border bg-white dark:bg-slate-900 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-1 dark:text-white ${
+                      principalFirstNameError
+                        ? 'border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-500'
+                        : 'border-[#D8EBD8] dark:border-slate-600 focus:border-mint-500 focus:ring-mint-500'
+                    }`}
                     required
                   />
+                  {principalFirstNameError && (
+                    <p className="mt-1 text-ds-tiny text-red-600 dark:text-red-400">{principalFirstNameError}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-ds-tiny sm:text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
@@ -1527,11 +1712,36 @@ export function AdminDashboard() {
                   <input
                     type="text"
                     value={principalForm.last_name || ''}
-                    onChange={(e) => setPrincipalForm((p) => ({ ...p, last_name: e.target.value, full_name: `${p.first_name || ''} ${e.target.value}`.trim() }))}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setPrincipalForm((p) => ({ ...p, last_name: value, full_name: `${p.first_name || ''} ${value}`.trim() }));
+                      // Validate on change
+                      const validation = validateLastName(value);
+                      if (!validation.valid) {
+                        setPrincipalLastNameError(validation.error);
+                      } else {
+                        setPrincipalLastNameError(null);
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const validation = validateLastName(e.target.value);
+                      if (!validation.valid) {
+                        setPrincipalLastNameError(validation.error);
+                      } else {
+                        setPrincipalLastNameError(null);
+                      }
+                    }}
                     placeholder={t.principal_last_name_placeholder}
-                    className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
+                    className={`w-full rounded-ds-md border bg-white dark:bg-slate-900 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-1 dark:text-white ${
+                      principalLastNameError
+                        ? 'border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-500'
+                        : 'border-[#D8EBD8] dark:border-slate-600 focus:border-mint-500 focus:ring-mint-500'
+                    }`}
                     required
                   />
+                  {principalLastNameError && (
+                    <p className="mt-1 text-ds-tiny text-red-600 dark:text-red-400">{principalLastNameError}</p>
+                  )}
                 </div>
               </div>
 
@@ -1542,10 +1752,35 @@ export function AdminDashboard() {
                 <input
                   type="email"
                   value={principalForm.email || ''}
-                  onChange={(e) => setPrincipalForm((p) => ({ ...p, email: e.target.value }))}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setPrincipalForm((p) => ({ ...p, email: value }));
+                    // Validate on change
+                    const validation = validateEmail(value);
+                    if (!validation.valid) {
+                      setPrincipalEmailError(validation.error);
+                    } else {
+                      setPrincipalEmailError(null);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const validation = validateEmail(e.target.value);
+                    if (!validation.valid) {
+                      setPrincipalEmailError(validation.error);
+                    } else {
+                      setPrincipalEmailError(null);
+                    }
+                  }}
                   placeholder={t.principal_email_placeholder}
-                  className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
+                  className={`w-full rounded-ds-md border bg-white dark:bg-slate-900 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-1 dark:text-white ${
+                    principalEmailError
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-500'
+                      : 'border-[#D8EBD8] dark:border-slate-600 focus:border-mint-500 focus:ring-mint-500'
+                  }`}
                 />
+                {principalEmailError && (
+                  <p className="mt-1 text-ds-tiny text-red-600 dark:text-red-400">{principalEmailError}</p>
+                )}
               </div>
 
               <div>
@@ -1559,16 +1794,18 @@ export function AdminDashboard() {
                     const phoneValue = e.target.value;
                     setPrincipalForm((p) => ({ ...p, phone: phoneValue }));
                     // Validate on change
-                    if (phoneValue && !validatePhoneNumber(phoneValue)) {
-                      setPrincipalPhoneError(t.principal_phone_invalid || 'Please enter a valid phone number');
+                    const validation = validatePhoneNumber(phoneValue);
+                    if (!validation.valid) {
+                      setPrincipalPhoneError(validation.error || t.principal_phone_invalid || 'Please enter a valid phone number');
                     } else {
                       setPrincipalPhoneError(null);
                     }
                   }}
                   onBlur={(e) => {
                     // Validate on blur
-                    if (e.target.value && !validatePhoneNumber(e.target.value)) {
-                      setPrincipalPhoneError(t.principal_phone_invalid || 'Please enter a valid phone number');
+                    const validation = validatePhoneNumber(e.target.value);
+                    if (!validation.valid) {
+                      setPrincipalPhoneError(validation.error || t.principal_phone_invalid || 'Please enter a valid phone number');
                     } else {
                       setPrincipalPhoneError(null);
                     }
@@ -1591,8 +1828,30 @@ export function AdminDashboard() {
                 </label>
                 <select
                   value={principalForm.org_id}
-                  onChange={(e) => setPrincipalForm((p) => ({ ...p, org_id: e.target.value }))}
-                  className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setPrincipalForm((p) => ({ ...p, org_id: value }));
+                    // Validate on change
+                    const validation = validateOrg(value);
+                    if (!validation.valid) {
+                      setPrincipalOrgError(validation.error);
+                    } else {
+                      setPrincipalOrgError(null);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    const validation = validateOrg(e.target.value);
+                    if (!validation.valid) {
+                      setPrincipalOrgError(validation.error);
+                    } else {
+                      setPrincipalOrgError(null);
+                    }
+                  }}
+                  className={`w-full rounded-ds-md border bg-white dark:bg-slate-900 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-1 dark:text-white ${
+                    principalOrgError
+                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-500'
+                      : 'border-[#D8EBD8] dark:border-slate-600 focus:border-mint-500 focus:ring-mint-500'
+                  }`}
                   required
                 >
                   <option value="">Select organization</option>
@@ -1600,6 +1859,9 @@ export function AdminDashboard() {
                     <option key={o.id} value={o.id}>{o.name}</option>
                   ))}
                 </select>
+                {principalOrgError && (
+                  <p className="mt-1 text-ds-tiny text-red-600 dark:text-red-400">{principalOrgError}</p>
+                )}
               </div>
 
               <div>
@@ -1626,6 +1888,10 @@ export function AdminDashboard() {
                   onClick={() => {
                     setIsPrincipalModalOpen(false);
                     setPrincipalPhoneError(null);
+                    setPrincipalFirstNameError(null);
+                    setPrincipalLastNameError(null);
+                    setPrincipalEmailError(null);
+                    setPrincipalOrgError(null);
                   }}
                   className="flex-1 rounded-ds-md border border-slate-300 dark:border-slate-600 px-3 sm:px-4 py-2 text-ds-tiny sm:text-ds-small hover:bg-mint-50 dark:hover:bg-slate-700 transition-colors"
                 >
@@ -1633,7 +1899,7 @@ export function AdminDashboard() {
                 </button>
                 <button
                   type="submit"
-                  disabled={isSubmittingPrincipal}
+                  disabled={isSubmittingPrincipal || !!principalFirstNameError || !!principalLastNameError || !!principalEmailError || !!principalPhoneError || !!principalOrgError}
                   className="flex-1 rounded-ds-md bg-mint-500 px-3 sm:px-4 py-2 text-ds-tiny sm:text-ds-small text-white hover:bg-mint-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
                 >
                   {isSubmittingPrincipal ? (
@@ -1674,10 +1940,8 @@ export function AdminDashboard() {
         onClose={() => setIsStudentModalOpen(false)}
         onSubmit={async (data: StudentFormData) => {
           const method = data.id ? 'PUT' : 'POST';
-          const requestData = {
-            ...data,
-            created_by: 'admin-user-id' // In real app, get from session
-          };
+         
+          const requestData = data;
 
           const res = await fetch('/api/students', {
             method,

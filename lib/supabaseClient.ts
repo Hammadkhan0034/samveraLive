@@ -5,7 +5,7 @@ import { createClient } from "@supabase/supabase-js"
 if (typeof window === 'undefined') {
   const { config } = require('dotenv');
   const path = require('path');
-  config({ path: path.resolve(process.cwd(), '.env.local') });
+  config({ path: path.resolve(process.cwd(), '.env') });
 }
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
