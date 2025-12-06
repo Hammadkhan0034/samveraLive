@@ -1,6 +1,5 @@
 'use client';
 
-import { useAuth } from '@/lib/hooks/useAuth';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
 import { AdminDashboard } from '@/app/components/AdminDashboard';
 import Loading from '@/app/components/shared/Loading';
@@ -18,7 +17,7 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-mint-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+    <div className="min-h-screen bg-mint-100 dark:bg-slate-950">
       <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-ds-lg">
         <AdminDashboard />
       </main>
