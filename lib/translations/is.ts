@@ -459,6 +459,7 @@ export const isText = {
 
   // Teacher Dashboard
   teacher_dashboard: 'Kennarayfirlit',
+  teacher_dashboard_subtitle: 'Fylgjast með mætingu, stjórna nemendum og hafa samskipti við forráðamenn.',
   kids_checked_in: 'Börn skráð inn',
   today_hint: 'Í dag · Sýnagögn',
   child: 'Barn',

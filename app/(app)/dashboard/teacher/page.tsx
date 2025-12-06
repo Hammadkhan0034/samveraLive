@@ -1,12 +1,13 @@
 'use client';
 import React, { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
-import { Menu, ClipboardCheck, Users, MessageSquare, FileText, Megaphone, Utensils, AlertCircle } from 'lucide-react';
-import ProfileSwitcher from '@/app/components/ProfileSwitcher';
+import { ClipboardCheck, Users, MessageSquare, FileText, Megaphone, Utensils, AlertCircle } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import TeacherPageLayout, { useTeacherPageLayout } from '@/app/components/shared/TeacherPageLayout';
+import { PageHeader } from '@/app/components/shared/PageHeader';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import KPICardSkeleton from '@/app/components/loading-skeletons/KPICardSkeleton';
 import type { KPICard, TeacherDashboardContentProps, TeacherMetrics } from '@/lib/types/dashboard';
+import StoryColumn from '@/app/components/shared/StoryColumn';
 
 function TeacherDashboardContent({
   t,
@@ -20,24 +21,18 @@ function TeacherDashboardContent({
   return (
     <>
       {/* Content Header */}
-      <div className="mb-ds-sm flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-3">
-          {/* Mobile menu button */}
-          <button
-            onClick={() => sidebarRef.current?.open()}
-            className="md:hidden p-2 rounded-ds-md hover:bg-mint-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300"
-            aria-label="Toggle sidebar"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-          <h2 className="text-ds-h2 font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-            {t.teacher_dashboard}
-          </h2>
-        </div>
-        <div className="flex items-center gap-3">
-          <ProfileSwitcher />
-        </div>
-      </div>
+      <PageHeader
+        title={t.teacher_dashboard || 'Teacher Dashboard'}
+        subtitle={t.teacher_dashboard_subtitle || 'Track attendance, manage students, and communicate with guardians.'}
+        headingLevel="h1"
+        showMobileMenu={true}
+        onMobileMenuClick={() => sidebarRef.current?.open()}
+      />
+
+      <StoryColumn
+        userRole="teacher"
+      />
+
       {/* Error Message */}
       {error && (
         <div className="mb-ds-md rounded-ds-md border border-red-200 bg-red-50 p-ds-md dark:border-red-800 dark:bg-red-900/20">

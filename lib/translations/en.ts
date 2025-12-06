@@ -458,6 +458,7 @@ export const enText = {
 
   // Teacher Dashboard
   teacher_dashboard: 'Teacher Dashboard',
+  teacher_dashboard_subtitle: 'Track attendance, manage students, and communicate with guardians.',
   kids_checked_in: 'Children checked in',
   today_hint: 'Today · Demo data',
   child: 'Child',
