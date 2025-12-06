@@ -420,15 +420,17 @@ CREATE TABLE IF NOT EXISTS daily_logs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   org_id uuid NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
   class_id uuid REFERENCES classes(id) ON DELETE CASCADE,
-  student_id uuid REFERENCES students(id) ON DELETE CASCADE,
   kind daily_log_kind NOT NULL DEFAULT 'note',
   value text,
   rating smallint,
   recorded_at timestamptz NOT NULL DEFAULT now(),
   created_by uuid REFERENCES users(id) ON DELETE SET NULL,
+  creator_name text NOT NULL,
+  image text,
   public boolean NOT NULL DEFAULT false,
   deleted_at timestamptz NULL,
-  updated_at timestamptz NOT NULL DEFAULT now()
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  note text
 );
 DO $$
 BEGIN
@@ -802,7 +804,7 @@ CREATE INDEX IF NOT EXISTS idx_classes_org_created ON classes(org_id, created_at
 CREATE INDEX IF NOT EXISTS idx_students_org_class ON students(org_id, class_id);
 CREATE INDEX IF NOT EXISTS idx_students_org_user ON students(org_id, user_id);
 CREATE INDEX IF NOT EXISTS idx_photos_org_class_student ON photos(org_id, class_id, student_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_daily_logs_org_class_student ON daily_logs(org_id, class_id, student_id, recorded_at DESC);
+CREATE INDEX IF NOT EXISTS idx_daily_logs_org_class ON daily_logs(org_id, class_id, recorded_at DESC);
 CREATE INDEX IF NOT EXISTS idx_attendance_org_class_date ON attendance(org_id, class_id, date DESC);
 CREATE INDEX IF NOT EXISTS idx_assessments_org_class ON assessments(org_id, class_id, assessed_at DESC);
 CREATE INDEX IF NOT EXISTS idx_stories_org_class_expires ON stories(org_id, class_id, expires_at);
@@ -816,7 +818,7 @@ CREATE INDEX IF NOT EXISTS idx_guardian_students_org_guardian ON guardian_studen
 CREATE INDEX IF NOT EXISTS idx_guardian_students_org_student ON guardian_students(org_id, student_id);
 
 CREATE INDEX IF NOT EXISTS idx_photos_class_student_created ON photos(class_id, student_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_dailylogs_class_student_time ON daily_logs(class_id, student_id, recorded_at DESC);
+CREATE INDEX IF NOT EXISTS idx_dailylogs_class_time ON daily_logs(class_id, recorded_at DESC);
 
 CREATE INDEX IF NOT EXISTS idx_photos_public_created ON photos(is_public, created_at DESC) WHERE is_public = true;
 -- Removed - covered by idx_messages_thread_created
@@ -861,10 +863,8 @@ CREATE INDEX IF NOT EXISTS idx_student_relatives_created ON student_relatives(cr
 -- Composite indexes for common query patterns
 CREATE INDEX IF NOT EXISTS idx_students_class_user ON students(class_id, user_id);
 CREATE INDEX IF NOT EXISTS idx_photos_student_public ON photos(student_id, is_public, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_daily_logs_student_date ON daily_logs(student_id, recorded_at);
 CREATE INDEX IF NOT EXISTS idx_attendance_student_status ON attendance(student_id, status, date);
 CREATE INDEX IF NOT EXISTS idx_assessments_student_subject ON assessments(student_id, subject, assessed_at DESC);
-CREATE INDEX IF NOT EXISTS idx_daily_logs_student_kind_date ON daily_logs(student_id, kind, recorded_at);
 CREATE INDEX IF NOT EXISTS idx_messages_participant_created ON message_participants(user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_type_created ON notifications(user_id, type, created_at DESC);
 
@@ -877,7 +877,6 @@ CREATE INDEX IF NOT EXISTS idx_classes_active ON classes(id) WHERE deleted_at IS
 
 -- Covering indexes for common SELECT patterns
 CREATE INDEX IF NOT EXISTS idx_photos_student_cover ON photos(student_id, created_at DESC) INCLUDE (caption, is_public);
-CREATE INDEX IF NOT EXISTS idx_daily_logs_student_cover ON daily_logs(student_id, recorded_at DESC) INCLUDE (kind, value, rating);
 CREATE INDEX IF NOT EXISTS idx_attendance_student_cover ON attendance(student_id, date DESC) INCLUDE (status, notes);
 
 -- Additional performance indexes for analytics
@@ -916,7 +915,6 @@ CREATE INDEX IF NOT EXISTS idx_menus_active_class ON menus(class_id, day) WHERE 
 CREATE INDEX IF NOT EXISTS idx_menus_active_public ON menus(is_public, day) WHERE deleted_at IS NULL AND is_public = true;
 
 -- Daily logs partial indexes (active records only)
-CREATE INDEX IF NOT EXISTS idx_daily_logs_active_student ON daily_logs(student_id, recorded_at DESC) WHERE deleted_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_daily_logs_active_class ON daily_logs(class_id, recorded_at DESC) WHERE deleted_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_daily_logs_active_kind ON daily_logs(kind, recorded_at DESC) WHERE deleted_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_daily_logs_active_public ON daily_logs(public, recorded_at DESC) WHERE deleted_at IS NULL AND public = true;
@@ -1088,8 +1086,6 @@ BEGIN
   ALTER TABLE daily_logs ADD CONSTRAINT daily_logs_org_id_fkey FOREIGN KEY (org_id) REFERENCES orgs(id) ON DELETE CASCADE ON UPDATE CASCADE;
   ALTER TABLE daily_logs DROP CONSTRAINT IF EXISTS daily_logs_class_id_fkey;
   ALTER TABLE daily_logs ADD CONSTRAINT daily_logs_class_id_fkey FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE CASCADE ON UPDATE CASCADE;
-  ALTER TABLE daily_logs DROP CONSTRAINT IF EXISTS daily_logs_student_id_fkey;
-  ALTER TABLE daily_logs ADD CONSTRAINT daily_logs_student_id_fkey FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE ON UPDATE CASCADE;
   ALTER TABLE daily_logs DROP CONSTRAINT IF EXISTS daily_logs_created_by_fkey;
   ALTER TABLE daily_logs ADD CONSTRAINT daily_logs_created_by_fkey FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL ON UPDATE CASCADE;
 
