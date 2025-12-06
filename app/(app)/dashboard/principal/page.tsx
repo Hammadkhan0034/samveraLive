@@ -107,7 +107,7 @@ function PrincipalDashboardContent({
 
       {/* contact cards section */}
 
-      {/* <ContactCards
+      <ContactCards
         contact={{
           id: '1',
           name: 'Mária Jónsdóttir',
@@ -130,7 +130,7 @@ function PrincipalDashboardContent({
             console.log('View profile Mária Jónsdóttir');
           },
         }}
-      /> */}
+      />
     </>
   );
 }
