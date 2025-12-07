@@ -71,7 +71,6 @@ function StudentsPanel({
     <div className="rounded-ds-lg border border-slate-200 bg-white p-3 sm:p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
       <div className="mb-3 sm:mb-ds-lg">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-2 sm:mb-ds-sm">
-          <h3 className="text-ds-tiny sm:text-ds-body font-medium text-ds-text-primary dark:text-slate-100">{t.existing_students}</h3>
           <div className="flex items-center gap-2 sm:gap-ds-xs">
             <div className="relative flex-1 sm:flex-none">
               <Search className="absolute left-2.5 sm:left-ds-sm top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-ds-text-muted dark:text-slate-400" />
@@ -400,18 +399,7 @@ export default function TeacherStudentsPage() {
           subtitle={t.students_subtitle}
           showMobileMenu={true}
           onMobileMenuClick={() => sidebarRef.current?.open()}
-          rightActions={
-            <div className="flex items-center gap-ds-xs text-ds-small text-ds-text-secondary dark:text-slate-400">
-              <Users className="h-4 w-4" />
-              <span>
-                {t.tile_students}:{' '}
-                <span className="font-medium">{students.length}</span>
-              </span>
-              <span className="hidden md:inline mx-ds-xs text-slate-300 dark:text-slate-600">•</span>
-              <CalendarDays className="hidden md:block h-4 w-4" />
-              <span className="hidden md:inline">{t.today_hint}</span>
-            </div>
-          }
+          
         />
 
         {loadingClasses ? (
@@ -430,9 +418,6 @@ export default function TeacherStudentsPage() {
         ) : (
           <>
             <div className="mb-3 sm:mb-ds-md">
-              <label className="block text-ds-tiny sm:text-ds-small font-medium text-ds-text-primary dark:text-slate-300 mb-1 sm:mb-ds-xs">
-                {t.select_class || 'Select a class'}
-              </label>
               <select
                 value={selectedClassId || ''}
                 onChange={(e) => {
