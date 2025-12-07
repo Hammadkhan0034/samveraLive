@@ -9,7 +9,7 @@ import { useLanguage } from '@/lib/contexts/LanguageContext';
 import KPICardSkeleton from '@/app/components/loading-skeletons/KPICardSkeleton';
 import type { KPICard } from '@/lib/types/dashboard';
 import { useAuth } from '@/lib/hooks/useAuth';
-import ContactCards, { type Contact } from '@/app/components/ContactCards';
+import UserCard from '@/app/components/UserCard';
 import StoryColumn from '@/app/components/shared/StoryColumn';
 
 interface PrincipalDashboardContentProps {
@@ -99,30 +99,45 @@ function PrincipalDashboardContent({
         )}
       </section>
 
-      {/* contact cards section */}
+      {/* user card section */}
 
-      {/* <ContactCards
-        contact={{
+      {/* <UserCard
+        user={{
           id: '1',
-          name: 'Mária Jónsdóttir',
-          phone: '777-1334',
+          org_id: 'org-1',
           email: 'maria@domain.is',
+          phone: '777-1334',
+          ssn: null,
           address: 'Jhress: JJohanna 9',
-          gender: 'Female',
-          status: 'Active',
-          imageUrl: undefined,
-          onCall: () => {
-            // Handle call action
-            console.log('Call Mária Jónsdóttir');
-          },
-          onMessage: () => {
-            // Handle message action
-            console.log('Message Mária Jónsdóttir');
-          },
-          onViewProfile: () => {
-            // Handle view profile action
-            console.log('View profile Mária Jónsdóttir');
-          },
+          canLogin: true,
+          first_name: 'Mária',
+          last_name: 'Jónsdóttir',
+          role: 'staff',
+          bio: null,
+          avatar_url: null,
+          gender: 'female',
+          last_login_at: null,
+          is_active: true,
+          is_staff: true,
+          status: 'active',
+          dob: null,
+          theme: 'light',
+          language: 'is',
+          deleted_at: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }}
+        onCall={() => {
+          // Handle call action
+          console.log('Call Mária Jónsdóttir');
+        }}
+        onMessage={() => {
+          // Handle message action
+          console.log('Message Mária Jónsdóttir');
+        }}
+        onViewProfile={() => {
+          // Handle view profile action
+          console.log('View profile Mária Jónsdóttir');
         }}
       /> */}
     </>
