@@ -28,7 +28,7 @@ export async function handleGetStudents(
 
   // Check if user has principal, admin, teacher, or parent/guardian role
   const isPrincipalAdminTeacher = roles.some((role) =>
-    ['principal', 'admin', 'teacher'].includes(role),
+    ['principal', 'guardian', 'teacher'].includes(role),
   );
   const isParentGuardian =
     activeRole === 'guardian' ||
@@ -154,7 +154,10 @@ export async function handleGetStudents(
               id,
               first_name,
               last_name,
-              email
+              email,
+              phone,
+              address,
+              gender
             )
           `)
         .eq('student_id', student.id);
@@ -329,6 +332,7 @@ export async function handlePostStudent(
         role: 'student' as any,
         org_id: orgId,
         is_active: true,
+        canLogin: false,
       })
       .select('id')
       .single();
@@ -554,6 +558,7 @@ export async function handlePutStudent(
         gender: normalizedGender || 'unknown',
         address: address || null,
         ssn: social_security_number || null,
+        canLogin: false,
       })
       .eq('id', userIdForUpdate);
 

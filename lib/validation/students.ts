@@ -18,6 +18,22 @@ import {
 } from '@/lib/validation';
 
 /**
+ * Required address schema for students
+ */
+export const requiredStudentAddressSchema = z
+  .string()
+  .min(1, { message: 'Address is required' })
+  .max(500, { message: 'Address must be 500 characters or less' });
+
+/**
+ * Required SSN schema for students
+ */
+export const requiredStudentSsnSchema = z
+  .string()
+  .min(1, { message: 'Social Security Number is required' })
+  .max(50, { message: 'SSN must be 50 characters or less' });
+
+/**
  * GET /api/students query parameter schema
  */
 export const getStudentsQuerySchema = z.object({
@@ -48,8 +64,8 @@ export const postStudentBodySchema = z
     medical_notes: medicalNotesSchema,
     allergies: allergiesSchema,
     emergency_contact: emergencyContactSchema,
-    address: addressSchema,
-    social_security_number: ssnSchema,
+    address: requiredStudentAddressSchema,
+    social_security_number: requiredStudentSsnSchema,
     guardian_ids: guardianIdsSchema.optional().default([]),
   })
   .transform((data) => {
@@ -90,8 +106,8 @@ export const putStudentBodySchema = z
     medical_notes: medicalNotesSchema,
     allergies: allergiesSchema,
     emergency_contact: emergencyContactSchema,
-    address: addressSchema,
-    social_security_number: ssnSchema,
+    address: requiredStudentAddressSchema,
+    social_security_number: requiredStudentSsnSchema,
     guardian_ids: guardianIdsSchema.optional().default([]),
   })
   .transform((data) => {
@@ -139,8 +155,8 @@ export const studentFormDataSchema = z.object({
   medical_notes: medicalNotesSchema,
   allergies: allergiesSchema,
   emergency_contact: emergencyContactSchema,
-  address: addressSchema,
-  social_security_number: ssnSchema,
+  address: requiredStudentAddressSchema,
+  social_security_number: requiredStudentSsnSchema,
   guardian_ids: guardianIdsSchema.optional().default([]),
 });
 

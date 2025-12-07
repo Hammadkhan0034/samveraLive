@@ -256,6 +256,7 @@ export function StudentForm({
               placeholder={t.student_address_placeholder}
               className="w-full min-h-[120px] rounded-ds-md border border-input-stroke dark:border-slate-600 px-ds-sm py-3 text-ds-body bg-input-fill text-ds-text-primary focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
               rows={2}
+              required
             />
           </div>
 
@@ -324,6 +325,7 @@ export function StudentForm({
                 onChange={(e) => setFormData(prev => ({ ...prev, social_security_number: e.target.value }))}
                 placeholder='000000-0000'
                 className="w-full h-10 rounded-ds-md border border-input-stroke dark:border-slate-600 px-ds-sm text-ds-body bg-input-fill text-ds-text-primary focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+                required
               />
             </div>
           </div>
