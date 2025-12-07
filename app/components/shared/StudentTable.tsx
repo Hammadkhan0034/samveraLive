@@ -12,6 +12,7 @@ interface StudentTableProps {
   onEdit: (student: StudentWithRelations) => void;
   onDelete: (id: string) => void;
   onCreate: () => void;
+  onRowClick?: (student: StudentWithRelations) => void;
   translations: {
     students: string;
     student_name: string;
@@ -35,6 +36,7 @@ export function StudentTable({
   onEdit,
   onDelete,
   onCreate,
+  onRowClick,
   translations: t
 }: StudentTableProps) {
   const { lang, t: translations } = useLanguage();
@@ -87,7 +89,13 @@ export function StudentTable({
               </tr>
             ) : (
               students.map((s) => (
-                <tr key={s.id} className="border-b border-slate-100 dark:border-slate-700 hover:bg-mint-50 dark:hover:bg-slate-700/50">
+                <tr 
+                  key={s.id} 
+                  onClick={() => onRowClick?.(s)}
+                  className={`border-b border-slate-100 dark:border-slate-700 hover:bg-mint-50 dark:hover:bg-slate-700/50 transition-colors ${
+                    onRowClick ? 'cursor-pointer' : ''
+                  }`}
+                >
                   <td className="text-left py-2 px-2 sm:px-ds-md text-ds-small text-ds-text-primary dark:text-slate-100">
                     {s.users?.first_name ?? s.first_name ?? '—'}
                   </td>
@@ -119,17 +127,23 @@ export function StudentTable({
                         .join(', ') || '—'
                       : '—'}
                   </td>
-                  <td className="text-left py-2 px-2 sm:px-ds-md text-ds-small">
+                  <td className="text-left py-2 px-2 sm:px-ds-md text-ds-small" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center gap-ds-xs flex-wrap">
                       <button
-                        onClick={() => onEdit(s)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEdit(s);
+                        }}
                         className="inline-flex items-center gap-1 rounded-ds-sm border border-input-stroke bg-input-fill px-2 py-1 text-ds-small text-ds-text-primary hover:bg-mint-50 hover:border-mint-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 transition-colors"
                       >
                         <Edit className="h-3.5 w-3.5" />
                         <span className="hidden sm:inline">{t.edit}</span>
                       </button>
                       <button
-                        onClick={() => onDelete(s.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDelete(s.id);
+                        }}
                         className="inline-flex items-center gap-1 rounded-ds-sm border border-red-300 px-2 py-1 text-ds-small text-red-600 hover:bg-red-50 dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors"
                       >
                         <Trash2 className="h-3.5 w-3.5" />

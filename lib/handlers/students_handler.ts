@@ -46,7 +46,7 @@ export async function handleGetStudents(
   if (!queryValidation.success) {
     return queryValidation.error;
   }
-  const { classId } = queryValidation.data;
+  const { classId, id: studentId } = queryValidation.data;
 
   // For parents/guardians, only allow access to their linked students
   let allowedStudentIds: string[] | null = null;
@@ -118,6 +118,11 @@ export async function handleGetStudents(
     .eq('org_id', orgId)
     .order('created_at', { ascending: false });
 
+  // Filter by student ID if provided (for single student fetch)
+  if (studentId) {
+    query = query.eq('id', studentId);
+  }
+
   // Filter by class if provided
   if (classId) {
     query = query.eq('class_id', classId);
@@ -175,6 +180,21 @@ export async function handleGetStudents(
       };
     }),
   );
+
+  // If fetching a single student by ID, return it as 'student' property for convenience
+  if (studentId && studentsWithGuardians && studentsWithGuardians.length === 1) {
+    return NextResponse.json(
+      {
+        student: studentsWithGuardians[0],
+        students: studentsWithGuardians,
+        total_students: 1,
+      },
+      {
+        status: 200,
+        headers: getUserDataCacheHeaders(),
+      },
+    );
+  }
 
   return NextResponse.json(
     {

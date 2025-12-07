@@ -130,6 +130,10 @@ function StudentsPageContent() {
     router.push(`/dashboard/principal/students/add?id=${encodeURIComponent(student.id)}`);
   }, [router]);
 
+  const openStudentDetails = useCallback((student: StudentWithRelations) => {
+    router.push(`/dashboard/students/${encodeURIComponent(student.id)}`);
+  }, [router]);
+
   const openDeleteStudentModal = useCallback((id: string) => {
     setStudentToDelete(id);
     setIsDeleteStudentModalOpen(true);
@@ -285,6 +289,7 @@ function StudentsPageContent() {
           onEdit={openEditStudentModal}
           onDelete={openDeleteStudentModal}
           onCreate={openCreateStudentModal}
+          onRowClick={openStudentDetails}
           translations={{
             students: t.students,
             student_name: t.student_name,

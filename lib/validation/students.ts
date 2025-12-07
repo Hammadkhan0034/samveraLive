@@ -22,6 +22,7 @@ import {
  */
 export const getStudentsQuerySchema = z.object({
   classId: classIdSchema.optional(),
+  id: studentIdSchema.optional(),
 });
 
 /**

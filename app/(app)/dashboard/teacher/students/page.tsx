@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { Users, Search, CalendarDays, BookOpen } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
@@ -29,13 +30,15 @@ function StudentsPanel({
   students,
   loadingStudents,
   studentError,
-  hasLoadedOnce
+  hasLoadedOnce,
+  router
 }: {
   t: typeof enText | typeof isText;
   students: Student[];
   loadingStudents: boolean;
   studentError: string | null;
   hasLoadedOnce?: boolean;
+  router: ReturnType<typeof useRouter>;
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -128,7 +131,11 @@ function StudentsPanel({
                 </thead>
                 <tbody>
                   {paginatedStudents.map((student) => (
-                    <tr key={student.id} className="border-b border-slate-100 dark:border-slate-700 hover:bg-mint-50 dark:hover:bg-slate-700/50 transition-colors">
+                    <tr 
+                      key={student.id} 
+                      onClick={() => router.push(`/dashboard/students/${encodeURIComponent(student.id)}`)}
+                      className="border-b border-slate-100 dark:border-slate-700 hover:bg-mint-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer"
+                    >
                       <td className="py-2 px-2 sm:px-4">
                         <div className="font-medium text-ds-tiny text-ds-text-primary dark:text-slate-100">
                           {getStudentName(student)}
@@ -216,6 +223,7 @@ function StudentsPanel({
 export default function TeacherStudentsPage() {
   const { t } = useLanguage();
   const { session } = useAuth();
+  const router = useRouter();
 
   const [teacherClasses, setTeacherClasses] = useState<TeacherClass[]>([]);
   const [loadingClasses, setLoadingClasses] = useState(true);
@@ -459,6 +467,7 @@ export default function TeacherStudentsPage() {
                 loadingStudents={loadingStudents} 
                 studentError={studentError} 
                 hasLoadedOnce={hasLoadedOnce}
+                router={router}
               />
             )}
           </>
