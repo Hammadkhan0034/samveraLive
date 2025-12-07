@@ -52,13 +52,17 @@ export function ActivityLog({
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(20);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
   const loadActivities = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const res = await fetch(`/api/daily-logs?kind=activity&t=${Date.now()}`, {
+      const res = await fetch(`/api/daily-logs?kind=activity&page=${currentPage}&pageSize=${pageSize}&t=${Date.now()}`, {
         cache: 'no-store',
         credentials: 'include',
       });
@@ -68,15 +72,17 @@ export function ActivityLog({
         throw new Error(err.error || `Failed with ${res.status}`);
       }
 
-      const { dailyLogs } = await res.json();
+      const { dailyLogs, totalCount: count, totalPages: pages } = await res.json();
       setActivities(dailyLogs || []);
+      setTotalCount(count || 0);
+      setTotalPages(pages || 0);
     } catch (err: any) {
       console.error('Failed to load activities:', err);
       setError(err.message || 'Failed to load activities');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentPage, pageSize]);
 
   useEffect(() => {
     loadActivities();
@@ -93,6 +99,8 @@ export function ActivityLog({
   };
 
   const handleModalSuccess = () => {
+    // Reset to first page after creating/editing
+    setCurrentPage(1);
     loadActivities();
   };
 
@@ -120,7 +128,12 @@ export function ActivityLog({
 
       setIsDeleteModalOpen(false);
       setActivityToDelete(null);
-      loadActivities();
+      // If we deleted the last item on the page and it's not page 1, go to previous page
+      if (activities.length === 1 && currentPage > 1) {
+        setCurrentPage(currentPage - 1);
+      } else {
+        loadActivities();
+      }
     } catch (err: any) {
       console.error('Failed to delete activity:', err);
       setDeleteError(err.message || 'Failed to delete activity');
@@ -379,6 +392,36 @@ export function ActivityLog({
             </tbody>
           </table>
           </div>
+          {/* Pagination controls */}
+          {totalPages > 1 && (
+            <div className="mt-ds-sm w-full flex flex-wrap justify-center sm:justify-end gap-ds-xs px-ds-md pb-ds-md">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="inline-flex items-center rounded-ds-md border border-input-stroke bg-input-fill px-2 sm:px-3 py-1.5 text-ds-small text-ds-text-primary disabled:opacity-60 disabled:cursor-not-allowed hover:bg-mint-50 hover:border-mint-200 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                {t.prev || 'Prev'}
+              </button>
+              <div className="flex gap-ds-xs flex-wrap justify-center">
+                {Array.from({ length: totalPages }).map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setCurrentPage(idx + 1)}
+                    className={`inline-flex items-center rounded-ds-md px-2 sm:px-3 py-1.5 text-ds-small transition-colors ${currentPage === idx + 1 ? 'bg-mint-500 text-white border border-mint-500 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600' : 'border border-input-stroke bg-input-fill text-ds-text-primary dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 hover:bg-mint-50 hover:border-mint-200 dark:hover:bg-slate-800'}`}
+                  >
+                    {idx + 1}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="inline-flex items-center rounded-ds-md border border-input-stroke bg-input-fill px-2 sm:px-3 py-1.5 text-ds-small text-ds-text-primary disabled:opacity-60 disabled:cursor-not-allowed hover:bg-mint-50 hover:border-mint-200 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                {t.next || 'Next'}
+              </button>
+            </div>
+          )}
         </div>
       )}
 

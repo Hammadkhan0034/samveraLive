@@ -21,6 +21,8 @@ export const getDailyLogsQuerySchema = z.object({
   classId: classIdSchema.optional(),
   date: dateSchema.optional(),
   kind: dailyLogKindSchema.optional(),
+  page: z.coerce.number().int().min(1).default(1).optional(),
+  pageSize: z.coerce.number().int().min(1).default(20).optional(),
 });
 
 /**

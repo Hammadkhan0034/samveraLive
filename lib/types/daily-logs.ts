@@ -85,5 +85,7 @@ export type FetchDailyLogsArgs = {
   classId?: string;
   date?: string;
   kind?: DailyLogKind;
+  page?: number;
+  pageSize?: number;
 };
 

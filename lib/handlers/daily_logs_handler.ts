@@ -48,23 +48,30 @@ export async function handleGetDailyLogs(
     return queryValidation.error;
   }
 
-  const { classId: rawClassId, date, kind } = queryValidation.data;
+  const { classId: rawClassId, date, kind, page, pageSize } = queryValidation.data;
   const classId = rawClassId ?? undefined;
+  const currentPage = page ?? 1;
+  const currentPageSize = pageSize ?? 20;
 
   try {
-    const logs = await fetchDailyLogs(adminClient, {
+    const result = await fetchDailyLogs(adminClient, {
       orgId,
       userId: user.id,
       isTeacher,
       classId,
       date,
       kind: kind || 'activity',
+      page: currentPage,
+      pageSize: currentPageSize,
     });
 
     return NextResponse.json(
       {
-        dailyLogs: logs || [],
-        total_logs: logs?.length || 0,
+        dailyLogs: result.logs || [],
+        totalCount: result.totalCount || 0,
+        page: currentPage,
+        pageSize: currentPageSize,
+        totalPages: result.totalPages || 0,
       },
       {
         status: 200,
@@ -300,10 +307,61 @@ async function fetchDailyLogs(
     classId,
     date,
     kind,
+    page = 1,
+    pageSize = 20,
   }: FetchDailyLogsArgs,
 ) {
   try {
-    let query = adminClient
+    // Build count query with same filters
+    let countQuery = adminClient
+      .from('daily_logs')
+      .select('*', { count: 'exact', head: true })
+      .eq('org_id', orgId)
+      .eq('kind', kind || 'activity')
+      .is('deleted_at', null);
+
+    // If teacher, only fetch logs created by them
+    if (isTeacher) {
+      countQuery = countQuery.eq('created_by', userId);
+    }
+
+    // Filter by class if specified (for principals)
+    if (classId) {
+      countQuery = countQuery.eq('class_id', classId);
+    }
+
+    if (date) {
+      // Filter by date (start of day to end of day)
+      const startOfDay = new Date(date);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(date);
+      endOfDay.setHours(23, 59, 59, 999);
+
+      countQuery = countQuery
+        .gte('recorded_at', startOfDay.toISOString())
+        .lte('recorded_at', endOfDay.toISOString());
+    }
+
+    const { count, error: countError } = await countQuery;
+
+    if (countError) {
+      throw new DailyLogsServiceError(
+        `Failed to count daily logs: ${countError.message}`,
+        500,
+        {
+          error: countError.message,
+        },
+      );
+    }
+
+    const totalCount = count ?? 0;
+    const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+
+    // Calculate pagination offset
+    const offset = (page - 1) * pageSize;
+
+    // Build data query with same filters
+    let dataQuery = adminClient
       .from('daily_logs')
       .select(
         `
@@ -317,17 +375,16 @@ async function fetchDailyLogs(
       )
       .eq('org_id', orgId)
       .eq('kind', kind || 'activity')
-      .is('deleted_at', null)
-      .order('recorded_at', { ascending: false });
+      .is('deleted_at', null);
 
     // If teacher, only fetch logs created by them
     if (isTeacher) {
-      query = query.eq('created_by', userId);
+      dataQuery = dataQuery.eq('created_by', userId);
     }
 
     // Filter by class if specified (for principals)
     if (classId) {
-      query = query.eq('class_id', classId);
+      dataQuery = dataQuery.eq('class_id', classId);
     }
 
     if (date) {
@@ -337,12 +394,16 @@ async function fetchDailyLogs(
       const endOfDay = new Date(date);
       endOfDay.setHours(23, 59, 59, 999);
 
-      query = query
+      dataQuery = dataQuery
         .gte('recorded_at', startOfDay.toISOString())
         .lte('recorded_at', endOfDay.toISOString());
     }
 
-    const { data, error } = await query;
+    dataQuery = dataQuery
+      .order('recorded_at', { ascending: false })
+      .range(offset, offset + pageSize - 1);
+
+    const { data, error } = await dataQuery;
 
     if (error) {
       throw new DailyLogsServiceError(
@@ -354,7 +415,11 @@ async function fetchDailyLogs(
       );
     }
 
-    return data ?? [];
+    return {
+      logs: data ?? [],
+      totalCount,
+      totalPages,
+    };
   } catch (error) {
     if (error instanceof DailyLogsServiceError) {
       throw error;
