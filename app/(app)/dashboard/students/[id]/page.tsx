@@ -7,8 +7,7 @@ import {
   Copy, 
   Check, 
   MapPin, 
-  Lock, 
-  Unlock,
+  Lock,
   Phone,
   Mail,
   GraduationCap,
@@ -53,7 +52,6 @@ export default function StudentDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
-  const [decryptedFields, setDecryptedFields] = useState<Set<string>>(new Set());
   const [showSSN, setShowSSN] = useState(false);
 
   // Determine user role for layout
@@ -112,18 +110,6 @@ export default function StudentDetailsPage() {
     navigator.clipboard.writeText(text);
     setCopiedField(fieldName);
     setTimeout(() => setCopiedField(null), 2000);
-  };
-
-  const toggleDecrypt = (fieldName: string) => {
-    setDecryptedFields(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(fieldName)) {
-        newSet.delete(fieldName);
-      } else {
-        newSet.add(fieldName);
-      }
-      return newSet;
-    });
   };
 
   const getGenderIcon = (gender: string | null | undefined) => {
@@ -510,30 +496,9 @@ export default function StudentDetailsPage() {
                     <Lock className="w-3 h-3" />
                     Medical Notes
                   </label>
-                  <div className="flex items-start gap-2">
-                    <div className="flex-1">
-                      {decryptedFields.has('medical_notes') ? (
-                        <p className="text-ds-body text-ds-text-primary dark:text-slate-100 whitespace-pre-wrap">
-                          {student.medical_notes_encrypted || 'No medical notes'}
-                        </p>
-                      ) : (
-                        <p className="text-ds-body text-slate-400 dark:text-slate-500 italic">
-                          Encrypted - Click to decrypt
-                        </p>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => toggleDecrypt('medical_notes')}
-                      className="p-2 rounded-ds-sm hover:bg-pale-peach/60 dark:hover:bg-pale-peach/30 transition-colors"
-                      aria-label={decryptedFields.has('medical_notes') ? 'Encrypt' : 'Decrypt'}
-                    >
-                      {decryptedFields.has('medical_notes') ? (
-                        <Lock className="w-4 h-4 text-[#D4A08A] dark:text-[#E8B8A0]" />
-                      ) : (
-                        <Unlock className="w-4 h-4 text-[#D4A08A] dark:text-[#E8B8A0]" />
-                      )}
-                    </button>
-                  </div>
+                  <p className="text-ds-body text-ds-text-primary dark:text-slate-100 whitespace-pre-wrap">
+                    {student.medical_notes_encrypted || 'No medical notes'}
+                  </p>
                 </div>
 
                 <div>
@@ -541,34 +506,13 @@ export default function StudentDetailsPage() {
                     <AlertTriangle className="w-3 h-3" />
                     Allergies
                   </label>
-                  <div className="flex items-start gap-2">
-                    <div className="flex-1">
-                      {decryptedFields.has('allergies') ? (
-                        <p className={`text-ds-body ${
-                          student.allergies_encrypted 
-                            ? 'text-red-600 dark:text-red-400 font-medium' 
-                            : 'text-ds-text-primary dark:text-slate-100'
-                        } whitespace-pre-wrap`}>
-                          {student.allergies_encrypted || 'No known allergies'}
-                        </p>
-                      ) : (
-                        <p className="text-ds-body text-slate-400 dark:text-slate-500 italic">
-                          Encrypted - Click to decrypt
-                        </p>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => toggleDecrypt('allergies')}
-                      className="p-2 rounded-ds-sm hover:bg-pale-peach/60 dark:hover:bg-pale-peach/30 transition-colors"
-                      aria-label={decryptedFields.has('allergies') ? 'Encrypt' : 'Decrypt'}
-                    >
-                      {decryptedFields.has('allergies') ? (
-                        <Lock className="w-4 h-4 text-[#D4A08A] dark:text-[#E8B8A0]" />
-                      ) : (
-                        <Unlock className="w-4 h-4 text-[#D4A08A] dark:text-[#E8B8A0]" />
-                      )}
-                    </button>
-                  </div>
+                  <p className={`text-ds-body ${
+                    student.allergies_encrypted 
+                      ? 'text-red-600 dark:text-red-400 font-medium' 
+                      : 'text-ds-text-primary dark:text-slate-100'
+                  } whitespace-pre-wrap`}>
+                    {student.allergies_encrypted || 'No known allergies'}
+                  </p>
                 </div>
 
                 <div>
@@ -576,30 +520,9 @@ export default function StudentDetailsPage() {
                     <Phone className="w-3 h-3" />
                     Emergency Contact
                   </label>
-                  <div className="flex items-start gap-2">
-                    <div className="flex-1">
-                      {decryptedFields.has('emergency_contact') ? (
-                        <p className="text-ds-body text-ds-text-primary dark:text-slate-100">
-                          {student.emergency_contact_encrypted || 'Not provided'}
-                        </p>
-                      ) : (
-                        <p className="text-ds-body text-slate-400 dark:text-slate-500 italic">
-                          Encrypted - Click to decrypt
-                        </p>
-                      )}
-                    </div>
-                    <button
-                      onClick={() => toggleDecrypt('emergency_contact')}
-                      className="p-2 rounded-ds-sm hover:bg-pale-peach/60 dark:hover:bg-pale-peach/30 transition-colors"
-                      aria-label={decryptedFields.has('emergency_contact') ? 'Encrypt' : 'Decrypt'}
-                    >
-                      {decryptedFields.has('emergency_contact') ? (
-                        <Lock className="w-4 h-4 text-[#D4A08A] dark:text-[#E8B8A0]" />
-                      ) : (
-                        <Unlock className="w-4 h-4 text-[#D4A08A] dark:text-[#E8B8A0]" />
-                      )}
-                    </button>
-                  </div>
+                  <p className="text-ds-body text-ds-text-primary dark:text-slate-100">
+                    {student.emergency_contact_encrypted || 'Not provided'}
+                  </p>
                 </div>
 
                 {student.updated_at && (
