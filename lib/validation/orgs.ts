@@ -6,6 +6,8 @@ import { orgIdSchema } from '@/lib/validation';
  */
 export const getOrgsQuerySchema = z.object({
   ids: z.string().optional(),
+  page: z.coerce.number().int().positive().optional().default(1),
+  limit: z.coerce.number().int().positive().max(100).optional().default(20),
 });
 
 /**

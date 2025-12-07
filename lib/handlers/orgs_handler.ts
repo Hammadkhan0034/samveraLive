@@ -21,8 +21,8 @@ export async function handleGetOrgs(
     return queryValidation.error;
   }
 
-  const idsParam = queryValidation.data.ids || '';
-  const ids = idsParam
+  const { ids: idsParam, page, limit } = queryValidation.data;
+  const ids = (idsParam || '')
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean)
@@ -36,19 +36,59 @@ export async function handleGetOrgs(
     });
 
   try {
-    const q = adminClient
+    // If specific IDs are requested, return those without pagination
+    if (ids.length > 0) {
+      const { data, error } = await adminClient
+        .from('orgs')
+        .select('id,name,slug,timezone,created_at,updated_at')
+        .in('id', ids)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      return NextResponse.json(
+        { orgs: data || [] },
+        {
+          status: 200,
+          headers: getStableDataCacheHeaders(),
+        },
+      );
+    }
+
+    // Get total count for pagination
+    const { count, error: countError } = await adminClient
+      .from('orgs')
+      .select('*', { count: 'exact', head: true });
+
+    if (countError) {
+      return NextResponse.json({ error: countError.message }, { status: 500 });
+    }
+
+    const totalCount = count ?? 0;
+    const totalPages = Math.max(1, Math.ceil(totalCount / limit));
+    const offset = (page - 1) * limit;
+
+    // Fetch paginated data
+    const { data, error } = await adminClient
       .from('orgs')
       .select('id,name,slug,timezone,created_at,updated_at')
-      .order('created_at', { ascending: false });
-
-    const { data, error } = ids.length ? await q.in('id', ids) : await q;
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json(
-      { orgs: data || [] },
+      {
+        orgs: data || [],
+        totalCount,
+        totalPages,
+        currentPage: page,
+        pageSize: limit,
+      },
       {
         status: 200,
         headers: getStableDataCacheHeaders(),

@@ -3,7 +3,7 @@
 import React, { useState, useImperativeHandle, forwardRef, useEffect, Suspense } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
-import { X, LayoutDashboard } from 'lucide-react';
+import { X, LayoutDashboard, Building } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 
 // Small helper
@@ -31,7 +31,8 @@ export interface AdminSidebarRef {
 }
 
 type BuiltInTileId =
-  | 'dashboard';
+  | 'dashboard'
+  | 'organizations';
 
 interface BuiltInTileConfig {
   id: BuiltInTileId;
@@ -40,6 +41,7 @@ interface BuiltInTileConfig {
 
 const builtInTileRoutes: BuiltInTileConfig[] = [
   { id: 'dashboard', route: '/dashboard/admin' },
+  { id: 'organizations', route: '/dashboard/admin/organizations' },
 ];
 
 const getRouteForTileId = (tileId: string): string | undefined => {
@@ -204,6 +206,42 @@ const AdminSidebarContent = forwardRef<AdminSidebarRef, AdminSidebarProps>(({
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
                   {t.manageUsersSchools || 'Manage users, schools, and system settings'}
+                </p>
+              </div>
+            </button>
+
+            {/* Organizations tile */}
+            <button
+              onClick={() => handleBuiltInTileClick('organizations')}
+              className={clsx(
+                'w-full flex items-center gap-3 px-ds-sm py-ds-sm rounded-ds-md text-left transition-all duration-200',
+                'hover:bg-slate-100 dark:hover:bg-slate-700',
+                isTileActive('organizations')
+                  ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
+                  : 'border-l-4 border-transparent'
+              )}
+            >
+              <span className={clsx(
+                'flex-shrink-0 rounded-lg p-2',
+                isTileActive('organizations')
+                  ? 'bg-mint-500 text-white'
+                  : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
+              )}>
+                <Building className="h-5 w-5" />
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <span className={clsx(
+                    'font-medium truncate',
+                    isTileActive('organizations')
+                      ? 'text-slate-900 dark:text-slate-100'
+                      : 'text-slate-700 dark:text-slate-300'
+                  )}>
+                    {t.organizations || 'Organizations'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                  {t.manageOrganizations || 'Manage all organizations'}
                 </p>
               </div>
             </button>
