@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Send, Paperclip, Search, MessageSquarePlus, X } from 'lucide-react';
+import { Send, Paperclip, Search, MessageSquarePlus, X, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useMessagesRealtime } from '@/lib/hooks/useMessagesRealtime';
 import { MessageThreadWithParticipants, MessageItem } from '@/lib/types/messages';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
+import EmptyState from '@/app/components/EmptyState';
 
 type Lang = 'is' | 'en';
 type Role = 'principal' | 'teacher' | 'guardian';
@@ -1359,7 +1360,14 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
               ))}
             </div>
           ) : filteredThreads.length === 0 ? (
-            <div className="p-4 text-center text-ds-small text-slate-500">{t.no_threads}</div>
+            <div className="p-4">
+              <EmptyState
+                lang={lang}
+                icon={MessageSquare}
+                title={t.no_messages_title || 'No Messages'}
+                description={t.no_messages_description || 'No message threads yet. Start a conversation to get started.'}
+              />
+            </div>
           ) : (
             <ul className="divide-y divide-slate-200 dark:divide-slate-700">
               {filteredThreads.map((thread) => (

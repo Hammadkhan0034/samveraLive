@@ -1,7 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, UserCheck } from 'lucide-react';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
+import EmptyState from '@/app/components/EmptyState';
 
 interface GuardianTableProps {
   guardians: Array<{
@@ -47,6 +49,8 @@ export function GuardianTable({
   onCreate,
   translations: t
 }: GuardianTableProps) {
+  const { lang, t: translations } = useLanguage();
+  
   return (
     <>
       {error && (
@@ -70,7 +74,14 @@ export function GuardianTable({
           <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
             {guardians.length === 0 ? (
               <tr>
-                <td colSpan={6} className="py-4 px-2 sm:px-3 text-ds-small text-center">{t.no_guardians}</td>
+                <td colSpan={6} className="py-4 px-2 sm:px-3">
+                  <EmptyState
+                    lang={lang}
+                    icon={UserCheck}
+                    title={translations.no_guardians_title || 'No Guardians'}
+                    description={translations.no_guardians_description || 'No guardians found. Click \'Add Guardian\' to create one.'}
+                  />
+                </td>
               </tr>
             ) : (
               guardians.map((g) => (

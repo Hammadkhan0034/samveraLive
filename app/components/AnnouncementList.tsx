@@ -261,8 +261,8 @@ export default function AnnouncementList({
       <EmptyState
         lang={effectiveLang}
         icon={Megaphone}
-        title={(t as any).no_announcements_title || t.no_announcements_yet}
-        description={t.no_announcements_description || (classId ? t.class_announcements_note : t.org_announcements_note)}
+        title={t.no_announcements_title}
+        description={t.no_announcements_description}
       />
     );
   }

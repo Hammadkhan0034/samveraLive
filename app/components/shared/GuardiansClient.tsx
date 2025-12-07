@@ -226,6 +226,8 @@ export function GuardiansClient({ canManage = false, onCreateClickRef }: Guardia
       actions: lang === 'is' ? 'Aðgerðir' : 'Actions',
       create: lang === 'is' ? 'Búa til' : 'Create',
       no_guardians: lang === 'is' ? 'Engir forráðamenn' : 'No guardians',
+      no_guardians_title: t.no_guardians_title || (lang === 'is' ? 'Engir forráðamenn' : 'No Guardians'),
+      no_guardians_description: t.no_guardians_description || (lang === 'is' ? 'Engir forráðamenn fundust. Smelltu á \'Bæta við forráðamanni\' til að búa til einn.' : 'No guardians found. Click \'Add Guardian\' to create one.'),
       no_guardians_loading: lang === 'is' ? 'Hleður...' : 'Loading...',
       edit: lang === 'is' ? 'Breyta' : 'Edit',
       delete: lang === 'is' ? 'Eyða' : 'Delete',

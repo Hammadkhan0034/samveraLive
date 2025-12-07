@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect, useRef, Suspense, useMemo, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Menu, Plus, Eye, CircleCheck as CheckCircle2, Edit, UserPlus, Users, X, Trash2 } from 'lucide-react';
+import { Menu, Plus, Eye, CircleCheck as CheckCircle2, Edit, UserPlus, Users, X, Trash2, School } from 'lucide-react';
 
 import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import Loading from '@/app/components/shared/Loading';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useAuth } from '@/lib/hooks/useAuth';
+import EmptyState from '@/app/components/EmptyState';
 
 import { StudentAssignmentModal } from '@/app/components/principal/classes/StudentAssignmentModal';
 import { TeacherAssignmentModal } from '@/app/components/principal/classes/TeacherAssignmentModal';
@@ -25,7 +26,7 @@ function clsx(...xs: Array<string | false | undefined>) {
 }
 
 function ClassesPageContent() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { session } = (useAuth?.() || {}) as { session: { user?: { id?: string } } | null };
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -399,8 +400,13 @@ function ClassesPageContent() {
 
                 {classes.length === 0 && (
                   <tr>
-                    <td className="text-center py-4 px-4 text-ds-small text-slate-600 dark:text-slate-400" colSpan={5}>
-                      {t.empty}
+                    <td colSpan={5} className="py-4 px-4">
+                      <EmptyState
+                        lang={lang}
+                        icon={School}
+                        title={t.no_classes_title || 'No Classes'}
+                        description={t.no_classes_description || 'No classes found. Click \'Add Class\' to create one.'}
+                      />
                     </td>
                   </tr>
                 )}

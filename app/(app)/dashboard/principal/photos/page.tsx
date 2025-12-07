@@ -9,6 +9,7 @@ import { PhotoUploadModal } from '@/app/components/shared/PhotoUploadModal';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
 import { PageHeader } from '@/app/components/shared/PageHeader';
+import EmptyState from '@/app/components/EmptyState';
 import type { Student } from '@/lib/types/attendance';
 
 interface Photo {
@@ -266,10 +267,13 @@ function PrincipalPhotosPageContent() {
             /* Photos Grid */
             <div className="grid grid-cols-2 gap-2 sm:gap-ds-sm sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
               {photos.length === 0 ? (
-                <div className="col-span-full text-center py-8 sm:py-12 px-4 text-slate-500 dark:text-slate-400">
-                  <ImageIcon className="h-10 w-10 sm:h-12 sm:w-12 mx-auto mb-3 text-mint-300 dark:text-slate-600" />
-                  <p className="text-ds-small sm:text-ds-body">{t.no_photos_uploaded || 'No photos uploaded yet'}</p>
-                  <p className="text-ds-tiny sm:text-ds-small mt-1">{t.click_upload_photo || 'Click "Upload Photo" to get started'}</p>
+                <div className="col-span-full">
+                  <EmptyState
+                    lang={lang}
+                    icon={ImageIcon}
+                    title={t.no_photos_title || 'No Photos Uploaded'}
+                    description={t.no_photos_description || 'No photos uploaded yet. Click \'Upload Photo\' to get started.'}
+                  />
                 </div>
               ) : (
                 photos.map((photo) => (

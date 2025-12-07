@@ -1,7 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Edit, Plus, Trash2 } from 'lucide-react';
+import { Edit, Plus, Trash2, Users } from 'lucide-react';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
+import EmptyState from '@/app/components/EmptyState';
 import type { StudentWithRelations } from '@/lib/types/students';
 
 interface StudentTableProps {
@@ -35,6 +37,8 @@ export function StudentTable({
   onCreate,
   translations: t
 }: StudentTableProps) {
+  const { lang, t: translations } = useLanguage();
+  
   return (
     <>
       {error && (
@@ -73,8 +77,13 @@ export function StudentTable({
           <tbody>
             {students.length === 0 ? (
               <tr>
-                <td colSpan={7} className="text-center py-ds-md px-ds-md text-ds-small text-ds-text-muted dark:text-slate-400">
-                  {t.no_students}
+                <td colSpan={7} className="py-ds-md px-ds-md">
+                  <EmptyState
+                    lang={lang}
+                    icon={Users}
+                    title={translations.no_students_title || 'No Students Found'}
+                    description={translations.no_students_description || 'No students found. Click \'Add Student\' to create one.'}
+                  />
                 </td>
               </tr>
             ) : (

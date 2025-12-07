@@ -8,6 +8,7 @@ import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmat
 import { MenuFormModal } from '@/app/components/shared/MenuFormModal';
 import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
+import EmptyState from '@/app/components/EmptyState';
 
 interface Menu {
   id: string;
@@ -357,10 +358,12 @@ export default function PrincipalMenusPage() {
           </div>
           {/* Table Section */}
           {paginatedMenus.length === 0 ? (
-            <div className="text-center py-12">
-              <Utensils className="h-12 w-12 mx-auto text-mint-400 dark:text-slate-500 mb-4" />
-              <p className="text-slate-600 dark:text-slate-400">{t.no_menus}</p>
-            </div>
+            <EmptyState
+              lang={lang}
+              icon={Utensils}
+              title={t.no_menus_title || 'No Menus Found'}
+              description={t.no_menus_description || 'No menus available. Create a menu to get started.'}
+            />
           ) : (
             <>
               <div className="overflow-x-auto rounded-ds-md">

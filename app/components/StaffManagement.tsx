@@ -9,6 +9,7 @@ import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmat
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 import { CreateStaffModal } from '@/app/components/staff/CreateStaffModal';
 import { StaffStatusChangeModal } from '@/app/components/staff/StaffStatusChangeModal';
+import EmptyState from '@/app/components/EmptyState';
 import type { StaffFormData, StaffMember, StaffManagementProps, StaffStatusType } from '@/lib/types/staff';
 import { PageHeader } from './shared/PageHeader';
 import { usePrincipalPageLayout } from './shared/PrincipalPageLayout';
@@ -18,7 +19,7 @@ const ITEMS_PER_PAGE = 20;
 export default function StaffManagement(_props: StaffManagementProps) {
   const { session } = useAuth();
   const userRole = useUserRole();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const isPrincipal = userRole === 'principal';
 
   // Staff management states
@@ -403,9 +404,12 @@ export default function StaffManagement(_props: StaffManagementProps) {
         {loadingStaff ? (
           <LoadingSkeleton type="table" rows={5} />
         ) : staff.length === 0 ? (
-          <div className="py-8 text-center text-ds-small text-slate-500 dark:text-slate-400">
-            {t.no_staff_members || 'No staff members found'}
-          </div>
+          <EmptyState
+            lang={lang}
+            icon={Users}
+            title={t.no_staff_title || 'No Staff Members'}
+            description={t.no_staff_description || 'No staff members found. Click \'Invite Staff\' to add one.'}
+          />
         ) : (
           <div className="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-ds-md">
             <table className="w-full min-w-[640px] text-ds-small">
