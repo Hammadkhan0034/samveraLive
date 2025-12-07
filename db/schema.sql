@@ -80,13 +80,32 @@ END $$;
 -- ORGS
 CREATE TABLE IF NOT EXISTS orgs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+
+  -- Core Identity
   name text NOT NULL,
   slug text NOT NULL UNIQUE,
+
+  -- Contact Details
+  email text,
+  phone text,
+  website text,
+
+  -- Location
+  address text,
+  city text,
+  state text,
+  postal_code text,
+
+  -- Basic Operational Data
   timezone text NOT NULL DEFAULT 'UTC',
+  is_active boolean NOT NULL DEFAULT true,
+
+  -- Auditing
+  created_by uuid,
+  updated_by uuid,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
-  deleted_at timestamptz NULL,
-  is_active boolean NOT NULL DEFAULT true
+  deleted_at timestamptz
 );
 
 -- USERS
@@ -1023,6 +1042,12 @@ END $$;
 -- CHANGE: Ensure all FKs include ON UPDATE CASCADE (drop and recreate as needed)
 DO $$
 BEGIN
+  -- orgs
+  ALTER TABLE orgs DROP CONSTRAINT IF EXISTS orgs_created_by_fkey;
+  ALTER TABLE orgs ADD CONSTRAINT orgs_created_by_fkey FOREIGN KEY (created_by) REFERENCES auth.users(id) ON DELETE SET NULL ON UPDATE CASCADE;
+  ALTER TABLE orgs DROP CONSTRAINT IF EXISTS orgs_updated_by_fkey;
+  ALTER TABLE orgs ADD CONSTRAINT orgs_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES auth.users(id) ON DELETE SET NULL ON UPDATE CASCADE;
+
   -- users
   ALTER TABLE users DROP CONSTRAINT IF EXISTS users_org_id_fkey;
   ALTER TABLE users ADD CONSTRAINT users_org_id_fkey FOREIGN KEY (org_id) REFERENCES orgs(id) ON DELETE RESTRICT ON UPDATE CASCADE;

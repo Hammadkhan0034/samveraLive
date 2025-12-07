@@ -5,9 +5,20 @@ export interface Organization {
   id: string;
   name: string;
   slug: string;
+  email?: string;
+  phone?: string;
+  website?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  postal_code?: string;
   timezone: string;
+  is_active: boolean;
+  created_by?: string;
+  updated_by?: string;
   created_at: string;
   updated_at: string;
+  deleted_at?: string;
 }
 
 /**

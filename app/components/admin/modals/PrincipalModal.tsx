@@ -22,12 +22,7 @@ interface Principal {
   is_active?: boolean;
 }
 
-interface Organization {
-  id: string;
-  name: string;
-  slug: string;
-  timezone: string;
-}
+import type { Organization } from '@/lib/types/orgs';
 
 interface PrincipalModalProps {
   isOpen: boolean;

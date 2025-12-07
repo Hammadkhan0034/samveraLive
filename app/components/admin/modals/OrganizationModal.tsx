@@ -4,18 +4,26 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { validateSlug, validateOrgForm } from '@/lib/utils/validation';
+import type { Organization } from '@/lib/types/orgs';
 
-interface Organization {
+interface OrganizationFormData {
   id?: string;
   name: string;
   slug: string;
+  email?: string;
+  phone?: string;
+  website?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  postal_code?: string;
   timezone: string;
 }
 
 interface OrganizationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: Organization) => Promise<void>;
+  onSubmit: (data: OrganizationFormData) => Promise<void>;
   initialData?: Organization;
   loading?: boolean;
   error?: string | null;
@@ -30,9 +38,15 @@ export function OrganizationModal({
   error: externalError = null,
 }: OrganizationModalProps) {
   const { t } = useLanguage();
-  const [formData, setFormData] = useState<Organization>({
+  const [formData, setFormData] = useState<OrganizationFormData>({
     name: '',
     slug: '',
+    email: '',
+    phone: '',
+    address: '',
+    city: '',
+    state: '',
+    postal_code: '',
     timezone: 'UTC',
   });
   const [slugError, setSlugError] = useState<string | null>(null);
@@ -42,9 +56,31 @@ export function OrganizationModal({
   useEffect(() => {
     if (isOpen) {
       if (initialData) {
-        setFormData(initialData);
+        setFormData({
+          id: initialData.id,
+          name: initialData.name || '',
+          slug: initialData.slug || '',
+          email: initialData.email || '',
+          phone: initialData.phone || '',
+          website: initialData.website || '',
+          address: initialData.address || '',
+          city: initialData.city || '',
+          state: initialData.state || '',
+          postal_code: initialData.postal_code || '',
+          timezone: initialData.timezone || 'UTC',
+        });
       } else {
-        setFormData({ name: '', slug: '', timezone: 'UTC' });
+        setFormData({
+          name: '',
+          slug: '',
+          email: '',
+          phone: '',
+          address: '',
+          city: '',
+          state: '',
+          postal_code: '',
+          timezone: 'UTC',
+        });
       }
       setSlugError(null);
       setError(null);
@@ -81,7 +117,17 @@ export function OrganizationModal({
     try {
       await onSubmit(formData);
       // Reset form on success
-      setFormData({ name: '', slug: '', timezone: 'UTC' });
+      setFormData({
+        name: '',
+        slug: '',
+        email: '',
+        phone: '',
+        address: '',
+        city: '',
+        state: '',
+        postal_code: '',
+        timezone: 'UTC',
+      });
       setSlugError(null);
       setError(null);
     } catch (err: any) {
@@ -90,17 +136,30 @@ export function OrganizationModal({
   };
 
   const handleClose = () => {
-    setFormData({ name: '', slug: '', timezone: 'UTC' });
+    setFormData({
+      name: '',
+      slug: '',
+      email: '',
+      phone: '',
+      address: '',
+      city: '',
+      state: '',
+      postal_code: '',
+      timezone: 'UTC',
+    });
     setSlugError(null);
     setError(null);
     onClose();
   };
 
+  const inputClassName = "w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white";
+  const labelClassName = "block text-ds-tiny sm:text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1";
+
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3 sm:p-4">
-      <div className="w-full max-w-md rounded-ds-lg bg-white dark:bg-slate-800 p-4 sm:p-6 lg:p-ds-md shadow-ds-lg max-h-[90vh] overflow-y-auto">
+      <div className="w-full max-w-2xl rounded-ds-lg bg-white dark:bg-slate-800 p-4 sm:p-6 lg:p-ds-md shadow-ds-lg max-h-[90vh] overflow-y-auto">
         <div className="mb-3 sm:mb-4 flex items-center justify-between gap-2">
           <h3 className="text-ds-small sm:text-ds-h3 font-semibold text-slate-900 dark:text-slate-100 truncate">
             {formData.id ? t.edit_organization : t.create_organization}
@@ -113,70 +172,198 @@ export function OrganizationModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-          <div>
-            <label className="block text-ds-tiny sm:text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
-              {t.organization_name}
-            </label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
-              placeholder={t.organization_name_placeholder}
-              className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
-              required
-            />
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+          {/* Core Identity Section */}
+          <div className="space-y-3 sm:space-y-4">
+            <h4 className="text-ds-small font-semibold text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 pb-2">
+              Core Identity
+            </h4>
+            
+            <div>
+              <label className={labelClassName}>
+                {t.organization_name || 'Organization Name'} <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
+                placeholder={t.organization_name_placeholder || 'Enter organization name'}
+                className={inputClassName}
+                required
+              />
+            </div>
+
+            <div>
+              <label className={labelClassName}>
+                {t.organization_slug || 'Slug'} <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.slug}
+                onChange={(e) => {
+                  const slugValue = e.target.value.toLowerCase();
+                  setFormData((p) => ({ ...p, slug: slugValue }));
+                  // Validate on change
+                  if (slugValue && !validateSlug(slugValue)) {
+                    setSlugError('Slug must contain only lowercase letters, numbers, and hyphens');
+                  } else {
+                    setSlugError(null);
+                  }
+                }}
+                onBlur={(e) => {
+                  // Validate on blur
+                  if (e.target.value && !validateSlug(e.target.value)) {
+                    setSlugError('Slug must contain only lowercase letters, numbers, and hyphens');
+                  } else {
+                    setSlugError(null);
+                  }
+                }}
+                placeholder={t.organization_slug_placeholder || 'Enter slug'}
+                className={`w-full rounded-ds-md border bg-white dark:bg-slate-900 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-1 dark:text-white ${
+                  slugError
+                    ? 'border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-500'
+                    : 'border-[#D8EBD8] dark:border-slate-600 focus:border-mint-500 focus:ring-mint-500'
+                }`}
+                required
+              />
+              {slugError && (
+                <p className="mt-1 text-ds-tiny text-red-600 dark:text-red-400">{slugError}</p>
+              )}
+            </div>
           </div>
 
-          <div>
-            <label className="block text-ds-tiny sm:text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
-              {t.organization_slug}
-            </label>
-            <input
-              type="text"
-              value={formData.slug}
-              onChange={(e) => {
-                const slugValue = e.target.value.toLowerCase();
-                setFormData((p) => ({ ...p, slug: slugValue }));
-                // Validate on change
-                if (slugValue && !validateSlug(slugValue)) {
-                  setSlugError('Slug must contain only lowercase letters, numbers, and hyphens');
-                } else {
-                  setSlugError(null);
-                }
-              }}
-              onBlur={(e) => {
-                // Validate on blur
-                if (e.target.value && !validateSlug(e.target.value)) {
-                  setSlugError('Slug must contain only lowercase letters, numbers, and hyphens');
-                } else {
-                  setSlugError(null);
-                }
-              }}
-              placeholder={t.organization_slug_placeholder}
-              className={`w-full rounded-ds-md border bg-white dark:bg-slate-900 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-1 dark:text-white ${
-                slugError
-                  ? 'border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-500'
-                  : 'border-[#D8EBD8] dark:border-slate-600 focus:border-mint-500 focus:ring-mint-500'
-              }`}
-              required
-            />
-            {slugError && (
-              <p className="mt-1 text-ds-tiny text-red-600 dark:text-red-400">{slugError}</p>
-            )}
+          {/* Contact Details Section */}
+          <div className="space-y-3 sm:space-y-4">
+            <h4 className="text-ds-small font-semibold text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 pb-2">
+              Contact Details
+            </h4>
+
+            <div>
+              <label className={labelClassName}>
+                Email <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="email"
+                value={formData.email || ''}
+                onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))}
+                placeholder="Enter email address"
+                className={inputClassName}
+                required
+              />
+            </div>
+
+            <div>
+              <label className={labelClassName}>
+                Phone <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="tel"
+                value={formData.phone || ''}
+                onChange={(e) => setFormData((p) => ({ ...p, phone: e.target.value }))}
+                placeholder="Enter phone number"
+                className={inputClassName}
+                required
+              />
+            </div>
+
+            <div>
+              <label className={labelClassName}>
+                Website
+              </label>
+              <input
+                type="url"
+                value={formData.website || ''}
+                onChange={(e) => setFormData((p) => ({ ...p, website: e.target.value }))}
+                placeholder="https://example.com"
+                className={inputClassName}
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="block text-ds-tiny sm:text-ds-small font-medium text-slate-700 dark:text-slate-300 mb-1">
-              {t.organization_timezone}
-            </label>
-            <input
-              type="text"
-              value={formData.timezone}
-              onChange={(e) => setFormData((p) => ({ ...p, timezone: e.target.value }))}
-              placeholder={t.organization_timezone_placeholder}
-              className="w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] dark:border-slate-600 dark:bg-slate-900 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:text-white"
-            />
+          {/* Location Section */}
+          <div className="space-y-3 sm:space-y-4">
+            <h4 className="text-ds-small font-semibold text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 pb-2">
+              Location
+            </h4>
+
+            <div>
+              <label className={labelClassName}>
+                Address <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                value={formData.address || ''}
+                onChange={(e) => setFormData((p) => ({ ...p, address: e.target.value }))}
+                placeholder="Enter street address"
+                className={inputClassName}
+                rows={2}
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+              <div>
+                <label className={labelClassName}>
+                  City <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.city || ''}
+                  onChange={(e) => setFormData((p) => ({ ...p, city: e.target.value }))}
+                  placeholder="City"
+                  className={inputClassName}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className={labelClassName}>
+                  State <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.state || ''}
+                  onChange={(e) => setFormData((p) => ({ ...p, state: e.target.value }))}
+                  placeholder="State"
+                  className={inputClassName}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className={labelClassName}>
+                  Postal Code <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={formData.postal_code || ''}
+                  onChange={(e) => setFormData((p) => ({ ...p, postal_code: e.target.value }))}
+                  placeholder="Postal Code"
+                  className={inputClassName}
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Basic Operational Data */}
+          <div className="space-y-3 sm:space-y-4">
+            <h4 className="text-ds-small font-semibold text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 pb-2">
+              Operational Settings
+            </h4>
+
+            <div>
+              <label className={labelClassName}>
+                {t.organization_timezone || 'Timezone'} <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={formData.timezone}
+                onChange={(e) => setFormData((p) => ({ ...p, timezone: e.target.value }))}
+                placeholder={t.organization_timezone_placeholder || 'UTC'}
+                className={inputClassName}
+                required
+              />
+            </div>
           </div>
 
           {(error || externalError) && (

@@ -44,7 +44,7 @@ export async function handleGetOrgs(
     if (ids.length > 0) {
       const q = adminClient
         .from('orgs')
-        .select('id,name,slug,timezone,created_at,updated_at')
+        .select('id,name,slug,email,phone,website,address,city,state,postal_code,timezone,is_active,created_by,updated_by,created_at,updated_at,deleted_at')
         .order('created_at', { ascending: false });
 
       const { data, error } = await q.in('id', ids);
@@ -80,7 +80,7 @@ export async function handleGetOrgs(
     // Get paginated data
     const { data, error } = await adminClient
       .from('orgs')
-      .select('id,name,slug,timezone,created_at,updated_at')
+      .select('id,name,slug,email,phone,website,address,city,state,postal_code,timezone,is_active,created_by,updated_by,created_at,updated_at,deleted_at')
       .order('created_at', { ascending: false })
       .range(offset, offset + pageSize - 1);
 
@@ -108,7 +108,7 @@ export async function handleGetOrgs(
 
 export async function handlePostOrg(
   request: Request,
-  _user: AuthUser,
+  user: AuthUser,
   adminClient: SupabaseClient,
 ) {
   const body = await request.json();
@@ -117,13 +117,39 @@ export async function handlePostOrg(
     return bodyValidation.error;
   }
 
-  const { name, slug, timezone } = bodyValidation.data;
+  const {
+    name,
+    slug,
+    email,
+    phone,
+    website,
+    address,
+    city,
+    state,
+    postal_code,
+    timezone,
+  } = bodyValidation.data;
 
   try {
+    const insertData: Record<string, unknown> = {
+      name,
+      slug,
+      timezone,
+      created_by: user.id,
+    };
+
+    if (email !== undefined) insertData.email = email;
+    if (phone !== undefined) insertData.phone = phone;
+    if (website !== undefined) insertData.website = website;
+    if (address !== undefined) insertData.address = address;
+    if (city !== undefined) insertData.city = city;
+    if (state !== undefined) insertData.state = state;
+    if (postal_code !== undefined) insertData.postal_code = postal_code;
+
     const { data, error } = await adminClient
       .from('orgs')
-      .insert({ name, slug, timezone })
-      .select('id,name,slug,timezone,created_at,updated_at')
+      .insert(insertData)
+      .select('id,name,slug,email,phone,website,address,city,state,postal_code,timezone,is_active,created_by,updated_by,created_at,updated_at,deleted_at')
       .single();
 
     if (error) {
@@ -139,6 +165,7 @@ export async function handlePostOrg(
 
 export async function handlePutOrg(
   request: Request,
+  user: AuthUser,
   adminClient: SupabaseClient,
 ) {
   const body = await request.json();
@@ -147,10 +174,33 @@ export async function handlePutOrg(
     return bodyValidation.error;
   }
 
-  const { id, name, slug, timezone } = bodyValidation.data;
-  const patch: Record<string, unknown> = {};
+  const {
+    id,
+    name,
+    slug,
+    email,
+    phone,
+    website,
+    address,
+    city,
+    state,
+    postal_code,
+    timezone,
+  } = bodyValidation.data;
+
+  const patch: Record<string, unknown> = {
+    updated_by: user.id,
+  };
+
   if (name !== undefined) patch.name = name;
   if (slug !== undefined) patch.slug = slug;
+  if (email !== undefined) patch.email = email;
+  if (phone !== undefined) patch.phone = phone;
+  if (website !== undefined) patch.website = website;
+  if (address !== undefined) patch.address = address;
+  if (city !== undefined) patch.city = city;
+  if (state !== undefined) patch.state = state;
+  if (postal_code !== undefined) patch.postal_code = postal_code;
   if (timezone !== undefined) patch.timezone = timezone;
 
   try {
@@ -158,7 +208,7 @@ export async function handlePutOrg(
       .from('orgs')
       .update(patch)
       .eq('id', id)
-      .select('id,name,slug,timezone,created_at,updated_at')
+      .select('id,name,slug,email,phone,website,address,city,state,postal_code,timezone,is_active,created_by,updated_by,created_at,updated_at,deleted_at')
       .single();
 
     if (error) {

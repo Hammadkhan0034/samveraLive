@@ -6,6 +6,7 @@ import { Plus, Edit, Trash2 } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { PrincipalModal } from './modals/PrincipalModal';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
+import type { Organization } from '@/lib/types/orgs';
 
 interface Principal {
   id: string;
@@ -18,13 +19,6 @@ interface Principal {
   org_id: string;
   is_active: boolean;
   created_at: string;
-}
-
-interface Organization {
-  id: string;
-  name: string;
-  slug: string;
-  timezone: string;
 }
 
 interface PrincipalsSectionProps {

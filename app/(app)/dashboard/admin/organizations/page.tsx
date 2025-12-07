@@ -88,7 +88,19 @@ function OrganizationsPageContent() {
   }, []);
 
   // Handle submit (create or update)
-  const handleSubmit = useCallback(async (data: { id?: string; name: string; slug: string; timezone: string }) => {
+  const handleSubmit = useCallback(async (data: {
+    id?: string;
+    name: string;
+    slug: string;
+    email?: string;
+    phone?: string;
+    website?: string;
+    address?: string;
+    city?: string;
+    state?: string;
+    postal_code?: string;
+    timezone: string;
+  }) => {
     try {
       setIsSubmitting(true);
       setError(null);
@@ -229,7 +241,10 @@ function OrganizationsPageContent() {
                       {t.table_slug || 'Slug'}
                     </th>
                     <th className="py-3 px-3 text-left font-semibold text-slate-700 dark:text-slate-300 hidden lg:table-cell">
-                      {t.table_timezone || 'Timezone'}
+                      Email
+                    </th>
+                    <th className="py-3 px-3 text-left font-semibold text-slate-700 dark:text-slate-300 hidden lg:table-cell">
+                      Location
                     </th>
                     <th className="py-3 px-3 text-left font-semibold text-slate-700 dark:text-slate-300 hidden xl:table-cell">
                       {t.created_at || 'Created At'}
@@ -252,7 +267,16 @@ function OrganizationsPageContent() {
                         {org.slug}
                       </td>
                       <td className="py-3 px-3 text-slate-600 dark:text-slate-400 hidden lg:table-cell">
-                        {org.timezone}
+                        {org.email || '-'}
+                      </td>
+                      <td className="py-3 px-3 text-slate-600 dark:text-slate-400 hidden lg:table-cell">
+                        {org.city || org.state ? (
+                          <div className="text-ds-tiny">
+                            {[org.city, org.state].filter(Boolean).join(', ') || '-'}
+                          </div>
+                        ) : (
+                          '-'
+                        )}
                       </td>
                       <td className="py-3 px-3 text-slate-600 dark:text-slate-400 hidden xl:table-cell">
                         {formatDate(org.created_at)}
@@ -359,7 +383,19 @@ function OrganizationsPageContent() {
           setError(null);
         }}
         onSubmit={handleSubmit}
-        initialData={editingOrg ? { id: editingOrg.id, name: editingOrg.name, slug: editingOrg.slug, timezone: editingOrg.timezone } : undefined}
+        initialData={editingOrg ? {
+          id: editingOrg.id,
+          name: editingOrg.name,
+          slug: editingOrg.slug,
+          email: editingOrg.email,
+          phone: editingOrg.phone,
+          website: editingOrg.website,
+          address: editingOrg.address,
+          city: editingOrg.city,
+          state: editingOrg.state,
+          postal_code: editingOrg.postal_code,
+          timezone: editingOrg.timezone,
+        } : undefined}
         loading={isSubmitting}
         error={error}
       />

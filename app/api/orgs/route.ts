@@ -35,7 +35,7 @@ export async function PUT(request: Request) {
       requireOrg: false,
       allowedRoles: ['admin'],
     },
-    (_user, adminClient) => handlePutOrg(request, adminClient)
+    (user, adminClient) => handlePutOrg(request, user, adminClient)
   )
 }
 

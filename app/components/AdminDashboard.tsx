@@ -9,6 +9,7 @@ import { OrganizationsSection } from './admin/OrganizationsSection';
 import { PrincipalsSection } from './admin/PrincipalsSection';
 import { SystemStatus } from './admin/SystemStatus';
 import { AdminDashboardSkeleton } from './admin/AdminDashboardSkeleton';
+import type { Organization } from '@/lib/types/orgs';
 
 interface AdminStats {
   totalUsers: number;
@@ -17,13 +18,6 @@ interface AdminStats {
   totalParents: number;
   activeUsers: number;
   newRegistrations: number;
-}
-
-interface Organization {
-  id: string;
-  name: string;
-  slug: string;
-  timezone: string;
 }
 
 export function AdminDashboard() {

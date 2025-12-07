@@ -6,13 +6,7 @@ import { Plus, Edit, Trash2 } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { OrganizationModal } from './modals/OrganizationModal';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
-
-interface Organization {
-  id: string;
-  name: string;
-  slug: string;
-  timezone: string;
-}
+import type { Organization } from '@/lib/types/orgs';
 
 export function OrganizationsSection() {
   const { t } = useLanguage();
