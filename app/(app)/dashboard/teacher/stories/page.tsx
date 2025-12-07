@@ -3,13 +3,14 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Timer, Users, Bell, MessageSquare, Camera, Utensils, Plus, Eye, Edit, Trash2 } from 'lucide-react';
+import { Timer, Users, Bell, MessageSquare, Camera, Utensils, Plus, Eye, Edit, Trash2, FileText } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import { AddStoryModal } from '@/app/components/shared/AddStoryModal';
 import TeacherPageLayout from '@/app/components/shared/TeacherPageLayout';
+import EmptyState from '@/app/components/EmptyState';
 import { supabase } from '@/lib/supabaseClient';
 
 type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'menus';
@@ -17,7 +18,7 @@ type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'ann
 // Translations removed - using centralized translations from @/lib/translations
 
 export default function TeacherStoriesPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { session } = useAuth();
   const router = useRouter();
 
@@ -468,7 +469,14 @@ export default function TeacherStoriesPage() {
                     <LoadingSkeleton type="table" rows={5} />
                   </div>
                 ) : stories.length === 0 ? (
-                  <div className="p-4 sm:p-6 text-center text-ds-small sm:text-ds-base text-slate-600 dark:text-slate-400">{t.empty_stories || 'No stories yet.'}</div>
+                  <div className="p-4 sm:p-6">
+                    <EmptyState
+                      lang={lang}
+                      icon={FileText}
+                      title={t.no_stories_title}
+                      description={t.no_stories_description}
+                    />
+                  </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[640px]">

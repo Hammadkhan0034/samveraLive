@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { X, Search, Send, MessageSquarePlus } from 'lucide-react';
+import { X, Search, Send, MessageSquarePlus, MessageSquare } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { MessageThreadWithParticipants, MessageItem } from '@/lib/types/messages';
@@ -9,6 +9,7 @@ import { useMessagesRealtime } from '@/lib/hooks/useMessagesRealtime';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 import TeacherPageLayout, { useTeacherPageLayout } from '@/app/components/shared/TeacherPageLayout';
 import { PageHeader } from '@/app/components/shared/PageHeader';
+import EmptyState from '@/app/components/EmptyState';
 
 type Recipient = {
   id: string;
@@ -50,7 +51,7 @@ function filterTeacherThreads(
 }
 
 export default function TeacherMessagesPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { session } = useAuth();
 
   // Messages state
@@ -545,6 +546,7 @@ export default function TeacherMessagesPage() {
     <TeacherPageLayout messagesBadge={messagesCount > 0 ? messagesCount : undefined}>
       <TeacherMessagesContent
         t={t}
+        lang={lang}
         session={session}
         error={error}
         setError={setError}
@@ -580,6 +582,7 @@ export default function TeacherMessagesPage() {
 
 interface TeacherMessagesContentProps {
   t: any;
+  lang: 'en' | 'is';
   session: any;
   error: string | null;
   setError: (error: string | null) => void;
@@ -612,6 +615,7 @@ interface TeacherMessagesContentProps {
 
 function TeacherMessagesContent({
   t,
+  lang,
   session,
   error,
   setError,
@@ -787,7 +791,14 @@ function TeacherMessagesContent({
                 <LoadingSkeleton type="list" rows={5} />
               </div>
             ) : filteredThreads.length === 0 ? (
-              <div className="p-4 text-center text-ds-small text-slate-500">{t.no_threads}</div>
+              <div className="p-4">
+                <EmptyState
+                  lang={lang}
+                  icon={MessageSquare}
+                  title={t.no_threads_title}
+                  description={t.no_threads_description}
+                />
+              </div>
             ) : (
               <ul className="divide-y divide-slate-200 dark:divide-slate-700">
                 {filteredThreads.map((thread) => (

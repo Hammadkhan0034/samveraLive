@@ -863,5 +863,22 @@ export const enText = {
     magic_link_sent: "Magic link sent. Check your email.",
     otp_verified: "Code verified! Redirecting...",
   },
+
+  // Empty State Messages
+  no_students_found_title: "No Students Found",
+  no_students_found_description: "No students found in assigned classes. Please check your class assignments.",
+  no_health_logs_title: "No Health Logs",
+  no_health_logs_description: "No health logs found. Click 'Add Log' to create one.",
+  no_health_logs_filtered_title: "No Health Logs Found",
+  no_health_logs_filtered_description: "No health logs found for the selected type.",
+  no_photos_title: "No Photos Uploaded",
+  no_photos_description: "No photos uploaded yet. Click 'Upload Photo' to get started.",
+  no_menus_title: "No Menus Found",
+  no_menus_description: "No menus available. Create a menu to get started.",
+  no_threads_title: "No Messages",
+  no_threads_description: "No message threads yet. Start a conversation to get started.",
+  no_stories_title: "No Stories Yet",
+  no_stories_description: "No stories available. Create a story to share with your class.",
+  no_announcements_title: "No Announcements Yet",
 } as const;
 

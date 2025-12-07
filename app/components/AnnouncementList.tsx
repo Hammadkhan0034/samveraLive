@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { Megaphone } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
+import EmptyState from '@/app/components/EmptyState';
 
 interface Announcement {
   id: string;
@@ -256,12 +258,12 @@ export default function AnnouncementList({
 
   if (announcements.length === 0) {
     return (
-      <div className="bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg p-4 sm:p-6 text-center">
-        <p className="text-ds-small sm:text-ds-base text-gray-600 dark:text-slate-400">{t.no_announcements}</p>
-        <p className="text-ds-tiny sm:text-sm text-gray-500 dark:text-slate-500 mt-1">
-          {classId ? t.class_announcements_note : t.org_announcements_note}
-        </p>
-      </div>
+      <EmptyState
+        lang={effectiveLang}
+        icon={Megaphone}
+        title={(t as any).no_announcements_title || t.no_announcements_yet}
+        description={t.no_announcements_description || (classId ? t.class_announcements_note : t.org_announcements_note)}
+      />
     );
   }
 

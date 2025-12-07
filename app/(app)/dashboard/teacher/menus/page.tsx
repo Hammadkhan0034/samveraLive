@@ -5,6 +5,7 @@ import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { Calendar, Utensils, Menu } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import TeacherPageLayout, { useTeacherPageLayout } from '@/app/components/shared/TeacherPageLayout';
+import EmptyState from '@/app/components/EmptyState';
 
 interface Menu {
   id: string;
@@ -316,10 +317,12 @@ export default function TeacherMenusPage() {
           </div>
           {/* Table Section */}
           {paginatedMenus.length === 0 ? (
-            <div className="text-center py-12">
-              <Utensils className="h-12 w-12 mx-auto text-mint-400 dark:text-slate-500 mb-4" />
-              <p className="text-slate-600 dark:text-slate-400">{t.no_menus}</p>
-            </div>
+            <EmptyState
+              lang={lang}
+              icon={Utensils}
+              title={t.no_menus_title}
+              description={t.no_menus_description}
+            />
           ) : (
             <>
               <div className="overflow-x-auto rounded-ds-md">

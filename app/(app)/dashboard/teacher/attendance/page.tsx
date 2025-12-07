@@ -14,6 +14,7 @@ import { StudentAttendanceCard } from '@/app/components/attendance/StudentAttend
 import { AttendanceFilters } from '@/app/components/attendance/AttendanceFilters';
 import { AttendanceActions } from '@/app/components/attendance/AttendanceActions';
 import { UnsavedChangesWarning } from '@/app/components/attendance/UnsavedChangesWarning';
+import EmptyState from '@/app/components/EmptyState';
 import type { Student, TeacherClass } from '@/lib/types/attendance';
 import { enText } from '@/lib/translations/en';
 import { isText } from '@/lib/translations/is';
@@ -295,11 +296,12 @@ const AttendancePanel = React.memo<AttendancePanelProps>(function AttendancePane
       {isLoading ? (
         <LoadingSkeleton type="cards" rows={6} />
       ) : filteredStudents.length === 0 ? (
-        <div className="text-center py-6 sm:py-8 text-ds-small sm:text-ds-base text-slate-500 dark:text-slate-400">
-          {selectedClassId === 'all'
-            ? t.no_students_found || 'No students found in assigned classes'
-            : t.no_students_assigned || 'No students assigned to this class'}
-        </div>
+        <EmptyState
+          lang={lang}
+          icon={Users}
+          title={selectedClassId === 'all' ? t.no_students_found_title : t.no_students_assigned || 'No students assigned to this class'}
+          description={selectedClassId === 'all' ? t.no_students_found_description : t.no_students_assigned || 'No students assigned to this class'}
+        />
       ) : (
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {filteredStudents.map((student) => {

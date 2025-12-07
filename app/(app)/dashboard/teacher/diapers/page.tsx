@@ -11,6 +11,7 @@ import { PageHeader } from '@/app/components/shared/PageHeader';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import { HealthLogFormModal } from '@/app/components/shared/HealthLogFormModal';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
+import EmptyState from '@/app/components/EmptyState';
 
 
 // Small helpers
@@ -290,18 +291,12 @@ function DiaperPanel({ t }: { t: typeof enText | typeof isText }) {
       {loadingLogs ? (
         <LoadingSkeleton type="table" rows={5} />
       ) : healthLogs.length === 0 ? (
-        <div className="text-center py-12">
-          <Baby className="h-12 w-12 mx-auto text-mint-400 dark:text-slate-500 mb-4" />
-          <p className="text-slate-600 dark:text-slate-400">
-            {selectedFilterType === 'all'
-              ? lang === 'is'
-                ? 'Engar heilsuskráningar fundust. Smelltu á "Bæta við skráningu" til að búa til eina.'
-                : 'No health logs found. Click "Add Log" to create one.'
-              : lang === 'is'
-                ? 'Engar heilsuskráningar fundust fyrir valda gerð.'
-                : 'No health logs found for the selected type.'}
-          </p>
-        </div>
+        <EmptyState
+          lang={lang}
+          icon={Baby}
+          title={selectedFilterType === 'all' ? t.no_health_logs_title : t.no_health_logs_filtered_title}
+          description={selectedFilterType === 'all' ? t.no_health_logs_description : t.no_health_logs_filtered_description}
+        />
       ) : (
         <div className="overflow-x-auto rounded-ds-md border border-slate-200 dark:border-slate-700">
           <table className="w-full border-collapse">

@@ -866,5 +866,22 @@ export const isText = {
     magic_link_sent: "Töfraslóð send. Athugaðu pósthólfið.",
     otp_verified: "Kóði staðfestur! Endurbeina...",
   },
+
+  // Empty State Messages
+  no_students_found_title: "Engir nemendur fundust",
+  no_students_found_description: "Engir nemendur fundust í úthlutuðum hópum. Vinsamlegast athugaðu úthlutun hópa.",
+  no_health_logs_title: "Engar heilsuskráningar",
+  no_health_logs_description: "Engar heilsuskráningar fundust. Smelltu á 'Bæta við skráningu' til að búa til eina.",
+  no_health_logs_filtered_title: "Engar heilsuskráningar fundust",
+  no_health_logs_filtered_description: "Engar heilsuskráningar fundust fyrir valda gerð.",
+  no_photos_title: "Engar myndir hlaðið upp",
+  no_photos_description: "Engar myndir hlaðið upp enn. Smelltu á 'Hlaða upp mynd' til að byrja.",
+  no_menus_title: "Engir matseðlar fundust",
+  no_menus_description: "Engir matseðlar tiltækir. Búðu til matseðil til að byrja.",
+  no_threads_title: "Engin skilaboð",
+  no_threads_description: "Engin skilaboðaþræðir enn. Byrjaðu samtal til að byrja.",
+  no_stories_title: "Engar sögur ennþá",
+  no_stories_description: "Engar sögur tiltækar. Búðu til sögu til að deila með hópnum þínum.",
+  no_announcements_title: "Engar tilkynningar ennþá",
 } as const;
 

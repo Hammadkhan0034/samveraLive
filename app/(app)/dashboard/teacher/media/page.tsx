@@ -10,6 +10,7 @@ import { useTeacherStudents } from '@/lib/hooks/useTeacherStudents';
 import TeacherPageLayout from '@/app/components/shared/TeacherPageLayout';
 import { PhotoUploadModal } from '@/app/components/shared/PhotoUploadModal';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
+import EmptyState from '@/app/components/EmptyState';
 
 type TileId = 'attendance' | 'diapers' | 'messages' | 'media' | 'stories' | 'announcements' | 'students' | 'menus';
 
@@ -52,7 +53,7 @@ interface Photo {
 }
 
 export default function TeacherMediaPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
 
 
   // Get classes and students
@@ -216,10 +217,13 @@ export default function TeacherMediaPage() {
           /* Photos Grid */
           <div className="grid grid-cols-2 gap-2 sm:gap-ds-sm sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {photos.length === 0 ? (
-              <div className="col-span-full text-center py-8 sm:py-12 text-slate-500 dark:text-slate-400">
-                <ImageIcon className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-2 sm:mb-3 text-mint-300 dark:text-slate-600" />
-                <p className="text-ds-small sm:text-ds-base">{t.no_photos_uploaded || 'No photos uploaded yet'}</p>
-                <p className="text-ds-tiny sm:text-ds-small mt-1">{t.click_upload_photo || 'Click "Upload Photo" to get started'}</p>
+              <div className="col-span-full">
+                <EmptyState
+                  lang={lang}
+                  icon={ImageIcon}
+                  title={t.no_photos_title}
+                  description={t.no_photos_description}
+                />
               </div>
             ) : (
               photos.map((photo) => (
