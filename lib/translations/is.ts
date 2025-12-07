@@ -700,6 +700,12 @@ export const isText = {
   error_loading_organizations: 'Villa við að hlaða stofnunum',
   delete_organization_title: 'Eyða stofnun',
   delete_organization_message: 'Ertu viss um að þú viljir eyða þessari stofnun? Þessa aðgerð er ekki hægt að afturkalla.',
+  manage_organizations: 'Skoða, búa til, uppfæra og eyða stofnunum',
+  loading_organizations: 'Hleð stofnunum...',
+  no_organizations: 'Engar stofnanir fundust',
+  no_organizations_description: 'Byrjaðu á að búa til fyrstu stofnunina þína.',
+  created_at: 'Búið til',
+  showing_organizations_count: 'Sýnir {start} - {end} af {total} stofnunum',
 
   // Principal Management
   principals: 'Skólastjórar',

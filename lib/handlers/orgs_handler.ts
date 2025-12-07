@@ -21,34 +21,80 @@ export async function handleGetOrgs(
     return queryValidation.error;
   }
 
-  const idsParam = queryValidation.data.ids || '';
+  const { ids: idsParam, page = 1, pageSize = 20 } = queryValidation.data;
+
+  // Handle legacy ids parameter for backward compatibility
   const ids = idsParam
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean)
-    .filter((id) => {
-      try {
-        uuidSchema.parse(id);
-        return true;
-      } catch {
-        return false;
-      }
-    });
+    ? idsParam
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .filter((id) => {
+          try {
+            uuidSchema.parse(id);
+            return true;
+          } catch {
+            return false;
+          }
+        })
+    : [];
 
   try {
-    const q = adminClient
+    // If specific IDs are requested, return them without pagination (backward compatibility)
+    if (ids.length > 0) {
+      const q = adminClient
+        .from('orgs')
+        .select('id,name,slug,timezone,created_at,updated_at')
+        .order('created_at', { ascending: false });
+
+      const { data, error } = await q.in('id', ids);
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      return NextResponse.json(
+        { orgs: data || [] },
+        {
+          status: 200,
+          headers: getStableDataCacheHeaders(),
+        },
+      );
+    }
+
+    // Paginated query
+    const offset = (page - 1) * pageSize;
+
+    // Get total count
+    const { count, error: countError } = await adminClient
+      .from('orgs')
+      .select('*', { count: 'exact', head: true });
+
+    if (countError) {
+      return NextResponse.json({ error: countError.message }, { status: 500 });
+    }
+
+    const totalCount = count ?? 0;
+    const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+
+    // Get paginated data
+    const { data, error } = await adminClient
       .from('orgs')
       .select('id,name,slug,timezone,created_at,updated_at')
-      .order('created_at', { ascending: false });
-
-    const { data, error } = ids.length ? await q.in('id', ids) : await q;
+      .order('created_at', { ascending: false })
+      .range(offset, offset + pageSize - 1);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json(
-      { orgs: data || [] },
+      {
+        orgs: data || [],
+        totalCount,
+        totalPages,
+        currentPage: page,
+      },
       {
         status: 200,
         headers: getStableDataCacheHeaders(),

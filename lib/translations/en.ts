@@ -697,6 +697,12 @@ export const enText = {
   error_loading_organizations: 'Error loading organizations',
   delete_organization_title: 'Delete Organization',
   delete_organization_message: 'Are you sure you want to delete this organization? This action cannot be undone.',
+  manage_organizations: 'View, create, update, and delete organizations',
+  loading_organizations: 'Loading organizations...',
+  no_organizations: 'No organizations found',
+  no_organizations_description: 'Get started by creating your first organization.',
+  created_at: 'Created At',
+  showing_organizations_count: 'Showing {start} - {end} of {total} organizations',
 
   // Principal Management
   principals: 'Principals',
