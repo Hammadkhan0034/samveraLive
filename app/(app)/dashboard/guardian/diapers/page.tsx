@@ -1,10 +1,12 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
+import { Baby } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 import GuardianPageLayout, { useGuardianPageLayout } from '@/app/components/shared/GuardianPageLayout';
 import { PageHeader } from '@/app/components/shared/PageHeader';
+import EmptyState from '@/app/components/EmptyState';
 import type { HealthLogWithRelations } from '@/lib/types/health-logs';
 
 const HEALTH_LOG_TYPE_LABELS: Record<string, { en: string; is: string }> = {
@@ -160,22 +162,20 @@ function GuardianDiapersContent() {
         {loadingLogs ? (
           <LoadingSkeleton type="table" rows={10} className="border-0 p-0" />
         ) : healthLogs.length === 0 ? (
-          <div className="text-center py-6 sm:py-12">
-            <p className="text-ds-tiny sm:text-ds-base text-slate-600 dark:text-slate-400 mb-2">
-              {selectedFilterType === 'all'
-                ? (lang === 'is'
-                    ? 'Engar heilsuskráningar fundust.'
-                    : 'No health logs found.')
-                : (lang === 'is'
-                    ? 'Engar heilsuskráningar fundust fyrir valda gerð.'
-                    : 'No health logs found for the selected type.')}
-            </p>
-            <p className="text-ds-tiny sm:text-ds-small text-slate-500 dark:text-slate-500 px-2">
-              {lang === 'is'
-                ? 'Engar heilsuskráningar fundust fyrir tengda nemendur.'
-                : 'No health logs found for your linked students.'}
-            </p>
-          </div>
+          <EmptyState
+            lang={lang}
+            icon={Baby}
+            title={
+              selectedFilterType === 'all'
+                ? (t.no_health_logs_title || 'No Health Logs')
+                : (t.no_health_logs_filtered_title || 'No Health Logs Found')
+            }
+            description={
+              selectedFilterType === 'all'
+                ? (t.no_health_logs_guardian_description  || 'No health logs found for your linked students.')
+                : (t.no_health_logs_filtered_description || 'No health logs found for the selected type.')
+            }
+          />
         ) : (
           <>
             <div className="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-ds-lg">

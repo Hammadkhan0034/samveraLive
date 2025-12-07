@@ -7,6 +7,7 @@ import { useLanguage } from '@/lib/contexts/LanguageContext';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 import GuardianPageLayout, { useGuardianPageLayout } from '@/app/components/shared/GuardianPageLayout';
 import { PageHeader } from '@/app/components/shared/PageHeader';
+import EmptyState from '@/app/components/EmptyState';
 
 interface Menu {
   id: string;
@@ -365,9 +366,13 @@ function GuardianMenusContent() {
 
       {/* Menu Display */}
       {menusForDate.length === 0 ? (
-        <div className="rounded-ds-lg border border-slate-200 bg-white p-12 shadow-ds-card dark:border-slate-700 dark:bg-slate-800 text-center">
-          <Utensils className="w-16 h-16 mx-auto text-mint-400 dark:text-slate-500 mb-4" />
-          <p className="text-ds-small text-slate-500 dark:text-slate-400">{t.empty_menu || 'No menu available for this date'}</p>
+        <div className="rounded-ds-lg border border-slate-200 bg-white p-12 shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+          <EmptyState
+            lang={lang}
+            icon={Utensils}
+            title={t.no_menu_for_date_title || 'No Menu Available'}
+            description={t.no_menu_for_date_description || 'No menu available for this date.'}
+          />
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-ds-sm">

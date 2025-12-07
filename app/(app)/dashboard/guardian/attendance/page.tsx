@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
-import { Calendar } from 'lucide-react';
+import { Calendar, UserCheck } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 import GuardianPageLayout, { useGuardianPageLayout } from '@/app/components/shared/GuardianPageLayout';
 import { PageHeader } from '@/app/components/shared/PageHeader';
+import EmptyState from '@/app/components/EmptyState';
 
 interface AttendanceRecord {
   id: string;
@@ -254,21 +255,16 @@ function GuardianAttendanceContent() {
         {loadingAttendance ? (
           <LoadingSkeleton type="table" rows={10} className="border-0 p-0" />
         ) : attendance.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-slate-600 dark:text-slate-400 mb-2">
-              {t.no_attendance_data || 'No attendance data available'}
-            </p>
-            {selectedDate && (
-              <p className="text-ds-small text-slate-500 dark:text-slate-500">
-                {t.try_different_date || 'Try selecting a different date or clear the date filter to see all records.'}
-              </p>
-            )}
-            {!selectedDate && linkedStudentIds.length > 0 && (
-              <p className="text-ds-small text-slate-500 dark:text-slate-500">
-                {t.no_records_for_students || 'No attendance records found for your linked students.'}
-              </p>
-            )}
-          </div>
+          <EmptyState
+            lang={lang}
+            icon={UserCheck}
+            title={t.no_attendance_data_title || 'No Attendance Data'}
+            description={
+              selectedDate
+                ? (t.no_attendance_filtered_description || 'Try selecting a different date or clear the date filter to see all records.')
+                : (t.no_attendance_data_description || 'No attendance records found for your linked students.')
+            }
+          />
         ) : (
           <>
             <div className="overflow-x-auto overflow-hidden border border-slate-200 dark:border-slate-700 rounded-ds-md">

@@ -895,5 +895,15 @@ export const isText = {
   no_announcements_title: "Engar tilkynningar ennþá",
   no_events_title: "Engir viðburðir",
   no_events_description: "Engir viðburðir áætlaðir. Smelltu á dagsetningu til að búa til viðburð.",
+  
+  // Guardian empty states
+  no_attendance_data_title: "Engin mætingargögn",
+  no_attendance_data_description: "Engar mætingarskrár fundust fyrir tengda nemendur þína.",
+  no_attendance_filtered_description: "Reyndu að velja aðra dagsetningu eða hreinsa dagsetningarsíu til að sjá allar skrár.",
+  no_health_logs_guardian_description: "Engar heilsuskráningar fundust fyrir tengda nemendur þína.",
+  no_photos_guardian_description: "Engar myndir tiltækar fyrir tengda nemendur þína eða stofnun.",
+  no_photos_no_students_description: "Engar stofnunarmiðaðar myndir tiltækar. Tengdu nemanda til að skoða hópsspecifískar myndir.",
+  no_menu_for_date_title: "Enginn matseðill tiltækur",
+  no_menu_for_date_description: "Enginn matseðill tiltækur fyrir þessa dagsetningu.",
 } as const;
 

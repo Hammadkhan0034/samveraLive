@@ -1,16 +1,18 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, Suspense } from 'react';
-import { Calendar, type CalendarEvent } from '@/app/components/shared/Calendar';
+import { Calendar as CalendarComponent, type CalendarEvent } from '@/app/components/shared/Calendar';
+import { Calendar } from 'lucide-react';
 import { EventDetailsModal } from '@/app/components/shared/EventDetailsModal';
 import { PageHeader } from '@/app/components/shared/PageHeader';
 import GuardianPageLayout, { useGuardianPageLayout } from '@/app/components/shared/GuardianPageLayout';
 import { getEvents } from '@/lib/server-actions';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
+import EmptyState from '@/app/components/EmptyState';
 
 function GuardianCalendarContent() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { session } = useAuth();
   const { sidebarRef } = useGuardianPageLayout();
   
@@ -85,9 +87,18 @@ function GuardianCalendarContent() {
             </div>
           </div>
         </div>
+      ) : !loadingEvents && calendarEvents.length === 0 ? (
+        <div className="rounded-ds-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-ds-card p-12">
+          <EmptyState
+            lang={lang}
+            icon={Calendar}
+            title={t.no_events_title || 'No Events'}
+            description={t.no_events_description || 'No events scheduled. Check back later for updates.'}
+          />
+        </div>
       ) : (
         <div className="rounded-ds-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-ds-card">
-          <Calendar
+          <CalendarComponent
             userRole="guardian"
             canEdit={false}
             events={calendarEvents}

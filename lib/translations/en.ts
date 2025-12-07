@@ -892,5 +892,15 @@ export const enText = {
   no_announcements_title: "No Announcements Yet",
   no_events_title: "No Events",
   no_events_description: "No events scheduled. Click on a date to create an event.",
+  
+  // Guardian empty states
+  no_attendance_data_title: "No Attendance Data",
+  no_attendance_data_description: "No attendance records found for your linked students.",
+  no_attendance_filtered_description: "Try selecting a different date or clear the date filter to see all records.",
+  no_health_logs_guardian_description: "No health logs found for your linked students.",
+  no_photos_guardian_description: "No photos available for your linked students or organization.",
+  no_photos_no_students_description: "No org-wide photos available. Link a student to view class-specific photos.",
+  no_menu_for_date_title: "No Menu Available",
+  no_menu_for_date_description: "No menu available for this date.",
 } as const;
 

@@ -7,6 +7,7 @@ import { useLanguage } from '@/lib/contexts/LanguageContext';
 import GuardianPageLayout, { useGuardianPageLayout } from '@/app/components/shared/GuardianPageLayout';
 import { PageHeader } from '@/app/components/shared/PageHeader';
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
+import EmptyState from '@/app/components/EmptyState';
 
 interface Photo {
   id: string;
@@ -271,15 +272,16 @@ function GuardianMediaContent() {
         {isLoading || loadingStudents ? (
           <LoadingSkeleton type="cards" rows={2} />
         ) : photos.length === 0 ? (
-          <div className="text-center py-6 sm:py-12 text-slate-500 dark:text-slate-400">
-            <ImageIcon className="h-8 w-8 sm:h-12 sm:w-12 mx-auto mb-2 sm:mb-3 text-slate-300 dark:text-slate-600" />
-            <p className="text-ds-tiny sm:text-ds-base">{t.no_photos_uploaded || 'No photos uploaded yet'}</p>
-            <p className="text-ds-tiny sm:text-ds-small mt-1 px-2">
-              {linkedStudents.length === 0
-                ? 'No org-wide photos available. Link a student to view class-specific photos.'
-                : 'No photos available for your linked students or organization'}
-            </p>
-          </div>
+          <EmptyState
+            lang={lang}
+            icon={ImageIcon}
+            title={t.no_photos_title || 'No Photos Uploaded'}
+            description={
+              linkedStudents.length === 0
+                ? (t.no_photos_no_students_description || 'No org-wide photos available. Link a student to view class-specific photos.')
+                : (t.no_photos_guardian_description  || 'No photos available for your linked students or organization.')
+            }
+          />
         ) : (
           /* Photos Grid */
           <div className="grid grid-cols-2 gap-2 sm:gap-ds-sm sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
