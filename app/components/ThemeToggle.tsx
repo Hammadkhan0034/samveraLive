@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Sun, Moon, Monitor } from 'lucide-react';
+import { Sun, Moon } from 'lucide-react';
 import { useTheme } from '@/lib/contexts/ThemeContext';
 
 export default function ThemeToggle() {
@@ -19,8 +19,6 @@ export default function ThemeToggle() {
       aria-label={
         theme === 'light' 
           ? "Switch to dark mode" 
-          : theme === 'dark' 
-          ? "Switch to system mode" 
           : "Switch to light mode"
       }
       onClick={toggleTheme}
@@ -30,14 +28,10 @@ export default function ThemeToggle() {
         <Sun size={16} className="text-amber-500" /> // Default to light icon during SSR
       ) : theme === 'light' ? (
         <Sun size={16} className="text-amber-500" />
-      ) : theme === 'dark' ? (
-        <Moon size={16} className="text-slate-600 dark:text-slate-300" />
       ) : (
-        <Monitor size={16} className="text-slate-600 dark:text-slate-300" />
+        <Moon size={16} className="text-slate-600 dark:text-slate-300" />
       )}
-      {/* <span className="hidden sm:inline">
-        {theme === 'light' ? 'Light' : theme === 'dark' ? 'Dark' : 'System'}
-      </span> */}
+     
     </button>
   );
 }

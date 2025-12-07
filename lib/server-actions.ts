@@ -372,7 +372,7 @@ export async function getEvents(options?: {
 /**
  * Update user theme preference
  */
-export async function updateUserTheme(theme: 'light' | 'dark' | 'system') {
+export async function updateUserTheme(theme: 'light' | 'dark') {
   const { user } = await getRequestAuthContext({
     requireOrg: false,
   });

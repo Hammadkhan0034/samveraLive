@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState, ReactNode, useCa
 import { useAuth } from '@/lib/hooks/useAuth';
 import { updateUserTheme } from '@/lib/server-actions';
 
-type ThemeMode = 'light' | 'dark' | 'system';
+type ThemeMode = 'light' | 'dark';
 
 interface ThemeContextType {
   isDark: boolean;
@@ -41,15 +41,6 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
   const [theme, setThemeState] = useState<ThemeMode>(DEFAULT_THEME);
   const [isDark, setIsDarkState] = useState(false); // Default to light
 
-  // Compute isDark based on theme mode
-  const getIsDark = useCallback((currentTheme: ThemeMode): boolean => {
-    if (currentTheme === 'system') {
-      if (typeof window === 'undefined') return false; // Default to light on server
-      return window.matchMedia("(prefers-color-scheme: dark)").matches;
-    }
-    return currentTheme === 'dark';
-  }, []);
-
   // Initialize from localStorage after mount (if not logged in)
   // Or fetch from database (if logged in)
   useEffect(() => {
@@ -64,9 +55,9 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
             const data = await response.json();
             const dbTheme = data.theme as ThemeMode;
             
-            if (dbTheme && (dbTheme === 'light' || dbTheme === 'dark' || dbTheme === 'system')) {
+            if (dbTheme && (dbTheme === 'light' || dbTheme === 'dark')) {
               setThemeState(dbTheme);
-              setIsDarkState(getIsDark(dbTheme));
+              setIsDarkState(dbTheme === 'dark');
               // Sync localStorage with database
               localStorage.setItem('theme', dbTheme);
               setIsLoading(false);
@@ -81,9 +72,9 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
 
       // If not logged in or fetch failed, use localStorage
       const saved = localStorage.getItem("theme") as ThemeMode | null;
-      if (saved && (saved === 'light' || saved === 'dark' || saved === 'system')) {
+      if (saved && (saved === 'light' || saved === 'dark')) {
         setThemeState(saved);
-        setIsDarkState(getIsDark(saved));
+        setIsDarkState(saved === 'dark');
       } else {
         // No localStorage, use default (light) and save it
         setThemeState(DEFAULT_THEME);
@@ -95,28 +86,11 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
     };
 
     initializeTheme();
-  }, [user?.id, mounted, getIsDark]);
+  }, [user?.id, mounted]);
 
-  // Listen to system preference changes when theme is 'system'
+  // Update isDark when theme changes
   useEffect(() => {
-    if (!mounted || theme !== 'system') return;
-
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const handleChange = (e: MediaQueryListEvent) => {
-      setIsDarkState(e.matches);
-    };
-
-    mediaQuery.addEventListener('change', handleChange);
-    setIsDarkState(mediaQuery.matches);
-
-    return () => {
-      mediaQuery.removeEventListener('change', handleChange);
-    };
-  }, [theme, mounted]);
-
-  // Update isDark when theme changes (but not when it's 'system' - that's handled above)
-  useEffect(() => {
-    if (!mounted || theme === 'system') return;
+    if (!mounted) return;
     setIsDarkState(theme === 'dark');
   }, [theme, mounted]);
 
@@ -172,7 +146,7 @@ export const ThemeProvider = ({ children }: ThemeProviderProps) => {
 
   const toggleTheme = useCallback(() => {
     setThemeState(prev => {
-      const newTheme = prev === 'light' ? 'dark' : prev === 'dark' ? 'system' : 'light';
+      const newTheme = prev === 'light' ? 'dark' : 'light';
       if (mounted) {
         localStorage.setItem("theme", newTheme);
       }

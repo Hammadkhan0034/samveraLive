@@ -21,7 +21,7 @@ export async function handleGetUserPreferences(
   }
 
   return NextResponse.json({
-    theme: (data?.theme as 'light' | 'dark' | 'system') || 'system',
+    theme: (data?.theme as 'light' | 'dark') || 'light',
     language: (data?.language as 'en' | 'is') || 'is',
   });
 }

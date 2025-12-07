@@ -116,7 +116,7 @@ CREATE TABLE IF NOT EXISTS users (
   is_staff boolean NOT NULL DEFAULT true,
   status staff_status_type DEFAULT 'active',
   dob date,
-  theme text DEFAULT 'system' CHECK (theme IN ('light','dark','system')),
+  theme text DEFAULT 'light' CHECK (theme IN ('light','dark')),
   language text DEFAULT 'is' CHECK (language IN ('en','is')),
   deleted_at timestamptz NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
