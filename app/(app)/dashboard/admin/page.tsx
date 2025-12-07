@@ -1,26 +1,44 @@
 'use client';
 
-import { useRequireAuth } from '@/lib/hooks/useAuth';
+import React, { Suspense } from 'react';
+import AdminPageLayout, { useAdminPageLayout } from '@/app/components/shared/AdminPageLayout';
+import { PageHeader } from '@/app/components/shared/PageHeader';
 import { AdminDashboard } from '@/app/components/AdminDashboard';
-import Loading from '@/app/components/shared/Loading';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
+import { AdminDashboardSkeleton } from '@/app/components/admin/AdminDashboardSkeleton';
 
-export default function AdminDashboardPage() {
-  const { user, loading, isSigningIn } = useRequireAuth('admin');
-
-  // Show loading ONLY if we have no user yet (avoid flicker after sign-in)
-  if (loading && !user) {
-    return <Loading fullScreen text="Loading admin dashboard..." />;
-  }
-
-  if (!user) {
-    return null;
-  }
+function AdminDashboardContent() {
+  const { sidebarRef } = useAdminPageLayout();
+  const { t } = useLanguage();
 
   return (
-    <div className="min-h-screen bg-mint-100 dark:bg-slate-950">
-      <main className="container mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-ds-lg">
-        <AdminDashboard />
-      </main>
-    </div>
+    <>
+      {/* Content Header */}
+      <PageHeader
+        title={t.adminDashboard || 'Admin Dashboard'}
+        subtitle={t.manageUsersSchools || 'Manage users, schools, and system settings'}
+        headingLevel="h1"
+        showMobileMenu={true}
+        onMobileMenuClick={() => sidebarRef.current?.open()}
+      />
+
+      <AdminDashboard />
+    </>
+  );
+}
+
+export default function AdminDashboardPage() {
+  return (
+    <Suspense fallback={
+      <AdminPageLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <AdminDashboardSkeleton />
+        </div>
+      </AdminPageLayout>
+    }>
+      <AdminPageLayout>
+        <AdminDashboardContent />
+      </AdminPageLayout>
+    </Suspense>
   );
 }

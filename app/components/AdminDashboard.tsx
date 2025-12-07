@@ -1,8 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
-import { Shield } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { AdminStatsCards } from './admin/AdminStatsCards';
 import { OrganizationsSection } from './admin/OrganizationsSection';
@@ -95,35 +93,7 @@ export function AdminDashboard() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto animate-in fade-in duration-500 mt-4 sm:mt-6 lg:mt-10 px-3 sm:px-4">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: 0 }}
-        className="mb-4 sm:mb-6 lg:mb-8"
-      >
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
-          <div>
-            <h1 className="text-ds-h2 sm:text-2xl lg:text-3xl font-bold text-slate-900 dark:text-slate-100 mb-1 sm:mb-2">
-              {t.adminDashboard}
-            </h1>
-            <p className="text-ds-tiny sm:text-ds-small text-slate-600 dark:text-slate-400">
-              {t.manageUsersSchools}
-            </p>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="p-1.5 sm:p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
-              <Shield className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6 text-green-600 dark:text-green-400" />
-            </div>
-            <div className="hidden sm:block">
-              <p className="text-ds-tiny sm:text-ds-small font-medium text-slate-900 dark:text-slate-100">{t.adminAccess}</p>
-              <p className="text-ds-tiny text-slate-500 dark:text-slate-400">{t.fullPermissions}</p>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-
+    <div className="max-w-7xl mx-auto animate-in fade-in duration-500">
       {/* Error State */}
       {error && (
         <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-ds-md">
@@ -135,7 +105,7 @@ export function AdminDashboard() {
       <AdminStatsCards stats={stats} />
 
       {/* Organizations and Principals Sections */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-ds-md">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-ds-md mt-4 sm:mt-6">
         <OrganizationsSection />
         <PrincipalsSection organizations={orgs} onRefresh={loadDashboardData} />
       </div>
