@@ -10,13 +10,13 @@ interface OrganizationFormData {
   id?: string;
   name: string;
   slug: string;
-  email?: string;
-  phone?: string;
+  email: string;
+  phone: string;
   website?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  postal_code?: string;
+  address: string;
+  city: string;
+  state: string;
+  postal_code: string;
   timezone: string;
 }
 
@@ -43,6 +43,7 @@ export function OrganizationModal({
     slug: '',
     email: '',
     phone: '',
+    website: '',
     address: '',
     city: '',
     state: '',
@@ -75,6 +76,7 @@ export function OrganizationModal({
           slug: '',
           email: '',
           phone: '',
+          website: '',
           address: '',
           city: '',
           state: '',
@@ -122,6 +124,7 @@ export function OrganizationModal({
         slug: '',
         email: '',
         phone: '',
+        website: '',
         address: '',
         city: '',
         state: '',
@@ -141,6 +144,7 @@ export function OrganizationModal({
       slug: '',
       email: '',
       phone: '',
+      website: '',
       address: '',
       city: '',
       state: '',
@@ -219,7 +223,7 @@ export function OrganizationModal({
                   }
                 }}
                 placeholder={t.organization_slug_placeholder || 'Enter slug'}
-                className={`w-full rounded-ds-md border bg-white dark:bg-slate-900 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:text-slate-100 placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-1 dark:text-white ${
+                className={`w-full rounded-ds-md border bg-white dark:bg-slate-900 px-3 py-2 text-ds-tiny sm:text-ds-small text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-1 ${
                   slugError
                     ? 'border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-500'
                     : 'border-[#D8EBD8] dark:border-slate-600 focus:border-mint-500 focus:ring-mint-500'
@@ -244,7 +248,7 @@ export function OrganizationModal({
               </label>
               <input
                 type="email"
-                value={formData.email || ''}
+                value={formData.email}
                 onChange={(e) => setFormData((p) => ({ ...p, email: e.target.value }))}
                 placeholder="Enter email address"
                 className={inputClassName}
@@ -258,7 +262,7 @@ export function OrganizationModal({
               </label>
               <input
                 type="tel"
-                value={formData.phone || ''}
+                value={formData.phone}
                 onChange={(e) => setFormData((p) => ({ ...p, phone: e.target.value }))}
                 placeholder="Enter phone number"
                 className={inputClassName}
@@ -291,7 +295,7 @@ export function OrganizationModal({
                 Address <span className="text-red-500">*</span>
               </label>
               <textarea
-                value={formData.address || ''}
+                value={formData.address}
                 onChange={(e) => setFormData((p) => ({ ...p, address: e.target.value }))}
                 placeholder="Enter street address"
                 className={inputClassName}
@@ -307,7 +311,7 @@ export function OrganizationModal({
                 </label>
                 <input
                   type="text"
-                  value={formData.city || ''}
+                  value={formData.city}
                   onChange={(e) => setFormData((p) => ({ ...p, city: e.target.value }))}
                   placeholder="City"
                   className={inputClassName}
@@ -321,7 +325,7 @@ export function OrganizationModal({
                 </label>
                 <input
                   type="text"
-                  value={formData.state || ''}
+                  value={formData.state}
                   onChange={(e) => setFormData((p) => ({ ...p, state: e.target.value }))}
                   placeholder="State"
                   className={inputClassName}
@@ -335,7 +339,7 @@ export function OrganizationModal({
                 </label>
                 <input
                   type="text"
-                  value={formData.postal_code || ''}
+                  value={formData.postal_code}
                   onChange={(e) => setFormData((p) => ({ ...p, postal_code: e.target.value }))}
                   placeholder="Postal Code"
                   className={inputClassName}

@@ -136,6 +136,13 @@ export function validateSlug(slug: string): boolean {
 export function validateOrgForm(data: {
   name: string;
   slug: string;
+  email?: string;
+  phone?: string;
+  website?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  postal_code?: string;
   timezone: string;
   id?: string;
 }): ValidationResult {
@@ -146,6 +153,13 @@ export function validateOrgForm(data: {
         id: data.id,
         name: data.name,
         slug: data.slug,
+        email: data.email,
+        phone: data.phone,
+        website: data.website,
+        address: data.address,
+        city: data.city,
+        state: data.state,
+        postal_code: data.postal_code,
         timezone: data.timezone,
       });
     } else {
@@ -153,16 +167,43 @@ export function validateOrgForm(data: {
       postOrgBodySchema.parse({
         name: data.name,
         slug: data.slug,
+        email: data.email,
+        phone: data.phone,
+        website: data.website,
+        address: data.address,
+        city: data.city,
+        state: data.state,
+        postal_code: data.postal_code,
         timezone: data.timezone,
       });
     }
     return { valid: true, error: null };
   } catch (error) {
     if (error instanceof z.ZodError) {
+      // Find the first error and provide a clear message
       const firstError = error.errors[0];
+      if (firstError) {
+        // If the error has a custom message, use it
+        if (firstError.message && firstError.message !== 'Required') {
+          return {
+            valid: false,
+            error: firstError.message
+          };
+        }
+        // Otherwise, create a descriptive message from the path
+        const fieldName = firstError.path.join('.');
+        const fieldLabel = fieldName
+          .split('_')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+        return {
+          valid: false,
+          error: `${fieldLabel} is required`
+        };
+      }
       return {
         valid: false,
-        error: firstError?.message || 'Validation failed'
+        error: 'Validation failed: Please fill in all required fields'
       };
     }
     return { valid: false, error: 'Validation failed' };
