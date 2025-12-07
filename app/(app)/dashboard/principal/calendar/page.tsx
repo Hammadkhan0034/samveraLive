@@ -5,6 +5,8 @@ import { supabaseAdmin } from '@/lib/supabaseClient';
 import PrincipalPageLayout from '@/app/components/shared/PrincipalPageLayout';
 import { PrincipalCalendarClient } from './PrincipalCalendarClient';
 
+export const dynamic = 'force-dynamic';
+
 async function fetchCalendarData() {
   try {
     // Get authenticated user and derive orgId from metadata
