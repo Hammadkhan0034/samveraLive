@@ -93,8 +93,16 @@ function StudentsPanel({
           {loadingStudents || !hasLoadedOnce ? (
             <LoadingSkeleton type="table" rows={5} />
           ) : filteredStudents.length === 0 ? (
-            <div className="text-center py-4 sm:py-6 text-ds-tiny sm:text-ds-small text-ds-text-muted dark:text-slate-400">
-              {searchQuery ? (t.no_students_found_search || 'No students found matching your search') : t.no_students_found}
+            <div className="p-4 sm:p-ds-lg">
+              <EmptyState
+                lang={typeof t === typeof enText ? 'en' : 'is'}
+                icon={Users}
+                title={t.no_students_found_title || 'No Students Found'}
+                description={searchQuery 
+                  ? (t.no_students_found_search || 'No students found matching your search')
+                  : ((t as any).no_students_found_description || t.no_students_found || 'No students found in assigned classes')
+                }
+              />
             </div>
           ) : (
             <>
