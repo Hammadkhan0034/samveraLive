@@ -57,7 +57,7 @@ export function PrincipalsSection({ organizations, onRefresh }: PrincipalsSectio
         throw new Error(json.error || `Failed with ${res.status}`);
       }
 
-      setPrincipals((json.principals || []).slice(0, 5));
+      setPrincipals((json.principals || []).slice(0, 4));
     } catch (e: any) {
       console.error('❌ Error loading principals:', e.message);
       setError(e.message);
@@ -161,7 +161,7 @@ export function PrincipalsSection({ organizations, onRefresh }: PrincipalsSectio
             {t.create}
           </button>
         </div>
-        <div className="overflow-x-auto h-[320px] rounded-md border border-slate-200 dark:border-slate-700">
+        <div className="overflow-x-auto h-[280px] rounded-md border border-slate-200 dark:border-slate-700">
           <table className="w-full text-ds-tiny sm:text-sm min-w-[600px]">
             <thead className="sticky top-0 bg-white dark:bg-slate-800 z-10">
               <tr className="text-left text-slate-600 dark:text-slate-300">
