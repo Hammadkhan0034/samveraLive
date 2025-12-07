@@ -269,7 +269,6 @@ function PrincipalPhotosPageContent() {
               {photos.length === 0 ? (
                 <div className="col-span-full">
                   <EmptyState
-                    lang={lang}
                     icon={ImageIcon}
                     title={t.no_photos_title || 'No Photos Uploaded'}
                     description={t.no_photos_description || 'No photos uploaded yet. Click \'Upload Photo\' to get started.'}

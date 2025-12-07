@@ -79,7 +79,6 @@ export function StudentTable({
               <tr>
                 <td colSpan={7} className="py-ds-md px-ds-md">
                   <EmptyState
-                    lang={lang}
                     icon={Users}
                     title={translations.no_students_title || 'No Students Found'}
                     description={translations.no_students_description || 'No students found. Click \'Add Student\' to create one.'}

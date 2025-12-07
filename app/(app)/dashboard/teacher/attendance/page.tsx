@@ -297,7 +297,6 @@ const AttendancePanel = React.memo<AttendancePanelProps>(function AttendancePane
         <LoadingSkeleton type="cards" rows={6} />
       ) : filteredStudents.length === 0 ? (
         <EmptyState
-          lang={lang}
           icon={Users}
           title={selectedClassId === 'all' ? t.no_students_found_title : t.no_students_assigned || 'No students assigned to this class'}
           description={selectedClassId === 'all' ? t.no_students_found_description : t.no_students_assigned || 'No students assigned to this class'}

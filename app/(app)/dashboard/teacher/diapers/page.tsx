@@ -292,7 +292,6 @@ function DiaperPanel({ t }: { t: typeof enText | typeof isText }) {
         <LoadingSkeleton type="table" rows={5} />
       ) : healthLogs.length === 0 ? (
         <EmptyState
-          lang={lang}
           icon={Baby}
           title={selectedFilterType === 'all' ? t.no_health_logs_title : t.no_health_logs_filtered_title}
           description={selectedFilterType === 'all' ? t.no_health_logs_description : t.no_health_logs_filtered_description}

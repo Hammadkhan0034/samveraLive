@@ -359,7 +359,6 @@ export default function PrincipalMenusPage() {
           {/* Table Section */}
           {paginatedMenus.length === 0 ? (
             <EmptyState
-              lang={lang}
               icon={Utensils}
               title={t.no_menus_title || 'No Menus Found'}
               description={t.no_menus_description || 'No menus available. Create a menu to get started.'}

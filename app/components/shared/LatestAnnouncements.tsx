@@ -268,7 +268,6 @@ export default function LatestAnnouncements({
           </div>
         )}
         <EmptyState
-          lang={effectiveLang}
           icon={Megaphone}
           title={t.no_announcements_title}
           description={t.no_announcements_description}

@@ -259,7 +259,6 @@ export default function AnnouncementList({
   if (announcements.length === 0) {
     return (
       <EmptyState
-        lang={effectiveLang}
         icon={Megaphone}
         title={t.no_announcements_title}
         description={t.no_announcements_description}

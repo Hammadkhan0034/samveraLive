@@ -76,7 +76,6 @@ export function GuardianTable({
               <tr>
                 <td colSpan={6} className="py-4 px-2 sm:px-3">
                   <EmptyState
-                    lang={lang}
                     icon={UserCheck}
                     title={translations.no_guardians_title || 'No Guardians'}
                     description={translations.no_guardians_description || 'No guardians found. Click \'Add Guardian\' to create one.'}

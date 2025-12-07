@@ -219,7 +219,6 @@ export default function TeacherMediaPage() {
             {photos.length === 0 ? (
               <div className="col-span-full">
                 <EmptyState
-                  lang={lang}
                   icon={ImageIcon}
                   title={t.no_photos_title}
                   description={t.no_photos_description}

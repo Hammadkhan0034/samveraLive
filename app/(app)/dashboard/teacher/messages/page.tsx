@@ -793,7 +793,6 @@ function TeacherMessagesContent({
             ) : filteredThreads.length === 0 ? (
               <div className="p-4">
                 <EmptyState
-                  lang={lang}
                   icon={MessageSquare}
                   title={t.no_threads_title}
                   description={t.no_threads_description}

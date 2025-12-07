@@ -471,7 +471,6 @@ export default function TeacherStoriesPage() {
                 ) : stories.length === 0 ? (
                   <div className="p-4 sm:p-6">
                     <EmptyState
-                      lang={lang}
                       icon={FileText}
                       title={t.no_stories_title}
                       description={t.no_stories_description}

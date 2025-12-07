@@ -163,7 +163,6 @@ function GuardianDiapersContent() {
           <LoadingSkeleton type="table" rows={10} className="border-0 p-0" />
         ) : healthLogs.length === 0 ? (
           <EmptyState
-            lang={lang}
             icon={Baby}
             title={
               selectedFilterType === 'all'

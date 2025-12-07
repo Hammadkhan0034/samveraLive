@@ -402,7 +402,6 @@ function ClassesPageContent() {
                   <tr>
                     <td colSpan={5} className="py-4 px-4">
                       <EmptyState
-                        lang={lang}
                         icon={School}
                         title={t.no_classes_title || 'No Classes'}
                         description={t.no_classes_description || 'No classes found. Click \'Add Class\' to create one.'}

@@ -90,7 +90,6 @@ function GuardianCalendarContent() {
       ) : !loadingEvents && calendarEvents.length === 0 ? (
         <div className="rounded-ds-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-ds-card p-12">
           <EmptyState
-            lang={lang}
             icon={Calendar}
             title={t.no_events_title || 'No Events'}
             description={t.no_events_description || 'No events scheduled. Check back later for updates.'}

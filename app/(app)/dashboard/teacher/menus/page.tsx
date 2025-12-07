@@ -318,7 +318,6 @@ export default function TeacherMenusPage() {
           {/* Table Section */}
           {paginatedMenus.length === 0 ? (
             <EmptyState
-              lang={lang}
               icon={Utensils}
               title={t.no_menus_title}
               description={t.no_menus_description}

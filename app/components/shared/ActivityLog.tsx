@@ -260,7 +260,6 @@ export function ActivityLog({
       {!loading && !error && activities.length === 0 && (
         <div className={`rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800 ${className}`}>
           <EmptyState
-            lang={lang}
             icon={Calendar}
             title={t.no_activities || 'No activities recorded yet'}
             description={(t as any).no_activities_description || 'There are no activity logs available at this time. Click "Add Activity" to create your first activity log.'}

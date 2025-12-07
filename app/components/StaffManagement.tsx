@@ -405,7 +405,6 @@ export default function StaffManagement(_props: StaffManagementProps) {
           <LoadingSkeleton type="table" rows={5} />
         ) : staff.length === 0 ? (
           <EmptyState
-            lang={lang}
             icon={Users}
             title={t.no_staff_title || 'No Staff Members'}
             description={t.no_staff_description || 'No staff members found. Click \'Invite Staff\' to add one.'}

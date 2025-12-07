@@ -206,7 +206,6 @@ export default function LinkStudentGuardian({ lang = 'en' }: { lang?: Lang }) {
           {!qGuardian && (
             <div>
               <EmptyState 
-                lang={lang} 
                 icon={UserSearch}
                 title={t.emptyStateGuardianTitle}
                 description={t.emptyStateGuardianDescription}
@@ -264,7 +263,6 @@ export default function LinkStudentGuardian({ lang = 'en' }: { lang?: Lang }) {
           {!qStudent && (
             <div>
               <EmptyState 
-                lang={lang} 
                 icon={GraduationCap}
                 title={t.emptyStateStudentTitle}
                 description={t.emptyStateStudentDescription}

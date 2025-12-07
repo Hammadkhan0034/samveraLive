@@ -368,7 +368,6 @@ function GuardianMenusContent() {
       {menusForDate.length === 0 ? (
         <div className="rounded-ds-lg border border-slate-200 bg-white p-12 shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
           <EmptyState
-            lang={lang}
             icon={Utensils}
             title={t.no_menu_for_date_title || 'No Menu Available'}
             description={t.no_menu_for_date_description || 'No menu available for this date.'}

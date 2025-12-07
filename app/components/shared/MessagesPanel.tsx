@@ -1362,7 +1362,6 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
           ) : filteredThreads.length === 0 ? (
             <div className="p-4">
               <EmptyState
-                lang={lang}
                 icon={MessageSquare}
                 title={t.no_messages_title || 'No Messages'}
                 description={t.no_messages_description || 'No message threads yet. Start a conversation to get started.'}

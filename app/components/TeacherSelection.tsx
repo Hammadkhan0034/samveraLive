@@ -183,7 +183,6 @@ export default function TeacherSelection({
         {!q && (
           <div className="mt-2">
             <EmptyState 
-              lang={lang} 
               icon={Users}
               title={t.emptyStateTitle}
               description={t.emptyStateDescription}

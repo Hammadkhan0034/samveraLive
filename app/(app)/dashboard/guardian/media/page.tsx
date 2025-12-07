@@ -273,7 +273,6 @@ function GuardianMediaContent() {
           <LoadingSkeleton type="cards" rows={2} />
         ) : photos.length === 0 ? (
           <EmptyState
-            lang={lang}
             icon={ImageIcon}
             title={t.no_photos_title || 'No Photos Uploaded'}
             description={

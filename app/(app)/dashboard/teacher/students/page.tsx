@@ -95,7 +95,6 @@ function StudentsPanel({
           ) : filteredStudents.length === 0 ? (
             <div className="p-4 sm:p-ds-lg">
               <EmptyState
-                lang={typeof t === typeof enText ? 'en' : 'is'}
                 icon={Users}
                 title={t.no_students_found_title || 'No Students Found'}
                 description={searchQuery 
@@ -417,7 +416,6 @@ export default function TeacherStudentsPage() {
         ) : teacherClasses.length === 0 ? (
           <div className="rounded-ds-lg border border-slate-200 bg-white p-4 sm:p-ds-lg shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
             <EmptyState
-              lang={lang}
               icon={BookOpen}
               title={t.no_classes_assigned_title}
               description={t.no_classes_assigned_description}
@@ -449,7 +447,6 @@ export default function TeacherStudentsPage() {
             {!selectedClassId ? (
               <div className="rounded-ds-lg border border-slate-200 bg-white p-4 sm:p-ds-lg shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
                 <EmptyState
-                  lang={lang}
                   icon={Users}
                   title={t.no_class_selected_title}
                   description={t.no_class_selected_description}

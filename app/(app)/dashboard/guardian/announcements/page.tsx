@@ -171,7 +171,6 @@ function GuardianAnnouncementsContent() {
       {!loading && !error && announcements.length === 0 && (
         <div className="rounded-ds-lg border border-slate-200 bg-white p-8 shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
           <EmptyState
-            lang={lang}
             icon={Megaphone}
             title={t.no_announcements_yet || 'No Announcements Yet'}
             description={t.no_announcements_description || 'There are no announcements available at this time. Check back later for updates.'}

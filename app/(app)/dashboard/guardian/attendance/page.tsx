@@ -256,7 +256,6 @@ function GuardianAttendanceContent() {
           <LoadingSkeleton type="table" rows={10} className="border-0 p-0" />
         ) : attendance.length === 0 ? (
           <EmptyState
-            lang={lang}
             icon={UserCheck}
             title={t.no_attendance_data_title || 'No Attendance Data'}
             description={
