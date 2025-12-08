@@ -523,6 +523,7 @@ export const enText = {
   // Common form fields
   email: 'Email',
   phone: 'Phone',
+  role: 'Role',
   first_name_placeholder: 'Enter first name',
   last_name_placeholder: 'Enter last name',
   email_placeholder: 'Enter email address',
@@ -807,7 +808,6 @@ export const enText = {
   core_identity: 'Core Identity',
   contact_details: 'Contact Details',
   location: 'Location',
-  settings: 'Settings',
   organization_name_label: 'Organization Name',
   slug_label: 'Slug',
   email_label: 'Email',
@@ -818,12 +818,8 @@ export const enText = {
   state_label: 'State',
   postal_code_label: 'Postal Code',
   timezone_label: 'Timezone',
-  organization_name_placeholder: 'Enter organization name',
   slug_placeholder: 'organization-slug',
-  email_placeholder: 'Enter email address',
-  phone_placeholder: 'Enter phone number',
   website_placeholder: 'https://example.com',
-  address_placeholder: 'Enter street address',
   city_placeholder: 'City',
   state_placeholder: 'State',
   postal_code_placeholder: 'Postal Code',
@@ -882,7 +878,6 @@ export const enText = {
 
   // Admin Dashboard Detail Pages
   loading_admin_dashboard: 'Loading admin dashboard...',
-  organization_information: 'Organization Information',
   principal_information: 'Principal Information',
   status_overview: 'Status Overview',
   user_metrics: 'User Metrics',
@@ -915,6 +910,7 @@ export const enText = {
   no_principals_assigned: 'No principals assigned',
   unknown_principal: 'Unknown Principal',
   error_organization_not_found_detail: "The organization you're looking for doesn't exist or you don't have permission to view it.",
+  error_principal_not_found: 'Principal not found',
   error_principal_not_found_detail: "The principal you're looking for doesn't exist or you don't have permission to view it.",
 
   // Landing Page

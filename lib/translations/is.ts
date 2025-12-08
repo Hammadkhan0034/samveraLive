@@ -524,6 +524,7 @@ export const isText = {
 
   // Common form fields
   phone: 'Sími',
+  role: 'Hlutverk',
   first_name_placeholder: 'Sláðu inn fornafn',
   last_name_placeholder: 'Sláðu inn eftirnafn',
   email_placeholder: 'Sláðu inn netfang',
@@ -810,7 +811,6 @@ export const isText = {
   core_identity: 'Grunnupplýsingar',
   contact_details: 'Tengiliðaupplýsingar',
   location: 'Staðsetning',
-  settings: 'Stillingar',
   organization_name_label: 'Nafn stofnunar',
   slug_label: 'Slug',
   email_label: 'Netfang',
@@ -821,12 +821,8 @@ export const isText = {
   state_label: 'Fylki',
   postal_code_label: 'Póstnúmer',
   timezone_label: 'Tímabelti',
-  organization_name_placeholder: 'Sláðu inn nafn stofnunar',
   slug_placeholder: 'stofnun-slug',
-  email_placeholder: 'Sláðu inn netfang',
-  phone_placeholder: 'Sláðu inn símanúmer',
   website_placeholder: 'https://dæmi.is',
-  address_placeholder: 'Sláðu inn heimilisfang',
   city_placeholder: 'Borg',
   state_placeholder: 'Fylki',
   postal_code_placeholder: 'Póstnúmer',
@@ -885,7 +881,6 @@ export const isText = {
 
   // Admin Dashboard Detail Pages
   loading_admin_dashboard: 'Hleður stjórnunaryfirliti...',
-  organization_information: 'Upplýsingar um stofnun',
   principal_information: 'Upplýsingar um skólastjóra',
   status_overview: 'Staða yfirlit',
   user_metrics: 'Notendamælingar',
@@ -918,6 +913,7 @@ export const isText = {
   no_principals_assigned: 'Engir skólastjórar úthlutaðir',
   unknown_principal: 'Óþekktur skólastjóri',
   error_organization_not_found_detail: 'Stofnunin sem þú leitar að er ekki til eða þú hefur ekki heimild til að skoða hana.',
+  error_principal_not_found: 'Skólastjóri fannst ekki',
   error_principal_not_found_detail: 'Skólastjórinn sem þú leitar að er ekki til eða þú hefur ekki heimild til að skoða hann.',
 
   // Landing Page
