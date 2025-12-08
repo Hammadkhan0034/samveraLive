@@ -160,3 +160,12 @@ export const studentFormDataSchema = z.object({
   guardian_ids: guardianIdsSchema.optional().default([]),
 });
 
+/**
+ * POST /api/assign-students-class body schema
+ * Assigns multiple students to a class
+ */
+export const assignStudentsClassBodySchema = z.object({
+  classId: z.string().uuid({ message: 'Invalid class ID format' }),
+  studentIds: z.array(studentIdSchema).min(1, { message: 'At least one student ID is required' }),
+});
+

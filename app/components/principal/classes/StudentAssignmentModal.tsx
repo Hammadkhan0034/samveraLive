@@ -141,68 +141,32 @@ export function StudentAssignmentModal({
     [availableStudents, studentSearchQuery],
   );
 
-  async function performMultipleStudentAssignment(studentIds: string[]) {
+  async function assignStudents(studentIds: string[]) {
     if (!classId || studentIds.length === 0) return;
 
     try {
       setAssigningStudent(true);
       setAssignmentError(null);
 
-      const studentResponse = await fetch(`/api/students?t=${Date.now()}`, {
-        cache: 'no-store',
+      const response = await fetch('/api/assign-students-class', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          classId,
+          studentIds,
+        }),
       });
-      const studentData = await studentResponse.json();
 
-      if (!studentData.students) {
-        throw new Error('Failed to load student data');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to assign students');
       }
 
-      const assignmentPromises = studentIds.map(async (studentId) => {
-        const student = studentData.students?.find((s: any) => s.id === studentId);
-        if (!student) {
-          console.warn(`Student ${studentId} not found`);
-          return;
-        }
-
-        if (student.class_id === classId) {
-          console.warn(`Student ${studentId} already in class ${classId}`);
-          return;
-        }
-
-        const updateResponse = await fetch('/api/students', {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: studentId,
-            first_name: student.first_name || student.users?.first_name || '',
-            last_name: student.last_name || student.users?.last_name || '',
-            dob: student.users?.dob || student.dob || '',
-            gender: student.users?.gender || student.gender || 'unknown',
-            class_id: classId,
-            phone: student.phone || '',
-            address: student.address || '',
-            start_date: student.start_date || '',
-            barngildi: student.barngildi || 0,
-            student_language: student.language || 'english',
-            social_security_number: student.social_security_number || '',
-            medical_notes: student.medical_notes || '',
-            allergies: student.allergies || '',
-            emergency_contact: student.emergency_contact || '',
-            guardian_ids: student.guardians?.map((g: any) => g.id) || [],
-          }),
-        });
-
-        const updateData = await updateResponse.json();
-        if (!updateResponse.ok) {
-          throw new Error(updateData.error || `Failed to assign student ${studentId}`);
-        }
-      });
-
-      await Promise.allSettled(assignmentPromises);
-
+      const assignedCount = data.assignedCount || studentIds.length;
       setAssignmentSuccess(
-        `${studentIds.length} ${
-          studentIds.length === 1 ? t.student_assigned_success : t.students_assigned_success
+        `${assignedCount} ${
+          assignedCount === 1 ? t.student_assigned_success : t.students_assigned_success
         }`,
       );
 
@@ -214,66 +178,6 @@ export function StudentAssignmentModal({
     } catch (err: any) {
       console.error('Error assigning students:', err);
       setAssignmentError(err.message || 'Failed to assign students');
-    } finally {
-      setAssigningStudent(false);
-    }
-  }
-
-  async function performSingleStudentAssignment(studentId: string) {
-    if (!classId) return;
-
-    try {
-      setAssigningStudent(true);
-      setAssignmentError(null);
-
-      const studentResponse = await fetch(`/api/students?t=${Date.now()}`, {
-        cache: 'no-store',
-      });
-      const studentData = await studentResponse.json();
-      const student = studentData.students?.find((s: any) => s.id === studentId);
-
-      if (!student) {
-        throw new Error('Student not found');
-      }
-
-      const updateResponse = await fetch('/api/students', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: studentId,
-          first_name: student.first_name || student.users?.first_name || '',
-          last_name: student.last_name || student.users?.last_name || '',
-          dob: student.users?.dob || student.dob || '',
-          gender: student.users?.gender || student.gender || 'unknown',
-          class_id: classId,
-          phone: student.phone || '',
-          address: student.address || '',
-          start_date: student.start_date || '',
-          barngildi: student.barngildi || 0,
-          student_language: student.language || 'english',
-          social_security_number: student.social_security_number || '',
-          medical_notes: student.medical_notes || '',
-          allergies: student.allergies || '',
-          emergency_contact: student.emergency_contact || '',
-          guardian_ids: student.guardians?.map((g: any) => g.id) || [],
-        }),
-      });
-
-      const updateData = await updateResponse.json();
-      if (!updateResponse.ok) {
-        throw new Error(updateData.error || 'Failed to assign student');
-      }
-
-      setAssignmentSuccess(t.student_assigned_success);
-
-      setTimeout(() => {
-        closeModal();
-        setAssignmentSuccess(null);
-        if (onCompleted) onCompleted();
-      }, 2000);
-    } catch (err: any) {
-      console.error('Error assigning student:', err);
-      setAssignmentError(err.message || 'Failed to assign student');
     } finally {
       setAssigningStudent(false);
     }
@@ -301,7 +205,7 @@ export function StudentAssignmentModal({
       }
     }
 
-    await performMultipleStudentAssignment(Array.from(selectedStudentIds));
+    await assignStudents(Array.from(selectedStudentIds));
   }
 
   if (!trigger) return null;
@@ -472,9 +376,9 @@ export function StudentAssignmentModal({
         onConfirm={() => {
           if (!studentToAssign) return;
           if (selectedStudentIds.size > 0) {
-            void performMultipleStudentAssignment(Array.from(selectedStudentIds));
+            void assignStudents(Array.from(selectedStudentIds));
           } else {
-            void performSingleStudentAssignment(studentToAssign.id);
+            void assignStudents([studentToAssign.id]);
           }
         }}
       />

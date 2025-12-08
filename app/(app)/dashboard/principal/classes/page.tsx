@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, Suspense, useMemo, useCallback } from 'react';
+import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Menu, Plus, Eye, CircleCheck as CheckCircle2, Edit, UserPlus, Users, X, Trash2, School } from 'lucide-react';
 
@@ -15,8 +15,6 @@ import { StudentAssignmentModal } from '@/app/components/principal/classes/Stude
 import { TeacherAssignmentModal } from '@/app/components/principal/classes/TeacherAssignmentModal';
 import { DeleteClassModal } from '@/app/components/principal/classes/DeleteClassModal';
 import type {
-  AvailableStudent,
-  AvailableTeacher,
   ClassSummary,
   TranslationStrings,
 } from '@/app/components/principal/classes/types';
@@ -26,7 +24,7 @@ function clsx(...xs: Array<string | false | undefined>) {
 }
 
 function ClassesPageContent() {
-  const { t, lang } = useLanguage();
+  const { t } = useLanguage();
   const { session } = (useAuth?.() || {}) as { session: { user?: { id?: string } } | null };
   const router = useRouter();
   const searchParams = useSearchParams();
