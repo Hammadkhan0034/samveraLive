@@ -317,24 +317,26 @@ export async function handleGetOrgDetails(
     ]);
 
     // Extract counts, defaulting to 0 on failure
-    const studentsCount = studentsResult.status === 'fulfilled' && studentsResult.value.data !== null
-      ? studentsResult.value.count || 0
+    // Note: When using { count: 'exact', head: true }, data is always null,
+    // so we check for fulfillment and errors, then extract count directly
+    const studentsCount = studentsResult.status === 'fulfilled' && !studentsResult.value.error
+      ? studentsResult.value.count ?? 0
       : 0;
     
-    const teachersCount = teachersResult.status === 'fulfilled' && teachersResult.value.data !== null
-      ? teachersResult.value.count || 0
+    const teachersCount = teachersResult.status === 'fulfilled' && !teachersResult.value.error
+      ? teachersResult.value.count ?? 0
       : 0;
     
-    const parentsCount = parentsResult.status === 'fulfilled' && parentsResult.value.data !== null
-      ? parentsResult.value.count || 0
+    const parentsCount = parentsResult.status === 'fulfilled' && !parentsResult.value.error
+      ? parentsResult.value.count ?? 0
       : 0;
     
-    const principalsCount = principalsResult.status === 'fulfilled' && principalsResult.value.data !== null
-      ? principalsResult.value.count || 0
+    const principalsCount = principalsResult.status === 'fulfilled' && !principalsResult.value.error
+      ? principalsResult.value.count ?? 0
       : 0;
 
-    // Calculate total users (teachers + parents + principals)
-    const totalUsers = teachersCount + parentsCount + principalsCount;
+    // Calculate total users (students + teachers + parents + principals)
+    const totalUsers = studentsCount + teachersCount + parentsCount + principalsCount;
 
     const metrics: OrganizationMetrics = {
       students: studentsCount,
