@@ -131,7 +131,7 @@ function StudentsPageContent() {
   }, [router]);
 
   const openStudentDetails = useCallback((student: StudentWithRelations) => {
-    router.push(`/dashboard/students/${encodeURIComponent(student.id)}`);
+    router.push(`/dashboard/principal/students/${encodeURIComponent(student.id)}`);
   }, [router]);
 
   const openDeleteStudentModal = useCallback((id: string) => {
