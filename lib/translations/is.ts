@@ -324,6 +324,7 @@ export const isText = {
   delete_guardian_confirm: 'Ertu viss um að þú viljir eyða þessum forráðamanni?',
   no_guardians: 'Engir forráðamenn enn',
   no_guardians_loading: 'Hleður forráðamönnum...',
+  loading_guardians: 'Hleður forráðamönnum...',
   error_loading_guardians: 'Villa við að hlaða forráðamönnum',
   error_creating_guardian: 'Villa við að búa til forráðamann',
   error_updating_guardian: 'Villa við að uppfæra forráðamann',

@@ -323,6 +323,7 @@ export const enText = {
   delete_guardian_confirm: 'Are you sure you want to delete this guardian?',
   no_guardians: 'No guardians yet',
   no_guardians_loading: 'Loading guardians...',
+  loading_guardians: 'Loading guardians...',
   error_loading_guardians: 'Error loading guardians',
   error_creating_guardian: 'Error creating guardian',
   error_updating_guardian: 'Error updating guardian',
