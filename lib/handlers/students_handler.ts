@@ -332,7 +332,6 @@ export async function handlePostStudent(
         role: 'student' as any,
         org_id: orgId,
         is_active: true,
-        canLogin: false,
       })
       .select('id')
       .single();
@@ -558,7 +557,6 @@ export async function handlePutStudent(
         gender: normalizedGender || 'unknown',
         address: address || null,
         ssn: social_security_number || null,
-        canLogin: false,
       })
       .eq('id', userIdForUpdate);
 

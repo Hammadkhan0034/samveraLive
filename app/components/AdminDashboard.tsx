@@ -99,7 +99,7 @@ export function AdminDashboard() {
       >
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
           <div>
-            <h1 className="text-ds-h2 sm:text-2xl lg:text-3xl font-bold text-slate-900 dark:text-slate-100 mb-1 sm:mb-2">
+            <h1 className="text-ds-h2 sm:text-2xl lg:text-3xl font-bold text-slate-900 dark:text-slate-100 mb-1 mt-4 sm:mb-2">
               {t.adminDashboard}
             </h1>
             <p className="text-ds-tiny sm:text-ds-small text-slate-600 dark:text-slate-400">
