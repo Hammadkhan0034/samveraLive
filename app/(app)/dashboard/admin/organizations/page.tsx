@@ -390,19 +390,7 @@ function OrganizationsPageContent() {
           setError(null);
         }}
         onSubmit={handleSubmit}
-        initialData={editingOrg ? {
-          id: editingOrg.id,
-          name: editingOrg.name,
-          slug: editingOrg.slug,
-          email: editingOrg.email,
-          phone: editingOrg.phone,
-          website: editingOrg.website,
-          address: editingOrg.address,
-          city: editingOrg.city,
-          state: editingOrg.state,
-          postal_code: editingOrg.postal_code,
-          timezone: editingOrg.timezone,
-        } : undefined}
+        initialData={editingOrg}
         loading={isSubmitting}
         error={error}
       />

@@ -276,7 +276,7 @@ export default function StudentDetailsPage() {
                     <MapPin className="w-4 h-4 text-slate-400 mt-1 flex-shrink-0" />
                     <div className="flex-1">
                       <p className="text-ds-body text-ds-text-primary dark:text-slate-100">
-                        {student.users?.address || student.address || 'Not provided'}
+                        {student.users?.address || 'Not provided'}
                       </p>
                       {student.users?.address && (
                         <a

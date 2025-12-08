@@ -10,11 +10,11 @@ import type { Organization } from '@/lib/types/orgs';
 
 interface Principal {
   id: string;
-  email: string | null;
-  phone: string | null;
+  email?: string;
+  phone?: string;
   full_name?: string;
-  first_name?: string | null;
-  last_name?: string | null;
+  first_name?: string;
+  last_name?: string;
   name?: string | null;
   org_id: string;
   is_active: boolean;
@@ -51,7 +51,15 @@ export function PrincipalsSection({ organizations, onRefresh }: PrincipalsSectio
         throw new Error(json.error || `Failed with ${res.status}`);
       }
 
-      setPrincipals((json.principals || []).slice(0, 4));
+      // Convert null values to undefined to match the Principal interface
+      const principals = (json.principals || []).map((p: any) => ({
+        ...p,
+        email: p.email ?? undefined,
+        phone: p.phone ?? undefined,
+        first_name: p.first_name ?? undefined,
+        last_name: p.last_name ?? undefined,
+      }));
+      setPrincipals(principals.slice(0, 4));
     } catch (e: any) {
       console.error('❌ Error loading principals:', e.message);
       setError(e.message);

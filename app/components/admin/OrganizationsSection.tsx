@@ -64,7 +64,19 @@ export function OrganizationsSection() {
     setIsDeleteModalOpen(true);
   };
 
-  const handleSubmit = async (data: Organization) => {
+  const handleSubmit = async (data: {
+    id?: string;
+    name: string;
+    slug: string;
+    email: string;
+    phone: string;
+    website?: string;
+    address: string;
+    city: string;
+    state: string;
+    postal_code: string;
+    timezone: string;
+  }) => {
     try {
       setIsSubmitting(true);
       setError(null);

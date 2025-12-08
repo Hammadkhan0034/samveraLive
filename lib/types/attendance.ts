@@ -17,11 +17,19 @@ export interface StudentUser {
   phone?: string | null;
   address?: string | null;
   ssn?: string | null;
+  bio?: string | null;
+  avatar_url?: string | null;
+  is_active?: boolean;
+  is_staff?: boolean;
+  role?: string | null;
+  last_login_at?: string | null;
+  theme?: string | null;
 }
 
 export interface StudentClass {
   id: string;
   name: string;
+  code?: string | null;
 }
 
 export interface GuardianRelation {
