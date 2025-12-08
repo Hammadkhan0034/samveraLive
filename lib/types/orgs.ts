@@ -30,3 +30,21 @@ export interface PaginatedOrganizationsResponse {
   totalPages: number;
   currentPage: number;
 }
+
+/**
+ * Organization metrics for detail view
+ */
+export interface OrganizationMetrics {
+  students: number;
+  teachers: number;
+  parents: number;
+  principals: number;
+  totalUsers: number;
+}
+
+/**
+ * Organization details with metrics and principals
+ */
+export interface OrganizationDetails extends Organization {
+  metrics?: OrganizationMetrics;
+}

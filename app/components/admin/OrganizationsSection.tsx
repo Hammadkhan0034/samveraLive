@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Plus, Edit, Trash2 } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
@@ -10,6 +11,7 @@ import type { Organization } from '@/lib/types/orgs';
 
 export function OrganizationsSection() {
   const { t } = useLanguage();
+  const router = useRouter();
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -159,7 +161,14 @@ export function OrganizationsSection() {
               ) : (
                 orgs.map((o) => (
                   <tr key={o.id} className="h-12 hover:bg-slate-50/50 dark:hover:bg-slate-700/30 dark:text-slate-100">
-                    <td className="py-2 px-2 sm:pr-3 text-ds-tiny sm:text-ds-small truncate max-w-[120px] sm:max-w-none">{o.name}</td>
+                    <td className="py-2 px-2 sm:pr-3 text-ds-tiny sm:text-ds-small truncate max-w-[120px] sm:max-w-none">
+                      <button
+                        onClick={() => router.push(`/dashboard/admin/organizations/${o.id}`)}
+                        className="text-mint-600 dark:text-mint-400 hover:text-mint-700 dark:hover:text-mint-300 hover:underline transition-colors text-left"
+                      >
+                        {o.name}
+                      </button>
+                    </td>
                     <td className="py-2 px-2 sm:pr-3 text-ds-tiny sm:text-ds-small hidden md:table-cell truncate">{o.slug}</td>
                     <td className="py-2 px-2 sm:pr-3 text-ds-tiny sm:text-ds-small hidden lg:table-cell">{o.timezone}</td>
                     <td className="py-2 px-2 sm:pr-3">

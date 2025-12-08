@@ -9,6 +9,7 @@ import {
 } from '@/lib/validation/orgs';
 import type { AuthUser } from '@/lib/types/auth';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { OrganizationDetails, OrganizationMetrics } from '@/lib/types/orgs';
 
 export async function handleGetOrgs(
   request: Request,
@@ -242,6 +243,119 @@ export async function handleDeleteOrg(
     }
 
     return NextResponse.json({ success: true }, { status: 200 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+/**
+ * Handler for GET /api/orgs/[id] - Get organization details with metrics
+ */
+export async function handleGetOrgDetails(
+  _request: Request,
+  _user: AuthUser,
+  adminClient: SupabaseClient,
+  orgId: string,
+): Promise<NextResponse> {
+  try {
+    // Validate orgId is a UUID
+    try {
+      uuidSchema.parse(orgId);
+    } catch {
+      return NextResponse.json({ error: 'Invalid organization ID' }, { status: 400 });
+    }
+
+    // Fetch organization
+    const { data: org, error: orgError } = await adminClient
+      .from('orgs')
+      .select('id,name,slug,email,phone,website,address,city,state,postal_code,timezone,is_active,created_by,updated_by,created_at,updated_at,deleted_at')
+      .eq('id', orgId)
+      .single();
+
+    if (orgError || !org) {
+      return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
+    }
+
+    // Calculate metrics in parallel
+    const [
+      studentsResult,
+      teachersResult,
+      parentsResult,
+      principalsResult,
+    ] = await Promise.allSettled([
+      // Students count
+      adminClient
+        .from('students')
+        .select('*', { count: 'exact', head: true })
+        .eq('org_id', orgId)
+        .is('deleted_at', null),
+      
+      // Teachers count
+      adminClient
+        .from('users')
+        .select('*', { count: 'exact', head: true })
+        .eq('org_id', orgId)
+        .eq('role', 'teacher')
+        .is('deleted_at', null),
+      
+      // Parents/Guardians count
+      adminClient
+        .from('users')
+        .select('*', { count: 'exact', head: true })
+        .eq('org_id', orgId)
+        .eq('role', 'guardian')
+        .is('deleted_at', null),
+      
+      // Principals count
+      adminClient
+        .from('users')
+        .select('*', { count: 'exact', head: true })
+        .eq('org_id', orgId)
+        .eq('role', 'principal')
+        .is('deleted_at', null),
+    ]);
+
+    // Extract counts, defaulting to 0 on failure
+    const studentsCount = studentsResult.status === 'fulfilled' && studentsResult.value.data !== null
+      ? studentsResult.value.count || 0
+      : 0;
+    
+    const teachersCount = teachersResult.status === 'fulfilled' && teachersResult.value.data !== null
+      ? teachersResult.value.count || 0
+      : 0;
+    
+    const parentsCount = parentsResult.status === 'fulfilled' && parentsResult.value.data !== null
+      ? parentsResult.value.count || 0
+      : 0;
+    
+    const principalsCount = principalsResult.status === 'fulfilled' && principalsResult.value.data !== null
+      ? principalsResult.value.count || 0
+      : 0;
+
+    // Calculate total users (teachers + parents + principals)
+    const totalUsers = teachersCount + parentsCount + principalsCount;
+
+    const metrics: OrganizationMetrics = {
+      students: studentsCount,
+      teachers: teachersCount,
+      parents: parentsCount,
+      principals: principalsCount,
+      totalUsers,
+    };
+
+    const orgDetails: OrganizationDetails = {
+      ...org,
+      metrics,
+    };
+
+    return NextResponse.json(
+      { org: orgDetails },
+      {
+        status: 200,
+        headers: getStableDataCacheHeaders(),
+      },
+    );
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     return NextResponse.json({ error: message }, { status: 500 });

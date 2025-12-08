@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { Plus, Edit, Trash2, Building2 } from 'lucide-react';
@@ -15,6 +16,7 @@ const ITEMS_PER_PAGE = 20;
 
 function OrganizationsPageContent() {
   const { t } = useLanguage();
+  const router = useRouter();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -261,7 +263,12 @@ function OrganizationsPageContent() {
                       className="hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors"
                     >
                       <td className="py-3 px-3 text-slate-900 dark:text-slate-100 font-medium">
-                        {org.name}
+                        <button
+                          onClick={() => router.push(`/dashboard/admin/organizations/${org.id}`)}
+                          className="text-mint-600 dark:text-mint-400 hover:text-mint-700 dark:hover:text-mint-300 hover:underline transition-colors text-left"
+                        >
+                          {org.name}
+                        </button>
                       </td>
                       <td className="py-3 px-3 text-slate-600 dark:text-slate-400 hidden md:table-cell">
                         {org.slug}
