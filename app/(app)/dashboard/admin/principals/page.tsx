@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { Plus, Edit, Trash2, Shield } from 'lucide-react';
@@ -16,6 +17,7 @@ const ITEMS_PER_PAGE = 20;
 
 function PrincipalsPageContent() {
   const { t } = useLanguage();
+  const router = useRouter();
   const [principals, setPrincipals] = useState<Principal[]>([]);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
@@ -300,7 +302,12 @@ function PrincipalsPageContent() {
                       className="hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors"
                     >
                       <td className="py-3 px-3 text-slate-900 dark:text-slate-100 font-medium">
-                        {getPrincipalName(principal)}
+                        <button
+                          onClick={() => router.push(`/dashboard/admin/principals/${principal.id}`)}
+                          className="text-mint-600 dark:text-mint-400 hover:text-mint-700 dark:hover:text-mint-300 hover:underline transition-colors text-left"
+                        >
+                          {getPrincipalName(principal)}
+                        </button>
                       </td>
                       <td className="py-3 px-3 text-slate-600 dark:text-slate-400 hidden md:table-cell">
                         {principal.email || '-'}
