@@ -12,6 +12,7 @@ import {
   emailSchema,
   phoneSchema,
 } from '@/lib/validation';
+import { getPrincipalsQuerySchema } from '@/lib/validation/principals';
 import type { AuthUser, UserMetadata } from '@/lib/types/auth';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getCurrentUserOrgId } from '@/lib/server-helpers';
@@ -19,11 +20,6 @@ import { getCurrentUserOrgId } from '@/lib/server-helpers';
 // Note: Some databases may not have a dedicated role_id column on public.users
 // We'll avoid relying on role_id in this route
 const PRINCIPAL_ROLE_ID = 30;
-
-// GET query parameter schema
-const getPrincipalsQuerySchema = z.object({
-  orgId: orgIdSchema.optional(),
-});
 
 // POST body schema
 const postPrincipalBodySchema = z.object({
@@ -157,7 +153,7 @@ export async function handleGetPrincipals(
     if (!queryValidation.success) {
       return queryValidation.error;
     }
-    const { orgId } = queryValidation.data;
+    const { orgId, page = 1, pageSize = 20 } = queryValidation.data;
 
     const roleExists = await hasUsersColumn('role', adminClient);
     const roleIdExists = await hasUsersColumn('role_id', adminClient);
@@ -184,6 +180,13 @@ export async function handleGetPrincipals(
       }
     }
 
+    // Build base query for count
+    let countQuery = adminClient
+      .from('users')
+      .select('*', { count: 'exact', head: true })
+      .is('deleted_at', null);
+
+    // Build base query for data
     let q = adminClient
       .from('users')
       .select('*')
@@ -197,21 +200,44 @@ export async function handleGetPrincipals(
     if (roleColumnDetected) {
       // Strictly filter by role='principal' only
       q = q.eq('role', 'principal');
+      countQuery = countQuery.eq('role', 'principal');
       filterApplied = true;
       console.log('✅ Filtering principals by role="principal"');
     } else if (roleIdExists) {
       q = q.eq('role_id', PRINCIPAL_ROLE_ID);
+      countQuery = countQuery.eq('role_id', PRINCIPAL_ROLE_ID);
       filterApplied = true;
       console.log('✅ Filtering principals by role_id=', PRINCIPAL_ROLE_ID);
     } else if (metadataExists) {
       q = q.contains('metadata', { activeRole: 'principal' });
+      countQuery = countQuery.contains('metadata', { activeRole: 'principal' });
       filterApplied = true;
       console.log(
         '✅ Filtering principals by metadata.activeRole="principal"',
       );
     }
 
-    if (orgId) q = q.eq('org_id', orgId);
+    if (orgId) {
+      q = q.eq('org_id', orgId);
+      countQuery = countQuery.eq('org_id', orgId);
+    }
+
+    // Get total count
+    const { count, error: countError } = await countQuery;
+    if (countError) {
+      console.error('❌ Error getting principals count:', countError);
+      return NextResponse.json(
+        { error: countError.message },
+        { status: 500 },
+      );
+    }
+
+    const totalCount = count ?? 0;
+    const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+    const offset = (page - 1) * pageSize;
+
+    // Apply pagination
+    q = q.range(offset, offset + pageSize - 1);
 
     const { data, error } = await q;
 
@@ -271,12 +297,26 @@ export async function handleGetPrincipals(
         deleted_at: u.deleted_at,
       }));
 
+      // For fallback, we need to handle pagination manually
+      const fallbackTotalCount = filtered.length;
+      const fallbackTotalPages = Math.max(1, Math.ceil(fallbackTotalCount / pageSize));
+      const fallbackOffset = (page - 1) * pageSize;
+      const paginatedPrincipals = filtered.slice(fallbackOffset, fallbackOffset + pageSize);
+
       console.log(
         '✅ Returning principals (fallback filtered):',
-        principals.length,
+        paginatedPrincipals.length,
         'principals',
       );
-      return NextResponse.json({ principals }, { status: 200 });
+      return NextResponse.json(
+        {
+          principals: paginatedPrincipals,
+          totalCount: fallbackTotalCount,
+          totalPages: fallbackTotalPages,
+          currentPage: page,
+        },
+        { status: 200 },
+      );
     }
 
     if (error) {
@@ -364,7 +404,12 @@ export async function handleGetPrincipals(
 
     console.log('✅ Returning principals:', principals.length, 'principals');
     return NextResponse.json(
-      { principals },
+      {
+        principals,
+        totalCount,
+        totalPages,
+        currentPage: page,
+      },
       {
         status: 200,
         headers: getUserDataCacheHeaders(),
