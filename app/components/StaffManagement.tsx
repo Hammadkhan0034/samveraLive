@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { Edit, Trash2, Users, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useUserRole } from '@/lib/hooks/useAuth';
@@ -186,6 +187,8 @@ export default function StaffManagement(_props: StaffManagementProps) {
   }, [loadStaff, handleCloseStatusModal]);
 
 
+  const router = useRouter();
+
   // Memoized table row component
   const StaffTableRow = React.memo<{
     staffMember: StaffMember;
@@ -199,7 +202,7 @@ export default function StaffManagement(_props: StaffManagementProps) {
   }>(({ staffMember, onEdit, onDelete, onStatusChange, isPrincipal, statusDropdownOpen, setStatusDropdownOpen, t }) => {
     const handleRowClick = useCallback((e: React.MouseEvent<HTMLTableRowElement>) => {
       const target = e.target as HTMLElement;
-      if (target.tagName !== 'BUTTON' && !target.closest('button')) {
+      if (target.tagName !== 'BUTTON' && !target.closest('button') && !target.closest('a')) {
         e.preventDefault();
         e.stopPropagation();
       }
@@ -256,14 +259,35 @@ export default function StaffManagement(_props: StaffManagementProps) {
       new Date(staffMember.created_at).toLocaleDateString(), 
       [staffMember.created_at]
     );
+    
+    const handleNameClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>) => {
+      e.stopPropagation();
+      router.push(`/dashboard/principal/staff/${staffMember.id}`);
+    }, [staffMember.id]);
 
     return (
       <tr
         className="h-12 hover:bg-mint-50 dark:hover:bg-slate-700/50 transition-colors"
         onClick={handleRowClick}
       >
-        <td className="py-2 px-2 sm:px-3 text-slate-900 dark:text-slate-100 whitespace-nowrap">{firstName}</td>
-        <td className="py-2 px-2 sm:px-3 text-slate-900 dark:text-slate-100 whitespace-nowrap">{lastName}</td>
+        <td className="py-2 px-2 sm:px-3 text-slate-900 dark:text-slate-100 whitespace-nowrap">
+          <a
+            href={`/dashboard/principal/staff/${staffMember.id}`}
+            onClick={handleNameClick}
+            className="text-mint-500 dark:text-mint-400 hover:underline font-medium cursor-pointer"
+          >
+            {firstName}
+          </a>
+        </td>
+        <td className="py-2 px-2 sm:px-3 text-slate-900 dark:text-slate-100 whitespace-nowrap">
+          <a
+            href={`/dashboard/principal/staff/${staffMember.id}`}
+            onClick={handleNameClick}
+            className="text-mint-500 dark:text-mint-400 hover:underline font-medium cursor-pointer"
+          >
+            {lastName}
+          </a>
+        </td>
         <td className="py-2 px-2 sm:px-3 text-slate-700 dark:text-slate-300 hidden md:table-cell whitespace-nowrap">{staffMember.email}</td>
         <td className="py-2 px-2 sm:px-3 text-slate-700 dark:text-slate-300 hidden lg:table-cell whitespace-nowrap">{role}</td>
         <td className="py-2 px-2 sm:px-3">
