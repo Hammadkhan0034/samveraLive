@@ -104,8 +104,8 @@ function PrincipalsPageContent() {
     if (principal.full_name) return principal.full_name;
     if (principal.name) return principal.name;
     const parts = [principal.first_name, principal.last_name].filter(Boolean);
-    return parts.length > 0 ? parts.join(' ') : 'Unknown Principal';
-  }, []);
+    return parts.length > 0 ? parts.join(' ') : (t.unknown_principal || 'Unknown Principal');
+  }, [t]);
 
   // Handle create
   const handleCreate = useCallback(() => {
@@ -276,16 +276,16 @@ function PrincipalsPageContent() {
                       {t.table_name || 'Name'}
                     </th>
                     <th className="py-3 px-3 text-left font-semibold text-slate-700 dark:text-slate-300 hidden md:table-cell">
-                      Email
+                      {t.field_email || 'Email'}
                     </th>
                     <th className="py-3 px-3 text-left font-semibold text-slate-700 dark:text-slate-300 hidden lg:table-cell">
-                      Phone
+                      {t.field_phone || 'Phone'}
                     </th>
                     <th className="py-3 px-3 text-left font-semibold text-slate-700 dark:text-slate-300 hidden lg:table-cell">
-                      Organization
+                      {t.principal_org || 'Organization'}
                     </th>
                     <th className="py-3 px-3 text-left font-semibold text-slate-700 dark:text-slate-300 hidden md:table-cell">
-                      Status
+                      {t.principal_status || 'Status'}
                     </th>
                     <th className="py-3 px-3 text-left font-semibold text-slate-700 dark:text-slate-300 hidden xl:table-cell">
                       {t.created_at || 'Created At'}
@@ -327,7 +327,7 @@ function PrincipalsPageContent() {
                           <div className={`w-1.5 h-1.5 rounded-full ${
                             principal.is_active ? 'bg-green-500' : 'bg-red-500'
                           }`} />
-                          {principal.is_active ? 'Active' : 'Inactive'}
+                          {principal.is_active ? (t.active || 'Active') : (t.inactive || 'Inactive')}
                         </span>
                       </td>
                       <td className="py-3 px-3 text-slate-600 dark:text-slate-400 hidden xl:table-cell">

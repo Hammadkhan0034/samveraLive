@@ -243,10 +243,10 @@ function OrganizationsPageContent() {
                       {t.table_slug || 'Slug'}
                     </th>
                     <th className="py-3 px-3 text-left font-semibold text-slate-700 dark:text-slate-300 hidden lg:table-cell">
-                      Email
+                      {t.field_email || 'Email'}
                     </th>
                     <th className="py-3 px-3 text-left font-semibold text-slate-700 dark:text-slate-300 hidden lg:table-cell">
-                      Location
+                      {t.field_address || 'Location'}
                     </th>
                     <th className="py-3 px-3 text-left font-semibold text-slate-700 dark:text-slate-300 hidden xl:table-cell">
                       {t.created_at || 'Created At'}

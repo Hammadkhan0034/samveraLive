@@ -39,43 +39,43 @@ interface Principal {
   created_at: string;
 }
 
-function formatDate(dateString: string | null | undefined): string {
-  if (!dateString) return 'Not provided';
-  try {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
-    });
-  } catch {
-    return dateString;
-  }
-}
-
-function formatRelativeTime(dateString: string | null | undefined): string {
-  if (!dateString) return 'Never';
-  try {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-    
-    if (diffInSeconds < 60) return 'Just now';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
-    if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 604800)} weeks ago`;
-    if (diffInSeconds < 31536000) return `${Math.floor(diffInSeconds / 2592000)} months ago`;
-    return `${Math.floor(diffInSeconds / 31536000)} years ago`;
-  } catch {
-    return dateString;
-  }
-}
-
 function OrganizationsDetailPageContent() {
   const params = useParams();
   const { t } = useLanguage();
   const orgId = params?.id as string;
+
+  const formatDate = (dateString: string | null | undefined): string => {
+    if (!dateString) return t.status_not_provided || 'Not provided';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    } catch {
+      return dateString;
+    }
+  };
+
+  const formatRelativeTime = (dateString: string | null | undefined): string => {
+    if (!dateString) return t.status_never || 'Never';
+    try {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+      
+      if (diffInSeconds < 60) return t.time_just_now || 'Just now';
+      if (diffInSeconds < 3600) return (t.time_minutes_ago || '{count} minutes ago').replace('{count}', String(Math.floor(diffInSeconds / 60)));
+      if (diffInSeconds < 86400) return (t.time_hours_ago || '{count} hours ago').replace('{count}', String(Math.floor(diffInSeconds / 3600)));
+      if (diffInSeconds < 604800) return (t.time_days_ago || '{count} days ago').replace('{count}', String(Math.floor(diffInSeconds / 86400)));
+      if (diffInSeconds < 2592000) return (t.time_weeks_ago || '{count} weeks ago').replace('{count}', String(Math.floor(diffInSeconds / 604800)));
+      if (diffInSeconds < 31536000) return (t.time_months_ago || '{count} months ago').replace('{count}', String(Math.floor(diffInSeconds / 2592000)));
+      return (t.time_years_ago || '{count} years ago').replace('{count}', String(Math.floor(diffInSeconds / 31536000)));
+    } catch {
+      return dateString;
+    }
+  };
 
   const [organization, setOrganization] = useState<OrganizationDetails | null>(null);
   const [principals, setPrincipals] = useState<Principal[]>([]);
@@ -162,8 +162,8 @@ function OrganizationsDetailPageContent() {
     return (
       <EmptyState
         icon={Building2}
-        title={error || 'Organization not found'}
-        description="The organization you're looking for doesn't exist or you don't have permission to view it."
+        title={error || t.error_organization_not_found || 'Organization not found'}
+        description={t.error_organization_not_found_detail || "The organization you're looking for doesn't exist or you don't have permission to view it."}
       />
     );
   }
@@ -187,14 +187,14 @@ function OrganizationsDetailPageContent() {
             <div className="flex items-center gap-2 mb-6">
               <Building2 className="w-5 h-5 text-mint-500 dark:text-mint-400" />
               <h2 className="text-ds-h2 font-semibold text-ds-text-primary dark:text-slate-100">
-                Organization Information
+                {t.organization_information || 'Organization Information'}
               </h2>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
-                  Organization Name
+                  {t.field_organization_name || 'Organization Name'}
                 </label>
                 <div className="flex items-center gap-2">
                   <p className="text-ds-body text-ds-text-primary dark:text-slate-100 font-medium">
@@ -216,7 +216,7 @@ function OrganizationsDetailPageContent() {
 
               <div>
                 <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
-                  Slug
+                  {t.field_slug || 'Slug'}
                 </label>
                 <div className="flex items-center gap-2">
                   <p className="text-ds-body text-ds-text-primary dark:text-slate-100 font-mono">
@@ -239,7 +239,7 @@ function OrganizationsDetailPageContent() {
               {organization.email && (
                 <div>
                   <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
-                    Email
+                    {t.field_email || 'Email'}
                   </label>
                   <div className="flex items-center gap-2">
                     <Mail className="w-4 h-4 text-slate-400" />
@@ -256,7 +256,7 @@ function OrganizationsDetailPageContent() {
               {organization.phone && (
                 <div>
                   <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
-                    Phone
+                    {t.field_phone || 'Phone'}
                   </label>
                   <div className="flex items-center gap-2">
                     <Phone className="w-4 h-4 text-slate-400" />
@@ -273,7 +273,7 @@ function OrganizationsDetailPageContent() {
               {organization.website && (
                 <div className="md:col-span-2">
                   <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
-                    Website
+                    {t.field_website || 'Website'}
                   </label>
                   <div className="flex items-center gap-2">
                     <Globe className="w-4 h-4 text-slate-400" />
@@ -291,13 +291,13 @@ function OrganizationsDetailPageContent() {
 
               <div className="md:col-span-2">
                 <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
-                  Address
+                  {t.field_address || 'Address'}
                 </label>
                 <div className="flex items-start gap-2">
                   <MapPin className="w-4 h-4 text-slate-400 mt-1 flex-shrink-0" />
                   <div className="flex-1">
                     <p className="text-ds-body text-ds-text-primary dark:text-slate-100">
-                      {organization.address || 'Not provided'}
+                      {organization.address || (t.status_not_provided || 'Not provided')}
                       {organization.city && `, ${organization.city}`}
                       {organization.state && `, ${organization.state}`}
                       {organization.postal_code && ` ${organization.postal_code}`}
@@ -313,7 +313,7 @@ function OrganizationsDetailPageContent() {
                         rel="noopener noreferrer"
                         className="text-ds-small text-mint-500 dark:text-mint-400 hover:underline mt-1 inline-flex items-center gap-1"
                       >
-                        View on Map
+                        {t.view_on_map || 'View on Map'}
                       </a>
                     )}
                   </div>
@@ -322,7 +322,7 @@ function OrganizationsDetailPageContent() {
 
               <div>
                 <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
-                  Timezone
+                  {t.field_timezone || 'Timezone'}
                 </label>
                 <p className="text-ds-body text-ds-text-primary dark:text-slate-100">
                   {organization.timezone}
@@ -336,7 +336,7 @@ function OrganizationsDetailPageContent() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-ds-h3 font-semibold text-ds-text-primary dark:text-slate-100 flex items-center gap-2">
                 <Shield className="w-5 h-5 text-mint-500 dark:text-mint-400" />
-                Principals
+                {t.metric_principals || 'Principals'}
               </h2>
             </div>
             
@@ -345,7 +345,7 @@ function OrganizationsDetailPageContent() {
                 {principals.map((principal) => {
                   const principalName = principal.full_name || principal.name || 
                     `${principal.first_name || ''} ${principal.last_name || ''}`.trim() || 
-                    'Unknown Principal';
+                    (t.unknown_principal || 'Unknown Principal');
 
                   return (
                     <div
@@ -366,7 +366,7 @@ function OrganizationsDetailPageContent() {
                               className="text-ds-tiny text-mint-500 dark:text-mint-400 hover:underline flex items-center gap-1"
                             >
                               <Mail className="w-3 h-3" />
-                              Email
+                              {t.field_email || 'Email'}
                             </a>
                           </div>
                         )}
@@ -379,7 +379,7 @@ function OrganizationsDetailPageContent() {
                             <div className={`w-1.5 h-1.5 rounded-full ${
                               principal.is_active ? 'bg-green-500' : 'bg-red-500'
                             }`} />
-                            {principal.is_active ? 'Active' : 'Inactive'}
+                            {principal.is_active ? (t.active || 'Active') : (t.inactive || 'Inactive')}
                           </span>
                         </div>
                       </div>
@@ -389,7 +389,7 @@ function OrganizationsDetailPageContent() {
               </div>
             ) : (
               <p className="text-ds-body text-ds-text-muted dark:text-slate-400">
-                No principals assigned
+                {t.no_principals_assigned || 'No principals assigned'}
               </p>
             )}
           </div>
@@ -400,13 +400,13 @@ function OrganizationsDetailPageContent() {
           {/* Status Overview Card */}
           <div className="rounded-ds-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-ds-card p-6">
             <h2 className="text-ds-h3 font-semibold text-ds-text-primary dark:text-slate-100 mb-4">
-              Status Overview
+              {t.status_overview || 'Status Overview'}
             </h2>
             
             <div className="space-y-4">
               <div>
                 <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
-                  Account Status
+                  {t.field_account_status || 'Account Status'}
                 </label>
                 <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-ds-small font-medium ${
                   organization.is_active
@@ -416,7 +416,7 @@ function OrganizationsDetailPageContent() {
                   <div className={`w-2 h-2 rounded-full ${
                     organization.is_active ? 'bg-green-500' : 'bg-red-500'
                   }`} />
-                  {organization.is_active ? 'Active' : 'Inactive'}
+                  {organization.is_active ? (t.active || 'Active') : (t.inactive || 'Inactive')}
                 </span>
               </div>
 
@@ -424,7 +424,7 @@ function OrganizationsDetailPageContent() {
                 <div>
                   <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
-                    Created At
+                    {t.field_created_at || 'Created At'}
                   </label>
                   <p className="text-ds-body text-ds-text-primary dark:text-slate-100">
                     {formatDate(organization.created_at)}
@@ -436,7 +436,7 @@ function OrganizationsDetailPageContent() {
                 <div>
                   <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 flex items-center gap-1">
                     <Clock className="w-3 h-3" />
-                    Last Updated
+                    {t.field_last_updated || 'Last Updated'}
                   </label>
                   <p className="text-ds-body text-ds-text-primary dark:text-slate-100">
                     {formatRelativeTime(organization.updated_at)}
@@ -451,14 +451,14 @@ function OrganizationsDetailPageContent() {
             <div className="rounded-ds-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-ds-card p-6">
               <h2 className="text-ds-h3 font-semibold text-ds-text-primary dark:text-slate-100 mb-4 flex items-center gap-2">
                 <Users className="w-5 h-5 text-mint-500 dark:text-mint-400" />
-                User Metrics
+                {t.user_metrics || 'User Metrics'}
               </h2>
               
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-3 rounded-ds-md bg-input-fill dark:bg-ds-surface-card">
                   <div className="flex items-center gap-2">
                     <GraduationCap className="w-4 h-4 text-mint-500 dark:text-mint-400" />
-                    <span className="text-ds-small text-ds-text-muted dark:text-slate-400">Students</span>
+                    <span className="text-ds-small text-ds-text-muted dark:text-slate-400">{t.metric_students || 'Students'}</span>
                   </div>
                   <span className="text-ds-h2 font-bold text-ds-text-primary dark:text-slate-100">
                     {organization.metrics.students}
@@ -468,7 +468,7 @@ function OrganizationsDetailPageContent() {
                 <div className="flex items-center justify-between p-3 rounded-ds-md bg-input-fill dark:bg-ds-surface-card">
                   <div className="flex items-center gap-2">
                     <UserCheck className="w-4 h-4 text-mint-500 dark:text-mint-400" />
-                    <span className="text-ds-small text-ds-text-muted dark:text-slate-400">Teachers</span>
+                    <span className="text-ds-small text-ds-text-muted dark:text-slate-400">{t.metric_teachers || 'Teachers'}</span>
                   </div>
                   <span className="text-ds-h2 font-bold text-ds-text-primary dark:text-slate-100">
                     {organization.metrics.teachers}
@@ -478,7 +478,7 @@ function OrganizationsDetailPageContent() {
                 <div className="flex items-center justify-between p-3 rounded-ds-md bg-input-fill dark:bg-ds-surface-card">
                   <div className="flex items-center gap-2">
                     <Users className="w-4 h-4 text-mint-500 dark:text-mint-400" />
-                    <span className="text-ds-small text-ds-text-muted dark:text-slate-400">Parents</span>
+                    <span className="text-ds-small text-ds-text-muted dark:text-slate-400">{t.metric_parents || 'Parents'}</span>
                   </div>
                   <span className="text-ds-h2 font-bold text-ds-text-primary dark:text-slate-100">
                     {organization.metrics.parents}
@@ -488,7 +488,7 @@ function OrganizationsDetailPageContent() {
                 <div className="flex items-center justify-between p-3 rounded-ds-md bg-input-fill dark:bg-ds-surface-card">
                   <div className="flex items-center gap-2">
                     <Shield className="w-4 h-4 text-mint-500 dark:text-mint-400" />
-                    <span className="text-ds-small text-ds-text-muted dark:text-slate-400">Principals</span>
+                    <span className="text-ds-small text-ds-text-muted dark:text-slate-400">{t.metric_principals || 'Principals'}</span>
                   </div>
                   <span className="text-ds-h2 font-bold text-ds-text-primary dark:text-slate-100">
                     {organization.metrics.principals}
@@ -498,7 +498,7 @@ function OrganizationsDetailPageContent() {
                 <div className="flex items-center justify-between p-3 rounded-ds-md bg-mint-100 dark:bg-mint-900/20 border-2 border-mint-200 dark:border-mint-800">
                   <div className="flex items-center gap-2">
                     <Users className="w-4 h-4 text-mint-600 dark:text-mint-400" />
-                    <span className="text-ds-small font-medium text-ds-text-primary dark:text-slate-100">Total Users</span>
+                    <span className="text-ds-small font-medium text-ds-text-primary dark:text-slate-100">{t.metric_total_users || 'Total Users'}</span>
                   </div>
                   <span className="text-ds-h2 font-bold text-mint-600 dark:text-mint-400">
                     {organization.metrics.totalUsers}

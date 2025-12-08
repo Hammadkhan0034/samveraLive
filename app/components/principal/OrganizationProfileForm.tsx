@@ -73,7 +73,7 @@ export function OrganizationProfileForm({ organization, onUpdate }: Organization
     if (field === 'slug') {
       const slugValue = value.toLowerCase();
       if (slugValue && !validateSlug(slugValue)) {
-        setSlugError('Slug must contain only lowercase letters, numbers, and hyphens');
+        setSlugError(t.slug_validation_error);
       } else {
         setSlugError(null);
       }
@@ -88,7 +88,7 @@ export function OrganizationProfileForm({ organization, onUpdate }: Organization
 
     // Validate slug
     if (!validateSlug(formData.slug)) {
-      setSlugError('Slug must contain only lowercase letters, numbers, and hyphens');
+      setSlugError(t.slug_validation_error);
       return;
     }
 
@@ -113,18 +113,18 @@ export function OrganizationProfileForm({ organization, onUpdate }: Organization
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Failed to update organization' }));
+        const errorData = await response.json().catch(() => ({ error: t.error_updating_organization }));
         throw new Error(errorData.error || `HTTP ${response.status}`);
       }
 
       const data = await response.json();
-      setSuccess('Organization updated successfully');
+      setSuccess(t.organization_updated_success);
       onUpdate(data.org);
       
       // Clear success message after 3 seconds
       setTimeout(() => setSuccess(null), 3000);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Failed to update organization';
+      const message = err instanceof Error ? err.message : t.error_updating_organization;
       setError(message);
     } finally {
       setLoading(false);
@@ -165,11 +165,11 @@ export function OrganizationProfileForm({ organization, onUpdate }: Organization
           <div className="flex items-center gap-ds-sm mb-2">
             <Building className="h-5 w-5 text-[#1F2937] dark:text-slate-300" />
             <h2 className="text-ds-h2 font-semibold text-[#1F2937] dark:text-slate-100">
-              Organization Information
+              {t.organization_information}
             </h2>
           </div>
           <p className="mt-2 text-ds-small text-[#4B5563] dark:text-slate-400">
-            Update your organization's details and contact information
+            {t.organization_information_subtitle}
           </p>
         </div>
 
@@ -177,19 +177,19 @@ export function OrganizationProfileForm({ organization, onUpdate }: Organization
           {/* Core Identity Section */}
           <div className="space-y-ds-md">
             <h3 className="text-ds-h3 font-semibold text-[#1F2937] dark:text-slate-200">
-              Core Identity
+              {t.core_identity}
             </h3>
             
             <div className="mt-4">
               <label htmlFor="org-name" className={labelClassName}>
-                Organization Name <span className="text-red-500">*</span>
+                {t.organization_name_label} <span className="text-red-500">*</span>
               </label>
               <input
                 id="org-name"
                 type="text"
                 value={formData.name}
                 onChange={(e) => handleFieldChange('name', e.target.value)}
-                placeholder="Enter organization name"
+                placeholder={t.organization_name_placeholder}
                 className={inputClassName}
                 required
               />
@@ -197,7 +197,7 @@ export function OrganizationProfileForm({ organization, onUpdate }: Organization
 
             <div>
               <label htmlFor="org-slug" className={labelClassName}>
-                Slug <span className="text-red-500">*</span>
+                {t.slug_label} <span className="text-red-500">*</span>
               </label>
               <input
                 id="org-slug"
@@ -206,12 +206,12 @@ export function OrganizationProfileForm({ organization, onUpdate }: Organization
                 onChange={(e) => handleFieldChange('slug', e.target.value.toLowerCase())}
                 onBlur={(e) => {
                   if (e.target.value && !validateSlug(e.target.value)) {
-                    setSlugError('Slug must contain only lowercase letters, numbers, and hyphens');
+                    setSlugError(t.slug_validation_error);
                   } else {
                     setSlugError(null);
                   }
                 }}
-                placeholder="organization-slug"
+                placeholder={t.slug_placeholder}
                 className={`${inputClassName} ${
                   slugError
                     ? 'border-red-500 focus:border-red-500 focus:ring-red-500 dark:border-red-500'
@@ -228,19 +228,19 @@ export function OrganizationProfileForm({ organization, onUpdate }: Organization
           {/* Contact Details Section */}
           <div className="space-y-ds-md">
             <h3 className="text-ds-h3 font-semibold text-[#1F2937] dark:text-slate-200">
-              Contact Details
+              {t.contact_details}
             </h3>
 
             <div className="mt-4">
               <label htmlFor="org-email" className={labelClassName}>
-                Email <span className="text-red-500">*</span>
+                {t.email_label} <span className="text-red-500">*</span>
               </label>
               <input
                 id="org-email"
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleFieldChange('email', e.target.value)}
-                placeholder="Enter email address"
+                placeholder={t.email_placeholder}
                 className={inputClassName}
                 required
               />
@@ -248,14 +248,14 @@ export function OrganizationProfileForm({ organization, onUpdate }: Organization
 
             <div>
               <label htmlFor="org-phone" className={labelClassName}>
-                Phone <span className="text-red-500">*</span>
+                {t.phone_label} <span className="text-red-500">*</span>
               </label>
               <input
                 id="org-phone"
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => handleFieldChange('phone', e.target.value)}
-                placeholder="Enter phone number"
+                placeholder={t.phone_placeholder}
                 className={inputClassName}
                 required
               />
@@ -263,14 +263,14 @@ export function OrganizationProfileForm({ organization, onUpdate }: Organization
 
             <div>
               <label htmlFor="org-website" className={labelClassName}>
-                Website
+                {t.website_label}
               </label>
               <input
                 id="org-website"
                 type="url"
                 value={formData.website}
                 onChange={(e) => handleFieldChange('website', e.target.value)}
-                placeholder="https://example.com"
+                placeholder={t.website_placeholder}
                 className={inputClassName}
               />
             </div>
@@ -279,18 +279,18 @@ export function OrganizationProfileForm({ organization, onUpdate }: Organization
           {/* Location Section */}
           <div className="space-y-ds-md">
             <h3 className="text-ds-h3 font-semibold text-[#1F2937] dark:text-slate-200">
-              Location
+              {t.location}
             </h3>
 
             <div className="mt-4">
               <label htmlFor="org-address" className={labelClassName}>
-                Address <span className="text-red-500">*</span>
+                {t.address_label} <span className="text-red-500">*</span>
               </label>
               <textarea
                 id="org-address"
                 value={formData.address}
                 onChange={(e) => handleFieldChange('address', e.target.value)}
-                placeholder="Enter street address"
+                placeholder={t.address_placeholder}
                 className={textareaClassName}
                 rows={2}
                 required
@@ -300,14 +300,14 @@ export function OrganizationProfileForm({ organization, onUpdate }: Organization
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-ds-md mt-4">
               <div>
                 <label htmlFor="org-city" className={labelClassName}>
-                  City <span className="text-red-500">*</span>
+                  {t.city_label} <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="org-city"
                   type="text"
                   value={formData.city}
                   onChange={(e) => handleFieldChange('city', e.target.value)}
-                  placeholder="City"
+                  placeholder={t.city_placeholder}
                   className={inputClassName}
                   required
                 />
@@ -315,14 +315,14 @@ export function OrganizationProfileForm({ organization, onUpdate }: Organization
 
               <div>
                 <label htmlFor="org-state" className={labelClassName}>
-                  State <span className="text-red-500">*</span>
+                  {t.state_label} <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="org-state"
                   type="text"
                   value={formData.state}
                   onChange={(e) => handleFieldChange('state', e.target.value)}
-                  placeholder="State"
+                  placeholder={t.state_placeholder}
                   className={inputClassName}
                   required
                 />
@@ -330,14 +330,14 @@ export function OrganizationProfileForm({ organization, onUpdate }: Organization
 
               <div>
                 <label htmlFor="org-postal-code" className={labelClassName}>
-                  Postal Code <span className="text-red-500">*</span>
+                  {t.postal_code_label} <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="org-postal-code"
                   type="text"
                   value={formData.postal_code}
                   onChange={(e) => handleFieldChange('postal_code', e.target.value)}
-                  placeholder="Postal Code"
+                  placeholder={t.postal_code_placeholder}
                   className={inputClassName}
                   required
                 />
@@ -348,19 +348,19 @@ export function OrganizationProfileForm({ organization, onUpdate }: Organization
           {/* Settings Section */}
           <div className="space-y-ds-md">
             <h3 className="text-ds-h3 font-semibold text-[#1F2937] dark:text-slate-200">
-              Settings
+              {t.settings}
             </h3>
 
             <div className="mt-4">
               <label htmlFor="org-timezone" className={labelClassName}>
-                Timezone <span className="text-red-500">*</span>
+                {t.timezone_label} <span className="text-red-500">*</span>
               </label>
               <input
                 id="org-timezone"
                 type="text"
                 value={formData.timezone}
                 onChange={(e) => handleFieldChange('timezone', e.target.value)}
-                placeholder="UTC"
+                placeholder={t.timezone_placeholder}
                 className={inputClassName}
                 required
               />
@@ -377,12 +377,12 @@ export function OrganizationProfileForm({ organization, onUpdate }: Organization
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span>Saving...</span>
+                  <span>{t.saving}</span>
                 </>
               ) : (
                 <>
                   <Save className="h-4 w-4" />
-                  <span>Save Changes</span>
+                  <span>{t.save_changes}</span>
                 </>
               )}
             </button>

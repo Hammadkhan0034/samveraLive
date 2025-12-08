@@ -24,6 +24,7 @@ import {
   maskSSN
 } from '@/lib/utils/guardianUtils';
 import { getStudentName, calculateAge as calculateStudentAge } from '@/lib/utils/studentUtils';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
 
 interface Guardian {
   id: string;
@@ -72,6 +73,7 @@ interface GuardianDetailsProps {
  * Manages its own state and data fetching, without any layout wrapper.
  */
 export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) {
+  const { t } = useLanguage();
   const [data, setData] = useState<GuardianDetailsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -80,7 +82,7 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
 
   const loadGuardian = useCallback(async () => {
     if (!guardianId) {
-      setError('Guardian ID is required');
+      setError(t.guardian_details_id_required);
       setLoading(false);
       return;
     }
@@ -96,12 +98,12 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
 
       if (!response.ok) {
         if (response.status === 403) {
-          throw new Error('You do not have permission to view this guardian');
+          throw new Error(t.guardian_details_no_permission);
         }
         if (response.status === 404) {
-          throw new Error('Guardian not found');
+          throw new Error(t.guardian_details_not_found);
         }
-        throw new Error(`Failed to load guardian: ${response.status}`);
+        throw new Error(t.guardian_details_load_error.replace('{status}', response.status.toString()));
       }
 
       const responseData = await response.json();
@@ -109,7 +111,7 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
       const childrenData = responseData.children || [];
 
       if (!guardianData) {
-        throw new Error('Guardian not found');
+        throw new Error(t.guardian_details_not_found);
       }
 
       setData({
@@ -117,13 +119,13 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
         children: childrenData,
       });
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load guardian';
+      const errorMessage = err instanceof Error ? err.message : t.guardian_details_load_error.replace('{status}', '');
       setError(errorMessage);
       console.error('Error loading guardian:', err);
     } finally {
       setLoading(false);
     }
-  }, [guardianId]);
+  }, [guardianId, t]);
 
   useEffect(() => {
     loadGuardian();
@@ -136,7 +138,7 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
   };
 
   const formatGender = (gender: string | null | undefined): string => {
-    if (!gender) return 'Not specified';
+    if (!gender) return t.guardian_details_not_specified;
     
     const icon = (() => {
       switch (gender.toLowerCase()) {
@@ -151,8 +153,20 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
       }
     })();
     
-    const capitalized = gender.charAt(0).toUpperCase() + gender.slice(1);
-    return icon ? `${icon} ${capitalized}` : capitalized;
+    const genderLabel = (() => {
+      switch (gender.toLowerCase()) {
+        case 'male':
+          return t.gender_male;
+        case 'female':
+          return t.gender_female;
+        case 'other':
+          return t.gender_other;
+        default:
+          return gender.charAt(0).toUpperCase() + gender.slice(1);
+      }
+    })();
+    
+    return icon ? `${icon} ${genderLabel}` : genderLabel;
   };
 
   const calculateDaysSince = (dateString: string | null | undefined): number | null => {
@@ -174,8 +188,8 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
     return (
       <EmptyState
         icon={User}
-        title={error || 'Guardian not found'}
-        description="The guardian you're looking for doesn't exist or you don't have permission to view it."
+        title={error || t.guardian_details_not_found}
+        description={t.guardian_details_not_found_description}
       />
     );
   }
@@ -203,14 +217,14 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
             <div className="flex items-center gap-2 mb-4 md:mb-6">
               <User className="w-5 h-5 text-mint-500 dark:text-mint-400" />
               <h2 className="text-ds-h2 font-semibold text-ds-text-primary dark:text-slate-100">
-                Personal Information
+                {t.guardian_details_personal_information}
               </h2>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               <div>
                 <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
-                  Full Name
+                  {t.guardian_details_full_name}
                 </label>
                 <div className="flex items-center gap-2 flex-wrap">
                   <p className="text-ds-body text-ds-text-primary dark:text-slate-100 font-medium break-words flex-1 min-w-0">
@@ -219,7 +233,7 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
                   <button
                     onClick={() => handleCopy(guardianName, 'name')}
                     className="p-2 md:p-1.5 min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 rounded-ds-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center flex-shrink-0"
-                    aria-label="Copy name"
+                    aria-label={t.guardian_details_copy_name}
                   >
                     {copiedField === 'name' ? (
                       <Check className="w-4 h-4 text-green-600" />
@@ -233,18 +247,18 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
               {guardian.dob && (
                 <div>
                   <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
-                    Date of Birth
+                    {t.guardian_details_date_of_birth}
                   </label>
                   <p className="text-ds-body text-ds-text-primary dark:text-slate-100">
                     {formatDate(guardian.dob)}
-                    {age !== null && ` (${age} years old)`}
+                    {age !== null && ` (${age} ${t.guardian_details_years_old})`}
                   </p>
                 </div>
               )}
 
               <div>
                 <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
-                  Gender
+                  {t.gender}
                 </label>
                 <p className="text-ds-body text-ds-text-primary dark:text-slate-100">
                   {formatGender(guardian.gender)}
@@ -254,7 +268,7 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
               {guardian.ssn && (
                 <div>
                   <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
-                    Social Security Number
+                    {t.guardian_details_social_security_number}
                   </label>
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-ds-body text-ds-text-primary dark:text-slate-100 font-mono">
@@ -263,9 +277,9 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
                     <button
                       onClick={() => setShowSSN(!showSSN)}
                       className="text-ds-small text-mint-500 dark:text-mint-400 hover:underline px-2 py-1 min-h-[44px] md:min-h-0"
-                      aria-label={showSSN ? 'Hide SSN' : 'Show SSN'}
+                      aria-label={showSSN ? t.guardian_details_hide_ssn : t.guardian_details_show_ssn}
                     >
-                      {showSSN ? 'Hide' : 'Show'}
+                      {showSSN ? t.hide : t.show}
                     </button>
                   </div>
                 </div>
@@ -273,7 +287,7 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
 
               <div className="md:col-span-2">
                 <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
-                  Address
+                  {t.address}
                 </label>
                 {guardian.address ? (
                   <div className="flex items-start gap-2">
@@ -288,19 +302,19 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
                         rel="noopener noreferrer"
                         className="text-ds-small text-mint-500 dark:text-mint-400 hover:underline mt-1 inline-flex items-center gap-1"
                       >
-                        View on Map
+                        {t.guardian_details_view_on_map}
                       </a>
                     </div>
                   </div>
                 ) : (
-                  <p className="text-ds-body text-ds-text-muted dark:text-slate-400">Not provided</p>
+                  <p className="text-ds-body text-ds-text-muted dark:text-slate-400">{t.guardian_details_not_provided}</p>
                 )}
               </div>
 
               {guardian.bio && (
                 <div className="md:col-span-2">
                   <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
-                    Bio
+                    {t.guardian_details_bio}
                   </label>
                   <p className="text-ds-body text-ds-text-primary dark:text-slate-100">
                     {guardian.bio}
@@ -315,14 +329,14 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
             <div className="flex items-center gap-2 mb-4 md:mb-6">
               <Mail className="w-5 h-5 text-mint-500 dark:text-mint-400" />
               <h2 className="text-ds-h2 font-semibold text-ds-text-primary dark:text-slate-100">
-                Contact Information
+                {t.guardian_details_contact_information}
               </h2>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               <div>
                 <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
-                  Email Address
+                  {t.guardian_details_email_address}
                 </label>
                 <div className="flex items-center gap-2 flex-wrap">
                   {guardian.email ? (
@@ -337,7 +351,7 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
                       <button
                         onClick={() => handleCopy(guardian.email || '', 'email')}
                         className="p-2 md:p-1.5 min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 rounded-ds-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center flex-shrink-0"
-                        aria-label="Copy email"
+                        aria-label={t.guardian_details_copy_email}
                       >
                         {copiedField === 'email' ? (
                           <Check className="w-4 h-4 text-green-600" />
@@ -347,14 +361,14 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
                       </button>
                     </>
                   ) : (
-                    <p className="text-ds-body text-ds-text-muted dark:text-slate-400">Not provided</p>
+                    <p className="text-ds-body text-ds-text-muted dark:text-slate-400">{t.guardian_details_not_provided}</p>
                   )}
                 </div>
               </div>
 
               <div>
                 <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
-                  Phone Number
+                  {t.guardian_details_phone_number}
                 </label>
                 <div className="flex items-center gap-2 flex-wrap">
                   {guardian.phone ? (
@@ -369,7 +383,7 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
                       <button
                         onClick={() => handleCopy(guardian.phone || '', 'phone')}
                         className="p-2 md:p-1.5 min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 rounded-ds-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center flex-shrink-0"
-                        aria-label="Copy phone"
+                        aria-label={t.guardian_details_copy_phone}
                       >
                         {copiedField === 'phone' ? (
                           <Check className="w-4 h-4 text-green-600" />
@@ -379,7 +393,7 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
                       </button>
                     </>
                   ) : (
-                    <p className="text-ds-body text-ds-text-muted dark:text-slate-400">Not provided</p>
+                    <p className="text-ds-body text-ds-text-muted dark:text-slate-400">{t.guardian_details_not_provided}</p>
                   )}
                 </div>
               </div>
@@ -392,13 +406,13 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
           {/* Status Overview Card */}
           <div className="rounded-ds-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-ds-card p-4 md:p-6">
             <h2 className="text-ds-h3 font-semibold text-ds-text-primary dark:text-slate-100 mb-3 md:mb-4">
-              Status Overview
+              {t.guardian_details_status_overview}
             </h2>
             
             <div className="space-y-3 md:space-y-4">
               <div>
                 <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
-                  Account Status
+                  {t.guardian_details_account_status}
                 </label>
                 <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-ds-small font-medium ${
                   guardian.is_active !== false
@@ -408,16 +422,16 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
                   <div className={`w-2 h-2 rounded-full ${
                     guardian.is_active !== false ? 'bg-green-500' : 'bg-red-500'
                   }`} />
-                  {guardian.is_active !== false ? 'Active' : 'Inactive'}
+                  {guardian.is_active !== false ? t.active : t.inactive}
                 </span>
               </div>
 
               <div>
                 <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
-                  Role
+                  {t.guardian_details_role}
                 </label>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-pale-blue text-ds-text-primary dark:bg-pale-blue/30 dark:text-ds-text-primary text-ds-small font-medium capitalize">
-                  Guardian
+                  {t.guardian}
                 </span>
               </div>
 
@@ -425,7 +439,7 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
                 <div>
                   <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 flex items-center gap-1">
                     <Clock className="w-3 h-3" />
-                    Last Login
+                    {t.guardian_details_last_login}
                   </label>
                   <p className="text-ds-body text-ds-text-primary dark:text-slate-100">
                     {formatRelativeTime(guardian.last_login_at)}
@@ -437,7 +451,7 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
                 <div>
                   <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
-                    Account Created
+                    {t.guardian_details_account_created}
                   </label>
                   <p className="text-ds-body text-ds-text-primary dark:text-slate-100">
                     {formatDate(guardian.created_at)}
@@ -445,7 +459,7 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
                       const daysSince = calculateDaysSince(guardian.created_at);
                       return daysSince !== null && (
                         <span className="text-ds-small text-ds-text-muted dark:text-slate-400">
-                          {' '}({daysSince} days ago)
+                          {' '}({daysSince} {t.guardian_details_days_ago})
                         </span>
                       );
                     })()}
@@ -460,14 +474,14 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
             <div className="flex items-center justify-between mb-3 md:mb-4">
               <h2 className="text-ds-h3 font-semibold text-ds-text-primary dark:text-slate-100 flex items-center gap-2">
                 <Users className="w-5 h-5 text-mint-500 dark:text-mint-400" />
-                Children & Classes
+                {t.guardian_details_children_and_classes}
               </h2>
             </div>
             
             {children && children.length > 0 ? (
               <div className="space-y-2 md:space-y-3">
                 {children.map((child) => {
-                  const childName = `${child.first_name || ''} ${child.last_name || ''}`.trim() || 'Unknown Child';
+                  const childName = `${child.first_name || ''} ${child.last_name || ''}`.trim() || t.guardian_details_unknown_child;
                   const childAge = calculateStudentAge(child.dob);
                   
                   return (
@@ -495,7 +509,7 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
                           </div>
                           {childAge !== null && (
                             <p className="text-ds-small text-ds-text-muted dark:text-slate-400 mb-1 md:mb-2">
-                              {childAge} years old
+                              {childAge} {t.guardian_details_years_old}
                             </p>
                           )}
                           {child.classes ? (
@@ -515,7 +529,7 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
                             </div>
                           ) : (
                             <p className="text-ds-small text-ds-text-muted dark:text-slate-400 mt-1 md:mt-2">
-                              No class assigned
+                              {t.guardian_details_no_class_assigned}
                             </p>
                           )}
                         </div>
@@ -526,7 +540,7 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
               </div>
             ) : (
               <p className="text-ds-body text-ds-text-muted dark:text-slate-400">
-                No children linked to this guardian
+                {t.guardian_details_no_children_linked}
               </p>
             )}
           </div>

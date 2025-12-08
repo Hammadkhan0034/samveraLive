@@ -1,15 +1,17 @@
 'use client';
 
 import { useRequireAuth } from '@/lib/hooks/useAuth';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { AdminDashboard } from '@/app/components/AdminDashboard';
 import Loading from '@/app/components/shared/Loading';
 
 export default function AdminDashboardPage() {
   const { user, loading, isSigningIn } = useRequireAuth('admin');
+  const { t } = useLanguage();
 
   // Show loading ONLY if we have no user yet (avoid flicker after sign-in)
   if (loading && !user) {
-    return <Loading fullScreen text="Loading admin dashboard..." />;
+    return <Loading fullScreen text={t.loading_admin_dashboard || 'Loading admin dashboard...'} />;
   }
 
   if (!user) {

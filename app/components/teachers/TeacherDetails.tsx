@@ -19,6 +19,7 @@ import {
 import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 import EmptyState from '@/app/components/EmptyState';
 import { TeacherHeader } from '@/app/components/teachers/TeacherHeader';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { 
   formatDate, 
   formatRelativeTime
@@ -72,6 +73,7 @@ interface TeacherDetailsProps {
  * Manages its own state and data fetching, without any layout wrapper.
  */
 export function TeacherDetails({ teacherId, backHref }: TeacherDetailsProps) {
+  const { t } = useLanguage();
   const [teacherData, setTeacherData] = useState<TeacherDetailsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -79,7 +81,7 @@ export function TeacherDetails({ teacherId, backHref }: TeacherDetailsProps) {
 
   const loadTeacher = useCallback(async () => {
     if (!teacherId) {
-      setError('Teacher ID is required');
+      setError(t.teacher_id_required);
       setLoading(false);
       return;
     }
@@ -95,24 +97,24 @@ export function TeacherDetails({ teacherId, backHref }: TeacherDetailsProps) {
 
       if (!response.ok) {
         if (response.status === 403) {
-          throw new Error('You do not have permission to view this teacher');
+          throw new Error(t.teacher_permission_denied);
         }
         if (response.status === 404) {
-          throw new Error('Teacher not found');
+          throw new Error(t.teacher_not_found);
         }
-        throw new Error(`Failed to load teacher: ${response.status}`);
+        throw new Error(`${t.teacher_load_failed}: ${response.status}`);
       }
 
       const data = await response.json();
       setTeacherData(data);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load teacher';
+      const errorMessage = err instanceof Error ? err.message : t.teacher_load_failed;
       setError(errorMessage);
       console.error('Error loading teacher:', err);
     } finally {
       setLoading(false);
     }
-  }, [teacherId]);
+  }, [teacherId, t]);
 
   useEffect(() => {
     loadTeacher();
@@ -151,14 +153,14 @@ export function TeacherDetails({ teacherId, backHref }: TeacherDetailsProps) {
     return (
       <EmptyState
         icon={User}
-        title={error || 'Teacher not found'}
-        description="The teacher you're looking for doesn't exist or you don't have permission to view it."
+        title={error || t.teacher_not_found}
+        description={t.teacher_not_found_description}
       />
     );
   }
 
   const { teacher, classes, total_students, total_classes } = teacherData;
-  const teacherName = `${teacher.first_name || ''} ${teacher.last_name || ''}`.trim() || teacher.email || 'Unknown Teacher';
+  const teacherName = `${teacher.first_name || ''} ${teacher.last_name || ''}`.trim() || teacher.email || t.teacher_unknown_teacher;
   const defaultBackHref = backHref || '/dashboard/principal/staff';
 
   return (
@@ -180,14 +182,14 @@ export function TeacherDetails({ teacherId, backHref }: TeacherDetailsProps) {
             <div className="flex items-center gap-2 mb-6">
               <User className="w-5 h-5 text-mint-500 dark:text-mint-400" />
               <h2 className="text-ds-h2 font-semibold text-ds-text-primary dark:text-slate-100">
-                Personal Information
+                {t.teacher_personal_information}
               </h2>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
-                  Full Name
+                  {t.teacher_full_name}
                 </label>
                 <div className="flex items-center gap-2">
                   <p className="text-ds-body text-ds-text-primary dark:text-slate-100 font-medium">
@@ -196,7 +198,7 @@ export function TeacherDetails({ teacherId, backHref }: TeacherDetailsProps) {
                   <button
                     onClick={() => handleCopy(teacherName, 'name')}
                     className="p-1.5 rounded-ds-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                    aria-label="Copy name"
+                    aria-label={t.teacher_copy_name}
                   >
                     {copiedField === 'name' ? (
                       <Check className="w-4 h-4 text-green-600" />
@@ -209,7 +211,7 @@ export function TeacherDetails({ teacherId, backHref }: TeacherDetailsProps) {
 
               <div>
                 <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
-                  Email
+                  {t.email}
                 </label>
                 <div className="flex items-center gap-2">
                   <p className="text-ds-body text-ds-text-primary dark:text-slate-100">
@@ -218,7 +220,7 @@ export function TeacherDetails({ teacherId, backHref }: TeacherDetailsProps) {
                   <button
                     onClick={() => handleCopy(teacher.email, 'email')}
                     className="p-1.5 rounded-ds-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                    aria-label="Copy email"
+                    aria-label={t.teacher_copy_email}
                   >
                     {copiedField === 'email' ? (
                       <Check className="w-4 h-4 text-green-600" />
@@ -232,7 +234,7 @@ export function TeacherDetails({ teacherId, backHref }: TeacherDetailsProps) {
               {teacher.phone && (
                 <div>
                   <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
-                    Phone
+                    {t.phone}
                   </label>
                   <div className="flex items-center gap-2">
                     <Phone className="w-4 h-4 text-slate-400" />
@@ -246,7 +248,7 @@ export function TeacherDetails({ teacherId, backHref }: TeacherDetailsProps) {
               {teacher.dob && (
                 <div>
                   <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
-                    Date of Birth
+                    {t.teacher_date_of_birth}
                   </label>
                   <p className="text-ds-body text-ds-text-primary dark:text-slate-100">
                     {formatDate(teacher.dob)}
@@ -257,10 +259,10 @@ export function TeacherDetails({ teacherId, backHref }: TeacherDetailsProps) {
               {teacher.gender && (
                 <div>
                   <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
-                    Gender
+                    {t.gender}
                   </label>
                   <p className="text-ds-body text-ds-text-primary dark:text-slate-100">
-                    {getGenderIcon(teacher.gender) || 'Not specified'}
+                    {getGenderIcon(teacher.gender) || t.teacher_not_specified}
                     {getGenderIcon(teacher.gender) && ' '}
                     {teacher.gender.charAt(0).toUpperCase() + teacher.gender.slice(1)}
                   </p>
@@ -270,7 +272,7 @@ export function TeacherDetails({ teacherId, backHref }: TeacherDetailsProps) {
               {teacher.address && (
                 <div className="md:col-span-2">
                   <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
-                    Address
+                    {t.address}
                   </label>
                   <div className="flex items-start gap-2">
                     <MapPin className="w-4 h-4 text-slate-400 mt-1 flex-shrink-0" />
@@ -284,7 +286,7 @@ export function TeacherDetails({ teacherId, backHref }: TeacherDetailsProps) {
                         rel="noopener noreferrer"
                         className="text-ds-small text-mint-500 dark:text-mint-400 hover:underline mt-1 inline-flex items-center gap-1"
                       >
-                        View on Map
+                        {t.teacher_view_on_map}
                       </a>
                     </div>
                   </div>
@@ -294,7 +296,7 @@ export function TeacherDetails({ teacherId, backHref }: TeacherDetailsProps) {
               {teacher.bio && (
                 <div className="md:col-span-2">
                   <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
-                    Bio
+                    {t.bio}
                   </label>
                   <p className="text-ds-body text-ds-text-primary dark:text-slate-100">
                     {teacher.bio}
@@ -309,7 +311,7 @@ export function TeacherDetails({ teacherId, backHref }: TeacherDetailsProps) {
             <div className="flex items-center gap-2 mb-6">
               <Briefcase className="w-5 h-5 text-mint-500 dark:text-mint-400" />
               <h2 className="text-ds-h2 font-semibold text-ds-text-primary dark:text-slate-100">
-                Professional Information
+                {t.teacher_professional_information}
               </h2>
             </div>
             
@@ -317,7 +319,7 @@ export function TeacherDetails({ teacherId, backHref }: TeacherDetailsProps) {
               {teacher.education_level && (
                 <div>
                   <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
-                    Education Level
+                    {t.teacher_education_level}
                   </label>
                   <p className="text-ds-body text-ds-text-primary dark:text-slate-100">
                     {teacher.education_level}
@@ -328,7 +330,7 @@ export function TeacherDetails({ teacherId, backHref }: TeacherDetailsProps) {
               {teacher.union_name && (
                 <div>
                   <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
-                    Union Name
+                    {t.teacher_union_name}
                   </label>
                   <p className="text-ds-body text-ds-text-primary dark:text-slate-100">
                     {teacher.union_name}
@@ -339,7 +341,7 @@ export function TeacherDetails({ teacherId, backHref }: TeacherDetailsProps) {
               {!teacher.education_level && !teacher.union_name && (
                 <div className="md:col-span-2">
                   <p className="text-ds-body text-ds-text-muted dark:text-slate-400">
-                    No professional information available
+                    {t.teacher_no_professional_info}
                   </p>
                 </div>
               )}
@@ -351,7 +353,7 @@ export function TeacherDetails({ teacherId, backHref }: TeacherDetailsProps) {
             <div className="flex items-center gap-2 mb-6">
               <GraduationCap className="w-5 h-5 text-mint-500 dark:text-mint-400" />
               <h2 className="text-ds-h2 font-semibold text-ds-text-primary dark:text-slate-100">
-                Assigned Classes
+                {t.teacher_assigned_classes}
               </h2>
             </div>
             
@@ -371,14 +373,14 @@ export function TeacherDetails({ teacherId, backHref }: TeacherDetailsProps) {
                       </a>
                       {cls.code && (
                         <p className="text-ds-small text-ds-text-muted dark:text-slate-400 mt-1">
-                          Code: {cls.code}
+                          {t.teacher_class_code}: {cls.code}
                         </p>
                       )}
                     </div>
                     <div className="flex items-center gap-2 ml-4">
                       <Users className="w-4 h-4 text-slate-400" />
                       <span className="text-ds-body font-semibold text-ds-text-primary dark:text-slate-100">
-                        {cls.student_count} {cls.student_count === 1 ? 'student' : 'students'}
+                        {cls.student_count} {cls.student_count === 1 ? t.teacher_student_singular : t.teacher_student_plural}
                       </span>
                     </div>
                   </div>
@@ -386,7 +388,7 @@ export function TeacherDetails({ teacherId, backHref }: TeacherDetailsProps) {
               </div>
             ) : (
               <p className="text-ds-body text-ds-text-muted dark:text-slate-400">
-                No classes assigned
+                {t.teacher_no_classes_assigned}
               </p>
             )}
           </div>
@@ -397,13 +399,13 @@ export function TeacherDetails({ teacherId, backHref }: TeacherDetailsProps) {
           {/* Status Overview Card */}
           <div className="rounded-ds-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-ds-card p-6">
             <h2 className="text-ds-h3 font-semibold text-ds-text-primary dark:text-slate-100 mb-4">
-              Status Overview
+              {t.teacher_status_overview}
             </h2>
             
             <div className="space-y-4">
               <div>
                 <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
-                  Account Status
+                  {t.teacher_account_status}
                 </label>
                 <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-ds-small font-medium ${
                   teacher.is_active !== false
@@ -413,14 +415,14 @@ export function TeacherDetails({ teacherId, backHref }: TeacherDetailsProps) {
                   <div className={`w-2 h-2 rounded-full ${
                     teacher.is_active !== false ? 'bg-green-500' : 'bg-red-500'
                   }`} />
-                  {teacher.is_active !== false ? 'Active' : 'Inactive'}
+                  {teacher.is_active !== false ? t.active : t.inactive}
                 </span>
               </div>
 
               {teacher.status && (
                 <div>
                   <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
-                    Current Status
+                    {t.teacher_current_status}
                   </label>
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-pale-blue text-ds-text-primary dark:bg-pale-blue/30 dark:text-ds-text-primary text-ds-small font-medium capitalize">
                     {teacher.status.replace('_', ' ')}
@@ -431,7 +433,7 @@ export function TeacherDetails({ teacherId, backHref }: TeacherDetailsProps) {
               {teacher.role && (
                 <div>
                   <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
-                    Role
+                    {t.role}
                   </label>
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-pale-blue text-ds-text-primary dark:bg-pale-blue/30 dark:text-ds-text-primary text-ds-small font-medium capitalize">
                     {teacher.role}
@@ -443,7 +445,7 @@ export function TeacherDetails({ teacherId, backHref }: TeacherDetailsProps) {
                 <div>
                   <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 flex items-center gap-1">
                     <Clock className="w-3 h-3" />
-                    Last Login
+                    {t.teacher_last_login}
                   </label>
                   <p className="text-ds-body text-ds-text-primary dark:text-slate-100">
                     {formatRelativeTime(teacher.last_login_at)}
@@ -455,7 +457,7 @@ export function TeacherDetails({ teacherId, backHref }: TeacherDetailsProps) {
                 <div>
                   <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 flex items-center gap-1">
                     <Calendar className="w-3 h-3" />
-                    Account Created
+                    {t.teacher_account_created}
                   </label>
                   <p className="text-ds-body text-ds-text-primary dark:text-slate-100">
                     {formatDate(teacher.created_at)}
@@ -468,14 +470,14 @@ export function TeacherDetails({ teacherId, backHref }: TeacherDetailsProps) {
           {/* Quick Statistics Card */}
           <div className="rounded-ds-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-ds-card p-6">
             <h2 className="text-ds-h3 font-semibold text-ds-text-primary dark:text-slate-100 mb-4">
-              Quick Statistics
+              {t.teacher_quick_statistics}
             </h2>
             
             <div className="space-y-4">
               <div className="flex items-center justify-between p-3 rounded-ds-md bg-input-fill dark:bg-ds-surface-card">
                 <div className="flex items-center gap-2">
                   <GraduationCap className="w-4 h-4 text-mint-500 dark:text-mint-400" />
-                  <span className="text-ds-small text-ds-text-muted dark:text-slate-400">Classes</span>
+                  <span className="text-ds-small text-ds-text-muted dark:text-slate-400">{t.kpi_classes}</span>
                 </div>
                 <span className="text-ds-h2 font-bold text-ds-text-primary dark:text-slate-100">
                   {total_classes}
@@ -485,7 +487,7 @@ export function TeacherDetails({ teacherId, backHref }: TeacherDetailsProps) {
               <div className="flex items-center justify-between p-3 rounded-ds-md bg-input-fill dark:bg-ds-surface-card">
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-mint-500 dark:text-mint-400" />
-                  <span className="text-ds-small text-ds-text-muted dark:text-slate-400">Total Students</span>
+                  <span className="text-ds-small text-ds-text-muted dark:text-slate-400">{t.teacher_total_students}</span>
                 </div>
                 <span className="text-ds-h2 font-bold text-ds-text-primary dark:text-slate-100">
                   {total_students}
