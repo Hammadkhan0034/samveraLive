@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
 import { getStableDataCacheHeaders } from '@/lib/cacheConfig';
 import { validateBody, validateQuery, uuidSchema } from '@/lib/validation';
+import { getCurrentUserOrgId } from '@/lib/server-helpers';
 import {
   getOrgsQuerySchema,
   postOrgBodySchema,
   putOrgBodySchema,
+  putMyOrgBodySchema,
   deleteOrgQuerySchema,
 } from '@/lib/validation/orgs';
 import type { AuthUser } from '@/lib/types/auth';
@@ -358,6 +360,110 @@ export async function handleGetOrgDetails(
         headers: getStableDataCacheHeaders(),
       },
     );
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+/**
+ * Handler for GET /api/orgs/my-org - Get principal's own organization
+ */
+export async function handleGetMyOrg(
+  _request: Request,
+  user: AuthUser,
+  adminClient: SupabaseClient,
+): Promise<NextResponse> {
+  try {
+    // Get the principal's org_id
+    const orgId = await getCurrentUserOrgId(user);
+
+    // Fetch organization
+    const { data: org, error: orgError } = await adminClient
+      .from('orgs')
+      .select('id,name,slug,email,phone,website,address,city,state,postal_code,timezone,is_active,created_by,updated_by,created_at,updated_at,deleted_at')
+      .eq('id', orgId)
+      .single();
+
+    if (orgError || !org) {
+      return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
+    }
+
+    return NextResponse.json(
+      { org },
+      {
+        status: 200,
+        headers: getStableDataCacheHeaders(),
+      },
+    );
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+/**
+ * Handler for PUT /api/orgs/my-org - Update principal's own organization
+ */
+export async function handleUpdateMyOrg(
+  request: Request,
+  user: AuthUser,
+  adminClient: SupabaseClient,
+): Promise<NextResponse> {
+  const body = await request.json();
+  const bodyValidation = validateBody(putMyOrgBodySchema, body);
+  if (!bodyValidation.success) {
+    return bodyValidation.error;
+  }
+
+  // Get the principal's org_id
+  const orgId = await getCurrentUserOrgId(user);
+
+  const {
+    name,
+    slug,
+    email,
+    phone,
+    website,
+    address,
+    city,
+    state,
+    postal_code,
+    timezone,
+  } = bodyValidation.data;
+
+  const patch: Record<string, unknown> = {
+    updated_by: user.id,
+  };
+
+  if (name !== undefined) patch.name = name;
+  if (slug !== undefined) patch.slug = slug;
+  if (email !== undefined) patch.email = email;
+  if (phone !== undefined) patch.phone = phone;
+  if (website !== undefined) patch.website = website;
+  if (address !== undefined) patch.address = address;
+  if (city !== undefined) patch.city = city;
+  if (state !== undefined) patch.state = state;
+  if (postal_code !== undefined) patch.postal_code = postal_code;
+  if (timezone !== undefined) patch.timezone = timezone;
+
+  try {
+    const { data, error } = await adminClient
+      .from('orgs')
+      .update(patch)
+      .eq('id', orgId)
+      .select('id,name,slug,email,phone,website,address,city,state,postal_code,timezone,is_active,created_by,updated_by,created_at,updated_at,deleted_at')
+      .single();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    if (!data) {
+      return NextResponse.json({ error: 'Organization not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ org: data }, { status: 200 });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
     return NextResponse.json({ error: message }, { status: 500 });

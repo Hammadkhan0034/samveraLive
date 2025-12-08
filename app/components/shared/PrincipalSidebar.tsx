@@ -4,7 +4,7 @@ import React, { useState, useImperativeHandle, forwardRef, useEffect, Suspense }
 import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { X } from 'lucide-react';
-import { LayoutDashboard, Users, School, ChartBar as BarChart3, MessageSquare, Camera, CalendarDays, Shield, Link as LinkIcon, Utensils, Megaphone, Activity } from 'lucide-react';
+import { LayoutDashboard, Users, School, ChartBar as BarChart3, MessageSquare, Camera, CalendarDays, Shield, Link as LinkIcon, Utensils, Megaphone, Activity, Building } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 
 // Small helper
@@ -43,7 +43,8 @@ type BuiltInTileId =
   | 'link_student'
   | 'menus'
   | 'announcements'
-  | 'daily_logs';
+  | 'daily_logs'
+  | 'organization_profile';
 
 interface BuiltInTileConfig {
   id: BuiltInTileId;
@@ -63,6 +64,7 @@ const builtInTileRoutes: BuiltInTileConfig[] = [
   { id: 'menus', route: '/dashboard/principal/menus' },
   { id: 'announcements', route: '/dashboard/principal/announcements' },
   { id: 'daily_logs', route: '/dashboard/principal/daily-logs' },
+  { id: 'organization_profile', route: '/dashboard/principal/organization-profile' },
 ];
 
 const getRouteForTileId = (tileId: string): string | undefined => {
@@ -607,6 +609,40 @@ const PrincipalSidebarContent = forwardRef<PrincipalSidebarRef, PrincipalSidebar
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{t.tile_activity_log_desc || 'View and manage daily activity logs'}</p>
+              </div>
+            </button>
+
+            {/* Organization Profile tile */}
+            <button
+              onClick={() => handleBuiltInTileClick('organization_profile')}
+              className={clsx(
+                'w-full flex items-center gap-3 px-ds-sm py-ds-sm rounded-ds-md text-left transition-all duration-200',
+                'hover:bg-slate-100 dark:hover:bg-slate-700',
+                isTileActive('organization_profile')
+                  ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
+                  : 'border-l-4 border-transparent'
+              )}
+            >
+              <span className={clsx(
+                'flex-shrink-0 rounded-lg p-2',
+                isTileActive('organization_profile')
+                  ? 'bg-mint-500 text-white'
+                  : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
+              )}>
+                <Building className="h-5 w-5" />
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <span className={clsx(
+                    'font-medium truncate',
+                    isTileActive('organization_profile')
+                      ? 'text-slate-900 dark:text-slate-100'
+                      : 'text-slate-700 dark:text-slate-300'
+                  )}>
+                    Organization Profile
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">View and update organization information</p>
               </div>
             </button>
 

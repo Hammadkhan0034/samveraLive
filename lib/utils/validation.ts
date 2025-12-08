@@ -11,7 +11,7 @@ import {
   phoneSchema,
   orgIdSchema,
 } from '@/lib/validation';
-import { postOrgBodySchema, putOrgBodySchema } from '@/lib/validation/orgs';
+import { postOrgBodySchema, putOrgBodySchema, putMyOrgBodySchema } from '@/lib/validation/orgs';
 
 /**
  * Validation result type
@@ -148,7 +148,7 @@ export function validateOrgForm(data: {
 }): ValidationResult {
   try {
     if (data.id) {
-      // Edit mode - use putOrgBodySchema
+      // Edit mode with id - use putOrgBodySchema (for admin editing with id)
       putOrgBodySchema.parse({
         id: data.id,
         name: data.name,
@@ -163,19 +163,36 @@ export function validateOrgForm(data: {
         timezone: data.timezone,
       });
     } else {
-      // Create mode - use postOrgBodySchema
-      postOrgBodySchema.parse({
-        name: data.name,
-        slug: data.slug,
-        email: data.email,
-        phone: data.phone,
-        website: data.website,
-        address: data.address,
-        city: data.city,
-        state: data.state,
-        postal_code: data.postal_code,
-        timezone: data.timezone,
-      });
+      // Create mode or principal editing own org (no id in body) - try putMyOrgBodySchema first, then postOrgBodySchema
+      // For principal's own org updates, use putMyOrgBodySchema (no id required)
+      try {
+        putMyOrgBodySchema.parse({
+          name: data.name,
+          slug: data.slug,
+          email: data.email,
+          phone: data.phone,
+          website: data.website,
+          address: data.address,
+          city: data.city,
+          state: data.state,
+          postal_code: data.postal_code,
+          timezone: data.timezone,
+        });
+      } catch {
+        // Fallback to postOrgBodySchema for create mode
+        postOrgBodySchema.parse({
+          name: data.name,
+          slug: data.slug,
+          email: data.email,
+          phone: data.phone,
+          website: data.website,
+          address: data.address,
+          city: data.city,
+          state: data.state,
+          postal_code: data.postal_code,
+          timezone: data.timezone,
+        });
+      }
     }
     return { valid: true, error: null };
   } catch (error) {

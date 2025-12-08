@@ -84,3 +84,19 @@ export const deleteOrgQuerySchema = z.object({
   id: orgIdSchema,
 });
 
+/**
+ * PUT my-org body schema (for principals updating their own org - no id required)
+ */
+export const putMyOrgBodySchema = z.object({
+  name: z.string().min(1).max(200),
+  slug: z.string().min(1).max(100).regex(/^[a-z0-9-]+$/, { message: 'Slug must contain only lowercase letters, numbers, and hyphens' }),
+  email: z.string().email().max(255).min(1, 'Email is required'),
+  phone: z.string().min(1, 'Phone is required').max(50),
+  website: optionalUrl(), // Only website is optional
+  address: z.string().min(1, 'Address is required').max(500),
+  city: z.string().min(1, 'City is required').max(100),
+  state: z.string().min(1, 'State is required').max(100),
+  postal_code: z.string().min(1, 'Postal code is required').max(20),
+  timezone: z.string().min(1, 'Timezone is required'),
+});
+
