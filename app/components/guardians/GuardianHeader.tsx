@@ -56,7 +56,7 @@ export function GuardianHeader({
   };
 
   return (
-    <div className={`rounded-ds-lg bg-white shadow-ds-card p-ds-md md:p-ds-lg ${className}`}>
+    <div className={`rounded-ds-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-ds-card p-4 md:p-6 ${className}`}>
       <PageHeader
         title={guardianName}
         subtitle={`Guardian ID: ${guardian.id.slice(0, 8)}...`}

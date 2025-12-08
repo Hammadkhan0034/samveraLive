@@ -60,7 +60,6 @@ interface Child {
 interface GuardianDetailsData {
   guardian: Guardian;
   children: Child[];
-  total_children?: number;
 }
 
 interface GuardianDetailsProps {
@@ -116,7 +115,6 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
       setData({
         guardian: guardianData,
         children: childrenData,
-        total_children: childrenData.length,
       });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load guardian';
@@ -137,17 +135,29 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
     setTimeout(() => setCopiedField(null), 2000);
   };
 
-  const getGenderIcon = (gender: string | null | undefined) => {
-    switch (gender?.toLowerCase()) {
-      case 'male':
-        return '♂';
-      case 'female':
-        return '♀';
-      case 'other':
-        return '⚧';
-      default:
-        return null;
-    }
+  const formatGender = (gender: string | null | undefined): string => {
+    if (!gender) return 'Not specified';
+    
+    const icon = (() => {
+      switch (gender.toLowerCase()) {
+        case 'male':
+          return '♂';
+        case 'female':
+          return '♀';
+        case 'other':
+          return '⚧';
+        default:
+          return null;
+      }
+    })();
+    
+    const capitalized = gender.charAt(0).toUpperCase() + gender.slice(1);
+    return icon ? `${icon} ${capitalized}` : capitalized;
+  };
+
+  const calculateDaysSince = (dateString: string | null | undefined): number | null => {
+    if (!dateString) return null;
+    return Math.floor((new Date().getTime() - new Date(dateString).getTime()) / (1000 * 60 * 60 * 24));
   };
 
   if (loading) {
@@ -176,7 +186,7 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
   const defaultBackHref = backHref || '/dashboard/principal/guardians';
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-4 md:space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       {/* Header Section */}
       <GuardianHeader
         guardian={guardian}
@@ -185,30 +195,30 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
       />
 
       {/* Main Content - Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-[65%_35%] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[65%_35%] gap-4 md:gap-6">
         {/* Left Column - Primary Information */}
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
           {/* Personal Information Card */}
-          <div className="rounded-ds-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-ds-card p-6">
-            <div className="flex items-center gap-2 mb-6">
+          <div className="rounded-ds-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-ds-card p-4 md:p-6">
+            <div className="flex items-center gap-2 mb-4 md:mb-6">
               <User className="w-5 h-5 text-mint-500 dark:text-mint-400" />
               <h2 className="text-ds-h2 font-semibold text-ds-text-primary dark:text-slate-100">
                 Personal Information
               </h2>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               <div>
                 <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
                   Full Name
                 </label>
-                <div className="flex items-center gap-2">
-                  <p className="text-ds-body text-ds-text-primary dark:text-slate-100 font-medium">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="text-ds-body text-ds-text-primary dark:text-slate-100 font-medium break-words flex-1 min-w-0">
                     {guardianName}
                   </p>
                   <button
                     onClick={() => handleCopy(guardianName, 'name')}
-                    className="p-1.5 rounded-ds-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                    className="p-2 md:p-1.5 min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 rounded-ds-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center flex-shrink-0"
                     aria-label="Copy name"
                   >
                     {copiedField === 'name' ? (
@@ -232,48 +242,46 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
                 </div>
               )}
 
-              {guardian.gender && (
-                <div>
-                  <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
-                    Gender
-                  </label>
-                  <p className="text-ds-body text-ds-text-primary dark:text-slate-100">
-                    {getGenderIcon(guardian.gender) || 'Not specified'}
-                    {getGenderIcon(guardian.gender) && ' '}
-                    {(guardian.gender || '').charAt(0).toUpperCase() + 
-                     (guardian.gender || '').slice(1)}
-                  </p>
-                </div>
-              )}
-
               <div>
                 <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
-                  Social Security Number
+                  Gender
                 </label>
-                <div className="flex items-center gap-2">
-                  <p className="text-ds-body text-ds-text-primary dark:text-slate-100 font-mono">
-                    {showSSN ? (guardian.ssn || 'Not provided') : maskSSN(guardian.ssn)}
-                  </p>
-                  <button
-                    onClick={() => setShowSSN(!showSSN)}
-                    className="text-ds-small text-mint-500 dark:text-mint-400 hover:underline"
-                  >
-                    {showSSN ? 'Hide' : 'Show'}
-                  </button>
-                </div>
+                <p className="text-ds-body text-ds-text-primary dark:text-slate-100">
+                  {formatGender(guardian.gender)}
+                </p>
               </div>
+
+              {guardian.ssn && (
+                <div>
+                  <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
+                    Social Security Number
+                  </label>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-ds-body text-ds-text-primary dark:text-slate-100 font-mono">
+                      {showSSN ? guardian.ssn : maskSSN(guardian.ssn)}
+                    </p>
+                    <button
+                      onClick={() => setShowSSN(!showSSN)}
+                      className="text-ds-small text-mint-500 dark:text-mint-400 hover:underline px-2 py-1 min-h-[44px] md:min-h-0"
+                      aria-label={showSSN ? 'Hide SSN' : 'Show SSN'}
+                    >
+                      {showSSN ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <div className="md:col-span-2">
                 <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
                   Address
                 </label>
-                <div className="flex items-start gap-2">
-                  <MapPin className="w-4 h-4 text-slate-400 mt-1 flex-shrink-0" />
-                  <div className="flex-1">
-                    <p className="text-ds-body text-ds-text-primary dark:text-slate-100">
-                      {guardian.address || 'Not provided'}
-                    </p>
-                    {guardian.address && (
+                {guardian.address ? (
+                  <div className="flex items-start gap-2">
+                    <MapPin className="w-4 h-4 text-slate-400 mt-1 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-ds-body text-ds-text-primary dark:text-slate-100 break-words">
+                        {guardian.address}
+                      </p>
                       <a
                         href={`https://maps.google.com/?q=${encodeURIComponent(guardian.address)}`}
                         target="_blank"
@@ -282,9 +290,11 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
                       >
                         View on Map
                       </a>
-                    )}
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <p className="text-ds-body text-ds-text-muted dark:text-slate-400">Not provided</p>
+                )}
               </div>
 
               {guardian.bio && (
@@ -301,39 +311,43 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
           </div>
 
           {/* Contact Information Card */}
-          <div className="rounded-ds-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-ds-card p-6">
-            <div className="flex items-center gap-2 mb-6">
+          <div className="rounded-ds-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-ds-card p-4 md:p-6">
+            <div className="flex items-center gap-2 mb-4 md:mb-6">
               <Mail className="w-5 h-5 text-mint-500 dark:text-mint-400" />
               <h2 className="text-ds-h2 font-semibold text-ds-text-primary dark:text-slate-100">
                 Contact Information
               </h2>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               <div>
                 <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
                   Email Address
                 </label>
-                <div className="flex items-center gap-2">
-                  <a
-                    href={`mailto:${guardian.email}`}
-                    className="text-ds-body text-mint-500 dark:text-mint-400 hover:underline flex items-center gap-2"
-                  >
-                    <Mail className="w-4 h-4" />
-                    {guardian.email || 'Not provided'}
-                  </a>
-                  {guardian.email && (
-                    <button
-                      onClick={() => handleCopy(guardian.email || '', 'email')}
-                      className="p-1.5 rounded-ds-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                      aria-label="Copy email"
-                    >
-                      {copiedField === 'email' ? (
-                        <Check className="w-4 h-4 text-green-600" />
-                      ) : (
-                        <Copy className="w-4 h-4 text-slate-400" />
-                      )}
-                    </button>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {guardian.email ? (
+                    <>
+                      <a
+                        href={`mailto:${guardian.email}`}
+                        className="text-ds-body text-mint-500 dark:text-mint-400 hover:underline flex items-center gap-2 break-words flex-1 min-w-0"
+                      >
+                        <Mail className="w-4 h-4 flex-shrink-0" />
+                        {guardian.email}
+                      </a>
+                      <button
+                        onClick={() => handleCopy(guardian.email || '', 'email')}
+                        className="p-2 md:p-1.5 min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 rounded-ds-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center flex-shrink-0"
+                        aria-label="Copy email"
+                      >
+                        {copiedField === 'email' ? (
+                          <Check className="w-4 h-4 text-green-600" />
+                        ) : (
+                          <Copy className="w-4 h-4 text-slate-400" />
+                        )}
+                      </button>
+                    </>
+                  ) : (
+                    <p className="text-ds-body text-ds-text-muted dark:text-slate-400">Not provided</p>
                   )}
                 </div>
               </div>
@@ -342,26 +356,30 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
                 <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
                   Phone Number
                 </label>
-                <div className="flex items-center gap-2">
-                  <a
-                    href={`tel:${guardian.phone}`}
-                    className="text-ds-body text-mint-500 dark:text-mint-400 hover:underline flex items-center gap-2"
-                  >
-                    <Phone className="w-4 h-4" />
-                    {guardian.phone || 'Not provided'}
-                  </a>
-                  {guardian.phone && (
-                    <button
-                      onClick={() => handleCopy(guardian.phone || '', 'phone')}
-                      className="p-1.5 rounded-ds-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                      aria-label="Copy phone"
-                    >
-                      {copiedField === 'phone' ? (
-                        <Check className="w-4 h-4 text-green-600" />
-                      ) : (
-                        <Copy className="w-4 h-4 text-slate-400" />
-                      )}
-                    </button>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {guardian.phone ? (
+                    <>
+                      <a
+                        href={`tel:${guardian.phone}`}
+                        className="text-ds-body text-mint-500 dark:text-mint-400 hover:underline flex items-center gap-2 break-words flex-1 min-w-0"
+                      >
+                        <Phone className="w-4 h-4 flex-shrink-0" />
+                        {guardian.phone}
+                      </a>
+                      <button
+                        onClick={() => handleCopy(guardian.phone || '', 'phone')}
+                        className="p-2 md:p-1.5 min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 rounded-ds-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center justify-center flex-shrink-0"
+                        aria-label="Copy phone"
+                      >
+                        {copiedField === 'phone' ? (
+                          <Check className="w-4 h-4 text-green-600" />
+                        ) : (
+                          <Copy className="w-4 h-4 text-slate-400" />
+                        )}
+                      </button>
+                    </>
+                  ) : (
+                    <p className="text-ds-body text-ds-text-muted dark:text-slate-400">Not provided</p>
                   )}
                 </div>
               </div>
@@ -370,14 +388,14 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
         </div>
 
         {/* Right Column - Secondary Information */}
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
           {/* Status Overview Card */}
-          <div className="rounded-ds-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-ds-card p-6">
-            <h2 className="text-ds-h3 font-semibold text-ds-text-primary dark:text-slate-100 mb-4">
+          <div className="rounded-ds-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-ds-card p-4 md:p-6">
+            <h2 className="text-ds-h3 font-semibold text-ds-text-primary dark:text-slate-100 mb-3 md:mb-4">
               Status Overview
             </h2>
             
-            <div className="space-y-4">
+            <div className="space-y-3 md:space-y-4">
               <div>
                 <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 block">
                   Account Status
@@ -423,18 +441,14 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
                   </label>
                   <p className="text-ds-body text-ds-text-primary dark:text-slate-100">
                     {formatDate(guardian.created_at)}
-                  </p>
-                </div>
-              )}
-
-              {guardian.created_at && (
-                <div>
-                  <label className="text-ds-tiny uppercase tracking-wide text-ds-text-muted dark:text-slate-400 mb-1 flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    Days Since Registration
-                  </label>
-                  <p className="text-ds-body text-ds-text-primary dark:text-slate-100">
-                    {Math.floor((new Date().getTime() - new Date(guardian.created_at).getTime()) / (1000 * 60 * 60 * 24))}
+                    {(() => {
+                      const daysSince = calculateDaysSince(guardian.created_at);
+                      return daysSince !== null && (
+                        <span className="text-ds-small text-ds-text-muted dark:text-slate-400">
+                          {' '}({daysSince} days ago)
+                        </span>
+                      );
+                    })()}
                   </p>
                 </div>
               )}
@@ -442,8 +456,8 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
           </div>
 
           {/* Children & Classes Card */}
-          <div className="rounded-ds-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-ds-card p-6">
-            <div className="flex items-center justify-between mb-4">
+          <div className="rounded-ds-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-ds-card p-4 md:p-6">
+            <div className="flex items-center justify-between mb-3 md:mb-4">
               <h2 className="text-ds-h3 font-semibold text-ds-text-primary dark:text-slate-100 flex items-center gap-2">
                 <Users className="w-5 h-5 text-mint-500 dark:text-mint-400" />
                 Children & Classes
@@ -451,7 +465,7 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
             </div>
             
             {children && children.length > 0 ? (
-              <div className="space-y-3">
+              <div className="space-y-2 md:space-y-3">
                 {children.map((child) => {
                   const childName = `${child.first_name || ''} ${child.last_name || ''}`.trim() || 'Unknown Child';
                   const childAge = calculateStudentAge(child.dob);
@@ -459,48 +473,48 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
                   return (
                     <div
                       key={child.id}
-                      className="p-4 rounded-ds-md bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                      className="p-3 md:p-4 rounded-ds-md bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                     >
-                      <div className="flex items-start gap-3">
+                      <div className="flex items-start gap-2 md:gap-3">
                         <div className="w-10 h-10 rounded-full bg-pale-blue dark:bg-pale-blue/30 flex items-center justify-center flex-shrink-0">
                           <User className="w-5 h-5 text-mint-500 dark:text-mint-400" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
+                          <div className="flex flex-wrap items-center gap-2 mb-1">
                             <a
                               href={`/dashboard/principal/students/${child.id}`}
-                              className="text-ds-body font-medium text-ds-text-primary dark:text-slate-100 hover:text-mint-500 dark:hover:text-mint-400 hover:underline"
+                              className="text-ds-body font-medium text-ds-text-primary dark:text-slate-100 hover:text-mint-500 dark:hover:text-mint-400 hover:underline break-words"
                             >
                               {childName}
                             </a>
                             {child.relation && (
-                              <span className="text-ds-tiny text-ds-text-muted dark:text-slate-400 px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-600">
+                              <span className="text-ds-tiny text-ds-text-muted dark:text-slate-400 px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-600 whitespace-nowrap">
                                 {child.relation}
                               </span>
                             )}
                           </div>
                           {childAge !== null && (
-                            <p className="text-ds-small text-ds-text-muted dark:text-slate-400 mb-2">
+                            <p className="text-ds-small text-ds-text-muted dark:text-slate-400 mb-1 md:mb-2">
                               {childAge} years old
                             </p>
                           )}
                           {child.classes ? (
-                            <div className="flex items-center gap-2 mt-2">
-                              <GraduationCap className="w-4 h-4 text-mint-500 dark:text-mint-400" />
+                            <div className="flex flex-wrap items-center gap-2 mt-1 md:mt-2">
+                              <GraduationCap className="w-4 h-4 text-mint-500 dark:text-mint-400 flex-shrink-0" />
                               <a
                                 href={`/dashboard/principal/classes/${child.class_id}`}
-                                className="text-ds-small text-mint-500 dark:text-mint-400 hover:underline flex items-center gap-1"
+                                className="text-ds-small text-mint-500 dark:text-mint-400 hover:underline flex items-center gap-1 break-words"
                               >
                                 {child.classes.name}
                                 {child.classes.code && (
-                                  <span className="text-ds-tiny text-ds-text-muted dark:text-slate-400">
+                                  <span className="text-ds-tiny text-ds-text-muted dark:text-slate-400 whitespace-nowrap">
                                     ({child.classes.code})
                                   </span>
                                 )}
                               </a>
                             </div>
                           ) : (
-                            <p className="text-ds-small text-ds-text-muted dark:text-slate-400 mt-2">
+                            <p className="text-ds-small text-ds-text-muted dark:text-slate-400 mt-1 md:mt-2">
                               No class assigned
                             </p>
                           )}
