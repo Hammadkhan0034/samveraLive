@@ -27,3 +27,22 @@ export interface PaginatedPrincipalsResponse {
   totalPages: number;
   currentPage: number;
 }
+
+/**
+ * Principal metrics for detail view (same structure as OrganizationMetrics)
+ */
+export interface PrincipalMetrics {
+  students: number;
+  teachers: number;
+  parents: number;
+  principals: number;
+  totalUsers: number;
+}
+
+/**
+ * Principal details with organization and metrics
+ */
+export interface PrincipalDetails extends Principal {
+  organization?: import('./orgs').Organization;
+  metrics?: PrincipalMetrics;
+}

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createUserAuthEntry } from 'app/core/createAuthEntry';
-import { getUserDataCacheHeaders } from '@/lib/cacheConfig';
+import { getUserDataCacheHeaders, getStableDataCacheHeaders } from '@/lib/cacheConfig';
 import { z } from 'zod';
 import {
   validateQuery,
@@ -16,6 +16,7 @@ import { getPrincipalsQuerySchema } from '@/lib/validation/principals';
 import type { AuthUser, UserMetadata } from '@/lib/types/auth';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getCurrentUserOrgId } from '@/lib/server-helpers';
+import type { Organization, OrganizationMetrics } from '@/lib/types/orgs';
 
 // Note: Some databases may not have a dedicated role_id column on public.users
 // We'll avoid relying on role_id in this route
@@ -894,6 +895,193 @@ export async function handleDeletePrincipal(
       { error: err.message || 'Unknown error' },
       { status: 500 },
     );
+  }
+}
+
+/**
+ * Handler for GET /api/principals/[id] - Get principal details with organization and metrics
+ */
+export async function handleGetPrincipalDetails(
+  _request: Request,
+  _user: AuthUser,
+  adminClient: SupabaseClient,
+  principalId: string,
+): Promise<NextResponse> {
+  try {
+    // Validate principalId is a UUID
+    try {
+      uuidSchema.parse(principalId);
+    } catch {
+      return NextResponse.json({ error: 'Invalid principal ID' }, { status: 400 });
+    }
+
+    // Check which role columns exist
+    const roleExists = await hasUsersColumn('role', adminClient);
+    const roleIdExists = await hasUsersColumn('role_id', adminClient);
+    const metadataExists = await hasUsersColumn('metadata', adminClient);
+
+    // Build query to fetch principal
+    let principalQuery = adminClient
+      .from('users')
+      .select('*')
+      .eq('id', principalId)
+      .is('deleted_at', null);
+
+    // Filter by role to ensure we only get principals
+    if (roleExists) {
+      principalQuery = principalQuery.eq('role', 'principal');
+    } else if (roleIdExists) {
+      principalQuery = principalQuery.eq('role_id', PRINCIPAL_ROLE_ID);
+    } else if (metadataExists) {
+      principalQuery = principalQuery.contains('metadata', { activeRole: 'principal' });
+    }
+
+    const { data: principalData, error: principalError } = await principalQuery.single();
+
+    if (principalError || !principalData) {
+      return NextResponse.json({ error: 'Principal not found' }, { status: 404 });
+    }
+
+    // Double-check: ensure this is actually a principal
+    const isPrincipal =
+      principalData.role === 'principal' ||
+      principalData.role_id === PRINCIPAL_ROLE_ID ||
+      principalData.metadata?.activeRole === 'principal';
+
+    if (!isPrincipal) {
+      return NextResponse.json({ error: 'Principal not found' }, { status: 404 });
+    }
+
+    // Extract principal data
+    const principal = {
+      id: principalData.id,
+      org_id: principalData.org_id,
+      email: principalData.email,
+      phone: principalData.phone,
+      first_name: principalData.first_name || null,
+      last_name: principalData.last_name || null,
+      full_name: [principalData.first_name, principalData.last_name]
+        .filter(Boolean)
+        .join(' ')
+        .trim() || null,
+      name: [principalData.first_name, principalData.last_name]
+        .filter(Boolean)
+        .join(' ')
+        .trim() || null,
+      role: 'principal',
+      ...(roleExists && principalData.role ? { role: principalData.role } : {}),
+      ...(roleIdExists && principalData.role_id ? { role_id: principalData.role_id } : {}),
+      is_active: principalData.is_active,
+      created_at: principalData.created_at,
+      updated_at: principalData.updated_at,
+      deleted_at: principalData.deleted_at,
+    };
+
+    // Fetch organization
+    const orgId = principal.org_id;
+    if (!orgId) {
+      return NextResponse.json(
+        { error: 'Principal does not have an associated organization' },
+        { status: 400 }
+      );
+    }
+
+    const { data: org, error: orgError } = await adminClient
+      .from('orgs')
+      .select('id,name,slug,email,phone,website,address,city,state,postal_code,timezone,is_active,created_by,updated_by,created_at,updated_at,deleted_at')
+      .eq('id', orgId)
+      .single();
+
+    if (orgError || !org) {
+      return NextResponse.json(
+        { error: 'Organization not found for this principal' },
+        { status: 404 }
+      );
+    }
+
+    // Calculate metrics for the organization in parallel
+    const [
+      studentsResult,
+      teachersResult,
+      parentsResult,
+      principalsResult,
+    ] = await Promise.allSettled([
+      // Students count
+      adminClient
+        .from('students')
+        .select('*', { count: 'exact', head: true })
+        .eq('org_id', orgId)
+        .is('deleted_at', null),
+      
+      // Teachers count
+      adminClient
+        .from('users')
+        .select('*', { count: 'exact', head: true })
+        .eq('org_id', orgId)
+        .eq('role', 'teacher')
+        .is('deleted_at', null),
+      
+      // Parents/Guardians count
+      adminClient
+        .from('users')
+        .select('*', { count: 'exact', head: true })
+        .eq('org_id', orgId)
+        .eq('role', 'guardian')
+        .is('deleted_at', null),
+      
+      // Principals count
+      adminClient
+        .from('users')
+        .select('*', { count: 'exact', head: true })
+        .eq('org_id', orgId)
+        .eq('role', 'principal')
+        .is('deleted_at', null),
+    ]);
+
+    // Extract counts, defaulting to 0 on failure
+    const studentsCount = studentsResult.status === 'fulfilled' && !studentsResult.value.error
+      ? studentsResult.value.count ?? 0
+      : 0;
+    
+    const teachersCount = teachersResult.status === 'fulfilled' && !teachersResult.value.error
+      ? teachersResult.value.count ?? 0
+      : 0;
+    
+    const parentsCount = parentsResult.status === 'fulfilled' && !parentsResult.value.error
+      ? parentsResult.value.count ?? 0
+      : 0;
+    
+    const principalsCount = principalsResult.status === 'fulfilled' && !principalsResult.value.error
+      ? principalsResult.value.count ?? 0
+      : 0;
+
+    // Calculate total users (students + teachers + parents + principals)
+    const totalUsers = studentsCount + teachersCount + parentsCount + principalsCount;
+
+    const metrics: OrganizationMetrics = {
+      students: studentsCount,
+      teachers: teachersCount,
+      parents: parentsCount,
+      principals: principalsCount,
+      totalUsers,
+    };
+
+    return NextResponse.json(
+      {
+        principal: {
+          ...principal,
+          organization: org,
+          metrics,
+        },
+      },
+      {
+        status: 200,
+        headers: getStableDataCacheHeaders(),
+      },
+    );
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 

@@ -735,6 +735,11 @@ export const isText = {
   error_loading_principals: 'Villa við að hlaða skólastjórum',
   delete_principal_title: 'Eyða skólastjóra',
   delete_principal_message: 'Ertu viss um að þú viljir eyða þessum skólastjóra? Þessa aðgerð er ekki hægt að afturkalla.',
+  manage_principals: 'Skoða, búa til, uppfæra og eyða skólastjórum',
+  loading_principals: 'Hleð skólastjórum...',
+  no_principals: 'Engir skólastjórar fundust',
+  no_principals_description: 'Byrjaðu á að búa til fyrsta skólastjóra þinn.',
+  showing_principals_count: 'Sýnir {start} - {end} af {total} skólastjórum',
 
   // Table Headers and Labels
   table_name: 'Nafn',

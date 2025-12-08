@@ -428,7 +428,16 @@ function PrincipalsPageContent() {
           setError(null);
         }}
         onSubmit={handleSubmit}
-        initialData={editingPrincipal}
+        initialData={editingPrincipal ? {
+          id: editingPrincipal.id,
+          org_id: editingPrincipal.org_id,
+          first_name: editingPrincipal.first_name ?? undefined,
+          last_name: editingPrincipal.last_name ?? undefined,
+          email: editingPrincipal.email ?? undefined,
+          phone: editingPrincipal.phone ?? undefined,
+          full_name: editingPrincipal.full_name ?? undefined,
+          is_active: editingPrincipal.is_active,
+        } : undefined}
         organizations={organizations}
         loading={isSubmitting}
         error={error}

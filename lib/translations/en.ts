@@ -732,6 +732,11 @@ export const enText = {
   error_loading_principals: 'Error loading principals',
   delete_principal_title: 'Delete Principal',
   delete_principal_message: 'Are you sure you want to delete this principal? This action cannot be undone.',
+  manage_principals: 'View, create, update, and delete principals',
+  loading_principals: 'Loading principals...',
+  no_principals: 'No principals found',
+  no_principals_description: 'Get started by creating your first principal.',
+  showing_principals_count: 'Showing {start} - {end} of {total} principals',
 
   // Table Headers and Labels
   table_name: 'Name',
