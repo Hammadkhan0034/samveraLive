@@ -7,9 +7,15 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { getCurrentUserOrgId } from '@/lib/server-helpers';
 
+// GET query parameter schema
+const getGuardiansQuerySchema = z.object({
+  id: userIdSchema.optional(),
+});
+
 /**
  * Handler for GET /api/guardians
  * Fetches all guardians for the authenticated user's organization
+ * If id is provided, fetches a single guardian with their children and class information
  */
 export async function handleGetGuardians(
   request: Request,
@@ -24,6 +30,95 @@ export async function handleGetGuardians(
       { error: 'Organization not found for user' },
       { status: 400 }
     );
+  }
+
+  const { searchParams } = new URL(request.url);
+  const queryValidation = validateQuery(getGuardiansQuerySchema, searchParams);
+  if (!queryValidation.success) {
+    return queryValidation.error;
+  }
+  const { id: guardianId } = queryValidation.data;
+
+  // If guardianId is provided, fetch single guardian with children
+  if (guardianId) {
+    // Fetch guardian details
+    const { data: guardian, error: guardianError } = await adminClient
+      .from('users')
+      .select('id,email,phone,first_name,last_name,org_id,role,is_active,created_at,ssn,address,last_login_at,avatar_url,bio,gender,dob')
+      .eq('id', guardianId)
+      .eq('role', 'guardian')
+      .eq('org_id', orgId)
+      .single();
+
+    if (guardianError || !guardian) {
+      return NextResponse.json(
+        { error: 'Guardian not found' },
+        { status: 404 }
+      );
+    }
+
+    // Fetch guardian-student relationships with student and class information
+    const { data: relationships, error: relError } = await adminClient
+      .from('guardian_students')
+      .select(`
+        id,
+        relation,
+        student_id,
+        students!guardian_students_student_id_fkey (
+          id,
+          user_id,
+          class_id,
+          users!students_user_id_fkey (
+            id,
+            first_name,
+            last_name,
+            dob,
+            gender
+          ),
+          classes!students_class_id_fkey (
+            id,
+            name,
+            code
+          )
+        )
+      `)
+      .eq('guardian_id', guardianId)
+      .eq('org_id', orgId);
+
+    if (relError) {
+      console.error('❌ Error fetching guardian-student relationships:', relError);
+    }
+
+    // Transform children data
+    const children = (relationships || []).map((rel: any) => {
+      const student = rel.students;
+      if (!student) return null;
+
+      // Get user data (first_name, last_name, dob, gender are in users table)
+      const user = Array.isArray(student.users) ? student.users[0] : student.users;
+      
+      return {
+        id: student.id,
+        first_name: user?.first_name || null,
+        last_name: user?.last_name || null,
+        dob: user?.dob || null,
+        gender: user?.gender || null,
+        relation: rel.relation,
+        class_id: student.class_id,
+        classes: Array.isArray(student.classes) 
+          ? student.classes[0] || null
+          : student.classes || null,
+      };
+    }).filter(Boolean);
+
+    return NextResponse.json({
+      guardian,
+      children,
+      total_children: children.length,
+    }, {
+      status: 200,
+      headers: getUserDataCacheHeaders()
+    });
   }
 
   // Query guardians for this specific org only

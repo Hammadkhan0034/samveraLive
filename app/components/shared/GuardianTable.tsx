@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { Edit, Trash2, UserCheck } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import EmptyState from '@/app/components/EmptyState';
@@ -50,6 +51,17 @@ export function GuardianTable({
   translations: t
 }: GuardianTableProps) {
   const { lang, t: translations } = useLanguage();
+  const router = useRouter();
+  
+  const handleGuardianClick = (guardianId: string) => {
+    // Check if we're in an admin context by checking the current pathname
+    const isAdminContext = typeof window !== 'undefined' && window.location.pathname.includes('/dashboard/admin');
+    if (isAdminContext) {
+      router.push(`/dashboard/admin/guardians/${guardianId}`);
+    } else {
+      router.push(`/dashboard/principal/guardians/${guardianId}`);
+    }
+  };
   
   return (
     <>
@@ -85,8 +97,22 @@ export function GuardianTable({
             ) : (
               guardians.map((g) => (
                 <tr key={g.id} className="h-12 hover:bg-input-fill dark:hover:bg-slate-700/30 dark:text-slate-100 text-center">
-                  <td className="py-2 px-2 sm:px-3 whitespace-nowrap">{g.first_name}</td>
-                  <td className="py-2 px-2 sm:px-3 whitespace-nowrap">{g.last_name || '—'}</td>
+                  <td className="py-2 px-2 sm:px-3 whitespace-nowrap">
+                    <button
+                      onClick={() => handleGuardianClick(g.id)}
+                      className="text-mint-600 dark:text-mint-400 hover:text-mint-700 dark:hover:text-mint-300 hover:underline transition-colors"
+                    >
+                      {g.first_name}
+                    </button>
+                  </td>
+                  <td className="py-2 px-2 sm:px-3 whitespace-nowrap">
+                    <button
+                      onClick={() => handleGuardianClick(g.id)}
+                      className="text-mint-600 dark:text-mint-400 hover:text-mint-700 dark:hover:text-mint-300 hover:underline transition-colors"
+                    >
+                      {g.last_name || '—'}
+                    </button>
+                  </td>
                   <td className="py-2 px-2 sm:px-3 hidden md:table-cell whitespace-nowrap">{g.email || '—'}</td>
                   <td className="py-2 px-2 sm:px-3 hidden lg:table-cell whitespace-nowrap">{g.phone || '—'}</td>
                   <td className="py-2 px-2 sm:px-3 hidden lg:table-cell whitespace-nowrap">{g.is_active ? t.active : t.inactive}</td>
