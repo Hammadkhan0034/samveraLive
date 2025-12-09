@@ -214,35 +214,35 @@ function PrincipalDashboardContent({
                 key={tile.id}
                 onClick={() => handleTileClick(tile.route)}
                 className={`
-                  rounded-ds-lg p-ds-md shadow-ds-card text-left transition-all duration-200
+                  group rounded-ds-lg p-ds-md shadow-ds-card text-left transition-all duration-300
                   hover:shadow-ds-card-hover hover:scale-[1.02]
                   ${active 
                     ? 'bg-mint-200 dark:bg-slate-700 border-2 border-mint-500' 
-                    : 'bg-white dark:bg-slate-800 border-2 border-transparent'
+                    : 'bg-white dark:bg-slate-800 border-2 border-transparent hover:border-mint-400 hover:bg-mint-50 dark:hover:bg-slate-700/50'
                   }
                 `}
               >
                 <div className="flex items-start gap-ds-sm">
                   <span className={`
-                    flex-shrink-0 rounded-lg p-2
+                    flex-shrink-0 rounded-lg p-2 transition-all duration-300
                     ${active
                       ? 'bg-mint-500 text-white'
-                      : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
+                      : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300 group-hover:bg-mint-500 group-hover:text-white'
                     }
                   `}>
                     <tile.Icon className="h-5 w-5" />
                   </span>
                   <div className="flex-1 min-w-0">
                     <div className={`
-                      font-medium text-ds-base mb-1
+                      font-medium text-ds-base mb-1 transition-colors duration-300
                       ${active
                         ? 'text-slate-900 dark:text-slate-100'
-                        : 'text-slate-700 dark:text-slate-300'
+                        : 'text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-slate-100'
                       }
                     `}>
                       {tile.title}
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 transition-colors duration-300 group-hover:text-slate-600 dark:group-hover:text-slate-300">
                       {tile.desc}
                     </p>
                   </div>
