@@ -294,13 +294,17 @@ export default function PrincipalMenusPage() {
           backHref="/dashboard/principal"
           showBackButton={true}
           rightActions={
-            <div className="flex items-center gap-ds-sm">
-              <ProfileSwitcher />
+            <div className="flex items-center gap-2 sm:gap-ds-sm flex-wrap">
+              <div className="hidden sm:block">
+                <ProfileSwitcher />
+              </div>
               <button
                 onClick={openAddMenuModal}
-                className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 hover:bg-mint-600 px-4 py-2 text-ds-small text-white transition-colors"
+                className="inline-flex items-center gap-1.5 sm:gap-2 rounded-ds-md bg-mint-500 hover:bg-mint-600 px-3 sm:px-4 py-1.5 sm:py-2 text-ds-small text-white transition-colors whitespace-nowrap"
               >
-                <Plus className="h-4 w-4" /> {t.add_menu}
+                <Plus className="h-4 w-4 flex-shrink-0" />
+                <span className="hidden sm:inline">{t.add_menu}</span>
+                <span className="sm:hidden">{t.add || 'Add'}</span>
               </button>
             </div>
           }
@@ -308,21 +312,21 @@ export default function PrincipalMenusPage() {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-4 rounded-ds-md bg-red-50 border border-red-200 px-4 py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
+          <div className="mb-4 rounded-ds-md bg-red-50 border border-red-200 px-3 sm:px-4 py-2 sm:py-3 text-ds-small text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400">
             {error}
           </div>
         )}
 
         {/* Menus Table with Filter */}
-        <div className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
+        <div className="rounded-ds-lg border border-slate-200 bg-white p-3 sm:p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
           {/* Date Filter Section */}
           <div className="mb-ds-md pb-ds-md border-b border-slate-200 dark:border-slate-700">
-            <div className="flex flex-col gap-ds-sm">
+            <div className="flex flex-col gap-2 sm:gap-ds-sm">
               <div className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-mint-600 dark:text-slate-400" />
+                <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-mint-600 dark:text-slate-400 flex-shrink-0" />
                 <span className="text-ds-small font-medium text-slate-700 dark:text-slate-300">{t.filter_by_date}</span>
               </div>
-              <div className="flex items-center gap-ds-sm">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-ds-sm">
                 <input
                   type="date"
                   value={selectedDate}
@@ -330,7 +334,7 @@ export default function PrincipalMenusPage() {
                     setSelectedDate(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="flex-1 rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                  className="flex-1 rounded-ds-md border border-slate-300 px-3 sm:px-4 py-2 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
                 />
                 {selectedDate && (
                   <button
@@ -338,7 +342,7 @@ export default function PrincipalMenusPage() {
                       setSelectedDate('');
                       setCurrentPage(1);
                     }}
-                    className="rounded-ds-md border border-slate-300 px-4 py-2 text-ds-small hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 whitespace-nowrap"
+                    className="rounded-ds-md border border-slate-300 px-3 sm:px-4 py-2 text-ds-small hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 whitespace-nowrap"
                   >
                     {t.clear_filter}
                   </button>
@@ -355,23 +359,13 @@ export default function PrincipalMenusPage() {
             />
           ) : (
             <>
-              <div className="overflow-x-auto rounded-ds-md">
-                <table className="w-full text-ds-small border-collapse rounded-ds-md">
-                  <thead className="bg-mint-500 text-white dark:bg-slate-800">
-                    <tr>
-                      <th className="py-2 px-4 text-left rounded-tl-ds-md">{t.created_date || 'Created'}</th>
-                      <th className="py-2 px-4 text-left">{t.breakfast}</th>
-                      <th className="py-2 px-4 text-left">{t.lunch}</th>
-                      <th className="py-2 px-4 text-left">{t.snack}</th>
-                      <th className="py-2 px-4 text-left">{t.notes}</th>
-                      <th className="py-2 px-4 text-center rounded-tr-ds-md">{t.actions}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-
-                    {paginatedMenus.map((menu) => (
-                      <tr key={menu.id} className="hover:bg-mint-50 dark:hover:bg-slate-700/50 transition-colors">
-                        <td className="py-3 px-4 text-black dark:text-slate-300">
+              {/* Mobile Card View */}
+              <div className="md:hidden space-y-3">
+                {paginatedMenus.map((menu) => (
+                  <div key={menu.id} className="rounded-ds-md border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-ds-tiny text-slate-500 dark:text-slate-400 mb-1">
                           {menu.created_at ? new Date(menu.created_at).toLocaleString(lang === 'is' ? 'is-IS' : 'en-US', {
                             year: 'numeric',
                             month: 'short',
@@ -379,24 +373,113 @@ export default function PrincipalMenusPage() {
                             hour: '2-digit',
                             minute: '2-digit'
                           }) : '—'}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 ml-2 flex-shrink-0">
+                        <button
+                          onClick={() => openEditMenuModal(menu)}
+                          className="p-1.5 rounded-ds-sm border border-slate-300 hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:hover:bg-slate-600"
+                          title={t.edit}
+                        >
+                          <Edit className="h-3.5 w-3.5 text-slate-600 dark:text-slate-300" />
+                        </button>
+                        <button
+                          onClick={() => openDeleteMenuModal(menu.id)}
+                          className="p-1.5 rounded-ds-sm border border-red-300 text-red-600 hover:bg-red-50 transition-colors dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20"
+                          title={t.delete}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div>
+                        <span className="text-ds-tiny font-medium text-slate-600 dark:text-slate-400">{t.breakfast}: </span>
+                        <span className="text-ds-small text-black dark:text-slate-300">{menu.breakfast || '—'}</span>
+                      </div>
+                      <div>
+                        <span className="text-ds-tiny font-medium text-slate-600 dark:text-slate-400">{t.lunch}: </span>
+                        <span className="text-ds-small text-black dark:text-slate-300">{menu.lunch || '—'}</span>
+                      </div>
+                      <div>
+                        <span className="text-ds-tiny font-medium text-slate-600 dark:text-slate-400">{t.snack}: </span>
+                        <span className="text-ds-small text-black dark:text-slate-300">{menu.snack || '—'}</span>
+                      </div>
+                      {menu.notes && (
+                        <div>
+                          <span className="text-ds-tiny font-medium text-slate-600 dark:text-slate-400">{t.notes}: </span>
+                          <span className="text-ds-small text-black dark:text-slate-300">{menu.notes}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop Table View */}
+              <div className="hidden md:block overflow-x-auto -mx-3 sm:mx-0 rounded-ds-md">
+                <table className="w-full min-w-[640px] text-ds-small border-collapse rounded-ds-md">
+                  <thead className="bg-mint-500 text-white dark:bg-slate-800">
+                    <tr>
+                      <th className="py-2.5 px-3 sm:px-4 text-left rounded-tl-ds-md whitespace-nowrap text-ds-small font-medium">{t.created_date || 'Created'}</th>
+                      <th className="py-2.5 px-3 sm:px-4 text-left whitespace-nowrap text-ds-small font-medium">{t.breakfast}</th>
+                      <th className="py-2.5 px-3 sm:px-4 text-left whitespace-nowrap text-ds-small font-medium hidden lg:table-cell">{t.lunch}</th>
+                      <th className="py-2.5 px-3 sm:px-4 text-left whitespace-nowrap text-ds-small font-medium hidden xl:table-cell">{t.snack}</th>
+                      <th className="py-2.5 px-3 sm:px-4 text-left whitespace-nowrap text-ds-small font-medium hidden xl:table-cell">{t.notes}</th>
+                      <th className="py-2.5 px-3 sm:px-4 text-center rounded-tr-ds-md whitespace-nowrap text-ds-small font-medium">{t.actions}</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
+                    {paginatedMenus.map((menu) => (
+                      <tr key={menu.id} className="hover:bg-mint-50 dark:hover:bg-slate-700/50 transition-colors">
+                        <td className="py-3 px-3 sm:px-4 text-black dark:text-slate-300">
+                          <div className="min-w-[140px]">
+                            {menu.created_at ? new Date(menu.created_at).toLocaleString(lang === 'is' ? 'is-IS' : 'en-US', {
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            }) : '—'}
+                          </div>
                         </td>
-                        <td className="py-3 px-4 text-black dark:text-slate-300">{menu.breakfast || '—'}</td>
-                        <td className="py-3 px-4 text-black dark:text-slate-300">{menu.lunch || '—'}</td>
-                        <td className="py-3 px-4 text-black dark:text-slate-300">{menu.snack || '—'}</td>
-                        <td className="py-3 px-4 text-black dark:text-slate-300">{menu.notes || '—'}</td>
-                        <td className="py-3 px-4">
-                          <div className="flex items-center justify-center gap-2">
+                        <td className="py-3 px-3 sm:px-4 text-black dark:text-slate-300 max-w-[180px]">
+                          <div className="truncate" title={menu.breakfast || undefined}>
+                            {menu.breakfast || '—'}
+                          </div>
+                        </td>
+                        <td className="py-3 px-3 sm:px-4 text-black dark:text-slate-300 max-w-[180px] hidden lg:table-cell">
+                          <div className="truncate" title={menu.lunch || undefined}>
+                            {menu.lunch || '—'}
+                          </div>
+                        </td>
+                        <td className="py-3 px-3 sm:px-4 text-black dark:text-slate-300 max-w-[180px] hidden xl:table-cell">
+                          <div className="truncate" title={menu.snack || undefined}>
+                            {menu.snack || '—'}
+                          </div>
+                        </td>
+                        <td className="py-3 px-3 sm:px-4 text-black dark:text-slate-300 max-w-[220px] hidden xl:table-cell">
+                          <div className="truncate" title={menu.notes || undefined}>
+                            {menu.notes || '—'}
+                          </div>
+                        </td>
+                        <td className="py-3 px-3 sm:px-4">
+                          <div className="flex items-center justify-center gap-1.5 sm:gap-2">
                             <button
                               onClick={() => openEditMenuModal(menu)}
-                              className="inline-flex items-center gap-1 rounded-ds-sm border border-slate-300 px-2 py-1 text-ds-tiny hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                              className="inline-flex items-center gap-1 rounded-ds-sm border border-slate-300 px-2 py-1.5 text-ds-tiny hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                              title={t.edit}
                             >
-                              <Edit className="h-3 w-3" /> {t.edit}
+                              <Edit className="h-3.5 w-3.5 flex-shrink-0" />
+                              <span className="hidden sm:inline">{t.edit}</span>
                             </button>
                             <button
                               onClick={() => openDeleteMenuModal(menu.id)}
-                              className="inline-flex items-center gap-1 rounded-ds-sm border border-red-300 px-2 py-1 text-ds-tiny text-red-600 hover:bg-red-50 transition-colors dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20"
+                              className="inline-flex items-center gap-1 rounded-ds-sm border border-red-300 px-2 py-1.5 text-ds-tiny text-red-600 hover:bg-red-50 transition-colors dark:border-red-600 dark:bg-slate-700 dark:text-red-400 dark:hover:bg-red-900/20"
+                              title={t.delete}
                             >
-                              <Trash2 className="h-3 w-3" /> {t.delete}
+                              <Trash2 className="h-3.5 w-3.5 flex-shrink-0" />
+                              <span className="hidden sm:inline">{t.delete}</span>
                             </button>
                           </div>
                         </td>
@@ -408,30 +491,57 @@ export default function PrincipalMenusPage() {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="mt-4 w-full flex justify-end gap-2">
-                  <button
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="inline-flex items-center rounded-ds-md border border-slate-400 px-3 py-1.5 text-ds-small disabled:opacity-50 hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
-                  >
-                    {t.prev}
-                  </button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <div className="mt-4 sm:mt-6 w-full flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-2">
+                  <div className="text-ds-small text-slate-600 dark:text-slate-400 order-2 sm:order-1">
+                    {t.page || 'Page'} {currentPage} {t.of || 'of'} {totalPages}
+                  </div>
+                  <div className="flex flex-wrap items-center justify-center sm:justify-end gap-1.5 sm:gap-2 order-1 sm:order-2">
                     <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`inline-flex items-center rounded-ds-md px-3 py-1.5 text-ds-small transition-colors ${currentPage === page ? 'bg-mint-500 text-white border border-mint-500' : 'border border-slate-400 hover:bg-mint-50 dark:border-slate-600 dark:text-slate-200'}`}
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="inline-flex items-center justify-center rounded-ds-md border border-slate-400 px-3 sm:px-4 py-2 text-ds-small font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 min-w-[80px]"
                     >
-                      {page}
+                      {t.prev || 'Prev'}
                     </button>
-                  ))}
-                  <button
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                    className="inline-flex items-center rounded-ds-md border border-slate-400 px-3 py-1.5 text-ds-small disabled:opacity-50 hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
-                  >
-                    {t.next}
-                  </button>
+                    <div className="flex gap-1 sm:gap-1.5 flex-wrap justify-center max-w-full">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                        // Show first page, last page, current page, and pages around current
+                        const showPage = 
+                          page === 1 || 
+                          page === totalPages || 
+                          (page >= currentPage - 1 && page <= currentPage + 1);
+                        
+                        if (!showPage && page === currentPage - 2 && currentPage > 3) {
+                          return <span key={`ellipsis-start-${page}`} className="px-2 text-slate-400">...</span>;
+                        }
+                        if (!showPage && page === currentPage + 2 && currentPage < totalPages - 2) {
+                          return <span key={`ellipsis-end-${page}`} className="px-2 text-slate-400">...</span>;
+                        }
+                        if (!showPage) return null;
+                        
+                        return (
+                          <button
+                            key={page}
+                            onClick={() => setCurrentPage(page)}
+                            className={`inline-flex items-center justify-center rounded-ds-md px-3 py-2 text-ds-small font-medium transition-colors min-w-[40px] ${
+                              currentPage === page 
+                                ? 'bg-mint-500 text-white border border-mint-500 dark:bg-slate-700 dark:border-slate-600' 
+                                : 'border border-slate-400 hover:bg-mint-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <button
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="inline-flex items-center justify-center rounded-ds-md border border-slate-400 px-3 sm:px-4 py-2 text-ds-small font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-mint-50 transition-colors dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600 min-w-[80px]"
+                    >
+                      {t.next || 'Next'}
+                    </button>
+                  </div>
                 </div>
               )}
             </>
