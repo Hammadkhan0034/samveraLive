@@ -144,6 +144,7 @@ export function validateOrgForm(data: {
   state?: string;
   postal_code?: string;
   timezone: string;
+  type?: string;
   total_area?: string;
   play_area?: string;
   square_meters_per_student?: string;
@@ -165,6 +166,7 @@ export function validateOrgForm(data: {
         state: data.state,
         postal_code: data.postal_code,
         timezone: data.timezone,
+        type: data.type,
         total_area: data.total_area,
         play_area: data.play_area,
         square_meters_per_student: data.square_meters_per_student,
@@ -185,6 +187,7 @@ export function validateOrgForm(data: {
           state: data.state,
           postal_code: data.postal_code,
           timezone: data.timezone,
+          type: data.type,
           total_area: data.total_area,
           play_area: data.play_area,
           square_meters_per_student: data.square_meters_per_student,
@@ -203,6 +206,7 @@ export function validateOrgForm(data: {
           state: data.state,
           postal_code: data.postal_code,
           timezone: data.timezone,
+          type: data.type,
           total_area: data.total_area,
           play_area: data.play_area,
           square_meters_per_student: data.square_meters_per_student,

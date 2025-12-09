@@ -18,6 +18,7 @@ interface OrganizationFormData {
   state: string;
   postal_code: string;
   timezone: string;
+  type: string;
   total_area: string;
   play_area: string;
   square_meters_per_student: string;
@@ -53,6 +54,7 @@ export function OrganizationModal({
     state: '',
     postal_code: '',
     timezone: 'UTC',
+    type: '',
     total_area: '',
     play_area: '',
     square_meters_per_student: '',
@@ -77,6 +79,7 @@ export function OrganizationModal({
           state: initialData.state || '',
           postal_code: initialData.postal_code || '',
           timezone: initialData.timezone || 'UTC',
+          type: initialData.type || '',
           total_area: initialData.total_area?.toString() || '',
           play_area: initialData.play_area?.toString() || '',
           square_meters_per_student: initialData.square_meters_per_student?.toString() || '',
@@ -94,6 +97,7 @@ export function OrganizationModal({
           state: '',
           postal_code: '',
           timezone: 'UTC',
+          type: '',
           total_area: '',
           play_area: '',
           square_meters_per_student: '',
@@ -146,6 +150,7 @@ export function OrganizationModal({
         state: '',
         postal_code: '',
         timezone: 'UTC',
+        type: '',
         total_area: '',
         play_area: '',
         square_meters_per_student: '',
@@ -170,6 +175,7 @@ export function OrganizationModal({
       state: '',
       postal_code: '',
       timezone: 'UTC',
+      type: '',
       total_area: '',
       play_area: '',
       square_meters_per_student: '',
@@ -378,6 +384,28 @@ export function OrganizationModal({
             <h4 className="text-ds-small font-semibold text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 pb-2">
               Operational Settings
             </h4>
+
+            <div>
+              <label className={labelClassName}>
+                Organization Type <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={formData.type}
+                onChange={(e) => setFormData((p) => ({ ...p, type: e.target.value }))}
+                className={inputClassName}
+                required
+              >
+                <option value="">Select organization type</option>
+                <option value="preschool">Preschool</option>
+                <option value="elementary">Elementary</option>
+                <option value="middle">Middle</option>
+                <option value="high">High</option>
+                <option value="private">Private</option>
+                <option value="public">Public</option>
+                <option value="charter">Charter</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
 
             <div>
               <label className={labelClassName}>

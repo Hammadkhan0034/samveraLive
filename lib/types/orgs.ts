@@ -14,6 +14,7 @@ export interface Organization {
   postal_code?: string;
   timezone: string;
   is_active: boolean;
+  type?: string | null;
   total_area?: number | null;
   play_area?: number | null;
   square_meters_per_student?: number | null;
