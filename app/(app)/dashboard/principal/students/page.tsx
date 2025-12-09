@@ -223,9 +223,9 @@ function StudentsPageContent() {
       <PageHeader
         title={t.students}
         subtitle={t.students_subtitle}
+        backHref="/dashboard/principal"
         headingLevel="h1"
-        showMobileMenu={true}
-        onMobileMenuClick={() => sidebarRef.current?.open()}
+        showBackButton={true}
         rightActions={
           <button
             onClick={openCreateStudentModal}

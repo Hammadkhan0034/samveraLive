@@ -22,8 +22,8 @@ function PrincipalAnnouncementsContent() {
         title={t.announcements || 'Announcements'}
         subtitle={t.announcements_subtitle || 'View and manage school announcements'}
         headingLevel="h1"
-        showMobileMenu={true}
-        onMobileMenuClick={() => sidebarRef.current?.open()}
+        backHref="/dashboard/principal"
+        showBackButton={true}
         rightActions={
           <button
             onClick={() => setShowForm(true)}

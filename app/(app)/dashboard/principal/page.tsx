@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
-import { Users, School, ChartBar as BarChart3, Utensils, AlertCircle } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
+import { Users, School, ChartBar as BarChart3, Utensils, AlertCircle, LayoutDashboard, MessageSquare, Camera, CalendarDays, Shield, Link as LinkIcon, Megaphone, Activity, Building } from 'lucide-react';
+import { useRouter, usePathname } from 'next/navigation';
+import PrincipalPageLayout from '@/app/components/shared/PrincipalPageLayout';
 import { PageHeader } from '@/app/components/shared/PageHeader';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import KPICardSkeleton from '@/app/components/loading-skeletons/KPICardSkeleton';
@@ -27,8 +27,111 @@ function PrincipalDashboardContent({
   error = null,
   onRetry,
 }: PrincipalDashboardContentProps) {
-  const { sidebarRef } = usePrincipalPageLayout();
   const router = useRouter();
+  const pathname = usePathname();
+
+  // Navigation tiles data
+  const navigationTiles = useMemo(() => [
+    {
+      id: 'dashboard',
+      title: t.title || 'Principal Dashboard',
+      desc: 'View dashboard overview',
+      Icon: LayoutDashboard,
+      route: '/dashboard/principal',
+    },
+    {
+      id: 'students',
+      title: t.tile_students || 'Students',
+      desc: t.tile_students_desc || 'Manage students',
+      Icon: Users,
+      route: '/dashboard/principal/students',
+    },
+    {
+      id: 'staff',
+      title: t.kpi_staff || 'Staff',
+      desc: 'Manage staff members',
+      Icon: School,
+      route: '/dashboard/principal/staff',
+    },
+    {
+      id: 'classes',
+      title: t.kpi_classes || 'Classes',
+      desc: 'Manage classes',
+      Icon: BarChart3,
+      route: '/dashboard/principal/classes',
+    },
+    {
+      id: 'messages',
+      title: t.tile_msg || 'Messages',
+      desc: t.tile_msg_desc || 'View and send messages',
+      Icon: MessageSquare,
+      route: '/dashboard/principal/messages',
+    },
+    {
+      id: 'photos',
+      title: t.kpi_photos || 'Photos',
+      desc: 'View and manage photos',
+      Icon: Camera,
+      route: '/dashboard/principal/photos',
+    },
+    {
+      id: 'calendar',
+      title: t.tile_calendar || 'Calendar',
+      desc: t.tile_calendar_desc || 'View calendar events',
+      Icon: CalendarDays,
+      route: '/dashboard/principal/calendar',
+    },
+    {
+      id: 'guardians',
+      title: t.tile_guardians || 'Guardians',
+      desc: t.tile_guardians_desc || 'Manage guardians',
+      Icon: Shield,
+      route: '/dashboard/principal/guardians',
+    },
+    {
+      id: 'link_student',
+      title: t.tile_link_student || 'Link Student',
+      desc: t.tile_link_student_desc || 'Link a guardian to a student',
+      Icon: LinkIcon,
+      route: '/dashboard/principal/link-student',
+    },
+    {
+      id: 'menus',
+      title: t.tile_menus || 'Menus',
+      desc: t.tile_menus_desc || 'Manage daily menus',
+      Icon: Utensils,
+      route: '/dashboard/principal/menus',
+    },
+    {
+      id: 'announcements',
+      title: t.tile_announcements || 'Announcements',
+      desc: t.tile_announcements_desc || 'Manage announcements',
+      Icon: Megaphone,
+      route: '/dashboard/principal/announcements',
+    },
+    {
+      id: 'daily_logs',
+      title: t.activity_log || 'Activity Log',
+      desc: t.tile_activity_log_desc || 'View and manage daily activity logs',
+      Icon: Activity,
+      route: '/dashboard/principal/daily-logs',
+    },
+    {
+      id: 'organization_profile',
+      title: 'Organization Profile',
+      desc: 'View and update organization information',
+      Icon: Building,
+      route: '/dashboard/principal/organization-profile',
+    },
+  ], [t]);
+
+  const handleTileClick = (route: string) => {
+    router.push(route);
+  };
+
+  const isTileActive = (route: string): boolean => {
+    return pathname === route;
+  };
 
   return (
     <>
@@ -36,9 +139,8 @@ function PrincipalDashboardContent({
       <PageHeader
         title={t.title || 'Principal Dashboard'}
         subtitle={t.subtitle || 'Manage groups, staff and visibility.'}
+        
         headingLevel="h1"
-        showMobileMenu={true}
-        onMobileMenuClick={() => sidebarRef.current?.open()}
       />
 
       <StoryColumn
@@ -97,6 +199,58 @@ function PrincipalDashboardContent({
             })}
           </div>
         )}
+      </section>
+
+      {/* Navigation Tiles Section */}
+      <section className="mb-ds-lg">
+        <h2 className="text-ds-h3 font-semibold text-ds-text-primary dark:text-slate-100 mb-ds-md">
+          Navigation
+        </h2>
+        <div className="grid grid-cols-1 gap-ds-md sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {navigationTiles.map((tile) => {
+            const active = isTileActive(tile.route);
+            return (
+              <button
+                key={tile.id}
+                onClick={() => handleTileClick(tile.route)}
+                className={`
+                  rounded-ds-lg p-ds-md shadow-ds-card text-left transition-all duration-200
+                  hover:shadow-ds-card-hover hover:scale-[1.02]
+                  ${active 
+                    ? 'bg-mint-200 dark:bg-slate-700 border-2 border-mint-500' 
+                    : 'bg-white dark:bg-slate-800 border-2 border-transparent'
+                  }
+                `}
+              >
+                <div className="flex items-start gap-ds-sm">
+                  <span className={`
+                    flex-shrink-0 rounded-lg p-2
+                    ${active
+                      ? 'bg-mint-500 text-white'
+                      : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
+                    }
+                  `}>
+                    <tile.Icon className="h-5 w-5" />
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className={`
+                      font-medium text-ds-base mb-1
+                      ${active
+                        ? 'text-slate-900 dark:text-slate-100'
+                        : 'text-slate-700 dark:text-slate-300'
+                      }
+                    `}>
+                      {tile.title}
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2">
+                      {tile.desc}
+                    </p>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
       </section>
 
       {/* user card section */}

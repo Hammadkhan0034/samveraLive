@@ -2,11 +2,12 @@
 
 import  { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
-import { Plus, Calendar, Utensils, Edit, Trash2, Menu } from 'lucide-react';
+import { Plus, Calendar, Utensils, Edit, Trash2 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { DeleteConfirmationModal } from '@/app/components/shared/DeleteConfirmationModal';
 import { MenuFormModal } from '@/app/components/shared/MenuFormModal';
-import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
+import PrincipalPageLayout from '@/app/components/shared/PrincipalPageLayout';
+import { PageHeader } from '@/app/components/shared/PageHeader';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import EmptyState from '@/app/components/EmptyState';
 
@@ -284,37 +285,26 @@ export default function PrincipalMenusPage() {
 
 
   function PrincipalMenusContent() {
-    const { sidebarRef } = usePrincipalPageLayout();
-
     return (
       <>
-        {/* Content Header */}
-        <div className="mb-ds-sm flex flex-col gap-ds-sm md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-ds-sm">
-            {/* Mobile menu button */}
-            <button
-              onClick={() => sidebarRef.current?.open()}
-              className="md:hidden p-2 rounded-ds-md hover:bg-mint-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
-              aria-label="Toggle sidebar"
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-            <div>
-              <h2 className="text-ds-h1 font-semibold tracking-tight text-slate-900 dark:text-slate-100">{t.tile_menus || 'Menus'}</h2>
-              <p className="mt-1 text-ds-small text-slate-600 dark:text-slate-400">Manage daily menus</p>
+        <PageHeader
+          title={t.tile_menus || 'Menus'}
+          subtitle="Manage daily menus"
+          headingLevel="h1"
+          backHref="/dashboard/principal"
+          showBackButton={true}
+          rightActions={
+            <div className="flex items-center gap-ds-sm">
+              <ProfileSwitcher />
+              <button
+                onClick={openAddMenuModal}
+                className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 hover:bg-mint-600 px-4 py-2 text-ds-small text-white transition-colors"
+              >
+                <Plus className="h-4 w-4" /> {t.add_menu}
+              </button>
             </div>
-          </div>
-
-          <div className="flex items-center gap-ds-sm">
-            <ProfileSwitcher />
-            <button
-              onClick={openAddMenuModal}
-              className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 hover:bg-mint-600 px-4 py-2 text-ds-small text-white transition-colors"
-            >
-              <Plus className="h-4 w-4" /> {t.add_menu}
-            </button>
-          </div>
-        </div>
+          }
+        />
 
         {/* Error Message */}
         {error && (

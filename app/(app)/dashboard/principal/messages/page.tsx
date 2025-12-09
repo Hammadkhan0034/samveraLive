@@ -18,8 +18,8 @@ function PrincipalMessagesPageContent() {
         title={t.messages_title || 'Messages'}
         subtitle={t.messages_subtitle || 'View and manage messages'}
         headingLevel="h1"
-        showMobileMenu={true}
-        onMobileMenuClick={() => sidebarRef.current?.open()}
+        backHref="/dashboard/principal"
+        showBackButton={true}
       />
       <MessagesPanel role="principal" />
     </>

@@ -69,8 +69,8 @@ function PrincipalOrganizationProfileContent() {
         title={t.organization_profile}
         subtitle={t.organization_profile_subtitle}
         headingLevel="h1"
-        showMobileMenu={true}
-        onMobileMenuClick={() => sidebarRef.current?.open()}
+        backHref="/dashboard/principal"
+        showBackButton={true}
       />
 
       {loading && (

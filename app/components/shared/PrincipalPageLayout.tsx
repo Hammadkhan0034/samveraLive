@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useRef, createContext, useContext } from 'react';
+import React, { createContext, useContext } from 'react';
 import { useRequireAuth } from '@/lib/hooks/useAuth';
-import PrincipalSidebar, { PrincipalSidebarRef } from './PrincipalSidebar';
 import Loading from './Loading';
 import Navbar from '@/app/components/Navbar';
 
@@ -12,17 +11,15 @@ interface PrincipalPageLayoutProps {
 }
 
 interface PrincipalPageLayoutContextValue {
-  sidebarRef: React.RefObject<PrincipalSidebarRef>;
+  sidebarRef: React.RefObject<{ open: () => void; close: () => void }> | null;
 }
 
 const PrincipalPageLayoutContext = createContext<PrincipalPageLayoutContextValue | null>(null);
 
 export function usePrincipalPageLayout() {
   const context = useContext(PrincipalPageLayoutContext);
-  if (!context) {
-    throw new Error('usePrincipalPageLayout must be used within PrincipalPageLayout');
-  }
-  return context;
+  // Return a default context with null sidebarRef if not found
+  return context || { sidebarRef: null };
 }
 
 export default function PrincipalPageLayout({
@@ -30,7 +27,6 @@ export default function PrincipalPageLayout({
   messagesBadge,
 }: PrincipalPageLayoutProps) {
   const { user, loading, isSigningIn } = useRequireAuth('principal');
-  const sidebarRef = useRef<PrincipalSidebarRef>(null);
 
   // Show loading state while checking authentication
   if (loading || (isSigningIn && !user)) {
@@ -43,32 +39,22 @@ export default function PrincipalPageLayout({
   }
 
   return (
-    <PrincipalPageLayoutContext.Provider value={{ sidebarRef }}>
-      {/* Design System: Sidebar + Main Content Structure */}
-      <div className="flex h-screen overflow-hidden">
-        {/* Sidebar - 280px wide, white background, fixed left position */}
-        <PrincipalSidebar
-          ref={sidebarRef}
-          messagesBadge={messagesBadge}
-        />
+    <PrincipalPageLayoutContext.Provider value={{ sidebarRef: null }}>
+      <div className="flex flex-col h-screen overflow-hidden">
+        {/* Navbar */}
+        <Navbar variant="static" />
 
-        {/* Right side: navbar + content column */}
-        <div className="flex flex-col flex-1 overflow-hidden">
-          {/* Navbar - positioned beside sidebar */}
-          <Navbar variant="static" />
-
-          {/* Main content area - mint green background with 32px padding */}
-          <main
-            className="flex-1 overflow-y-auto"
-            style={{
-              backgroundColor: 'var(--ds-mint)',
-            }}
-          >
-            <div className="p-ds-lg">
-              {children}
-            </div>
-          </main>
-        </div>
+        {/* Main content area - mint green background with 32px padding */}
+        <main
+          className="flex-1 overflow-y-auto"
+          style={{
+            backgroundColor: 'var(--ds-mint)',
+          }}
+        >
+          <div className="p-ds-lg">
+            {children}
+          </div>
+        </main>
       </div>
     </PrincipalPageLayoutContext.Provider>
   );

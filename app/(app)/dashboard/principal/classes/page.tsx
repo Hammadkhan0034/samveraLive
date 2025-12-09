@@ -7,6 +7,7 @@ import { Menu, Plus, Eye, CircleCheck as CheckCircle2, Edit, UserPlus, Users, X,
 import PrincipalPageLayout, { usePrincipalPageLayout } from '@/app/components/shared/PrincipalPageLayout';
 import ProfileSwitcher from '@/app/components/ProfileSwitcher';
 import Loading from '@/app/components/shared/Loading';
+import { PageHeader } from '@/app/components/shared/PageHeader';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useAuth } from '@/lib/hooks/useAuth';
 import EmptyState from '@/app/components/EmptyState';
@@ -28,7 +29,6 @@ function ClassesPageContent() {
   const { session } = (useAuth?.() || {}) as { session: { user?: { id?: string } } | null };
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { sidebarRef } = usePrincipalPageLayout();
 
   // Class management states
   const [showDeleteClassModal, setShowDeleteClassModal] = useState(false);
@@ -260,33 +260,24 @@ function ClassesPageContent() {
 
   return (
     <>
-      {/* Content Header */}
-      <div className="mb-ds-md flex flex-col gap-ds-md md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-ds-md">
-          {/* Mobile menu button */}
-          <button
-            onClick={() => sidebarRef.current?.open()}
-            className="md:hidden p-2 rounded-ds-md hover:bg-mint-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
-            aria-label="Toggle sidebar"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-          <div>
-            <h1 className="text-ds-h1 font-bold tracking-tight text-ds-text-primary dark:text-slate-100">{t.departments}</h1>
-            <p className="mt-2 text-ds-small text-ds-text-muted dark:text-slate-400">{t.overview_hint}</p>
+      <PageHeader
+        title={t.departments}
+        subtitle={t.overview_hint}
+        headingLevel="h1"
+        backHref="/dashboard/principal"
+        showBackButton={true}
+        rightActions={
+          <div className="flex items-center gap-ds-md">
+            <ProfileSwitcher />
+            <button
+              onClick={() => router.push('/dashboard/principal/classes/create')}
+              className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-ds-sm py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600"
+            >
+              <Plus className="h-4 w-4" /> {t.add_class}
+            </button>
           </div>
-        </div>
-
-        <div className="flex items-center gap-ds-md">
-          <ProfileSwitcher />
-          <button
-            onClick={() => router.push('/dashboard/principal/classes/create')}
-            className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-ds-sm py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600"
-          >
-            <Plus className="h-4 w-4" /> {t.add_class}
-          </button>
-        </div>
-      </div>
+        }
+      />
 
         {/* Departments table */}
         <div className="mt-ds-md rounded-ds-lg bg-white p-ds-md shadow-ds-card dark:bg-slate-800">

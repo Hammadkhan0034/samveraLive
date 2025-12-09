@@ -404,8 +404,8 @@ export default function StaffManagement(_props: StaffManagementProps) {
        <PageHeader
         title={t.staff}
         subtitle={t.staff_subtitle}
-        showMobileMenu={true}
-        onMobileMenuClick={() => sidebarRef.current?.open()}
+        backHref="/dashboard/principal"
+        showBackButton={true}
         rightActions={
           <button
             onClick={handleOpenCreateModal}

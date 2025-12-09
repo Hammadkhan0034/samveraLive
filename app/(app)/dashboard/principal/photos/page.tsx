@@ -230,8 +230,8 @@ function PrincipalPhotosPageContent() {
         title={t.photos || 'Photos'}
         subtitle={t.photos_subtitle}
         headingLevel="h1"
-        showMobileMenu={true}
-        onMobileMenuClick={() => sidebarRef.current?.open()}
+        backHref="/dashboard/principal"
+        showBackButton={true}
         rightActions={
           <button
             onClick={() => setIsModalOpen(true)}
