@@ -73,10 +73,6 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'staff_status_type') THEN
     CREATE TYPE staff_status_type AS ENUM ('active', 'inactive', 'holiday', 'sick_leave', 'maternity_leave', 'casual_leave');
   END IF;
-
-  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'org_type') THEN
-    CREATE TYPE org_type AS ENUM ('preschool', 'elementary', 'middle', 'high', 'private', 'public', 'charter', 'other');
-  END IF;
 END $$;
 
 -- ======================
@@ -107,22 +103,6 @@ CREATE TABLE IF NOT EXISTS orgs (
   -- Basic Operational Data
   timezone text NOT NULL DEFAULT 'UTC',
   is_active boolean NOT NULL DEFAULT true,
-  type org_type,
-
-  -- Area Measurements (in square meters)
-  total_area numeric,
-  play_area numeric,
-  square_meters_per_student numeric,
-
-  -- Capacity Limits
-  maximum_allowed_students integer,
-
-  -- Calculated Metrics (updated via triggers)
-  current_enrolled_students integer NOT NULL DEFAULT 0,
-  total_teachers integer NOT NULL DEFAULT 0,
-  total_guardians integer NOT NULL DEFAULT 0,
-  total_images integer NOT NULL DEFAULT 0,
-  total_classes integer NOT NULL DEFAULT 0,
 
   -- Auditing
   created_by uuid,

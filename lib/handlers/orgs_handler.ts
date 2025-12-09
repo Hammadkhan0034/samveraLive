@@ -47,7 +47,7 @@ export async function handleGetOrgs(
     if (ids.length > 0) {
       const q = adminClient
         .from('orgs')
-        .select('id,name,slug,email,phone,website,address,city,state,postal_code,timezone,is_active,created_by,updated_by,created_at,updated_at,deleted_at')
+        .select('id,name,slug,email,phone,website,address,city,state,postal_code,timezone,total_area,play_area,square_meters_per_student,maximum_allowed_students,is_active,created_by,updated_by,created_at,updated_at,deleted_at')
         .order('created_at', { ascending: false });
 
       const { data, error } = await q.in('id', ids);
@@ -83,7 +83,7 @@ export async function handleGetOrgs(
     // Get paginated data
     const { data, error } = await adminClient
       .from('orgs')
-      .select('id,name,slug,email,phone,website,address,city,state,postal_code,timezone,is_active,created_by,updated_by,created_at,updated_at,deleted_at')
+      .select('id,name,slug,email,phone,website,address,city,state,postal_code,timezone,total_area,play_area,square_meters_per_student,maximum_allowed_students,is_active,created_by,updated_by,created_at,updated_at,deleted_at')
       .order('created_at', { ascending: false })
       .range(offset, offset + pageSize - 1);
 
@@ -131,6 +131,10 @@ export async function handlePostOrg(
     state,
     postal_code,
     timezone,
+    total_area,
+    play_area,
+    square_meters_per_student,
+    maximum_allowed_students,
   } = bodyValidation.data;
 
   try {
@@ -139,6 +143,10 @@ export async function handlePostOrg(
       slug,
       timezone,
       created_by: user.id,
+      total_area,
+      play_area,
+      square_meters_per_student,
+      maximum_allowed_students,
     };
 
     if (email !== undefined) insertData.email = email;
@@ -152,7 +160,7 @@ export async function handlePostOrg(
     const { data, error } = await adminClient
       .from('orgs')
       .insert(insertData)
-      .select('id,name,slug,email,phone,website,address,city,state,postal_code,timezone,is_active,created_by,updated_by,created_at,updated_at,deleted_at')
+      .select('id,name,slug,email,phone,website,address,city,state,postal_code,timezone,total_area,play_area,square_meters_per_student,maximum_allowed_students,is_active,created_by,updated_by,created_at,updated_at,deleted_at')
       .single();
 
     if (error) {
@@ -189,6 +197,10 @@ export async function handlePutOrg(
     state,
     postal_code,
     timezone,
+    total_area,
+    play_area,
+    square_meters_per_student,
+    maximum_allowed_students,
   } = bodyValidation.data;
 
   const patch: Record<string, unknown> = {
@@ -205,13 +217,17 @@ export async function handlePutOrg(
   if (state !== undefined) patch.state = state;
   if (postal_code !== undefined) patch.postal_code = postal_code;
   if (timezone !== undefined) patch.timezone = timezone;
+  if (total_area !== undefined) patch.total_area = total_area;
+  if (play_area !== undefined) patch.play_area = play_area;
+  if (square_meters_per_student !== undefined) patch.square_meters_per_student = square_meters_per_student;
+  if (maximum_allowed_students !== undefined) patch.maximum_allowed_students = maximum_allowed_students;
 
   try {
     const { data, error } = await adminClient
       .from('orgs')
       .update(patch)
       .eq('id', id)
-      .select('id,name,slug,email,phone,website,address,city,state,postal_code,timezone,is_active,created_by,updated_by,created_at,updated_at,deleted_at')
+      .select('id,name,slug,email,phone,website,address,city,state,postal_code,timezone,total_area,play_area,square_meters_per_student,maximum_allowed_students,is_active,created_by,updated_by,created_at,updated_at,deleted_at')
       .single();
 
     if (error) {
@@ -271,7 +287,7 @@ export async function handleGetOrgDetails(
     // Fetch organization
     const { data: org, error: orgError } = await adminClient
       .from('orgs')
-      .select('id,name,slug,email,phone,website,address,city,state,postal_code,timezone,is_active,created_by,updated_by,created_at,updated_at,deleted_at')
+      .select('id,name,slug,email,phone,website,address,city,state,postal_code,timezone,total_area,play_area,square_meters_per_student,maximum_allowed_students,is_active,created_by,updated_by,created_at,updated_at,deleted_at')
       .eq('id', orgId)
       .single();
 
@@ -381,7 +397,7 @@ export async function handleGetMyOrg(
     // Fetch organization
     const { data: org, error: orgError } = await adminClient
       .from('orgs')
-      .select('id,name,slug,email,phone,website,address,city,state,postal_code,timezone,is_active,created_by,updated_by,created_at,updated_at,deleted_at')
+      .select('id,name,slug,email,phone,website,address,city,state,postal_code,timezone,total_area,play_area,square_meters_per_student,maximum_allowed_students,is_active,created_by,updated_by,created_at,updated_at,deleted_at')
       .eq('id', orgId)
       .single();
 
@@ -430,6 +446,10 @@ export async function handleUpdateMyOrg(
     state,
     postal_code,
     timezone,
+    total_area,
+    play_area,
+    square_meters_per_student,
+    maximum_allowed_students,
   } = bodyValidation.data;
 
   const patch: Record<string, unknown> = {
@@ -446,13 +466,17 @@ export async function handleUpdateMyOrg(
   if (state !== undefined) patch.state = state;
   if (postal_code !== undefined) patch.postal_code = postal_code;
   if (timezone !== undefined) patch.timezone = timezone;
+  if (total_area !== undefined) patch.total_area = total_area;
+  if (play_area !== undefined) patch.play_area = play_area;
+  if (square_meters_per_student !== undefined) patch.square_meters_per_student = square_meters_per_student;
+  if (maximum_allowed_students !== undefined) patch.maximum_allowed_students = maximum_allowed_students;
 
   try {
     const { data, error } = await adminClient
       .from('orgs')
       .update(patch)
       .eq('id', orgId)
-      .select('id,name,slug,email,phone,website,address,city,state,postal_code,timezone,is_active,created_by,updated_by,created_at,updated_at,deleted_at')
+      .select('id,name,slug,email,phone,website,address,city,state,postal_code,timezone,total_area,play_area,square_meters_per_student,maximum_allowed_students,is_active,created_by,updated_by,created_at,updated_at,deleted_at')
       .single();
 
     if (error) {

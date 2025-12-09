@@ -18,6 +18,10 @@ interface OrganizationFormData {
   state: string;
   postal_code: string;
   timezone: string;
+  total_area: string;
+  play_area: string;
+  square_meters_per_student: string;
+  maximum_allowed_students: string;
 }
 
 interface OrganizationModalProps {
@@ -49,6 +53,10 @@ export function OrganizationModal({
     state: '',
     postal_code: '',
     timezone: 'UTC',
+    total_area: '',
+    play_area: '',
+    square_meters_per_student: '',
+    maximum_allowed_students: '',
   });
   const [slugError, setSlugError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -69,6 +77,10 @@ export function OrganizationModal({
           state: initialData.state || '',
           postal_code: initialData.postal_code || '',
           timezone: initialData.timezone || 'UTC',
+          total_area: initialData.total_area?.toString() || '',
+          play_area: initialData.play_area?.toString() || '',
+          square_meters_per_student: initialData.square_meters_per_student?.toString() || '',
+          maximum_allowed_students: initialData.maximum_allowed_students?.toString() || '',
         });
       } else {
         setFormData({
@@ -82,6 +94,10 @@ export function OrganizationModal({
           state: '',
           postal_code: '',
           timezone: 'UTC',
+          total_area: '',
+          play_area: '',
+          square_meters_per_student: '',
+          maximum_allowed_students: '',
         });
       }
       setSlugError(null);
@@ -130,6 +146,10 @@ export function OrganizationModal({
         state: '',
         postal_code: '',
         timezone: 'UTC',
+        total_area: '',
+        play_area: '',
+        square_meters_per_student: '',
+        maximum_allowed_students: '',
       });
       setSlugError(null);
       setError(null);
@@ -150,6 +170,10 @@ export function OrganizationModal({
       state: '',
       postal_code: '',
       timezone: 'UTC',
+      total_area: '',
+      play_area: '',
+      square_meters_per_student: '',
+      maximum_allowed_students: '',
     });
     setSlugError(null);
     setError(null);
@@ -367,6 +391,81 @@ export function OrganizationModal({
                 className={inputClassName}
                 required
               />
+            </div>
+          </div>
+
+          {/* Capacity & Area Section */}
+          <div className="space-y-3 sm:space-y-4">
+            <h4 className="text-ds-small font-semibold text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700 pb-2">
+              Capacity & Area
+            </h4>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div>
+                <label className={labelClassName}>
+                  Total Area (m²) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.total_area}
+                  onChange={(e) => setFormData((p) => ({ ...p, total_area: e.target.value }))}
+                  placeholder="Enter total area in square meters"
+                  className={inputClassName}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className={labelClassName}>
+                  Play Area (m²) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.play_area}
+                  onChange={(e) => setFormData((p) => ({ ...p, play_area: e.target.value }))}
+                  placeholder="Enter play area in square meters"
+                  className={inputClassName}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div>
+                <label className={labelClassName}>
+                  Square Meters per Student <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.square_meters_per_student}
+                  onChange={(e) => setFormData((p) => ({ ...p, square_meters_per_student: e.target.value }))}
+                  placeholder="Enter square meters per student"
+                  className={inputClassName}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className={labelClassName}>
+                  Maximum Allowed Students <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  step="1"
+                  min="1"
+                  value={formData.maximum_allowed_students}
+                  onChange={(e) => setFormData((p) => ({ ...p, maximum_allowed_students: e.target.value }))}
+                  placeholder="Enter maximum allowed students"
+                  className={inputClassName}
+                  required
+                />
+              </div>
             </div>
           </div>
 

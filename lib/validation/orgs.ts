@@ -58,6 +58,10 @@ export const postOrgBodySchema = z.object({
   state: z.string().min(1, 'State is required').max(100),
   postal_code: z.string().min(1, 'Postal code is required').max(20),
   timezone: z.string().min(1, 'Timezone is required').default('UTC'),
+  total_area: z.coerce.number().positive('Total area must be a positive number'),
+  play_area: z.coerce.number().positive('Play area must be a positive number'),
+  square_meters_per_student: z.coerce.number().positive('Square meters per student must be a positive number'),
+  maximum_allowed_students: z.coerce.number().int().positive('Maximum allowed students must be a positive integer'),
 });
 
 /**
@@ -75,6 +79,10 @@ export const putOrgBodySchema = z.object({
   state: z.string().min(1, 'State is required').max(100),
   postal_code: z.string().min(1, 'Postal code is required').max(20),
   timezone: z.string().min(1, 'Timezone is required'),
+  total_area: z.coerce.number().positive('Total area must be a positive number'),
+  play_area: z.coerce.number().positive('Play area must be a positive number'),
+  square_meters_per_student: z.coerce.number().positive('Square meters per student must be a positive number'),
+  maximum_allowed_students: z.coerce.number().int().positive('Maximum allowed students must be a positive integer'),
 });
 
 /**
@@ -98,5 +106,9 @@ export const putMyOrgBodySchema = z.object({
   state: z.string().min(1, 'State is required').max(100),
   postal_code: z.string().min(1, 'Postal code is required').max(20),
   timezone: z.string().min(1, 'Timezone is required'),
+  total_area: z.coerce.number().positive('Total area must be a positive number'),
+  play_area: z.coerce.number().positive('Play area must be a positive number'),
+  square_meters_per_student: z.coerce.number().positive('Square meters per student must be a positive number'),
+  maximum_allowed_students: z.coerce.number().int().positive('Maximum allowed students must be a positive integer'),
 });
 

@@ -144,6 +144,10 @@ export function validateOrgForm(data: {
   state?: string;
   postal_code?: string;
   timezone: string;
+  total_area?: string;
+  play_area?: string;
+  square_meters_per_student?: string;
+  maximum_allowed_students?: string;
   id?: string;
 }): ValidationResult {
   try {
@@ -161,6 +165,10 @@ export function validateOrgForm(data: {
         state: data.state,
         postal_code: data.postal_code,
         timezone: data.timezone,
+        total_area: data.total_area,
+        play_area: data.play_area,
+        square_meters_per_student: data.square_meters_per_student,
+        maximum_allowed_students: data.maximum_allowed_students,
       });
     } else {
       // Create mode or principal editing own org (no id in body) - try putMyOrgBodySchema first, then postOrgBodySchema
@@ -177,6 +185,10 @@ export function validateOrgForm(data: {
           state: data.state,
           postal_code: data.postal_code,
           timezone: data.timezone,
+          total_area: data.total_area,
+          play_area: data.play_area,
+          square_meters_per_student: data.square_meters_per_student,
+          maximum_allowed_students: data.maximum_allowed_students,
         });
       } catch {
         // Fallback to postOrgBodySchema for create mode
@@ -191,6 +203,10 @@ export function validateOrgForm(data: {
           state: data.state,
           postal_code: data.postal_code,
           timezone: data.timezone,
+          total_area: data.total_area,
+          play_area: data.play_area,
+          square_meters_per_student: data.square_meters_per_student,
+          maximum_allowed_students: data.maximum_allowed_students,
         });
       }
     }
