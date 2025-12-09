@@ -835,7 +835,7 @@ function StoriesPageContent() {
           <div className="flex items-center gap-ds-sm">
             {/* Mobile menu button */}
             <button
-              onClick={() => sidebarRef.current?.open()}
+              onClick={() => sidebarRef?.current?.open()}
               className="md:hidden p-2 rounded-ds-md hover:bg-mint-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-colors"
               aria-label="Toggle sidebar"
             >

@@ -56,7 +56,7 @@ function EditEventContentInner({
   calendarRoute: string;
   eventId: string;
   classes: Array<{ id: string; name: string }>;
-  sidebarRef: React.RefObject<{ open: () => void }>;
+  sidebarRef: React.RefObject<{ open: () => void }> | null;
 }) {
   const router = useRouter();
   const { t } = useLanguage();

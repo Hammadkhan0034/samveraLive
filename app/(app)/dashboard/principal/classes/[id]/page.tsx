@@ -233,7 +233,7 @@ function ClassDetailsPageContent() {
         title={`${t.class_details || 'Class Details'}${classData ? ` - ${classData.name}` : ''}`}
         subtitle={t.class_details_subtitle}
         showMobileMenu={true}
-        onMobileMenuClick={() => sidebarRef.current?.open()}
+        onMobileMenuClick={() => sidebarRef?.current?.open()}
       />
 
         {/* Class Details Table */}

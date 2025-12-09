@@ -248,7 +248,7 @@ function CreateClassPageContent() {
         title={isEditMode ? t.edit_class : t.add_class}
         subtitle={isEditMode ? t.edit_class_subtitle : t.create_class_subtitle}
         showMobileMenu={true}
-        onMobileMenuClick={() => sidebarRef.current?.open()}
+        onMobileMenuClick={() => sidebarRef?.current?.open()}
       />
 
         {/* Error Message */}
