@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { Edit, Users } from 'lucide-react';
 import { PageHeader } from '@/app/components/shared/PageHeader';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { 
   getGuardianName, 
   getInitials
@@ -38,6 +39,7 @@ export function GuardianHeader({
   className = '',
 }: GuardianHeaderProps) {
   const router = useRouter();
+  const { t } = useLanguage();
 
   // Calculate derived values
   const guardianName = getGuardianName(guardian);
@@ -59,7 +61,7 @@ export function GuardianHeader({
     <div className={`rounded-ds-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-ds-card p-4 md:p-6 ${className}`}>
       <PageHeader
         title={guardianName}
-        subtitle={`Guardian ID: ${guardian.id.slice(0, 8)}...`}
+        subtitle={`${t.guardian_id_label || 'Guardian ID:'} ${guardian.id.slice(0, 8)}...`}
         showBackButton={true}
         backHref={backHref}
         showProfileSwitcher={false}
@@ -90,7 +92,7 @@ export function GuardianHeader({
               className={`absolute bottom-0 right-0 w-6 h-6 md:w-8 md:h-8 rounded-full border-4 border-white ${
                 guardian.is_active !== false ? 'bg-green-500' : 'bg-red-500'
               }`} 
-              title={guardian.is_active !== false ? 'Active' : 'Inactive'} 
+              title={guardian.is_active !== false ? (t.active || 'Active') : (t.inactive || 'Inactive')} 
             />
           </div>
 
@@ -99,7 +101,7 @@ export function GuardianHeader({
               {childrenCount > 0 && (
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-input-fill border border-input-stroke text-ds-small font-medium text-ds-text-primary">
                   <Users className="w-4 h-4 text-mint-200" />
-                  {childrenCount} {childrenCount === 1 ? 'Child' : 'Children'}
+                  {childrenCount} {childrenCount === 1 ? (t.child || 'Child') : (t.children || 'Children')}
                 </span>
               )}
               {guardian.email && (
@@ -116,10 +118,10 @@ export function GuardianHeader({
           <button
             onClick={handleEditClick}
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-ds-md bg-mint-200 hover:bg-mint-300 text-ds-text-primary text-ds-body font-medium transition-colors"
-            aria-label="Edit guardian"
+            aria-label={t.edit_guardian || 'Edit guardian'}
           >
             <Edit className="w-4 h-4" />
-            <span className="hidden sm:inline">Edit</span>
+            <span className="hidden sm:inline">{t.edit || 'Edit'}</span>
           </button>
         </div>
       </div>

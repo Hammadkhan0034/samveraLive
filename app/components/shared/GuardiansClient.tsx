@@ -53,7 +53,7 @@ function parseGuardianName(guardian: any): { first_name: string; last_name: stri
 }
 
 export function GuardiansClient({ canManage = false, onCreateClickRef }: GuardiansClientProps) {
-  const { lang, t } = useLanguage();
+  const { t } = useLanguage();
 
   // Guardian state
   const [guardians, setGuardians] = useState<Array<any>>([]);
@@ -216,63 +216,66 @@ export function GuardiansClient({ canManage = false, onCreateClickRef }: Guardia
   const tableTranslations = useMemo(
     () => ({
       guardians: t.tile_guardians || 'Guardians',
-      first_name: lang === 'is' ? 'Fornafn' : 'First Name',
-      last_name: lang === 'is' ? 'Eftirnafn' : 'Last Name',
-      email: lang === 'is' ? 'Netfang' : 'Email',
-      phone: lang === 'is' ? 'Sími' : 'Phone',
-      status: lang === 'is' ? 'Staða' : 'Status',
-      active: lang === 'is' ? 'Virkur' : 'Active',
-      inactive: lang === 'is' ? 'Óvirkur' : 'Inactive',
-      actions: lang === 'is' ? 'Aðgerðir' : 'Actions',
-      create: lang === 'is' ? 'Búa til' : 'Create',
-      no_guardians: lang === 'is' ? 'Engir forráðamenn' : 'No guardians',
-      no_guardians_title: t.no_guardians_title || (lang === 'is' ? 'Engir forráðamenn' : 'No Guardians'),
-      no_guardians_description: t.no_guardians_description || (lang === 'is' ? 'Engir forráðamenn fundust. Smelltu á \'Bæta við forráðamanni\' til að búa til einn.' : 'No guardians found. Click \'Add Guardian\' to create one.'),
-      no_guardians_loading: lang === 'is' ? 'Hleður...' : 'Loading...',
-      edit: lang === 'is' ? 'Breyta' : 'Edit',
-      delete: lang === 'is' ? 'Eyða' : 'Delete',
-      send_magic_link: lang === 'is' ? 'Senda töfraslóð' : 'Send Magic Link',
-      sending: lang === 'is' ? 'Sendi...' : 'Sending...',
-      magic_link_sent: lang === 'is' ? 'Töfraslóð send' : 'Magic link sent',
-      magic_link_send_failed:
-        lang === 'is' ? 'Tókst ekki að senda töfraslóð' : 'Failed to send magic link',
-      no_students_linked: lang === 'is' ? 'Engir nemendur tengdir' : 'No students linked',
+      first_name: t.first_name || 'First Name',
+      last_name: t.last_name || 'Last Name',
+      email: t.email || 'Email',
+      phone: t.phone || 'Phone',
+      status: t.status || 'Status',
+      active: t.active || 'Active',
+      inactive: t.inactive || 'Inactive',
+      actions: t.col_actions || 'Actions',
+      create: t.create || 'Create',
+      no_guardians: t.no_guardians || 'No guardians',
+      no_guardians_title: t.no_guardians_title || 'No Guardians',
+      no_guardians_description: t.no_guardians_description || 'No guardians found. Click \'Add Guardian\' to create one.',
+      no_guardians_loading: t.no_guardians_loading || 'Loading...',
+      edit: t.edit || 'Edit',
+      delete: t.delete || 'Delete',
+      send_magic_link: t.send_magic_link || 'Send Magic Link',
+      sending: t.sending || 'Sending...',
+      magic_link_sent: t.magic_link_sent || 'Magic link sent',
+      magic_link_send_failed: t.magic_link_send_failed || 'Failed to send magic link',
+      no_students_linked: t.no_students_linked || 'No students linked',
     }),
-    [t, lang],
+    [t],
   );
 
   const formTranslations = useMemo(
     () => ({
-      create_guardian: lang === 'is' ? 'Búa til forráðamann' : 'Create Guardian',
-      edit_guardian: lang === 'is' ? 'Breyta forráðamanni' : 'Edit Guardian',
-      first_name: lang === 'is' ? 'Fornafn' : 'First Name',
-      last_name: lang === 'is' ? 'Eftirnafn' : 'Last Name',
-      email: lang === 'is' ? 'Netfang' : 'Email',
-      phone: lang === 'is' ? 'Sími' : 'Phone',
-      organization: lang === 'is' ? 'Stofnun' : 'Organization',
-      status: lang === 'is' ? 'Staða' : 'Status',
-      active: lang === 'is' ? 'Virkur' : 'Active',
-      inactive: lang === 'is' ? 'Óvirkur' : 'Inactive',
-      create: lang === 'is' ? 'Búa til' : 'Create',
-      update: lang === 'is' ? 'Uppfæra' : 'Update',
-      cancel: lang === 'is' ? 'Hætta við' : 'Cancel',
-      creating: lang === 'is' ? 'Býr til...' : 'Creating...',
-      updating: lang === 'is' ? 'Uppfærir...' : 'Updating...',
-      first_name_placeholder: lang === 'is' ? 'Sláðu inn fornafn' : 'Enter first name',
-      last_name_placeholder: lang === 'is' ? 'Sláðu inn eftirnafn' : 'Enter last name',
-      email_placeholder: lang === 'is' ? 'Sláðu inn netfang' : 'Enter email address',
-      phone_placeholder: lang === 'is' ? 'Sláðu inn símanúmer' : 'Enter phone number',
-      status_placeholder: lang === 'is' ? 'Veldu stöðu' : 'Select status',
+      create_guardian: t.create_guardian || 'Create Guardian',
+      edit_guardian: t.edit_guardian || 'Edit Guardian',
+      first_name: t.first_name || 'First Name',
+      last_name: t.last_name || 'Last Name',
+      email: t.email || 'Email',
+      phone: t.phone || 'Phone',
+      organization: t.organization || 'Organization',
+      status: t.status || 'Status',
+      active: t.active || 'Active',
+      inactive: t.inactive || 'Inactive',
+      create: t.create || 'Create',
+      update: t.update || 'Update',
+      cancel: t.cancel || 'Cancel',
+      creating: t.creating || 'Creating...',
+      updating: t.updating || 'Updating...',
+      first_name_placeholder: t.first_name_placeholder || 'Enter first name',
+      last_name_placeholder: t.last_name_placeholder || 'Enter last name',
+      email_placeholder: t.email_placeholder || 'Enter email address',
+      phone_placeholder: t.phone_placeholder || 'Enter phone number',
+      status_placeholder: t.status_placeholder || 'Select status',
+      ssn: t.ssn || 'Social Security Number (SSN)',
+      ssn_placeholder: t.ssn_placeholder || '000000-0000',
+      address: t.address || 'Address',
+      address_placeholder: t.address_placeholder || 'Enter address (optional)',
     }),
-    [lang],
+    [t],
   );
 
   const deleteModalTranslations = useMemo(
     () => ({
-      confirm_delete: lang === 'is' ? 'Eyða' : 'Delete',
-      cancel: lang === 'is' ? 'Hætta við' : 'Cancel',
+      confirm_delete: t.delete || 'Delete',
+      cancel: t.cancel || 'Cancel',
     }),
-    [lang],
+    [t],
   );
 
   const showManagementControls = canManage;
@@ -290,7 +293,7 @@ export function GuardiansClient({ canManage = false, onCreateClickRef }: Guardia
                 setSearchQuery(e.target.value);
                 setCurrentPage(1);
               }}
-              placeholder={lang === 'is' ? 'Leita...' : 'Search guardians...'}
+              placeholder={t.search_guardians_placeholder || 'Search guardians...'}
               className="w-full sm:w-48 md:w-64 h-10 sm:h-12 px-ds-sm rounded-ds-md rounded-full bg-input-fill border border-input-stroke text-ds-small text-ds-text-primary focus:outline-none focus:border-mint-200 focus:ring-2 focus:ring-mint-200/20 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-200 dark:placeholder-slate-400 dark:focus:border-mint-300"
             />
           </div>
@@ -353,12 +356,8 @@ export function GuardiansClient({ canManage = false, onCreateClickRef }: Guardia
               isOpen={isDeleteGuardianModalOpen}
               onClose={() => setIsDeleteGuardianModalOpen(false)}
               onConfirm={confirmDeleteGuardian}
-              title={lang === 'is' ? 'Eyða forráðamanni' : 'Delete Guardian'}
-              message={
-                lang === 'is'
-                  ? 'Ertu viss um að þú viljir eyða þessum forráðamanni?'
-                  : 'Are you sure you want to delete this guardian?'
-              }
+              title={t.delete_guardian || 'Delete Guardian'}
+              message={t.delete_guardian_confirm || 'Are you sure you want to delete this guardian?'}
               loading={deletingGuardian}
               error={guardianError}
               translations={deleteModalTranslations}
