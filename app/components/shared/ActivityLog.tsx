@@ -31,6 +31,14 @@ export interface ActivityLogProps {
    * Callback for mobile menu button click
    */
   onMobileMenuClick?: () => void;
+  /**
+   * URL to navigate back to
+   */
+  backHref?: string;
+  /**
+   * Whether to show the back button
+   */
+  showBackButton?: boolean;
 }
 
 export function ActivityLog({
@@ -39,6 +47,8 @@ export function ActivityLog({
   className = '',
   showMobileMenu = false,
   onMobileMenuClick,
+  backHref,
+  showBackButton = false,
 }: ActivityLogProps) {
   const { t, lang } = useLanguage();
   const { user } = useAuth();
@@ -191,6 +201,8 @@ export function ActivityLog({
         headingLevel="h1"
         showMobileMenu={showMobileMenu}
         onMobileMenuClick={onMobileMenuClick}
+        backHref={backHref}
+        showBackButton={showBackButton}
         rightActions={addActivityButton}
       />
 

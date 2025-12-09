@@ -63,8 +63,8 @@ export function PrincipalCalendarClient({
         title={t.tile_calendar || 'Calendar'}
         subtitle={t.calendar_subtitle}
         headingLevel="h1"
-        showMobileMenu={true}
-        onMobileMenuClick={() => sidebarRef.current?.open()}
+        backHref="/dashboard/principal"
+        showBackButton={true}
       />
 
       {/* Calendar Container */}

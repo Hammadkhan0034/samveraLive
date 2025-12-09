@@ -13,8 +13,8 @@ function PrincipalDailyLogsPageContent() {
     <ActivityLog 
       canEdit={true} 
       canDelete={true}
-      showMobileMenu={true}
-      onMobileMenuClick={() => sidebarRef.current?.open()}
+      backHref="/dashboard/principal"
+      showBackButton={true}
     />
   );
 }

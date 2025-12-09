@@ -19,8 +19,8 @@ function PrincipalGuardiansPageContent() {
         title={t.guardians || 'Guardians'}
         subtitle={t.tile_guardians_desc || 'Manage guardians'}
         headingLevel="h1"
-        showMobileMenu={true}
-        onMobileMenuClick={() => sidebarRef.current?.open()}
+        backHref="/dashboard/principal"
+        showBackButton={true}
         rightActions={
           <button
             onClick={() => createGuardianRef.current?.()}

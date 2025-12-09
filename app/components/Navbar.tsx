@@ -54,20 +54,17 @@ export default function Navbar({ variant = 'fixed' }: NavbarProps) {
   return (
     <nav className={`${positionClass} z-50 bg-white dark:bg-slate-900 shadow-ds-sm backdrop-blur dark:supports-[backdrop-filter]:bg-slate-900/80`}>
       <div className="mx-auto max-w-7xl px-3 sm:px-4 lg:px-8 h-12 sm:h-14 flex items-center justify-between">
-        {variant === 'fixed' && (
-          <div className="flex items-center gap-2 font-semibold text-slate-900 dark:text-slate-100">
-            <div className="relative w-24 sm:w-32 h-8 sm:h-10 flex-shrink-0">
-              <Image
-                src="/logo.png"
-                alt="Samvera Logo"
-                fill
-                className="object-contain rounded-lg"
-                priority
-              />
-            </div>
+        <div className="flex items-center gap-2 font-semibold text-slate-900 dark:text-slate-100">
+          <div className="relative w-24 sm:w-32 h-8 sm:h-10 flex-shrink-0">
+            <Image
+              src="/logo.png"
+              alt="Samvera Logo"
+              fill
+              className="object-contain rounded-lg"
+              priority
+            />
           </div>
-        )}
-        {variant === 'static' && <div />}
+        </div>
         <div className="flex items-center gap-1.5 sm:gap-2">
           <button
             type="button"

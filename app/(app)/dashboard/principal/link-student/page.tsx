@@ -22,8 +22,8 @@ function PrincipalLinkStudentContent() {
         title={t.tile_link_student || 'Link Student'}
         subtitle={t.tile_link_student_desc || 'Link a guardian to a student'}
         headingLevel="h1"
-        showMobileMenu={true}
-        onMobileMenuClick={() => sidebarRef.current?.open()}
+        backHref="/dashboard/principal"
+        showBackButton={true}
       />
 
       <div className="rounded-ds-lg border border-slate-200 bg-white p-3 sm:p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
