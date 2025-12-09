@@ -638,6 +638,7 @@ export const enText = {
   add_activity: 'Add Activity',
   edit_activity: 'Edit Activity',
   no_activities: 'No activities recorded yet',
+  no_activities_description: 'There are no activity logs available at this time. Click "Add Activity" to create your first activity log.',
   delete_activity: 'Delete Activity',
   delete_activity_confirmation: 'Are you sure you want to delete this activity? This action cannot be undone.',
   activity_description_placeholder: 'Enter activity description...',
@@ -645,6 +646,14 @@ export const enText = {
   photo: 'Photo',
   teacher: 'Teacher',
   click_to_upload: 'Click to upload',
+  activity_log_note: 'Note',
+  activity_log_datetime: 'Date/Time',
+  show_less: 'Show less',
+  show_more: 'Show more',
+  activity: 'Activity',
+  click_to_view_full_image: 'Click to view full image',
+  failed_to_load_activities: 'Failed to load activities',
+  failed_to_delete_activity: 'Failed to delete activity',
 
   // Diapers/Health
   di_title: 'Diapers & Health Log',

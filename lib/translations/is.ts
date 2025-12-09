@@ -640,6 +640,7 @@ export const isText = {
   add_activity: 'Bæta við aðgerð',
   edit_activity: 'Breyta aðgerð',
   no_activities: 'Engar aðgerðir skráðar enn',
+  no_activities_description: 'Það eru engar aðgerðaskrár tiltækar í augnablikinu. Smelltu á "Bæta við aðgerð" til að búa til fyrstu aðgerðaskrána þína.',
   delete_activity: 'Eyða aðgerð',
   delete_activity_confirmation: 'Ertu viss um að þú viljir eyða þessari aðgerð? Þessa aðgerð er ekki hægt að afturkalla.',
   activity_description_placeholder: 'Sláðu inn lýsingu aðgerðar...',
@@ -647,6 +648,14 @@ export const isText = {
   photo: 'Mynd',
   teacher: 'Kennari',
   click_to_upload: 'Smelltu til að hlaða upp',
+  activity_log_note: 'Athugasemd',
+  activity_log_datetime: 'Dagsetning/Tími',
+  show_less: 'Sýna minna',
+  show_more: 'Sýna meira',
+  activity: 'Aðgerð',
+  click_to_view_full_image: 'Smelltu til að skoða fulla mynd',
+  failed_to_load_activities: 'Mistókst að hlaða aðgerðum',
+  failed_to_delete_activity: 'Mistókst að eyða aðgerð',
 
   // Diapers/Health
   di_title: 'Bleyju- og heilsuskráning',

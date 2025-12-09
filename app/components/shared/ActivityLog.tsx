@@ -88,7 +88,7 @@ export function ActivityLog({
       setTotalPages(pages || 0);
     } catch (err: any) {
       console.error('Failed to load activities:', err);
-      setError(err.message || 'Failed to load activities');
+      setError(err.message || (t.failed_to_load_activities || 'Failed to load activities'));
     } finally {
       setLoading(false);
     }
@@ -146,7 +146,7 @@ export function ActivityLog({
       }
     } catch (err: any) {
       console.error('Failed to delete activity:', err);
-      setDeleteError(err.message || 'Failed to delete activity');
+      setDeleteError(err.message || (t.failed_to_delete_activity || 'Failed to delete activity'));
     } finally {
       setDeleting(false);
     }
@@ -197,7 +197,7 @@ export function ActivityLog({
       {/* Page Header */}
       <PageHeader
         title={t.activity_log || 'Activity Log'}
-        subtitle={(t as any).activity_log_subtitle || 'View and manage daily activity logs'}
+        subtitle={t.tile_activity_log_desc || 'View and manage daily activity logs'}
         headingLevel="h1"
         showMobileMenu={showMobileMenu}
         onMobileMenuClick={onMobileMenuClick}
@@ -226,19 +226,19 @@ export function ActivityLog({
               <thead className="sticky top-0 bg-mint-500 text-white z-10">
                 <tr>
                   <th className="text-left py-2 px-2 sm:px-ds-md text-ds-small font-medium text-white dark:text-slate-300 rounded-tl-ds-md whitespace-nowrap">
-                    Note
+                    {t.activity_log_note || 'Note'}
                   </th>
                   <th className="text-left py-2 px-2 sm:px-ds-md text-ds-small font-medium text-white dark:text-slate-300 whitespace-nowrap">
-                    Image
+                    {t.photo || 'Image'}
                   </th>
                   <th className="text-left py-2 px-2 sm:px-ds-md text-ds-small font-medium text-white dark:text-slate-300 whitespace-nowrap">
-                    Creator
+                    {t.teacher || 'Creator'}
                   </th>
                   <th className="text-left py-2 px-2 sm:px-ds-md text-ds-small font-medium text-white dark:text-slate-300 whitespace-nowrap">
-                    Date/Time
+                    {t.activity_log_datetime || 'Date/Time'}
                   </th>
                   <th className="text-left py-2 px-2 sm:px-ds-md text-ds-small font-medium text-white dark:text-slate-300 rounded-tr-ds-md whitespace-nowrap">
-                    Actions
+                    {t.col_actions || 'Actions'}
                   </th>
                 </tr>
               </thead>
@@ -274,7 +274,7 @@ export function ActivityLog({
           <EmptyState
             icon={Calendar}
             title={t.no_activities || 'No activities recorded yet'}
-            description={(t as any).no_activities_description || 'There are no activity logs available at this time. Click "Add Activity" to create your first activity log.'}
+            description={t.no_activities_description || 'There are no activity logs available at this time. Click "Add Activity" to create your first activity log.'}
           />
         </div>
       )}
@@ -287,19 +287,19 @@ export function ActivityLog({
               <thead className="sticky top-0 bg-mint-500 text-white z-10">
                 <tr>
                   <th className="text-left py-2 px-2 sm:px-ds-md text-ds-small font-medium text-white dark:text-slate-300 rounded-tl-ds-md whitespace-nowrap">
-                    Note
+                    {t.activity_log_note || 'Note'}
                   </th>
                   <th className="text-left py-2 px-2 sm:px-ds-md text-ds-small font-medium text-white dark:text-slate-300 whitespace-nowrap">
-                    Image
+                    {t.photo || 'Image'}
                   </th>
                   <th className="text-left py-2 px-2 sm:px-ds-md text-ds-small font-medium text-white dark:text-slate-300 whitespace-nowrap">
-                    Creator
+                    {t.teacher || 'Creator'}
                   </th>
                   <th className="text-left py-2 px-2 sm:px-ds-md text-ds-small font-medium text-white dark:text-slate-300 whitespace-nowrap">
-                    Date/Time
+                    {t.activity_log_datetime || 'Date/Time'}
                   </th>
                   <th className="text-left py-2 px-2 sm:px-ds-md text-ds-small font-medium text-white dark:text-slate-300 rounded-tr-ds-md whitespace-nowrap">
-                    Actions
+                    {t.col_actions || 'Actions'}
                   </th>
                 </tr>
               </thead>
@@ -329,12 +329,12 @@ export function ActivityLog({
                               {isNoteExpanded ? (
                                 <>
                                   <ChevronUp className="h-3 w-3" />
-                                  Show less
+                                  {t.show_less || 'Show less'}
                                 </>
                               ) : (
                                 <>
                                   <ChevronDown className="h-3 w-3" />
-                                  Show more
+                                  {t.show_more || 'Show more'}
                                 </>
                               )}
                             </button>
@@ -348,10 +348,10 @@ export function ActivityLog({
                       {activity.image ? (
                         <img
                           src={activity.image}
-                          alt="Activity"
+                          alt={t.activity || 'Activity'}
                           className="h-12 w-12 object-cover rounded-ds-md border border-slate-200 dark:border-slate-700 cursor-pointer hover:opacity-80 transition-opacity"
                           onClick={() => window.open(activity.image || '', '_blank')}
-                          title="Click to view full image"
+                          title={t.click_to_view_full_image || 'Click to view full image'}
                         />
                       ) : (
                         <span className="text-ds-text-muted dark:text-slate-400">—</span>
