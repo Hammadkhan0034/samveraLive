@@ -44,7 +44,7 @@ BEGIN
   END IF;
 
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role_type') THEN
-    CREATE TYPE user_role_type AS ENUM ('principal','staff','guardian','student');
+    CREATE TYPE user_role_type AS ENUM ('principal','teacher','guardian','student');
   END IF;
 
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'staff_role_type') THEN
@@ -1381,7 +1381,7 @@ CREATE OR REPLACE FUNCTION update_org_teacher_count()
 RETURNS TRIGGER AS $$
 BEGIN
   IF TG_OP = 'INSERT' THEN
-    IF NEW.role = 'staff' AND NEW.deleted_at IS NULL AND NEW.is_active = true THEN
+    IF NEW.role = 'teacher' AND NEW.deleted_at IS NULL AND NEW.is_active = true THEN
       UPDATE orgs
       SET total_teachers = total_teachers + 1
       WHERE id = NEW.org_id;
@@ -1391,31 +1391,31 @@ BEGIN
     -- Handle role changes, active status changes, and soft deletes
     IF OLD.org_id = NEW.org_id THEN
       -- If was a teacher and now isn't (role changed, or deleted, or inactive)
-      IF OLD.role = 'staff' AND OLD.deleted_at IS NULL AND OLD.is_active = true
-         AND (NEW.role != 'staff' OR NEW.deleted_at IS NOT NULL OR NEW.is_active = false) THEN
+      IF OLD.role = 'teacher' AND OLD.deleted_at IS NULL AND OLD.is_active = true
+         AND (NEW.role != 'teacher' OR NEW.deleted_at IS NOT NULL OR NEW.is_active = false) THEN
         UPDATE orgs
         SET total_teachers = total_teachers - 1
         WHERE id = NEW.org_id;
       END IF;
       -- If wasn't a teacher and now is (role changed, or restored, or activated)
-      IF (OLD.role != 'staff' OR OLD.deleted_at IS NOT NULL OR OLD.is_active = false)
-         AND NEW.role = 'staff' AND NEW.deleted_at IS NULL AND NEW.is_active = true THEN
+      IF (OLD.role != 'teacher' OR OLD.deleted_at IS NOT NULL OR OLD.is_active = false)
+         AND NEW.role = 'teacher' AND NEW.deleted_at IS NULL AND NEW.is_active = true THEN
         UPDATE orgs
         SET total_teachers = total_teachers + 1
         WHERE id = NEW.org_id;
       END IF;
     ELSE
       -- Org changed
-      IF OLD.role = 'staff' AND OLD.deleted_at IS NULL AND OLD.is_active = true THEN
+      IF OLD.role = 'teacher' AND OLD.deleted_at IS NULL AND OLD.is_active = true THEN
         UPDATE orgs SET total_teachers = total_teachers - 1 WHERE id = OLD.org_id;
       END IF;
-      IF NEW.role = 'staff' AND NEW.deleted_at IS NULL AND NEW.is_active = true THEN
+      IF NEW.role = 'teacher' AND NEW.deleted_at IS NULL AND NEW.is_active = true THEN
         UPDATE orgs SET total_teachers = total_teachers + 1 WHERE id = NEW.org_id;
       END IF;
     END IF;
     RETURN NEW;
   ELSIF TG_OP = 'DELETE' THEN
-    IF OLD.role = 'staff' AND OLD.deleted_at IS NULL AND OLD.is_active = true THEN
+    IF OLD.role = 'teacher' AND OLD.deleted_at IS NULL AND OLD.is_active = true THEN
       UPDATE orgs
       SET total_teachers = total_teachers - 1
       WHERE id = OLD.org_id;
