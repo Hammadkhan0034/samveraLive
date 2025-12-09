@@ -44,13 +44,14 @@ BEGIN
   END IF;
 
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'user_role_type') THEN
-    CREATE TYPE user_role_type AS ENUM (
-      'admin',
+    CREATE TYPE user_role_type AS ENUM ('principal','staff','guardian','student');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'staff_role_type') THEN
+    CREATE TYPE staff_role_type AS ENUM (
       'principal',
-      'teacher',
-      'guardian',
-      'student',
       'assistant_principal',
+      'teacher',
       'school_secretary',
       'finance_officer',
       'hr_officer',
@@ -65,9 +66,12 @@ BEGIN
     );
   END IF;
 
-
   IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'student_request_status') THEN
     CREATE TYPE student_request_status AS ENUM ('pending','approved','rejected');
+  END IF;
+
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'staff_status_type') THEN
+    CREATE TYPE staff_status_type AS ENUM ('active', 'inactive', 'holiday', 'sick_leave', 'maternity_leave', 'casual_leave');
   END IF;
 END $$;
 
@@ -126,9 +130,10 @@ CREATE TABLE IF NOT EXISTS users (
   last_login_at timestamptz,
   is_active boolean NOT NULL DEFAULT true,  
   is_staff boolean NOT NULL DEFAULT true,
+  status staff_status_type DEFAULT 'active',
   dob date,
-
-
+  theme text DEFAULT 'light' CHECK (theme IN ('light','dark')),
+  language text DEFAULT 'is' CHECK (language IN ('en','is')),
   deleted_at timestamptz NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
@@ -150,6 +155,22 @@ CREATE TABLE IF NOT EXISTS staff (
   updated_at timestamptz NOT NULL DEFAULT now(),
   UNIQUE (org_id, user_id)
 );
+
+-- STAFF STATUS HISTORY
+CREATE TABLE IF NOT EXISTS staff_status_history (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  staff_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  org_id uuid NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+  status staff_status_type NOT NULL ,
+  reason text NOT NULL,
+  start_date date NOT NULL,
+  end_date date,
+  changed_by uuid NOT NULL REFERENCES users(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  deleted_at timestamptz NULL
+);
+CREATE INDEX IF NOT EXISTS idx_staff_status_history_staff_id ON staff_status_history(staff_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_staff_status_history_org_id ON staff_status_history(org_id);
 
 -- Email format validation (works with citext)
 DO $$
@@ -297,8 +318,8 @@ BEGIN
   IF NEW.user_id IS NOT NULL THEN
     SELECT dob INTO user_dob FROM users WHERE id = NEW.user_id;
     IF user_dob IS NOT NULL THEN
-      IF user_dob > CURRENT_DATE OR user_dob < (CURRENT_DATE - INTERVAL '18 years') THEN
-        RAISE EXCEPTION 'Invalid DOB on linked user: must be within the last 18 years and not in the future';
+      IF user_dob > CURRENT_DATE OR user_dob < (CURRENT_DATE - INTERVAL '18 years') OR user_dob > (CURRENT_DATE - INTERVAL '3 years') THEN
+        RAISE EXCEPTION 'Invalid DOB on linked user: must be between 3 and 18 years old and not in the future';
       END IF;
     END IF;
   END IF;
@@ -311,8 +332,8 @@ CREATE OR REPLACE FUNCTION validate_user_dob()
 RETURNS TRIGGER AS $$
 BEGIN
   IF NEW.dob IS NOT NULL THEN
-    IF NEW.dob > CURRENT_DATE OR NEW.dob < (CURRENT_DATE - INTERVAL '18 years') THEN
-      RAISE EXCEPTION 'Invalid DOB: must be within the last 18 years and not in the future';
+    IF NEW.dob > CURRENT_DATE OR NEW.dob < (CURRENT_DATE - INTERVAL '18 years') OR NEW.dob > (CURRENT_DATE - INTERVAL '3 years') THEN
+      RAISE EXCEPTION 'Invalid DOB: must be between 3 and 18 years old and not in the future';
     END IF;
   END IF;
   RETURN NEW;
@@ -468,6 +489,26 @@ BEGIN
     );
   END IF;
 END $$;
+
+-- HEALTH_LOGS
+CREATE TABLE IF NOT EXISTS health_logs (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  org_id uuid NOT NULL REFERENCES orgs(id) ON DELETE CASCADE,
+  class_id uuid REFERENCES classes(id) ON DELETE CASCADE,
+  student_id uuid NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  type text NOT NULL,
+  recorded_at timestamptz NOT NULL DEFAULT now(),
+  temperature_celsius numeric,
+  data jsonb NOT NULL DEFAULT '{}'::jsonb,
+  notes text,
+  severity smallint,
+  recorded_by uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  deleted_at timestamptz NULL,
+  CHECK (temperature_celsius IS NULL OR (temperature_celsius >= 30 AND temperature_celsius <= 45)),
+  CHECK (severity IS NULL OR (severity BETWEEN 1 AND 5))
+);
 
 -- ANNOUNCEMENTS
 CREATE TABLE IF NOT EXISTS announcements (
@@ -814,6 +855,7 @@ CREATE INDEX IF NOT EXISTS idx_story_items_org_id ON story_items(org_id);
 CREATE INDEX IF NOT EXISTS idx_photos_org_id ON photos(org_id);
 CREATE INDEX IF NOT EXISTS idx_menus_org_id ON menus(org_id);
 CREATE INDEX IF NOT EXISTS idx_daily_logs_org_id ON daily_logs(org_id);
+CREATE INDEX IF NOT EXISTS idx_health_logs_org_id ON health_logs(org_id);
 CREATE INDEX IF NOT EXISTS idx_announcements_org_id ON announcements(org_id);
 CREATE INDEX IF NOT EXISTS idx_messages_org_id ON messages(org_id);
 CREATE INDEX IF NOT EXISTS idx_message_participants_org_id ON message_participants(org_id);
@@ -1245,7 +1287,7 @@ BEGIN
   FOR rec IN SELECT unnest(ARRAY[
     'orgs', 'users', 'classes', 'students',
     'student_requests', 'stories', 'story_items', 'photos', 'menus',
-    'daily_logs', 'announcements', 'messages', 'message_participants', 'message_items',
+    'daily_logs', 'health_logs', 'announcements', 'messages', 'message_participants', 'message_items',
     'events', 'notifications', 'invitations', 'attendance', 'assessments', 'staff', 'student_relatives'
   ]) AS tbl
   LOOP
