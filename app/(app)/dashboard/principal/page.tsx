@@ -112,15 +112,7 @@ function PrincipalDashboardContent({
 
   // Navigation tiles data with colored borders
   const navigationTiles = useMemo(() => [
-    {
-      id: 'dashboard',
-      title: t.title || 'Principal Dashboard',
-      desc: 'View dashboard overview',
-      Icon: LayoutDashboard,
-      route: '/dashboard/principal',
-      borderColor: 'border-mint-500',
-      titleColor: 'text-slate-900 dark:text-slate-100',
-    },
+
     {
       id: 'students',
       title: t.tile_students || 'Students',
@@ -137,7 +129,7 @@ function PrincipalDashboardContent({
       Icon: School,
       route: '/dashboard/principal/staff',
       borderColor: 'border-blue-500',
-      titleColor: 'text-blue-600 dark:text-blue-400',
+      titleColor: 'text-slate-900 dark:text-slate-100',
     },
     {
       id: 'classes',
@@ -483,11 +475,8 @@ function PrincipalDashboardContent({
                   ${active ? 'ring-2 ring-mint-500' : ''}
                 `}
               >
-                {/* Colored Top Border */}
-                <div className={`absolute top-0 left-0 right-0 h-1 rounded-t-ds-lg ${getTopBorderBgColor(borderColor)}`}></div>
-                
                 {/* Content */}
-                <div className="p-ds-md pt-5">
+                <div className="p-ds-md">
                   {/* Icon */}
                   <div className="mb-3">
                     <tile.Icon className={`h-8 w-8 text-slate-600 dark:text-slate-400 transition-colors duration-300 ${getIconHoverColor(borderColor)}`} />
