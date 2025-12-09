@@ -1322,6 +1322,327 @@ BEGIN
 END $$;
 
 -- ======================
+-- ORGANIZATION METRICS TRIGGERS
+-- ======================
+-- Trigger functions to automatically maintain calculated metrics in orgs table
+
+-- Trigger function to update current_enrolled_students
+CREATE OR REPLACE FUNCTION update_org_student_count()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    IF NEW.deleted_at IS NULL THEN
+      UPDATE orgs
+      SET current_enrolled_students = current_enrolled_students + 1
+      WHERE id = NEW.org_id;
+    END IF;
+    RETURN NEW;
+  ELSIF TG_OP = 'UPDATE' THEN
+    -- If deleted_at changed from NULL to NOT NULL (soft delete)
+    IF OLD.deleted_at IS NULL AND NEW.deleted_at IS NOT NULL THEN
+      UPDATE orgs
+      SET current_enrolled_students = current_enrolled_students - 1
+      WHERE id = NEW.org_id;
+    -- If deleted_at changed from NOT NULL to NULL (restore)
+    ELSIF OLD.deleted_at IS NOT NULL AND NEW.deleted_at IS NULL THEN
+      UPDATE orgs
+      SET current_enrolled_students = current_enrolled_students + 1
+      WHERE id = NEW.org_id;
+    -- If org_id changed
+    ELSIF OLD.org_id != NEW.org_id THEN
+      -- Decrement old org
+      IF OLD.deleted_at IS NULL THEN
+        UPDATE orgs
+        SET current_enrolled_students = current_enrolled_students - 1
+        WHERE id = OLD.org_id;
+      END IF;
+      -- Increment new org
+      IF NEW.deleted_at IS NULL THEN
+        UPDATE orgs
+        SET current_enrolled_students = current_enrolled_students + 1
+        WHERE id = NEW.org_id;
+      END IF;
+    END IF;
+    RETURN NEW;
+  ELSIF TG_OP = 'DELETE' THEN
+    IF OLD.deleted_at IS NULL THEN
+      UPDATE orgs
+      SET current_enrolled_students = current_enrolled_students - 1
+      WHERE id = OLD.org_id;
+    END IF;
+    RETURN OLD;
+  END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger function to update total_teachers
+CREATE OR REPLACE FUNCTION update_org_teacher_count()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    IF NEW.role = 'staff' AND NEW.deleted_at IS NULL AND NEW.is_active = true THEN
+      UPDATE orgs
+      SET total_teachers = total_teachers + 1
+      WHERE id = NEW.org_id;
+    END IF;
+    RETURN NEW;
+  ELSIF TG_OP = 'UPDATE' THEN
+    -- Handle role changes, active status changes, and soft deletes
+    IF OLD.org_id = NEW.org_id THEN
+      -- If was a teacher and now isn't (role changed, or deleted, or inactive)
+      IF OLD.role = 'staff' AND OLD.deleted_at IS NULL AND OLD.is_active = true
+         AND (NEW.role != 'staff' OR NEW.deleted_at IS NOT NULL OR NEW.is_active = false) THEN
+        UPDATE orgs
+        SET total_teachers = total_teachers - 1
+        WHERE id = NEW.org_id;
+      END IF;
+      -- If wasn't a teacher and now is (role changed, or restored, or activated)
+      IF (OLD.role != 'staff' OR OLD.deleted_at IS NOT NULL OR OLD.is_active = false)
+         AND NEW.role = 'staff' AND NEW.deleted_at IS NULL AND NEW.is_active = true THEN
+        UPDATE orgs
+        SET total_teachers = total_teachers + 1
+        WHERE id = NEW.org_id;
+      END IF;
+    ELSE
+      -- Org changed
+      IF OLD.role = 'staff' AND OLD.deleted_at IS NULL AND OLD.is_active = true THEN
+        UPDATE orgs SET total_teachers = total_teachers - 1 WHERE id = OLD.org_id;
+      END IF;
+      IF NEW.role = 'staff' AND NEW.deleted_at IS NULL AND NEW.is_active = true THEN
+        UPDATE orgs SET total_teachers = total_teachers + 1 WHERE id = NEW.org_id;
+      END IF;
+    END IF;
+    RETURN NEW;
+  ELSIF TG_OP = 'DELETE' THEN
+    IF OLD.role = 'staff' AND OLD.deleted_at IS NULL AND OLD.is_active = true THEN
+      UPDATE orgs
+      SET total_teachers = total_teachers - 1
+      WHERE id = OLD.org_id;
+    END IF;
+    RETURN OLD;
+  END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger function to update total_guardians
+CREATE OR REPLACE FUNCTION update_org_guardian_count()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    IF NEW.role = 'guardian' AND NEW.deleted_at IS NULL AND NEW.is_active = true THEN
+      UPDATE orgs
+      SET total_guardians = total_guardians + 1
+      WHERE id = NEW.org_id;
+    END IF;
+    RETURN NEW;
+  ELSIF TG_OP = 'UPDATE' THEN
+    -- Handle role changes, active status changes, and soft deletes
+    IF OLD.org_id = NEW.org_id THEN
+      -- If was a guardian and now isn't
+      IF OLD.role = 'guardian' AND OLD.deleted_at IS NULL AND OLD.is_active = true
+         AND (NEW.role != 'guardian' OR NEW.deleted_at IS NOT NULL OR NEW.is_active = false) THEN
+        UPDATE orgs
+        SET total_guardians = total_guardians - 1
+        WHERE id = NEW.org_id;
+      END IF;
+      -- If wasn't a guardian and now is
+      IF (OLD.role != 'guardian' OR OLD.deleted_at IS NOT NULL OR OLD.is_active = false)
+         AND NEW.role = 'guardian' AND NEW.deleted_at IS NULL AND NEW.is_active = true THEN
+        UPDATE orgs
+        SET total_guardians = total_guardians + 1
+        WHERE id = NEW.org_id;
+      END IF;
+    ELSE
+      -- Org changed
+      IF OLD.role = 'guardian' AND OLD.deleted_at IS NULL AND OLD.is_active = true THEN
+        UPDATE orgs SET total_guardians = total_guardians - 1 WHERE id = OLD.org_id;
+      END IF;
+      IF NEW.role = 'guardian' AND NEW.deleted_at IS NULL AND NEW.is_active = true THEN
+        UPDATE orgs SET total_guardians = total_guardians + 1 WHERE id = NEW.org_id;
+      END IF;
+    END IF;
+    RETURN NEW;
+  ELSIF TG_OP = 'DELETE' THEN
+    IF OLD.role = 'guardian' AND OLD.deleted_at IS NULL AND OLD.is_active = true THEN
+      UPDATE orgs
+      SET total_guardians = total_guardians - 1
+      WHERE id = OLD.org_id;
+    END IF;
+    RETURN OLD;
+  END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger function to update total_images
+CREATE OR REPLACE FUNCTION update_org_image_count()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    IF NEW.deleted_at IS NULL THEN
+      UPDATE orgs
+      SET total_images = total_images + 1
+      WHERE id = NEW.org_id;
+    END IF;
+    RETURN NEW;
+  ELSIF TG_OP = 'UPDATE' THEN
+    -- If deleted_at changed from NULL to NOT NULL (soft delete)
+    IF OLD.deleted_at IS NULL AND NEW.deleted_at IS NOT NULL THEN
+      UPDATE orgs
+      SET total_images = total_images - 1
+      WHERE id = NEW.org_id;
+    -- If deleted_at changed from NOT NULL to NULL (restore)
+    ELSIF OLD.deleted_at IS NOT NULL AND NEW.deleted_at IS NULL THEN
+      UPDATE orgs
+      SET total_images = total_images + 1
+      WHERE id = NEW.org_id;
+    -- If org_id changed
+    ELSIF OLD.org_id != NEW.org_id THEN
+      -- Decrement old org
+      IF OLD.deleted_at IS NULL THEN
+        UPDATE orgs
+        SET total_images = total_images - 1
+        WHERE id = OLD.org_id;
+      END IF;
+      -- Increment new org
+      IF NEW.deleted_at IS NULL THEN
+        UPDATE orgs
+        SET total_images = total_images + 1
+        WHERE id = NEW.org_id;
+      END IF;
+    END IF;
+    RETURN NEW;
+  ELSIF TG_OP = 'DELETE' THEN
+    IF OLD.deleted_at IS NULL THEN
+      UPDATE orgs
+      SET total_images = total_images - 1
+      WHERE id = OLD.org_id;
+    END IF;
+    RETURN OLD;
+  END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger function to update total_classes
+CREATE OR REPLACE FUNCTION update_org_class_count()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    IF NEW.deleted_at IS NULL THEN
+      UPDATE orgs
+      SET total_classes = total_classes + 1
+      WHERE id = NEW.org_id;
+    END IF;
+    RETURN NEW;
+  ELSIF TG_OP = 'UPDATE' THEN
+    -- If deleted_at changed from NULL to NOT NULL (soft delete)
+    IF OLD.deleted_at IS NULL AND NEW.deleted_at IS NOT NULL THEN
+      UPDATE orgs
+      SET total_classes = total_classes - 1
+      WHERE id = NEW.org_id;
+    -- If deleted_at changed from NOT NULL to NULL (restore)
+    ELSIF OLD.deleted_at IS NOT NULL AND NEW.deleted_at IS NULL THEN
+      UPDATE orgs
+      SET total_classes = total_classes + 1
+      WHERE id = NEW.org_id;
+    -- If org_id changed
+    ELSIF OLD.org_id != NEW.org_id THEN
+      -- Decrement old org
+      IF OLD.deleted_at IS NULL THEN
+        UPDATE orgs
+        SET total_classes = total_classes - 1
+        WHERE id = OLD.org_id;
+      END IF;
+      -- Increment new org
+      IF NEW.deleted_at IS NULL THEN
+        UPDATE orgs
+        SET total_classes = total_classes + 1
+        WHERE id = NEW.org_id;
+      END IF;
+    END IF;
+    RETURN NEW;
+  ELSIF TG_OP = 'DELETE' THEN
+    IF OLD.deleted_at IS NULL THEN
+      UPDATE orgs
+      SET total_classes = total_classes - 1
+      WHERE id = OLD.org_id;
+    END IF;
+    RETURN OLD;
+  END IF;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create triggers for students table
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger t
+    JOIN pg_class c ON c.oid = t.tgrelid
+    WHERE t.tgname = 'trg_update_org_student_count' AND c.relname = 'students'
+  ) THEN
+    CREATE TRIGGER trg_update_org_student_count
+    AFTER INSERT OR UPDATE OR DELETE ON students
+    FOR EACH ROW EXECUTE FUNCTION update_org_student_count();
+  END IF;
+END $$;
+
+-- Create triggers for users table (teachers and guardians)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger t
+    JOIN pg_class c ON c.oid = t.tgrelid
+    WHERE t.tgname = 'trg_update_org_teacher_count' AND c.relname = 'users'
+  ) THEN
+    CREATE TRIGGER trg_update_org_teacher_count
+    AFTER INSERT OR UPDATE OR DELETE ON users
+    FOR EACH ROW EXECUTE FUNCTION update_org_teacher_count();
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger t
+    JOIN pg_class c ON c.oid = t.tgrelid
+    WHERE t.tgname = 'trg_update_org_guardian_count' AND c.relname = 'users'
+  ) THEN
+    CREATE TRIGGER trg_update_org_guardian_count
+    AFTER INSERT OR UPDATE OR DELETE ON users
+    FOR EACH ROW EXECUTE FUNCTION update_org_guardian_count();
+  END IF;
+END $$;
+
+-- Create triggers for photos table
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger t
+    JOIN pg_class c ON c.oid = t.tgrelid
+    WHERE t.tgname = 'trg_update_org_image_count' AND c.relname = 'photos'
+  ) THEN
+    CREATE TRIGGER trg_update_org_image_count
+    AFTER INSERT OR UPDATE OR DELETE ON photos
+    FOR EACH ROW EXECUTE FUNCTION update_org_image_count();
+  END IF;
+END $$;
+
+-- Create triggers for classes table
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger t
+    JOIN pg_class c ON c.oid = t.tgrelid
+    WHERE t.tgname = 'trg_update_org_class_count' AND c.relname = 'classes'
+  ) THEN
+    CREATE TRIGGER trg_update_org_class_count
+    AFTER INSERT OR UPDATE OR DELETE ON classes
+    FOR EACH ROW EXECUTE FUNCTION update_org_class_count();
+  END IF;
+END $$;
+
+-- ======================
 -- MULTI-TENANT VALIDATION FUNCTION
 -- ======================
 -- Create validation function after all tables are created
