@@ -6,6 +6,7 @@ import { Calendar, Utensils, Menu } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import TeacherPageLayout, { useTeacherPageLayout } from '@/app/components/shared/TeacherPageLayout';
 import EmptyState from '@/app/components/EmptyState';
+import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 
 interface Menu {
   id: string;
@@ -25,27 +26,9 @@ export default function TeacherMenusPage() {
   const { lang, t } = useLanguage();
   const pathname = usePathname();
 
-  // Initialize from cache immediately if available to avoid loading state
-  const [menus, setMenus] = useState<Menu[]>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const cacheKey = 'teacher_menus_list';
-        const cached = localStorage.getItem(cacheKey);
-        const cacheTime = localStorage.getItem(`${cacheKey}_time`);
-        if (cached && cacheTime) {
-          const cachedMenus = JSON.parse(cached);
-          const age = Date.now() - parseInt(cacheTime);
-          if (cachedMenus && Array.isArray(cachedMenus) && age < 5 * 60 * 1000 && cachedMenus.length > 0) {
-            return cachedMenus;
-          }
-        }
-      } catch (e) {
-        // Ignore cache errors
-      }
-    }
-    return [];
-  });
-  const [loadingMenus, setLoadingMenus] = useState(false);
+  const [menus, setMenus] = useState<Menu[]>([]);
+  const [loadingMenus, setLoadingMenus] = useState(true);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>(() => {
     const today = new Date();
@@ -55,18 +38,21 @@ export default function TeacherMenusPage() {
   const itemsPerPage = 10;
 
   const loadMenus = useCallback(async () => {
-    // Check cache first for instant display
+    // Check cache first for instant display (only after initial load)
     const cacheKey = 'teacher_menus_list';
-    if (typeof window !== 'undefined') {
+    let cachedMenus: Menu[] | null = null;
+    
+    if (typeof window !== 'undefined' && !isInitialLoad) {
       const cached = localStorage.getItem(cacheKey);
       const cacheTime = localStorage.getItem(`${cacheKey}_time`);
       
       if (cached && cacheTime) {
         try {
-          const cachedMenus = JSON.parse(cached);
+          const parsed = JSON.parse(cached);
           const age = Date.now() - parseInt(cacheTime);
           // Use cache if less than 5 minutes old
-          if (age < 5 * 60 * 1000 && cachedMenus && Array.isArray(cachedMenus) && cachedMenus.length > 0) {
+          if (age < 5 * 60 * 1000 && parsed && Array.isArray(parsed) && parsed.length > 0) {
+            cachedMenus = parsed;
             setMenus(cachedMenus);
             // Fetch fresh data in background
             fetchFreshMenus(cachedMenus);
@@ -78,8 +64,8 @@ export default function TeacherMenusPage() {
       }
     }
 
-    // No cache, fetch immediately
-    await fetchFreshMenus(null);
+    // No cache or initial load, fetch immediately
+    await fetchFreshMenus(cachedMenus);
 
     async function fetchFreshMenus(existingMenus: Menu[] | null) {
       setLoadingMenus(true);
@@ -137,9 +123,10 @@ export default function TeacherMenusPage() {
         }
       } finally {
         setLoadingMenus(false);
+        setIsInitialLoad(false);
       }
     }
-  }, []);
+  }, [isInitialLoad]);
 
   // Listen for menu updates and refresh instantly
   useEffect(() => {
@@ -316,7 +303,9 @@ export default function TeacherMenusPage() {
             </div>
           </div>
           {/* Table Section */}
-          {paginatedMenus.length === 0 ? (
+          {loadingMenus && isInitialLoad ? (
+            <LoadingSkeleton type="table" rows={5} />
+          ) : paginatedMenus.length === 0 ? (
             <EmptyState
               icon={Utensils}
               title={t.no_menus_title}

@@ -33,28 +33,10 @@ function GuardianMenusContent() {
   const orgId = userMetadata?.org_id || userMetadata?.organization_id || userMetadata?.orgId;
   const classId = userMetadata?.class_id;
 
-  // Initialize from cache immediately if available
-  const [menus, setMenus] = useState<Menu[]>(() => {
-    if (typeof window !== 'undefined' && orgId) {
-      try {
-        const cacheKey = `parent_menus_${orgId}`;
-        const cached = localStorage.getItem(cacheKey);
-        const cacheTime = localStorage.getItem(`${cacheKey}_time`);
-        if (cached && cacheTime) {
-          const cachedMenus = JSON.parse(cached);
-          const age = Date.now() - parseInt(cacheTime);
-          if (cachedMenus && Array.isArray(cachedMenus) && age < 10 * 60 * 1000 && cachedMenus.length > 0) {
-            return cachedMenus;
-          }
-        }
-      } catch (e) {
-        // Ignore cache errors
-      }
-    }
-    return [];
-  });
-
+  const [menus, setMenus] = useState<Menu[]>([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [selectedDate, setSelectedDate] = useState<string>(() => {
     const today = new Date();
     return today.toISOString().split('T')[0];
@@ -174,12 +156,22 @@ function GuardianMenusContent() {
 
   const loadMenus = useCallback(async () => {
     if (!orgId || !user?.id) {
+      setLoading(false);
+      setIsInitialLoad(false);
       return;
     }
 
     const cacheKey = `parent_menus_${orgId}`;
     
+    // On initial load, always show skeleton and fetch fresh data
+    if (isInitialLoad) {
+      setLoading(true);
+    }
+    
     async function fetchFreshMenus(existingMenus: Menu[] | null) {
+      if (isInitialLoad) {
+        setLoading(true);
+      }
       setError(null);
       try {
         let allMenus: Menu[] = [];
@@ -255,10 +247,19 @@ function GuardianMenusContent() {
         console.error('Error loading menus:', e);
         const errorMessage = e.message || 'Failed to load menus. Please try again.';
         setError(errorMessage);
+      } finally {
+        setLoading(false);
+        setIsInitialLoad(false);
       }
     }
 
-    // Check cache first
+    // On initial load, always fetch fresh data (no cache check)
+    if (isInitialLoad) {
+      await fetchFreshMenus(null);
+      return;
+    }
+
+    // After initial load, use cache for faster updates
     if (typeof window !== 'undefined') {
       const cached = localStorage.getItem(cacheKey);
       const cacheTime = localStorage.getItem(`${cacheKey}_time`);
@@ -269,6 +270,8 @@ function GuardianMenusContent() {
           const age = Date.now() - parseInt(cacheTime);
           if (cachedMenus && Array.isArray(cachedMenus) && age < 10 * 60 * 1000 && cachedMenus.length > 0) {
             setMenus(cachedMenus);
+            setLoading(false);
+            // Fetch fresh data in background
             fetchFreshMenus(cachedMenus);
             return;
           }
@@ -278,8 +281,9 @@ function GuardianMenusContent() {
       }
     }
 
+    // No cache available, fetch immediately
     await fetchFreshMenus(null);
-  }, [orgId, classId, linkedStudents, user]);
+  }, [orgId, classId, linkedStudents, user, isInitialLoad]);
 
   // Load menus when orgId and user are available
   useEffect(() => {
@@ -364,8 +368,49 @@ function GuardianMenusContent() {
         </div>
       )}
 
-      {/* Menu Display */}
-      {menusForDate.length === 0 ? (
+      {/* Loading State - Show skeleton on initial load */}
+      {loading && isInitialLoad && !error ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-ds-sm">
+          {[1, 2, 3].map((idx) => (
+            <div key={idx} className="rounded-ds-lg border border-slate-200 bg-white p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800 animate-pulse">
+              {/* Class name skeleton */}
+              <div className="mb-ds-sm h-4 w-24 bg-slate-200 dark:bg-slate-700 rounded"></div>
+              <div className="space-y-4">
+                {/* Breakfast skeleton */}
+                <div className="flex items-start gap-4 p-4 rounded-ds-md bg-amber-50 border border-amber-200 dark:bg-amber-900/20 dark:border-amber-800">
+                  <div className="flex-shrink-0 mt-1">
+                    <div className="w-3 h-3 rounded-ds-full bg-amber-200 dark:bg-amber-800"></div>
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-32 bg-amber-200 dark:bg-amber-800 rounded"></div>
+                    <div className="h-3 w-full bg-amber-200 dark:bg-amber-800 rounded"></div>
+                  </div>
+                </div>
+                {/* Lunch skeleton */}
+                <div className="flex items-start gap-4 p-4 rounded-ds-md bg-pale-blue border border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
+                  <div className="flex-shrink-0 mt-1">
+                    <div className="w-3 h-3 rounded-ds-full bg-blue-200 dark:bg-blue-800"></div>
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-24 bg-blue-200 dark:bg-blue-800 rounded"></div>
+                    <div className="h-3 w-full bg-blue-200 dark:bg-blue-800 rounded"></div>
+                  </div>
+                </div>
+                {/* Snack skeleton */}
+                <div className="flex items-start gap-4 p-4 rounded-ds-md bg-mint-50 border border-mint-200 dark:bg-green-900/20 dark:border-green-800">
+                  <div className="flex-shrink-0 mt-1">
+                    <div className="w-3 h-3 rounded-ds-full bg-mint-200 dark:bg-green-800"></div>
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 w-20 bg-mint-200 dark:bg-green-800 rounded"></div>
+                    <div className="h-3 w-5/6 bg-mint-200 dark:bg-green-800 rounded"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : !loading && menusForDate.length === 0 ? (
         <div className="rounded-ds-lg border border-slate-200 bg-white p-12 shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
           <EmptyState
             icon={Utensils}
@@ -373,7 +418,7 @@ function GuardianMenusContent() {
             description={t.no_menu_for_date_description || 'No menu available for this date.'}
           />
         </div>
-      ) : (
+      ) : !loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-ds-sm">
           {menusForDate
             .slice()
@@ -437,7 +482,7 @@ function GuardianMenusContent() {
             </div>
           ))}
         </div>
-      )}
+      ) : null}
     </>
   );
 }
@@ -463,3 +508,4 @@ export default function GuardianMenusPage() {
     </Suspense>
   );
 }
+

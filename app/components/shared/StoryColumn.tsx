@@ -49,7 +49,7 @@ export default function StoryColumn({
   const [stories, setStories] = useState<StoryWithPreview[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [hydratedFromCache, setHydratedFromCache] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [isAddStoryModalOpen, setIsAddStoryModalOpen] = useState(false);
 
   // Story viewer state
@@ -80,25 +80,8 @@ export default function StoryColumn({
     return 'guardian'; // default
   }, [userRole, session]);
 
-  // Hydrate from cache instantly on mount
-  useEffect(() => {
-    if (effectiveUserId) {
-      try {
-        const cacheKey = `stories_column_cache_${effectiveUserId}`;
-        const cached = localStorage.getItem(cacheKey);
-        if (cached) {
-          const parsed = JSON.parse(cached) as StoryWithPreview[];
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setStories(parsed);
-            setHydratedFromCache(true);
-            setLoading(false); // Don't show loading if we have cache
-          }
-        }
-      } catch (e) {
-        // Ignore cache errors
-      }
-    }
-  }, [effectiveUserId]);
+  // On initial load, always show skeleton and fetch fresh data
+  // After initial load, use cache for faster updates
 
   // Load stories function
   const loadStories = useCallback(async () => {
@@ -106,11 +89,12 @@ export default function StoryColumn({
     if (!effectiveUserId) {
       setLoading(false);
       setError(null); // Don't show error, just don't fetch
+      setIsInitialLoad(false);
       return;
     }
 
-    // Don't show loading if we already have cached data
-    if (!hydratedFromCache) {
+    // On initial load, always show loading skeleton
+    if (isInitialLoad) {
       setLoading(true);
     }
     setError(null);
@@ -217,14 +201,51 @@ export default function StoryColumn({
       console.error('Error loading stories:', e);
     } finally {
       setLoading(false);
-      setHydratedFromCache(false); // Reset after first load
+      setIsInitialLoad(false);
     }
-  }, [effectiveUserId, hydratedFromCache]);
+  }, [effectiveUserId, isInitialLoad]);
 
   // Fetch stories on mount and when dependencies change
   useEffect(() => {
-    loadStories();
-  }, [loadStories, effectiveUserRole, session]);
+    const cacheKey = `stories_column_cache_${effectiveUserId}`;
+    
+    // On initial load, always fetch and show skeleton
+    if (isInitialLoad) {
+      if (effectiveUserId) {
+        loadStories();
+      } else {
+        setLoading(false);
+        setIsInitialLoad(false);
+      }
+      return;
+    }
+
+    // After initial load, use cache for faster updates
+    if (effectiveUserId && typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          const parsed = JSON.parse(cached) as StoryWithPreview[];
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setStories(parsed);
+            setLoading(false);
+            // Fetch fresh data in background
+            loadStories();
+            return;
+          }
+        }
+      } catch (e) {
+        // Ignore cache errors
+      }
+    }
+
+    // No cache available, fetch immediately
+    if (effectiveUserId) {
+      loadStories();
+    } else {
+      setLoading(false);
+    }
+  }, [loadStories, effectiveUserRole, session, effectiveUserId, isInitialLoad]);
 
   const handleStoryClick = (story: StoryWithPreview) => {
     openStoryViewer(story);
@@ -591,11 +612,13 @@ export default function StoryColumn({
 
   const canCreateStory = effectiveUserRole === 'guardian' || effectiveUserRole === 'teacher' || effectiveUserRole === 'principal';
 
-  // Only show loading skeleton if no cache exists and we're actually loading
-  if (loading && stories.length === 0 && !hydratedFromCache) {
+  // Show loading skeleton on initial load
+  if (loading && isInitialLoad) {
     return (
       <div className="mb-6">
         <div className="flex items-center gap-3 overflow-x-auto pb-2">
+          <div className="flex-shrink-0 w-16 h-16 rounded-full bg-slate-200 dark:bg-slate-700 animate-pulse" />
+          <div className="flex-shrink-0 w-16 h-16 rounded-full bg-slate-200 dark:bg-slate-700 animate-pulse" />
           <div className="flex-shrink-0 w-16 h-16 rounded-full bg-slate-200 dark:bg-slate-700 animate-pulse" />
           <div className="flex-shrink-0 w-16 h-16 rounded-full bg-slate-200 dark:bg-slate-700 animate-pulse" />
           <div className="flex-shrink-0 w-16 h-16 rounded-full bg-slate-200 dark:bg-slate-700 animate-pulse" />

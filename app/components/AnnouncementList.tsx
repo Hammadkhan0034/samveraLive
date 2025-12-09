@@ -5,6 +5,7 @@ import { Megaphone } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import EmptyState from '@/app/components/EmptyState';
+import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 
 interface Announcement {
   id: string;
@@ -36,9 +37,9 @@ export default function AnnouncementList({
 }: AnnouncementListProps) {
   const { user } = useAuth();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [loading, setLoading] = useState(false); // Start with false to avoid initial skeleton
+  const [loading, setLoading] = useState(true); // Start with true to show initial skeleton
   const [error, setError] = useState('');
-  const [hydratedFromCache, setHydratedFromCache] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   const { t, lang: currentLang } = useLanguage();
   // Use lang prop if provided, otherwise use current language from context
@@ -172,22 +173,38 @@ export default function AnnouncementList({
       }
     } finally {
       setLoading(false);
+      setIsInitialLoad(false);
     }
   }, [classId, userRole, teacherClassIds, limit, t, user]);
 
   useEffect(() => {
-    // Instant render from cache (no skeleton) and then refresh in background
     const cacheKey = `announcements_${classId || 'org'}_${userRole || 'all'}_${teacherClassIds?.join('-') || 'none'}`;
 
+    // On initial load, always show skeleton and fetch fresh data
+    if (isInitialLoad) {
+      if (user) {
+        loadAnnouncements();
+      } else {
+        setLoading(false);
+        setIsInitialLoad(false);
+      }
+      return;
+    }
+
+    // After initial load, use cache for faster updates
     if (typeof window !== 'undefined') {
       try {
         const cached = localStorage.getItem(cacheKey);
         if (cached) {
           const parsed = JSON.parse(cached) as Announcement[];
-          if (Array.isArray(parsed)) {
+          if (Array.isArray(parsed) && parsed.length > 0) {
             setAnnouncements(parsed);
-            setLoading(false); // Ensure loading is false when we have cache
-            setHydratedFromCache(true);
+            setLoading(false);
+            // Fetch fresh data in background
+            if (user) {
+              loadAnnouncements();
+            }
+            return;
           }
         }
       } catch {
@@ -195,18 +212,18 @@ export default function AnnouncementList({
       }
     }
 
-    // Only load fresh data if user is authenticated
+    // No cache available, fetch immediately
     if (user) {
-      // Load fresh data in background without showing loading
       loadAnnouncements();
+    } else {
+      setLoading(false);
     }
-  }, [classId, userRole, teacherClassIds, loadAnnouncements, user]);
+  }, [classId, userRole, teacherClassIds, loadAnnouncements, user, isInitialLoad]);
   
   // Listen for custom event to refresh announcements
   useEffect(() => {
     const handleRefresh = () => {
       // Don't show loading skeleton when refreshing - just update in background
-      // Keep hydratedFromCache true so we don't show skeleton
       loadAnnouncements();
     };
     
@@ -227,19 +244,8 @@ export default function AnnouncementList({
     });
   };
 
-  if (loading) {
-    return (
-      <div className="space-y-3 sm:space-y-4">
-        {[...Array(3)].map((_, i) => (
-          <div key={i} className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-3 sm:p-4 animate-pulse">
-            <div className="h-3 sm:h-4 bg-gray-200 dark:bg-slate-600 rounded w-3/4 mb-2"></div>
-            <div className="h-2.5 sm:h-3 bg-gray-200 dark:bg-slate-600 rounded w-1/2 mb-2 sm:mb-3"></div>
-            <div className="h-2.5 sm:h-3 bg-gray-200 dark:bg-slate-600 rounded w-full"></div>
-            <div className="h-2.5 sm:h-3 bg-gray-200 dark:bg-slate-600 rounded w-2/3 mt-1"></div>
-          </div>
-        ))}
-      </div>
-    );
+  if (loading && isInitialLoad) {
+    return <LoadingSkeleton type="cards" rows={5} />;
   }
 
   if (error) {

@@ -6,6 +6,7 @@ import GuardianPageLayout, { useGuardianPageLayout } from '@/app/components/shar
 import { PageHeader } from '@/app/components/shared/PageHeader';
 import { AlertCircle, Megaphone } from 'lucide-react';
 import EmptyState from '@/app/components/EmptyState';
+import LoadingSkeleton from '@/app/components/loading-skeletons/LoadingSkeleton';
 
 interface Announcement {
   id: string;
@@ -22,12 +23,13 @@ function GuardianAnnouncementsContent() {
   const { sidebarRef } = useGuardianPageLayout();
 
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [hydratedFromCache, setHydratedFromCache] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   const loadAnnouncements = useCallback(async (showLoading = false) => {
-    if (showLoading) {
+    // On initial load, always show loading
+    if (isInitialLoad || showLoading) {
       setLoading(true);
     }
     setError(null);
@@ -75,41 +77,56 @@ function GuardianAnnouncementsContent() {
       // Use server error message or fallback - translation handled in UI
       setError(err.message || 'Failed to load announcements');
     } finally {
-      if (showLoading) {
+      if (isInitialLoad || showLoading) {
         setLoading(false);
       }
+      setIsInitialLoad(false);
     }
-  }, []);
+  }, [isInitialLoad]);
 
   useEffect(() => {
     let mounted = true;
 
-    // Load from cache first for instant display
-    if (typeof window !== 'undefined') {
-      try {
-        const cached = localStorage.getItem('guardian_announcements');
-        if (cached) {
-          const parsed = JSON.parse(cached) as Announcement[];
-          if (Array.isArray(parsed) && mounted) {
-            setAnnouncements(parsed);
-            setHydratedFromCache(true);
-          }
-        }
-      } catch {
-        // ignore cache errors
+    // On initial load, always show skeleton and fetch fresh data
+    if (isInitialLoad) {
+      if (mounted) {
+        loadAnnouncements(false);
       }
-    }
+    } else {
+      // After initial load, use cache for faster updates
+      if (typeof window !== 'undefined' && mounted) {
+        try {
+          const cached = localStorage.getItem('guardian_announcements');
+          if (cached) {
+            const parsed = JSON.parse(cached) as Announcement[];
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setAnnouncements(parsed);
+              setLoading(false);
+              // Fetch fresh data in background
+              if (mounted) {
+                loadAnnouncements(false);
+              }
+              return () => {
+                mounted = false;
+              };
+            }
+          }
+        } catch {
+          // ignore cache errors
+        }
+      }
 
-    // Load fresh data in background without showing loading
-    if (mounted) {
-      loadAnnouncements(false);
+      // No cache available, fetch immediately
+      if (mounted) {
+        loadAnnouncements(false);
+      }
     }
 
     return () => {
       mounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only run once on mount
+  }, [isInitialLoad]); // Run when isInitialLoad changes
 
   // Listen for refresh events
   useEffect(() => {
@@ -160,11 +177,9 @@ function GuardianAnnouncementsContent() {
         </div>
       )}
 
-      {/* Loading State - Only show if we don't have cached data */}
-      {loading && !error && !hydratedFromCache && announcements.length === 0 && (
-        <div className="rounded-ds-lg border border-slate-200 bg-white p-8 shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
-          <p className="text-center text-slate-600 dark:text-slate-400">{t.loading || 'Loading...'}</p>
-        </div>
+      {/* Loading State - Show skeleton on initial load */}
+      {loading && isInitialLoad && !error && (
+        <LoadingSkeleton type="cards" rows={5} />
       )}
 
       {/* Empty State */}
