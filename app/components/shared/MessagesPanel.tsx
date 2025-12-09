@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Send, Paperclip, Search, MessageSquarePlus, X, MessageSquare } from 'lucide-react';
+import { Send, Paperclip, Search, MessageSquarePlus, X, MessageSquare, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useMessagesRealtime } from '@/lib/hooks/useMessagesRealtime';
@@ -38,6 +38,7 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
   const [linkedStudentClassIds, setLinkedStudentClassIds] = useState<Set<string>>(new Set());
   const [showNewConversation, setShowNewConversation] = useState(false);
   const [chatMessageBody, setChatMessageBody] = useState('');
+  const [showChatView, setShowChatView] = useState(false); // For mobile: true = show chat, false = show list
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // Refs to track previous values and prevent infinite loops
@@ -662,9 +663,12 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
           }
           setThreads(json.threads);
           
-          // Auto-select first thread if none selected
+          // Auto-select first thread if none selected (only on desktop, not mobile)
           if (json.threads.length > 0 && !selectedThread) {
-            setSelectedThread(json.threads[0]);
+            const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+            if (!isMobile) {
+              setSelectedThread(json.threads[0]);
+            }
           }
         }
       } catch (error) {
@@ -903,16 +907,37 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
   }, [threads, searchQuery, role, allowedGuardianIds]);
 
   // Update selected thread if it's no longer in filtered list
+  // On desktop, auto-select first thread. On mobile, don't auto-select to keep list visible
   useEffect(() => {
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    
     if (selectedThread && filteredThreads.length > 0) {
       const isSelectedThreadVisible = filteredThreads.some(t => t.id === selectedThread.id);
       if (!isSelectedThreadVisible) {
-        // Selected thread is filtered out, select the first available thread
-        setSelectedThread(filteredThreads[0]);
+        // Selected thread is filtered out
+        if (isMobile) {
+          // On mobile, clear selection to show list
+          setSelectedThread(null);
+          setShowChatView(false);
+        } else {
+          // On desktop, select first available thread
+          setSelectedThread(filteredThreads[0]);
+        }
       }
     } else if (!selectedThread && filteredThreads.length > 0) {
-      // No thread selected but we have filtered threads, select the first one
-      setSelectedThread(filteredThreads[0]);
+      // No thread selected but we have filtered threads
+      if (!isMobile) {
+        // Only auto-select on desktop, not mobile
+        setSelectedThread(filteredThreads[0]);
+      } else {
+        // On mobile, ensure chat view is hidden when no thread is selected
+        setShowChatView(false);
+      }
+    } else if (!selectedThread) {
+      // No thread selected at all - ensure chat view is hidden on mobile
+      if (isMobile) {
+        setShowChatView(false);
+      }
     }
   }, [filteredThreads, selectedThread]);
 
@@ -1104,6 +1129,7 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
       setMessageBody('');
       setRecipientId('');
       setShowNewConversation(false);
+      setShowChatView(true); // Show chat view on mobile after sending
 
       // Reload threads to show the new conversation in the list
       // Don't filter here - let the useMemo handle filtering based on role and allowedGuardianIds
@@ -1176,17 +1202,18 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
   }
 
   return (
-    <div className="flex h-[calc(100vh-160px)] rounded-ds-lg border border-slate-200 bg-white shadow-ds-card dark:border-slate-700 dark:bg-slate-800 overflow-hidden">
+    <div className="flex flex-col md:flex-row h-[calc(100vh-240px)] sm:h-[calc(100vh-200px)] md:h-[calc(100vh-160px)] rounded-ds-lg border border-slate-200 bg-white shadow-ds-card dark:border-slate-700 dark:bg-slate-800 overflow-hidden">
       {/* Left Sidebar - Conversations List */}
-      <div className="w-1/3 border-r border-slate-200 dark:border-slate-700 flex flex-col">
+      <div className={`${showChatView ? 'hidden' : 'flex'} md:flex w-full md:w-1/3 md:border-r border-b md:border-b-0 border-slate-200 dark:border-slate-700 flex-col min-h-0`}>
         {/* Header with New Conversation Button */}
-        <div className="p-ds-sm border-b border-slate-200 dark:border-slate-700 bg-mint-50 dark:bg-slate-900">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">{t.messages || 'Conversations'}</h2>
+        <div className="p-3 md:p-ds-sm border-b border-slate-200 dark:border-slate-700 bg-mint-50 dark:bg-slate-900">
+          <div className="flex items-center justify-between mb-2 md:mb-3">
+            <h2 className="text-base md:text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">{t.messages || 'Conversations'}</h2>
             <button
               onClick={() => {
                 setShowNewConversation(!showNewConversation);
                 setSelectedThread(null);
+                setShowChatView(false); // Hide chat view on mobile when opening new conversation
               }}
               className="p-2 rounded-ds-md bg-mint-500 hover:bg-mint-600 text-white transition-colors"
               title={t.new_message}
@@ -1197,7 +1224,7 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
 
           {/* New Conversation Form */}
           {showNewConversation && (
-            <div className="p-3 bg-white dark:bg-slate-800 rounded-ds-md border border-slate-200 dark:border-slate-700 mb-3">
+            <div className="p-2 md:p-3 bg-white dark:bg-slate-800 rounded-ds-md border border-slate-200 dark:border-slate-700 mb-2 md:mb-3">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-ds-small font-medium text-slate-900 dark:text-slate-100">{t.new_message}</span>
                 <button
@@ -1330,7 +1357,7 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
           )}
 
           {/* Search Bar */}
-          <div className="flex items-center gap-2 bg-[#F5FFF7] dark:bg-slate-800 rounded-ds-md border border-[#D8EBD8] dark:border-slate-700 px-3 py-2">
+          <div className="flex items-center gap-2 bg-[#F5FFF7] dark:bg-slate-800 rounded-ds-md border border-[#D8EBD8] dark:border-slate-700 px-2 py-1.5 md:px-3 md:py-2">
             <Search className="h-4 w-4 text-slate-400" />
             <input
               type="text"
@@ -1376,8 +1403,9 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
                     setSelectedThread(thread);
                     setShowNewConversation(false);
                     setChatMessageBody('');
+                    setShowChatView(true); // Show chat view on mobile
                   }}
-                  className={`cursor-pointer p-4 hover:bg-mint-50 dark:hover:bg-slate-700/50 transition-colors ${
+                  className={`cursor-pointer p-3 md:p-4 hover:bg-mint-50 dark:hover:bg-slate-700/50 transition-colors ${
                     selectedThread?.id === thread.id ? 'bg-mint-100 dark:bg-slate-800/50 border-l-4 border-mint-500' : ''
                   }`}
                 >
@@ -1421,13 +1449,25 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
       </div>
 
       {/* Right Side - Chat View */}
-      <div className="flex-1 flex flex-col bg-mint-50 dark:bg-slate-900">
+      {/* On mobile: only show when showChatView is true (user clicked conversation). On desktop: always show */}
+      <div className={`${showChatView ? 'flex' : 'hidden'} md:flex flex-1 flex-col bg-mint-50 dark:bg-slate-900 w-full md:w-auto min-h-0`}>
         {selectedThread ? (
           <>
             {/* Chat Header */}
-            <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-mint-500 flex items-center justify-center text-white font-semibold">
+            <div className="p-3 md:p-4 border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+              <div className="flex items-center gap-2 md:gap-3">
+                {/* Back button for mobile */}
+                <button
+                  onClick={() => {
+                    setShowChatView(false);
+                    setSelectedThread(null);
+                  }}
+                  className="md:hidden p-2 -ml-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-ds-md transition-colors"
+                  aria-label="Back to conversations"
+                >
+                  <ArrowLeft className="h-5 w-5 text-slate-600 dark:text-slate-400" />
+                </button>
+                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-mint-500 flex items-center justify-center text-white font-semibold text-sm md:text-base">
                   {selectedThread.other_participant
                     ? (selectedThread.other_participant.first_name?.[0] || selectedThread.other_participant.email?.[0] || '?').toUpperCase()
                     : '?'}
@@ -1447,7 +1487,7 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-2 md:space-y-3">
               {messages.length === 0 ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center">
@@ -1464,7 +1504,7 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
                         className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
                       >
                         <div
-                          className={`max-w-[70%] rounded-ds-lg px-4 py-2 ${
+                          className={`max-w-[85%] md:max-w-[70%] rounded-ds-lg px-3 py-2 md:px-4 ${
                             isOwn
                               ? 'bg-mint-500 text-white rounded-br-sm'
                               : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-bl-sm border border-slate-200 dark:border-slate-700'
@@ -1484,7 +1524,7 @@ export default function MessagesPanel({ role, teacherClasses = [], students = []
             </div>
 
             {/* Message Input */}
-            <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+            <div className="p-3 md:p-4 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
               <div className="flex items-end gap-2">
                 <button className="p-2 rounded-ds-md hover:bg-mint-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 transition-colors">
                   <Paperclip className="h-5 w-5" />
