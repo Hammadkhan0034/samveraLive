@@ -116,6 +116,8 @@ export const enText = {
   save_values: 'Save Values',
   stats_report: 'Stats Report',
   navigation: 'Navigation',
+  management_modules: 'Management Modules',
+  management_modules_description: 'Access and manage all administrative modules and features',
   failed_to_load_dashboard_metrics: 'Failed to load dashboard metrics. Please try again.',
 
   // Announcements

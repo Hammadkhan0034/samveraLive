@@ -116,6 +116,8 @@ export const isText = {
   save_values: 'Vista gildi',
   stats_report: 'Tölfræðiskýrsla',
   navigation: 'Flakk',
+  management_modules: 'Stjórnunareiningar',
+  management_modules_description: 'Aðgangur að og stjórnun allra stjórnunareininga og eiginleika',
   failed_to_load_dashboard_metrics: 'Mistókst að hlaða mælingum yfirlits. Vinsamlegast reyndu aftur.',
 
   // Announcements

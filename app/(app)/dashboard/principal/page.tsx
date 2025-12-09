@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
-import { Users, School, ChartBar as BarChart3, Utensils, AlertCircle, LayoutDashboard, MessageSquare, Camera, CalendarDays, Shield, Link as LinkIcon, Megaphone, Activity, Building, Edit3, Settings, Download, Baby, Maximize2, Minimize2, UsersRound, GraduationCap, Layers, Image as ImageIcon } from 'lucide-react';
+import { Users, School, ChartBar as BarChart3, Utensils, AlertCircle, LayoutDashboard, MessageSquare, Camera, CalendarDays, Shield, Link as LinkIcon, Megaphone, Activity, Building, Edit3, Settings, Download, Baby, Maximize2, Minimize2, UsersRound, GraduationCap, Layers, Image as ImageIcon, Grid3x3 } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import PrincipalPageLayout from '@/app/components/shared/PrincipalPageLayout';
 import { PageHeader } from '@/app/components/shared/PageHeader';
@@ -358,10 +358,10 @@ function PrincipalDashboardContent({
         </section>
       )}
 
-      <StoryColumn
+      {/* <StoryColumn
         userRole="principal"
       />
-      {/* Error Message */}
+    
       {error && (
         <div className="mb-ds-sm rounded-ds-md border border-red-200 bg-red-50 p-ds-sm dark:border-red-800 dark:bg-red-900/20">
           <div className="flex items-center gap-ds-md">
@@ -381,7 +381,7 @@ function PrincipalDashboardContent({
         </div>
       )}
 
-      {/* KPIs Section */}
+  
       <section className="mb-ds-lg">
         {isLoading ? (
           <KPICardSkeleton count={4} />
@@ -414,13 +414,23 @@ function PrincipalDashboardContent({
             })}
           </div>
         )}
-      </section>
+      </section> */}
 
       {/* Navigation Tiles Section */}
       <section className="mb-ds-lg">
-        <h2 className="text-ds-h3 font-semibold text-ds-text-primary dark:text-slate-100 mb-ds-md">
-          {t.navigation || 'Navigation'}
-        </h2>
+        <div className="mb-ds-md flex items-center gap-ds-sm">
+          <div className="flex h-10 w-10 items-center justify-center rounded-ds-md bg-mint-100 dark:bg-slate-800">
+            <Grid3x3 className="h-5 w-5 text-mint-700 dark:text-mint-400" />
+          </div>
+          <div>
+            <h2 className="text-ds-h3 font-semibold text-ds-text-primary dark:text-slate-100">
+              {t.management_modules || 'Management Modules'}
+            </h2>
+            <p className="mt-1 text-ds-small text-ds-text-muted dark:text-slate-400">
+              {t.management_modules_description || 'Access and manage all administrative modules and features'}
+            </p>
+          </div>
+        </div>
         <div className="grid grid-cols-1 gap-ds-md sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {navigationTiles.map((tile) => {
             const active = isTileActive(tile.route);
