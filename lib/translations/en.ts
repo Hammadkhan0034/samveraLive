@@ -97,6 +97,27 @@ export const enText = {
   tip_visibility: 'Toggle visibility per class before publishing.',
   tip_exports: 'Export data and audit trails anytime.',
 
+  // Principal Dashboard - School Information
+  students_enrolled: 'Students Enrolled',
+  capacity: 'capacity',
+  percent_full: '% Full',
+  floor_area: 'Floor Area',
+  play_area_label: 'Play area:',
+  space_per_child: 'Space per Child',
+  based_on_current_enrollment: 'Based on current enrollment',
+  registered_parents: 'Registered parents',
+  active_staff_members: 'Active staff members',
+  active_groups: 'Active groups',
+  media_items: 'Media Items',
+  photos_and_videos: 'Photos & Videos',
+
+  // Principal Dashboard - Actions
+  edit_values: 'Edit Values',
+  save_values: 'Save Values',
+  stats_report: 'Stats Report',
+  navigation: 'Navigation',
+  failed_to_load_dashboard_metrics: 'Failed to load dashboard metrics. Please try again.',
+
   // Announcements
   announcements_title: 'Create Announcement',
   announcements_list: 'School Announcements',
@@ -277,7 +298,6 @@ export const enText = {
   create_staff: 'Create Staff',
   create_staff_btn: 'Create Staff',
   invalid_phone: 'Invalid phone number format',
-  active_staff_members: 'Active Staff Members',
   pending_invitations: 'Pending Invitations',
   joined: 'Joined',
   sent: 'Sent',
@@ -601,6 +621,11 @@ export const enText = {
   tile_menus: 'Menus',
   tile_menus_desc: 'Manage daily menus.',
   tile_activity_log_desc: 'View and manage daily activity logs',
+  tile_staff_desc: 'Teachers',
+  tile_classes_desc: 'Manage classes',
+  tile_photos_desc: 'Gallery',
+  tile_organization_profile: 'Organization Profile',
+  tile_organization_profile_desc: 'View and update organization information',
 
   // Attendance
   att_title: 'Attendance & Check-in',
@@ -1106,5 +1131,8 @@ export const enText = {
   teacher_copy_email: "Copy email",
   teacher_unknown_teacher: "Unknown Teacher",
   bio: "Bio",
+
+  // Common
+  school: 'School',
 } as const;
 

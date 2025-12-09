@@ -97,6 +97,27 @@ export const isText = {
   tip_visibility: 'Kveiktu/slökktu á sýnileika á hópum áður en birt er.',
   tip_exports: 'Flyttu út gögn og atvikaskrár hvenær sem er.',
 
+  // Principal Dashboard - School Information
+  students_enrolled: 'Skráðir nemendur',
+  capacity: 'geta',
+  percent_full: '% Fullt',
+  floor_area: 'Gólfflatarmál',
+  play_area_label: 'Leiksvæði:',
+  space_per_child: 'Rými á barn',
+  based_on_current_enrollment: 'Byggt á núverandi skráningu',
+  registered_parents: 'Skráðir foreldrar',
+  active_staff_members: 'Virkir starfsmenn',
+  active_groups: 'Virkir hópar',
+  media_items: 'Fjölmiðlaeiningar',
+  photos_and_videos: 'Myndir og myndbönd',
+
+  // Principal Dashboard - Actions
+  edit_values: 'Breyta gildum',
+  save_values: 'Vista gildi',
+  stats_report: 'Tölfræðiskýrsla',
+  navigation: 'Flakk',
+  failed_to_load_dashboard_metrics: 'Mistókst að hlaða mælingum yfirlits. Vinsamlegast reyndu aftur.',
+
   // Announcements
   announcements_title: 'Búa til tilkynningu',
   announcements_list: 'Tilkynningar skóla',
@@ -279,7 +300,6 @@ export const isText = {
   create_staff: 'Búa til starfsmann',
   create_staff_btn: 'Búa til starfsmann',
   invalid_phone: 'Ógildur símanúmerasnið',
-  active_staff_members: 'Virkir starfsmenn',
   pending_invitations: 'Bíðandi boð',
   joined: 'Gekk til liðs',
   sent: 'Sent',
@@ -603,6 +623,11 @@ export const isText = {
   tile_menus: 'Matseðillar',
   tile_menus_desc: 'Sýsla með daglega matseðla.',
   tile_activity_log_desc: 'Skoða og stjórna daglegum aðgerðaskrám',
+  tile_staff_desc: 'Kennarar',
+  tile_classes_desc: 'Stjórna hópum',
+  tile_photos_desc: 'Myndasafn',
+  tile_organization_profile: 'Stofnunarprófíl',
+  tile_organization_profile_desc: 'Skoða og uppfæra upplýsingar stofnunar',
 
   // Attendance
   att_title: 'Mæting & Inn-/útstimplun',
@@ -1109,5 +1134,8 @@ export const isText = {
   teacher_copy_email: "Afrita netfang",
   teacher_unknown_teacher: "Óþekktur kennari",
   bio: "Lýsing",
+
+  // Common
+  school: 'Skóli',
 } as const;
 

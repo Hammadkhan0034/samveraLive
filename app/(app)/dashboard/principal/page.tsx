@@ -125,7 +125,7 @@ function PrincipalDashboardContent({
     {
       id: 'staff',
       title: t.kpi_staff || 'Staff',
-      desc: 'Teachers',
+      desc: t.tile_staff_desc || 'Teachers',
       Icon: School,
       route: '/dashboard/principal/staff',
       borderColor: 'border-blue-500',
@@ -134,7 +134,7 @@ function PrincipalDashboardContent({
     {
       id: 'classes',
       title: t.kpi_classes || 'Classes',
-      desc: 'Manage classes',
+      desc: t.tile_classes_desc || 'Manage classes',
       Icon: BarChart3,
       route: '/dashboard/principal/classes',
       borderColor: 'border-purple-500',
@@ -152,7 +152,7 @@ function PrincipalDashboardContent({
     {
       id: 'photos',
       title: t.kpi_photos || 'Media',
-      desc: 'Gallery',
+      desc: t.tile_photos_desc || 'Gallery',
       Icon: Camera,
       route: '/dashboard/principal/photos',
       borderColor: 'border-pink-500',
@@ -161,7 +161,7 @@ function PrincipalDashboardContent({
     {
       id: 'calendar',
       title: t.tile_calendar || 'Calendar',
-      desc: 'Events',
+      desc: t.tile_calendar_desc || 'Events',
       Icon: CalendarDays,
       route: '/dashboard/principal/calendar',
       borderColor: 'border-green-500',
@@ -188,7 +188,7 @@ function PrincipalDashboardContent({
     {
       id: 'menus',
       title: t.tile_menus || 'Menu',
-      desc: 'Dietary',
+      desc: t.tile_menus_desc || 'Dietary',
       Icon: Utensils,
       route: '/dashboard/principal/menus',
       borderColor: 'border-orange-500',
@@ -214,8 +214,8 @@ function PrincipalDashboardContent({
     },
     {
       id: 'organization_profile',
-      title: 'Organization Profile',
-      desc: 'View and update organization information',
+      title: t.tile_organization_profile || 'Organization Profile',
+      desc: t.tile_organization_profile_desc || 'View and update organization information',
       Icon: Building,
       route: '/dashboard/principal/organization-profile',
       borderColor: 'border-slate-500',
@@ -252,15 +252,15 @@ function PrincipalDashboardContent({
                 className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 font-medium text-sm transition-colors shadow-sm"
               >
                 <Edit3 size={16} />
-                {isEditing ? 'Save Values' : 'Edit Values'}
+                {isEditing ? (t.save_values || 'Save Values') : (t.edit_values || 'Edit Values')}
               </button>
               <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 font-medium text-sm transition-colors shadow-sm">
                 <Settings size={16} />
-                Settings
+                {t.settings || 'Settings'}
               </button>
               <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium text-sm transition-colors shadow-sm">
                 <Download size={16} />
-                Stats Report
+                {t.stats_report || 'Stats Report'}
               </button>
             </div>
           </div>
@@ -275,11 +275,11 @@ function PrincipalDashboardContent({
                     <div className="p-1.5 bg-blue-100 dark:bg-blue-900/30 rounded-md text-blue-600 dark:text-blue-400">
                       <Baby className="h-[18px] w-[18px]" />
                     </div>
-                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Students Enrolled</p>
+                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400">{t.students_enrolled || 'Students Enrolled'}</p>
                   </div>
                   <div className="flex items-baseline gap-2 mt-1">
                     <h3 className="text-3xl font-bold text-slate-900 dark:text-slate-100">{schoolData.enrolledCount}</h3>
-                    <span className="text-slate-400 dark:text-slate-500 font-medium">/ {schoolData.maxCapacity} capacity</span>
+                    <span className="text-slate-400 dark:text-slate-500 font-medium">/ {schoolData.maxCapacity} {t.capacity || 'capacity'}</span>
                   </div>
                 </div>
                 <div className={`px-3 py-1 rounded-full text-sm font-bold ${
@@ -287,7 +287,7 @@ function PrincipalDashboardContent({
                     ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' 
                     : 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
                 }`}>
-                  {capacityPercentage}% Full
+                  {capacityPercentage}{t.percent_full || '% Full'}
                 </div>
               </div>
               {/* Progress Bar */}
@@ -304,9 +304,9 @@ function PrincipalDashboardContent({
             {/* Spatial Stats */}
             {schoolData.totalFloorArea && (
               <StatBadge 
-                label="Floor Area" 
+                label={t.floor_area || 'Floor Area'} 
                 value={`${schoolData.totalFloorArea} m²`} 
-                subtext={schoolData.playArea ? `Play area: ${schoolData.playArea} m²` : undefined}
+                subtext={schoolData.playArea ? `${t.play_area_label || 'Play area:'} ${schoolData.playArea} m²` : undefined}
                 icon={Maximize2}
                 colorClass="bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400"
               />
@@ -314,9 +314,9 @@ function PrincipalDashboardContent({
             
             {sqMetersPerChild !== '0' && (
               <StatBadge 
-                label="Space per Child" 
+                label={t.space_per_child || 'Space per Child'} 
                 value={`${sqMetersPerChild} m²`} 
-                subtext="Based on current enrollment"
+                subtext={t.based_on_current_enrollment || 'Based on current enrollment'}
                 icon={Minimize2}
                 colorClass="bg-teal-100 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400"
               />
@@ -324,33 +324,33 @@ function PrincipalDashboardContent({
 
             {/* People & Media Metric Cards */}
             <StatBadge 
-              label="Guardians" 
+              label={t.guardians || 'Guardians'} 
               value={schoolData.guardiansCount} 
-              subtext="Registered parents"
+              subtext={t.registered_parents || 'Registered parents'}
               icon={UsersRound}
               colorClass="bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400"
             />
 
             <StatBadge 
-              label="Teachers" 
+              label={t.teachers || 'Teachers'} 
               value={schoolData.teachersCount} 
-              subtext="Active staff members"
+              subtext={t.active_staff_members || 'Active staff members'}
               icon={GraduationCap}
               colorClass="bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400"
             />
 
             <StatBadge 
-              label="Classes" 
+              label={t.kpi_classes || 'Classes'} 
               value={schoolData.classesCount} 
-              subtext="Active groups"
+              subtext={t.active_groups || 'Active groups'}
               icon={Layers}
               colorClass="bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400"
             />
 
             <StatBadge 
-              label="Media Items" 
+              label={t.media_items || 'Media Items'} 
               value={schoolData.mediaCount.toLocaleString()} 
-              subtext="Photos & Videos"
+              subtext={t.photos_and_videos || 'Photos & Videos'}
               icon={ImageIcon}
               colorClass="bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400"
             />
@@ -374,7 +374,7 @@ function PrincipalDashboardContent({
                 onClick={onRetry}
                 className="rounded-ds-md bg-red-100 px-3 py-1.5 text-ds-small font-medium text-red-700 hover:bg-red-200 transition-colors dark:bg-red-800/50 dark:text-red-200 dark:hover:bg-red-800/70"
               >
-                Retry
+                {t.retry || 'Retry'}
               </button>
             )}
           </div>
@@ -419,7 +419,7 @@ function PrincipalDashboardContent({
       {/* Navigation Tiles Section */}
       <section className="mb-ds-lg">
         <h2 className="text-ds-h3 font-semibold text-ds-text-primary dark:text-slate-100 mb-ds-md">
-          Navigation
+          {t.navigation || 'Navigation'}
         </h2>
         <div className="grid grid-cols-1 gap-ds-md sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {navigationTiles.map((tile) => {
@@ -719,7 +719,7 @@ function PrincipalDashboardPageContent() {
       }
 
       const message =
-        err instanceof Error ? err.message : 'Failed to load dashboard metrics. Please try again.';
+        err instanceof Error ? err.message : (t.failed_to_load_dashboard_metrics || 'Failed to load dashboard metrics. Please try again.');
       setError(message);
       console.error('Error loading metrics:', err);
     } finally {
@@ -795,7 +795,7 @@ function PrincipalDashboardPageContent() {
     if (!organization) return undefined;
 
     return {
-      name: organization.name || 'School',
+      name: organization.name || ((t as any).school || 'School'),
       address: organization.address || undefined,
       kennitala: undefined, // Not in Organization type, would need to be added
       type: organization.type || undefined,
@@ -808,7 +808,7 @@ function PrincipalDashboardPageContent() {
       classesCount,
       mediaCount,
     };
-  }, [organization, studentsCount, staffCount, classesCount, guardiansCount, mediaCount]);
+  }, [organization, studentsCount, staffCount, classesCount, guardiansCount, mediaCount, t]);
 
   return (
     <PrincipalPageLayout>
