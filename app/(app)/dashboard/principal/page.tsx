@@ -91,6 +91,25 @@ function PrincipalDashboardContent({
     ? (schoolData.totalFloorArea / schoolData.enrolledCount).toFixed(1)
     : '0';
 
+  // Helper to get icon color from border color for hover effect
+  const getIconHoverColor = (borderColor: string) => {
+    const colorMap: Record<string, string> = {
+      'border-blue-500': 'group-hover:text-blue-600 dark:group-hover:text-blue-400',
+      'border-orange-500': 'group-hover:text-orange-600 dark:group-hover:text-orange-400',
+      'border-green-500': 'group-hover:text-green-600 dark:group-hover:text-green-400',
+      'border-pink-500': 'group-hover:text-pink-600 dark:group-hover:text-pink-400',
+      'border-purple-500': 'group-hover:text-purple-600 dark:group-hover:text-purple-400',
+      'border-cyan-500': 'group-hover:text-cyan-600 dark:group-hover:text-cyan-400',
+      'border-mint-500': 'group-hover:text-mint-600 dark:group-hover:text-mint-400',
+      'border-indigo-500': 'group-hover:text-indigo-600 dark:group-hover:text-indigo-400',
+      'border-teal-500': 'group-hover:text-teal-600 dark:group-hover:text-teal-400',
+      'border-yellow-500': 'group-hover:text-yellow-600 dark:group-hover:text-yellow-400',
+      'border-red-500': 'group-hover:text-red-600 dark:group-hover:text-red-400',
+      'border-slate-500': 'group-hover:text-slate-600 dark:group-hover:text-slate-400',
+    };
+    return colorMap[borderColor] || 'group-hover:text-slate-600 dark:group-hover:text-slate-400';
+  };
+
   // Navigation tiles data with colored borders
   const navigationTiles = useMemo(() => [
     {
@@ -118,7 +137,7 @@ function PrincipalDashboardContent({
       Icon: School,
       route: '/dashboard/principal/staff',
       borderColor: 'border-blue-500',
-      titleColor: 'text-slate-900 dark:text-slate-100',
+      titleColor: 'text-blue-600 dark:text-blue-400',
     },
     {
       id: 'classes',
@@ -415,6 +434,44 @@ function PrincipalDashboardContent({
             const active = isTileActive(tile.route);
             const borderColor = tile.borderColor || 'border-slate-500';
             const titleColor = tile.titleColor || 'text-slate-900 dark:text-slate-100';
+            // Get hover border color class
+            const getHoverBorderClass = (borderColor: string) => {
+              const colorMap: Record<string, string> = {
+                'border-blue-500': 'hover:border-blue-500',
+                'border-orange-500': 'hover:border-orange-500',
+                'border-green-500': 'hover:border-green-500',
+                'border-pink-500': 'hover:border-pink-500',
+                'border-purple-500': 'hover:border-purple-500',
+                'border-cyan-500': 'hover:border-cyan-500',
+                'border-mint-500': 'hover:border-mint-500',
+                'border-indigo-500': 'hover:border-indigo-500',
+                'border-teal-500': 'hover:border-teal-500',
+                'border-yellow-500': 'hover:border-yellow-500',
+                'border-red-500': 'hover:border-red-500',
+                'border-slate-500': 'hover:border-slate-500',
+              };
+              return colorMap[borderColor] || 'hover:border-slate-500';
+            };
+
+            // Get background color class for top border from border color
+            const getTopBorderBgColor = (borderColor: string) => {
+              const colorMap: Record<string, string> = {
+                'border-blue-500': 'bg-blue-500',
+                'border-orange-500': 'bg-orange-500',
+                'border-green-500': 'bg-green-500',
+                'border-pink-500': 'bg-pink-500',
+                'border-purple-500': 'bg-purple-500',
+                'border-cyan-500': 'bg-cyan-500',
+                'border-mint-500': 'bg-mint-500',
+                'border-indigo-500': 'bg-indigo-500',
+                'border-teal-500': 'bg-teal-500',
+                'border-yellow-500': 'bg-yellow-500',
+                'border-red-500': 'bg-red-500',
+                'border-slate-500': 'bg-slate-500',
+              };
+              return colorMap[borderColor] || 'bg-mint-500';
+            };
+
             return (
               <button
                 key={tile.id}
@@ -422,17 +479,18 @@ function PrincipalDashboardContent({
                 className={`
                   group relative bg-white dark:bg-slate-800 rounded-ds-lg shadow-ds-card text-left transition-all duration-300
                   hover:shadow-ds-card-hover hover:scale-[1.02] overflow-hidden
+                  border-2 border-transparent ${getHoverBorderClass(borderColor)}
                   ${active ? 'ring-2 ring-mint-500' : ''}
                 `}
               >
                 {/* Colored Top Border */}
-                <div className={`absolute top-0 left-0 right-0 h-1 ${borderColor}`}></div>
+                <div className={`absolute top-0 left-0 right-0 h-1 rounded-t-ds-lg ${getTopBorderBgColor(borderColor)}`}></div>
                 
                 {/* Content */}
                 <div className="p-ds-md pt-5">
                   {/* Icon */}
                   <div className="mb-3">
-                    <tile.Icon className="h-8 w-8 text-slate-600 dark:text-slate-400" />
+                    <tile.Icon className={`h-8 w-8 text-slate-600 dark:text-slate-400 transition-colors duration-300 ${getIconHoverColor(borderColor)}`} />
                   </div>
                   
                   {/* Title */}
