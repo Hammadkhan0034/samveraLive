@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
-import { Users, School, ChartBar as BarChart3, Utensils, AlertCircle, LayoutDashboard, MessageSquare, Camera, CalendarDays, Shield, Link as LinkIcon, Megaphone, Activity, Building, Edit3, Settings, Download, Baby, Maximize2, Minimize2, UsersRound, GraduationCap, Layers, Image as ImageIcon, Grid3x3 } from 'lucide-react';
+import { Users, School, ChartBar as BarChart3, Utensils, AlertCircle, LayoutDashboard, MessageSquare, Camera, CalendarDays, Shield, Link as LinkIcon, Megaphone, Activity, Building, Edit3, Settings, Download, Baby, Maximize2, Minimize2, UsersRound, GraduationCap, Layers, Image as ImageIcon, Grid3x3, MapPin } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import PrincipalPageLayout from '@/app/components/shared/PrincipalPageLayout';
 import { PageHeader } from '@/app/components/shared/PageHeader';
@@ -234,17 +234,43 @@ function PrincipalDashboardContent({
   return (
     <>
       {/* Content Header */}
-      <PageHeader
-        title={t.title || 'Principal Dashboard'}
-        subtitle={t.subtitle || 'Manage groups, staff and visibility.'}
-        
-        headingLevel="h1"
-      />
+      {/* <PageHeader
+        // title={t.title || 'Principal Dashboard'}
+        // subtitle={t.subtitle || 'Manage groups, staff and visibility.'}
+        // headingLevel="h1"
+      /> */}
 
       {/* School Information Section */}
       {schoolData && (
         <section className="mb-ds-lg space-y-6">
-          <div className="flex flex-col md:flex-row md:items-center justify-end gap-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            {/* School Information */}
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{schoolData.name}</h2>
+              <div className="flex flex-wrap items-center gap-4 text-slate-500 dark:text-slate-400 text-sm mt-1">
+                {schoolData.address && (
+                  <>
+                    <span className="flex items-center gap-1">
+                      <MapPin size={14} />
+                      {schoolData.address}
+                    </span>
+                    <span className="hidden md:inline text-slate-300 dark:text-slate-600">|</span>
+                  </>
+                )}
+                {schoolData.kennitala && (
+                  <>
+                    <span>Kt: {schoolData.kennitala}</span>
+                    <span className="hidden md:inline text-slate-300 dark:text-slate-600">|</span>
+                  </>
+                )}
+                {schoolData.type && (
+                  <span className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full text-xs font-medium">
+                    {schoolData.type}
+                  </span>
+                )}
+              </div>
+            </div>
+            
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-3">
               <button 
