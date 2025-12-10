@@ -246,28 +246,18 @@ function PrincipalDashboardContent({
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             {/* School Information */}
             <div>
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{schoolData.name}</h2>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{schoolData.name || 'School Name'}</h2>
               <div className="flex flex-wrap items-center gap-4 text-slate-500 dark:text-slate-400 text-sm mt-1">
-                {schoolData.address && (
-                  <>
-                    <span className="flex items-center gap-1">
-                      <MapPin size={14} />
-                      {schoolData.address}
-                    </span>
-                    <span className="hidden md:inline text-slate-300 dark:text-slate-600">|</span>
-                  </>
-                )}
-                {schoolData.kennitala && (
-                  <>
-                    <span>Kt: {schoolData.kennitala}</span>
-                    <span className="hidden md:inline text-slate-300 dark:text-slate-600">|</span>
-                  </>
-                )}
-                {schoolData.type && (
-                  <span className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full text-xs font-medium">
-                    {schoolData.type}
-                  </span>
-                )}
+                <span className="flex items-center gap-1">
+                  <MapPin size={14} />
+                  {schoolData.address || '123 Main Street, City'}
+                </span>
+                <span className="hidden md:inline text-slate-300 dark:text-slate-600">|</span>
+                <span>Kt: {schoolData.kennitala || '000000-0000'}</span>
+                <span className="hidden md:inline text-slate-300 dark:text-slate-600">|</span>
+                <span className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full text-xs font-medium">
+                  {schoolData.type || 'School'}
+                </span>
               </div>
             </div>
             
