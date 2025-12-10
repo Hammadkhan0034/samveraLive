@@ -15,6 +15,7 @@ import EmptyState from '@/app/components/EmptyState';
 import { StudentAssignmentModal } from '@/app/components/principal/classes/StudentAssignmentModal';
 import { TeacherAssignmentModal } from '@/app/components/principal/classes/TeacherAssignmentModal';
 import { DeleteClassModal } from '@/app/components/principal/classes/DeleteClassModal';
+import { ClassFormModal, type ClassData } from '@/app/components/shared/ClassFormModal';
 import type {
   ClassSummary,
   TranslationStrings,
@@ -34,6 +35,8 @@ function ClassesPageContent() {
   const [showDeleteClassModal, setShowDeleteClassModal] = useState(false);
   const [classToDelete, setClassToDelete] = useState<ClassSummary | null>(null);
   const [deletingClass, setDeletingClass] = useState(false);
+  const [showClassFormModal, setShowClassFormModal] = useState(false);
+  const [classToEdit, setClassToEdit] = useState<ClassData | null>(null);
   const [classes, setClasses] = useState<ClassSummary[]>(() => {
     if (typeof window !== 'undefined') {
       const cached = localStorage.getItem('classes_cache');
@@ -224,8 +227,31 @@ function ClassesPageContent() {
   }, []);
 
   const openEditClass = useCallback((cls: ClassSummary) => {
-    router.push(`/dashboard/principal/classes/create?id=${encodeURIComponent(cls.id)}`);
-  }, [router]);
+    // Convert ClassSummary to ClassData format
+    setClassToEdit({
+      id: cls.id,
+      name: cls.name,
+      code: cls.code || undefined,
+      assigned_teachers: cls.assigned_teachers || [],
+    });
+    setShowClassFormModal(true);
+  }, []);
+
+  const openCreateClass = useCallback(() => {
+    setClassToEdit(null);
+    setShowClassFormModal(true);
+  }, []);
+
+  const handleClassFormSuccess = useCallback(() => {
+    // Refresh classes data
+    void loadClasses(false);
+    void loadStudentsForCounts(false);
+  }, [loadClasses, loadStudentsForCounts]);
+
+  const handleClassFormClose = useCallback(() => {
+    setShowClassFormModal(false);
+    setClassToEdit(null);
+  }, []);
 
 
   async function handleDeleteClass() {
@@ -270,7 +296,7 @@ function ClassesPageContent() {
           <div className="flex items-center gap-ds-md">
             <ProfileSwitcher />
             <button
-              onClick={() => router.push('/dashboard/principal/classes/create')}
+              onClick={openCreateClass}
               className="inline-flex items-center gap-2 rounded-ds-md bg-mint-500 px-ds-sm py-2 text-ds-small text-white hover:bg-mint-600 transition-colors dark:bg-slate-700 dark:hover:bg-slate-600"
             >
               <Plus className="h-4 w-4" /> {t.add_class}
@@ -434,6 +460,13 @@ function ClassesPageContent() {
             setClassToDelete(null);
           }}
           onConfirm={handleDeleteClass}
+        />
+
+        <ClassFormModal
+          isOpen={showClassFormModal}
+          onClose={handleClassFormClose}
+          onSuccess={handleClassFormSuccess}
+          initialData={classToEdit}
         />
     </>
   );
