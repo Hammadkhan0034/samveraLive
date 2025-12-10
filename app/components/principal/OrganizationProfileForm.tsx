@@ -108,13 +108,13 @@ export function OrganizationProfileForm({ organization, onUpdate }: Organization
     }
 
     // Validate entire form (for principal's own org, we don't need id in validation)
-    // Convert number fields from strings to numbers for validation
+    // Pass strings directly - Zod schemas will coerce them to numbers
     const validation = validateOrgForm({
       ...formData,
-      total_area: formData.total_area ? Number(formData.total_area) : undefined,
-      play_area: formData.play_area ? Number(formData.play_area) : undefined,
-      square_meters_per_student: formData.square_meters_per_student ? Number(formData.square_meters_per_student) : undefined,
-      maximum_allowed_students: formData.maximum_allowed_students ? Number(formData.maximum_allowed_students) : undefined,
+      total_area: formData.total_area || undefined,
+      play_area: formData.play_area || undefined,
+      square_meters_per_student: formData.square_meters_per_student || undefined,
+      maximum_allowed_students: formData.maximum_allowed_students || undefined,
     });
     if (!validation.valid) {
       setError(validation.error || 'Validation failed');
