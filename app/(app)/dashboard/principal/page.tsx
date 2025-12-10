@@ -1,29 +1,21 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
-import { Users, School, ChartBar as BarChart3, Utensils, AlertCircle, LayoutDashboard, MessageSquare, Camera, CalendarDays, Shield, Link as LinkIcon, Megaphone, Activity, Building, Edit3, Settings, Download, Baby, Maximize2, Minimize2, UsersRound, GraduationCap, Layers, Image as ImageIcon, Grid3x3, MapPin } from 'lucide-react';
+import { Users, School, ChartBar as BarChart3, Utensils, MessageSquare, Camera, CalendarDays, Shield, Link as LinkIcon, Megaphone, Activity, Building, Edit3, Settings, Download, Baby, Maximize2, Minimize2, UsersRound, GraduationCap, Layers, Image as ImageIcon, Grid3x3, MapPin } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import PrincipalPageLayout from '@/app/components/shared/PrincipalPageLayout';
-import { PageHeader } from '@/app/components/shared/PageHeader';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import KPICardSkeleton from '@/app/components/loading-skeletons/KPICardSkeleton';
-import type { KPICard } from '@/lib/types/dashboard';
 import { useAuth } from '@/lib/hooks/useAuth';
-import UserCard from '@/app/components/UserCard';
-import StoryColumn from '@/app/components/shared/StoryColumn';
 import type { Organization } from '@/lib/types/orgs';
 
 interface PrincipalDashboardContentProps {
   t: any;
-  kpis: KPICard[];
-  isLoading?: boolean;
-  error?: string | null;
-  onRetry?: () => void;
   schoolData?: {
     name: string;
     address?: string;
     kennitala?: string;
-    type?: string;
+    type: string;
     enrolledCount: number;
     maxCapacity: number;
     totalFloorArea?: number;
@@ -71,10 +63,6 @@ function StatBadge({
 
 function PrincipalDashboardContent({
   t,
-  kpis,
-  isLoading = false,
-  error = null,
-  onRetry,
   schoolData,
   isEditing = false,
   onEditToggle,
@@ -233,13 +221,6 @@ function PrincipalDashboardContent({
 
   return (
     <>
-      {/* Content Header */}
-      {/* <PageHeader
-        // title={t.title || 'Principal Dashboard'}
-        // subtitle={t.subtitle || 'Manage groups, staff and visibility.'}
-        // headingLevel="h1"
-      /> */}
-
       {/* School Information Section */}
       {schoolData && (
         <section className="mb-ds-lg space-y-6">
@@ -374,64 +355,6 @@ function PrincipalDashboardContent({
         </section>
       )}
 
-      {/* <StoryColumn
-        userRole="principal"
-      />
-    
-      {error && (
-        <div className="mb-ds-sm rounded-ds-md border border-red-200 bg-red-50 p-ds-sm dark:border-red-800 dark:bg-red-900/20">
-          <div className="flex items-center gap-ds-md">
-            <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
-            <div className="flex-1">
-              <p className="text-ds-small font-medium text-red-800 dark:text-red-200">{error}</p>
-            </div>
-            {onRetry && (
-              <button
-                onClick={onRetry}
-                className="rounded-ds-md bg-red-100 px-3 py-1.5 text-ds-small font-medium text-red-700 hover:bg-red-200 transition-colors dark:bg-red-800/50 dark:text-red-200 dark:hover:bg-red-800/70"
-              >
-                {t.retry || 'Retry'}
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-  
-      <section className="mb-ds-lg">
-        {isLoading ? (
-          <KPICardSkeleton count={4} />
-        ) : (
-          <div className="grid grid-cols-1 gap-ds-md sm:grid-cols-2 lg:grid-cols-4">
-            {kpis.map(({ label, value, icon: Icon }, i) => {
-              // Cycle through tinted backgrounds: pale-blue, pale-yellow, pale-peach, pale-green
-              const bgColors = [
-                'bg-pale-blue dark:bg-slate-800',
-                'bg-pale-yellow dark:bg-slate-800',
-                'bg-pale-peach dark:bg-slate-800',
-                'bg-pale-green dark:bg-slate-800',
-              ];
-              const bgColor = bgColors[i % 4];
-
-              return (
-                <div
-                  key={i}
-                  className={`rounded-ds-lg ${bgColor} p-ds-md shadow-ds-card`}
-                >
-                  <div className="text-ds-small text-ds-text-secondary dark:text-slate-400 mb-2">{label}</div>
-                  <div className="flex items-center justify-between">
-                    <div className="text-ds-h2 font-bold text-ds-text-primary dark:text-slate-100">{value}</div>
-                    <span className="rounded-ds-md bg-white/50 dark:bg-slate-700/50 p-2">
-                      <Icon className="h-5 w-5 text-ds-text-primary dark:text-slate-300" />
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section> */}
-
       {/* Navigation Tiles Section */}
       <section className="mb-ds-lg">
         <div className="mb-ds-md flex items-center gap-ds-sm">
@@ -471,25 +394,6 @@ function PrincipalDashboardContent({
               return colorMap[borderColor] || 'hover:border-slate-500';
             };
 
-            // Get background color class for top border from border color
-            const getTopBorderBgColor = (borderColor: string) => {
-              const colorMap: Record<string, string> = {
-                'border-blue-500': 'bg-blue-500',
-                'border-orange-500': 'bg-orange-500',
-                'border-green-500': 'bg-green-500',
-                'border-pink-500': 'bg-pink-500',
-                'border-purple-500': 'bg-purple-500',
-                'border-cyan-500': 'bg-cyan-500',
-                'border-mint-500': 'bg-mint-500',
-                'border-indigo-500': 'bg-indigo-500',
-                'border-teal-500': 'bg-teal-500',
-                'border-yellow-500': 'bg-yellow-500',
-                'border-red-500': 'bg-red-500',
-                'border-slate-500': 'bg-slate-500',
-              };
-              return colorMap[borderColor] || 'bg-mint-500';
-            };
-
             return (
               <button
                 key={tile.id}
@@ -524,47 +428,6 @@ function PrincipalDashboardContent({
         </div>
       </section>
 
-      {/* user card section */}
-
-      {/* <UserCard
-        user={{
-          id: '1',
-          org_id: 'org-1',
-          email: 'maria@domain.is',
-          phone: '777-1334',
-          ssn: null,
-          address: 'Jhress: JJohanna 9',
-          canLogin: true,
-          first_name: 'Mária',
-          last_name: 'Jónsdóttir',
-          role: 'staff',
-          bio: null,
-          avatar_url: null,
-          gender: 'female',
-          last_login_at: null,
-          is_active: true,
-          is_staff: true,
-          status: 'active',
-          dob: null,
-          theme: 'light',
-          language: 'is',
-          deleted_at: null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        }}
-        onCall={() => {
-          // Handle call action
-          console.log('Call Mária Jónsdóttir');
-        }}
-        onMessage={() => {
-          // Handle message action
-          console.log('Message Mária Jónsdóttir');
-        }}
-        onViewProfile={() => {
-          // Handle view profile action
-          console.log('View profile Mária Jónsdóttir');
-        }}
-      /> */}
     </>
   );
 }
@@ -573,21 +436,15 @@ function PrincipalDashboardPageContent() {
   const { t } = useLanguage();
   const { session } = useAuth?.() || {} as any;
 
-  // KPI data states - simplified initialization
   const [studentsCount, setStudentsCount] = useState(0);
   const [staffCount, setStaffCount] = useState(0);
   const [classesCount, setClassesCount] = useState(0);
-  const [menusCount, setMenusCount] = useState(0);
 
   // Organization/school data state
   const [organization, setOrganization] = useState<Organization | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [mediaCount, setMediaCount] = useState(0);
   const [guardiansCount, setGuardiansCount] = useState(0);
-
-  // Loading and error states
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -696,9 +553,6 @@ function PrincipalDashboardPageContent() {
   // Single consolidated function to fetch all metrics
   const fetchMetrics = useCallback(async (signal: AbortSignal) => {
     try {
-      setIsLoading(true);
-      setError(null);
-
       // API gets all data from authenticated session, no query params needed
       const res = await fetch(`/api/principal-dashboard-metrics?t=${Date.now()}`, {
         cache: 'no-store',
@@ -738,20 +592,12 @@ function PrincipalDashboardPageContent() {
       setStudentsCount(data.studentsCount || 0);
       setStaffCount(data.staffCount || 0);
       setClassesCount(data.classesCount || 0);
-      setMenusCount(data.menusCount || 0);
     } catch (err: unknown) {
       if (signal.aborted) {
         return;
       }
 
-      const message =
-        err instanceof Error ? err.message : (t.failed_to_load_dashboard_metrics || 'Failed to load dashboard metrics. Please try again.');
-      setError(message);
       console.error('Error loading metrics:', err);
-    } finally {
-      if (!signal.aborted) {
-        setIsLoading(false);
-      }
     }
   }, []);
 
@@ -770,51 +616,6 @@ function PrincipalDashboardPageContent() {
       abortController.abort();
     };
   }, [session?.user?.id, fetchMetrics, fetchOrganization, fetchAdditionalCounts]);
-
-  // Retry function
-  const handleRetry = useCallback(() => {
-    setError(null);
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    const abortController = new AbortController();
-    abortControllerRef.current = abortController;
-    void fetchMetrics(abortController.signal);
-    void fetchOrganization(abortController.signal);
-    void fetchAdditionalCounts(abortController.signal);
-  }, [fetchMetrics, fetchOrganization, fetchAdditionalCounts]);
-
-  // Stable icon references
-  const icons = useMemo(() => ({
-    Users,
-    School,
-    BarChart3,
-    Utensils,
-  }), []);
-
-  // Memoize KPIs array with stable references
-  const kpis = useMemo<KPICard[]>(() => [
-    {
-      label: t.kpi_students || 'Students',
-      value: studentsCount,
-      icon: icons.Users,
-    },
-    {
-      label: t.kpi_staff || 'Staff',
-      value: staffCount,
-      icon: icons.School,
-    },
-    {
-      label: t.kpi_classes || 'Classes',
-      value: classesCount,
-      icon: icons.BarChart3,
-    },
-    {
-      label: t.kpi_menus || 'Menus',
-      value: menusCount,
-      icon: icons.Utensils,
-    },
-  ], [t, studentsCount, staffCount, classesCount, menusCount, icons]);
 
   // Prepare school data for the school information section
   const schoolData = useMemo(() => {
@@ -840,10 +641,6 @@ function PrincipalDashboardPageContent() {
     <PrincipalPageLayout>
       <PrincipalDashboardContent 
         t={t} 
-        kpis={kpis} 
-        isLoading={isLoading}
-        error={error}
-        onRetry={handleRetry}
         schoolData={schoolData}
         isEditing={isEditing}
         onEditToggle={() => setIsEditing(!isEditing)}
