@@ -9,7 +9,6 @@ import {
   Baby,
   MessageSquare,
   Camera,
-  Timer,
   Bell,
   Users,
   Utensils,
@@ -51,7 +50,6 @@ type BuiltInTileId =
   | 'diapers'
   | 'messages'
   | 'media'
-  | 'stories'
   | 'announcements'
   | 'calendar'
   | 'students'
@@ -69,7 +67,6 @@ const builtInTileRoutes: BuiltInTileConfig[] = [
   { id: 'diapers', route: '/dashboard/teacher/diapers' },
   { id: 'messages', route: '/dashboard/teacher/messages' },
   { id: 'media', route: '/dashboard/teacher/media' },
-  { id: 'stories', route: '/dashboard/teacher/stories' },
   { id: 'announcements', route: '/dashboard/teacher/announcements' },
   { id: 'students', route: '/dashboard/teacher/students' },
   { id: 'menus', route: '/dashboard/teacher/menus' },
@@ -392,40 +389,6 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
                   )}
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{t.tile_media_desc}</p>
-              </div>
-            </button>
-
-            {/* Stories tile */}
-            <button
-              onClick={() => handleBuiltInTileClick('stories')}
-              className={clsx(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-ds-md text-left transition-all duration-200',
-                'hover:bg-slate-100 dark:hover:bg-slate-700',
-                isTileActive('stories')
-                  ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
-                  : 'border-l-4 border-transparent'
-              )}
-            >
-              <span className={clsx(
-                'flex-shrink-0 rounded-lg p-2',
-                isTileActive('stories')
-                  ? 'bg-mint-500 text-white'
-                  : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
-              )}>
-                <Timer className="h-5 w-5" />
-              </span>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2">
-                  <span className={clsx(
-                    'font-medium truncate',
-                    isTileActive('stories')
-                      ? 'text-slate-900 dark:text-slate-100'
-                      : 'text-slate-700 dark:text-slate-300'
-                  )}>
-                    {t.tile_stories}
-                  </span>
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{t.tile_stories_desc}</p>
               </div>
             </button>
 
