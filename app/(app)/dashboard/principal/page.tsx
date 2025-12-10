@@ -6,6 +6,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import PrincipalPageLayout from '@/app/components/shared/PrincipalPageLayout';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import KPICardSkeleton from '@/app/components/loading-skeletons/KPICardSkeleton';
+import SchoolInfoSkeleton from '@/app/components/loading-skeletons/SchoolInfoSkeleton';
 import { useAuth } from '@/lib/hooks/useAuth';
 import type { Organization } from '@/lib/types/orgs';
 
@@ -15,7 +16,7 @@ interface PrincipalDashboardContentProps {
     name: string;
     address?: string;
     kennitala?: string;
-    type: string;
+    type?: string;
     enrolledCount: number;
     maxCapacity: number;
     totalFloorArea?: number;
@@ -222,7 +223,7 @@ function PrincipalDashboardContent({
   return (
     <>
       {/* School Information Section */}
-      {schoolData && (
+      {schoolData ? (
         <section className="mb-ds-lg space-y-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             {/* School Information */}
@@ -353,6 +354,8 @@ function PrincipalDashboardContent({
             />
           </div>
         </section>
+      ) : (
+        <SchoolInfoSkeleton />
       )}
 
       {/* Navigation Tiles Section */}
@@ -622,7 +625,7 @@ function PrincipalDashboardPageContent() {
     if (!organization) return undefined;
 
     return {
-      name: organization.name || ((t as any).school || 'School'),
+      name: organization.name || String((t as any).school || 'School'),
       address: organization.address || undefined,
       kennitala: undefined, // Not in Organization type, would need to be added
       type: organization.type || undefined,
