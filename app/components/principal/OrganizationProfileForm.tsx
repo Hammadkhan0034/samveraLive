@@ -22,6 +22,11 @@ interface OrganizationFormData {
   state: string;
   postal_code: string;
   timezone: string;
+  type: string;
+  total_area: string;
+  play_area: string;
+  square_meters_per_student: string;
+  maximum_allowed_students: string;
 }
 
 export function OrganizationProfileForm({ organization, onUpdate }: OrganizationProfileFormProps) {
@@ -37,6 +42,11 @@ export function OrganizationProfileForm({ organization, onUpdate }: Organization
     state: '',
     postal_code: '',
     timezone: 'UTC',
+    type: '',
+    total_area: '',
+    play_area: '',
+    square_meters_per_student: '',
+    maximum_allowed_students: '',
   });
   const [slugError, setSlugError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -57,6 +67,11 @@ export function OrganizationProfileForm({ organization, onUpdate }: Organization
         state: organization.state || '',
         postal_code: organization.postal_code || '',
         timezone: organization.timezone || 'UTC',
+        type: organization.type || '',
+        total_area: organization.total_area?.toString() || '',
+        play_area: organization.play_area?.toString() || '',
+        square_meters_per_student: organization.square_meters_per_student?.toString() || '',
+        maximum_allowed_students: organization.maximum_allowed_students?.toString() || '',
       });
       setError(null);
       setSuccess(null);
@@ -93,8 +108,13 @@ export function OrganizationProfileForm({ organization, onUpdate }: Organization
     }
 
     // Validate entire form (for principal's own org, we don't need id in validation)
+    // Convert number fields from strings to numbers for validation
     const validation = validateOrgForm({
       ...formData,
+      total_area: formData.total_area ? Number(formData.total_area) : undefined,
+      play_area: formData.play_area ? Number(formData.play_area) : undefined,
+      square_meters_per_student: formData.square_meters_per_student ? Number(formData.square_meters_per_student) : undefined,
+      maximum_allowed_students: formData.maximum_allowed_students ? Number(formData.maximum_allowed_students) : undefined,
     });
     if (!validation.valid) {
       setError(validation.error || 'Validation failed');
@@ -109,7 +129,13 @@ export function OrganizationProfileForm({ organization, onUpdate }: Organization
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          total_area: formData.total_area ? Number(formData.total_area) : undefined,
+          play_area: formData.play_area ? Number(formData.play_area) : undefined,
+          square_meters_per_student: formData.square_meters_per_student ? Number(formData.square_meters_per_student) : undefined,
+          maximum_allowed_students: formData.maximum_allowed_students ? Number(formData.maximum_allowed_students) : undefined,
+        }),
       });
 
       if (!response.ok) {
@@ -222,6 +248,29 @@ export function OrganizationProfileForm({ organization, onUpdate }: Organization
               {slugError && (
                 <p className="mt-2 text-ds-tiny text-red-600 dark:text-red-400">{slugError}</p>
               )}
+            </div>
+
+            <div>
+              <label htmlFor="org-type" className={labelClassName}>
+                {t.organization_type_label} <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="org-type"
+                value={formData.type}
+                onChange={(e) => handleFieldChange('type', e.target.value)}
+                className={inputClassName}
+                required
+              >
+                <option value="">{t.organization_type_placeholder}</option>
+                <option value="preschool">{t.organization_type_preschool}</option>
+                <option value="elementary">{t.organization_type_elementary}</option>
+                <option value="middle">{t.organization_type_middle}</option>
+                <option value="high">{t.organization_type_high}</option>
+                <option value="private">{t.organization_type_private}</option>
+                <option value="public">{t.organization_type_public}</option>
+                <option value="charter">{t.organization_type_charter}</option>
+                <option value="other">{t.organization_type_other}</option>
+              </select>
             </div>
           </div>
 
@@ -342,6 +391,81 @@ export function OrganizationProfileForm({ organization, onUpdate }: Organization
                   required
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Facility Information Section */}
+          <div className="space-y-ds-md">
+            <h3 className="text-ds-h3 font-semibold text-[#1F2937] dark:text-slate-200">
+              {t.facility_information}
+            </h3>
+
+            <div className="mt-4">
+              <label htmlFor="org-total-area" className={labelClassName}>
+                {t.total_area_label} <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="org-total-area"
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.total_area}
+                onChange={(e) => handleFieldChange('total_area', e.target.value)}
+                placeholder={t.total_area_placeholder}
+                className={inputClassName}
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="org-play-area" className={labelClassName}>
+                {t.play_area_label} <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="org-play-area"
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.play_area}
+                onChange={(e) => handleFieldChange('play_area', e.target.value)}
+                placeholder={t.play_area_placeholder}
+                className={inputClassName}
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="org-square-meters-per-student" className={labelClassName}>
+                {t.square_meters_per_student_label} <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="org-square-meters-per-student"
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.square_meters_per_student}
+                onChange={(e) => handleFieldChange('square_meters_per_student', e.target.value)}
+                placeholder={t.square_meters_per_student_placeholder}
+                className={inputClassName}
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="org-maximum-allowed-students" className={labelClassName}>
+                {t.maximum_allowed_students_label} <span className="text-red-500">*</span>
+              </label>
+              <input
+                id="org-maximum-allowed-students"
+                type="number"
+                step="1"
+                min="1"
+                value={formData.maximum_allowed_students}
+                onChange={(e) => handleFieldChange('maximum_allowed_students', e.target.value)}
+                placeholder={t.maximum_allowed_students_placeholder}
+                className={inputClassName}
+                required
+              />
             </div>
           </div>
 
