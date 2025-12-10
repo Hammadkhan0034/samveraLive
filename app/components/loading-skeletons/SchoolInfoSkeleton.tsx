@@ -30,7 +30,7 @@ export default function SchoolInfoSkeleton() {
         
         {/* Action Buttons Skeleton */}
         <div className="flex flex-wrap gap-3">
-          {[1, 2, 3].map((i) => (
+          {[1, 2].map((i) => (
             <div
               key={i}
               className={`h-10 w-28 rounded-lg ${baseSkeletonClass}`}

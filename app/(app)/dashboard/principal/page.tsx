@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react';
-import { Users, School, ChartBar as BarChart3, Utensils, MessageSquare, Camera, CalendarDays, Shield, Link as LinkIcon, Megaphone, Activity, Building, Edit3, Settings, Download, Baby, Maximize2, Minimize2, UsersRound, GraduationCap, Layers, Image as ImageIcon, Grid3x3, MapPin } from 'lucide-react';
+import { Users, School, ChartBar as BarChart3, Utensils, MessageSquare, Camera, CalendarDays, Shield, Link as LinkIcon, Megaphone, Activity, Building, Settings, Download, Baby, Maximize2, Minimize2, UsersRound, GraduationCap, Layers, Image as ImageIcon, Grid3x3, MapPin } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 import PrincipalPageLayout from '@/app/components/shared/PrincipalPageLayout';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
@@ -245,13 +245,6 @@ function PrincipalDashboardContent({
             
             {/* Action Buttons */}
             <div className="flex flex-wrap gap-3">
-              <button 
-                onClick={onEditToggle}
-                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 font-medium text-sm transition-colors shadow-sm"
-              >
-                <Edit3 size={16} />
-                {isEditing ? (t.save_values || 'Save Values') : (t.edit_values || 'Edit Values')}
-              </button>
               <button className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 font-medium text-sm transition-colors shadow-sm">
                 <Settings size={16} />
                 {t.settings || 'Settings'}
