@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { Users, CalendarDays } from 'lucide-react';
-import { useAuth } from '@/lib/hooks/useAuth';
+import { Users } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useTeacherClasses } from '@/lib/hooks/useTeacherClasses';
 import { useTeacherStudents } from '@/lib/hooks/useTeacherStudents';
@@ -68,9 +67,6 @@ function TeacherAttendanceContent({
               <span>
                 {t.kids_checked_in}: <span className="font-medium">{kidsIn}</span> / {students.length}
               </span>
-              <span className="mx-2 text-slate-300 dark:text-slate-600">•</span>
-              <CalendarDays className="h-4 w-4" />
-              <span>{t.today_hint}</span>
             </div>
             {/* Mobile stats */}
             <div className="md:hidden flex items-center gap-2 text-ds-small text-slate-600 dark:text-slate-400">
