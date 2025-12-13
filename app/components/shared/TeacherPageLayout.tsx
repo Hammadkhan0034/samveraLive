@@ -8,7 +8,6 @@ import Navbar from '@/app/components/Navbar';
 
 interface TeacherPageLayoutProps {
   children: React.ReactNode;
-  attendanceBadge?: number;
   messagesBadge?: number;
   mediaBadge?: number;
 }
@@ -29,7 +28,6 @@ export function useTeacherPageLayout() {
 
 export default function TeacherPageLayout({
   children,
-  attendanceBadge,
   messagesBadge,
   mediaBadge,
 }: TeacherPageLayoutProps) {
@@ -52,7 +50,6 @@ export default function TeacherPageLayout({
         {/* Sidebar - full height on left */}
         <TeacherSidebar
           ref={sidebarRef}
-          attendanceBadge={attendanceBadge}
           messagesBadge={messagesBadge}
           mediaBadge={mediaBadge}
         />

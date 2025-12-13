@@ -5,7 +5,6 @@ import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { X } from 'lucide-react';
 import {
-  SquareCheck as CheckSquare,
   Baby,
   MessageSquare,
   Camera,
@@ -34,7 +33,6 @@ export interface TeacherSidebarTile {
 
 export interface TeacherSidebarProps {
   messagesBadge?: number; // Optional badge count for messages
-  attendanceBadge?: number; // Optional badge count for attendance
   mediaBadge?: number; // Optional badge count for media
   tiles?: TeacherSidebarTile[]; // For any custom tiles
 }
@@ -46,7 +44,6 @@ export interface TeacherSidebarRef {
 
 type BuiltInTileId =
   | 'dashboard'
-  | 'attendance'
   | 'diapers'
   | 'messages'
   | 'media'
@@ -63,7 +60,6 @@ interface BuiltInTileConfig {
 
 const builtInTileRoutes: BuiltInTileConfig[] = [
   { id: 'dashboard', route: '/dashboard/teacher' },
-  { id: 'attendance', route: '/dashboard/teacher/attendance' },
   { id: 'diapers', route: '/dashboard/teacher/diapers' },
   { id: 'messages', route: '/dashboard/teacher/messages' },
   { id: 'media', route: '/dashboard/teacher/media' },
@@ -83,7 +79,6 @@ const getBasePathnameFromRoute = (route: string): string => route.split('?')[0];
 
 const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>(({
   messagesBadge,
-  attendanceBadge,
   mediaBadge,
   tiles = [],
 }, ref) => {
@@ -238,45 +233,6 @@ const TeacherSidebarContent = forwardRef<TeacherSidebarRef, TeacherSidebarProps>
                 <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
                   View dashboard overview
                 </p>
-              </div>
-            </button>
-
-            {/* Attendance tile */}
-            <button
-              onClick={() => handleBuiltInTileClick('attendance')}
-              className={clsx(
-                'w-full flex items-center gap-3 px-4 py-3 rounded-ds-md text-left transition-all duration-200',
-                'hover:bg-slate-100 dark:hover:bg-slate-700',
-                isTileActive('attendance')
-                  ? 'bg-mint-200 dark:bg-slate-700 border-l-4 border-mint-500'
-                  : 'border-l-4 border-transparent'
-              )}
-            >
-              <span className={clsx(
-                'flex-shrink-0 rounded-lg p-2',
-                isTileActive('attendance')
-                  ? 'bg-mint-500 text-white'
-                  : 'bg-slate-100 dark:bg-slate-600 text-slate-600 dark:text-slate-300'
-              )}>
-                <CheckSquare className="h-5 w-5" />
-              </span>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2">
-                  <span className={clsx(
-                    'font-medium truncate',
-                    isTileActive('attendance')
-                      ? 'text-slate-900 dark:text-slate-100'
-                      : 'text-slate-700 dark:text-slate-300'
-                  )}>
-                    {t.tile_att}
-                  </span>
-                  {attendanceBadge !== undefined && attendanceBadge !== null && attendanceBadge !== 0 && (
-                    <span className="flex-shrink-0 rounded-full bg-mint-500 px-2 py-0.5 text-xs font-medium text-white" suppressHydrationWarning>
-                      {attendanceBadge}
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">{t.tile_att_desc}</p>
               </div>
             </button>
 
