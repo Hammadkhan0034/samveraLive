@@ -17,11 +17,8 @@ export interface TeacherDashboardContentProps {
 }
 
 export interface TeacherMetrics {
-  attendanceCount: number;
+  classesCount: number;
   studentsCount: number;
-  messagesCount: number;
-  storiesCount: number;
-  announcementsCount: number;
-  menusCount: number;
+  attendanceCount: number;
 }
 

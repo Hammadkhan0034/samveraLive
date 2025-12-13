@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
-import { ClipboardCheck, Users, MessageSquare, FileText, Megaphone, Utensils, AlertCircle } from 'lucide-react';
+import { ClipboardCheck, Users, School, AlertCircle } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import TeacherPageLayout, { useTeacherPageLayout } from '@/app/components/shared/TeacherPageLayout';
 import { PageHeader } from '@/app/components/shared/PageHeader';
@@ -56,10 +56,10 @@ function TeacherDashboardContent({
       {/* KPIs Section */}
       <section className="mb-ds-md">
         {isLoading ? (
-          <KPICardSkeleton count={6} />
+          <KPICardSkeleton count={3} />
         ) : (
           <div className="grid grid-cols-1 gap-ds-md sm:grid-cols-2 lg:grid-cols-3">
-            {kpis.map(({ label, value, icon: Icon, onClick }, i) => {
+            {kpis.map(({ label, value, icon: Icon }, i) => {
               const bgColors = [
                 'bg-pale-blue dark:bg-slate-800',
                 'bg-pale-yellow dark:bg-slate-800',
@@ -69,8 +69,7 @@ function TeacherDashboardContent({
               return (
                 <div
                   key={i}
-                  className={`cursor-pointer rounded-ds-lg p-ds-md shadow-ds-card transition-all duration-200 hover:shadow-ds-lg ${bgColor}`}
-                  onClick={onClick}
+                  className={`rounded-ds-lg p-ds-md shadow-ds-card transition-all duration-200 ${bgColor}`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="text-ds-small text-slate-600 dark:text-slate-400">{label}</div>
@@ -127,12 +126,9 @@ function TeacherDashboardPageContent() {
 
   // Metrics state - all KPIs in one object
   const [metrics, setMetrics] = useState<TeacherMetrics>({
-    attendanceCount: 0,
+    classesCount: 0,
     studentsCount: 0,
-    messagesCount: 0,
-    storiesCount: 0,
-    announcementsCount: 0,
-    menusCount: 0,
+    attendanceCount: 0,
   });
 
   // Loading and error states
@@ -182,12 +178,9 @@ function TeacherDashboardPageContent() {
       }
 
       setMetrics({
-        attendanceCount: data.attendanceCount || 0,
+        classesCount: data.classesCount || 0,
         studentsCount: data.studentsCount || 0,
-        messagesCount: data.messagesCount || 0,
-        storiesCount: data.storiesCount || 0,
-        announcementsCount: data.announcementsCount || 0,
-        menusCount: data.menusCount || 0,
+        attendanceCount: data.attendanceCount || 0,
       });
     } catch (err: unknown) {
       if (signal.aborted) {
@@ -233,66 +226,32 @@ function TeacherDashboardPageContent() {
 
   // Stable icon references
   const icons = useMemo(() => ({
-    ClipboardCheck,
+    School,
     Users,
-    MessageSquare,
-    FileText,
-    Megaphone,
-    Utensils,
+    ClipboardCheck,
   }), []);
-
-  // Stable navigation handlers
-  const navigationHandlers = useMemo(() => ({
-    attendance: () => router.push('/dashboard/teacher/attendance'),
-    students: () => router.push('/dashboard/teacher/students'),
-    messages: () => router.push('/dashboard/teacher/messages'),
-    stories: () => router.push('/dashboard/stories'),
-    announcements: () => router.push('/dashboard/teacher/announcements'),
-    menus: () => router.push('/dashboard/teacher/menus'),
-  }), [router]);
 
   // Memoize KPIs array with stable references
   const kpis = useMemo<KPICard[]>(() => [
     {
-      label: t.attendance || 'Attendance',
-      value: metrics.attendanceCount,
-      icon: icons.ClipboardCheck,
-      onClick: navigationHandlers.attendance,
+      label: t.kpi_classes || 'Total Classes',
+      value: metrics.classesCount,
+      icon: icons.School,
     },
     {
       label: t.kpi_students || 'Students',
       value: metrics.studentsCount,
       icon: icons.Users,
-      onClick: navigationHandlers.students,
     },
     {
-      label: t.kpi_messages || 'Messages',
-      value: metrics.messagesCount,
-      icon: icons.MessageSquare,
-      onClick: navigationHandlers.messages,
+      label: t.attendance || 'Attendance Marked',
+      value: metrics.attendanceCount,
+      icon: icons.ClipboardCheck,
     },
-    {
-      label: `${t.kpi_stories || 'Stories'} (24h)`,
-      value: metrics.storiesCount,
-      icon: icons.FileText,
-      onClick: navigationHandlers.stories,
-    },
-    {
-      label: t.kpi_announcements || 'Announcements',
-      value: metrics.announcementsCount,
-      icon: icons.Megaphone,
-      onClick: navigationHandlers.announcements,
-    },
-    {
-      label: t.kpi_menus || 'Menus',
-      value: metrics.menusCount,
-      icon: icons.Utensils,
-      onClick: navigationHandlers.menus,
-    },
-  ], [t, metrics, icons, navigationHandlers]);
+  ], [t, metrics, icons]);
 
   return (
-    <TeacherPageLayout messagesBadge={metrics.messagesCount > 0 ? metrics.messagesCount : undefined}>
+    <TeacherPageLayout>
       <TeacherDashboardContent 
         t={t} 
         kpis={kpis} 
@@ -309,7 +268,7 @@ export default function TeacherDashboardPage() {
     <Suspense fallback={
       <TeacherPageLayout>
         <div className="flex items-center justify-center min-h-[400px]">
-          <KPICardSkeleton count={6} />
+          <KPICardSkeleton count={3} />
         </div>
       </TeacherPageLayout>
     }>
