@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { 
   Copy, 
   Check, 
@@ -74,6 +75,8 @@ interface GuardianDetailsProps {
  */
 export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) {
   const { t } = useLanguage();
+  const router = useRouter();
+  const pathname = usePathname();
   const [data, setData] = useState<GuardianDetailsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -495,12 +498,15 @@ export function GuardianDetails({ guardianId, backHref }: GuardianDetailsProps) 
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex flex-wrap items-center gap-2 mb-1">
-                            <a
-                              href={`/dashboard/principal/students/${child.id}`}
-                              className="text-ds-body font-medium text-ds-text-primary dark:text-slate-100 hover:text-mint-500 dark:hover:text-mint-400 hover:underline break-words"
+                            <button
+                              onClick={() => {
+                                const from = encodeURIComponent(pathname || '/dashboard/principal/guardians');
+                                router.push(`/dashboard/principal/students/${encodeURIComponent(child.id)}?from=${from}`);
+                              }}
+                              className="text-ds-body font-medium text-ds-text-primary dark:text-slate-100 hover:text-mint-500 dark:hover:text-mint-400 hover:underline break-words text-left"
                             >
                               {childName}
-                            </a>
+                            </button>
                             {child.relation && (
                               <span className="text-ds-tiny text-ds-text-muted dark:text-slate-400 px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-600 whitespace-nowrap">
                                 {child.relation}

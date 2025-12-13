@@ -133,7 +133,10 @@ function StudentsPanel({
                   {paginatedStudents.map((student) => (
                     <tr 
                       key={student.id} 
-                      onClick={() => router.push(`/dashboard/teacher/students/${encodeURIComponent(student.id)}`)}
+                      onClick={() => {
+                        const from = encodeURIComponent('/dashboard/teacher/students');
+                        router.push(`/dashboard/teacher/students/${encodeURIComponent(student.id)}?from=${from}`);
+                      }}
                       className="border-b border-slate-100 dark:border-slate-700 hover:bg-mint-50 dark:hover:bg-slate-700/50 transition-colors cursor-pointer"
                     >
                       <td className="py-2 px-2 sm:px-4">

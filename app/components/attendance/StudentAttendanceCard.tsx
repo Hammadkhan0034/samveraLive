@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import type { Student } from '@/lib/types/attendance';
 import { getStudentName, getClassName } from '@/lib/utils/studentUtils';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
@@ -32,10 +33,17 @@ export const StudentAttendanceCard = React.memo<StudentAttendanceCardProps>(
     leftAt,
   }) {
     const { t, lang } = useLanguage();
+    const router = useRouter();
     const studentName = getStudentName(student);
     const classId = student.class_id || (student as any).classes?.id || null;
     const className = getClassName(classId, classes);
     const isGone = leftAt !== null && leftAt !== undefined;
+
+    const handleStudentNameClick = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      const from = encodeURIComponent('/dashboard/teacher/attendance');
+      router.push(`/dashboard/teacher/students/${encodeURIComponent(student.id)}?from=${from}`);
+    };
 
     // Get available status options based on current status and left_at
     const getAvailableOptions = (): Array<{ value: string; label: string }> => {
@@ -158,7 +166,13 @@ export const StudentAttendanceCard = React.memo<StudentAttendanceCardProps>(
       >
         <div className="flex items-center justify-between mb-2">
           <div className="flex flex-col flex-1">
-            <span className="font-medium">{studentName}</span>
+            <button
+              onClick={handleStudentNameClick}
+              className="font-medium text-left hover:text-mint-600 dark:hover:text-mint-400 hover:underline transition-colors cursor-pointer focus:outline-none rounded px-1 -ml-1"
+              type="button"
+            >
+              {studentName}
+            </button>
             {classId && (
               <span className="text-ds-tiny text-slate-500 dark:text-slate-400">
                 {className}

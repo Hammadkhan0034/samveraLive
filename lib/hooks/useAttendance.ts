@@ -298,25 +298,6 @@ export function useAttendance(
     });
   }, []);
 
-  // Mark all students as arrived
-  const markAllPresent = useCallback((classId?: string) => {
-    setAttendance((prev) => {
-      const newAttendance = { ...prev };
-      const studentsToMark = classId
-        ? students.filter((s) => {
-            const sClassId = s.class_id || (s as any).classes?.id;
-            return sClassId === classId;
-          })
-        : students;
-
-      studentsToMark.forEach((s) => {
-        newAttendance[s.id] = 'arrived';
-      });
-
-      return newAttendance;
-    });
-  }, [students]);
-
   return {
     attendance,
     savedAttendance,
@@ -329,7 +310,6 @@ export function useAttendance(
     loadAttendance,
     saveAttendance,
     updateAttendance,
-    markAllPresent,
   };
 }
 

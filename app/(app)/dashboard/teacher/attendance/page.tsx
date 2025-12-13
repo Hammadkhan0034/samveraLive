@@ -32,7 +32,6 @@ interface TeacherAttendanceContentProps {
   hasUnsavedChanges: boolean;
   isSaving: boolean;
   isLoading: boolean;
-  onMarkAll: (classId?: string) => void;
   onStatusChange: (studentId: string, status: string) => void;
   onSubmit: () => void;
 }
@@ -49,7 +48,6 @@ function TeacherAttendanceContent({
   hasUnsavedChanges,
   isSaving,
   isLoading,
-  onMarkAll,
   onStatusChange,
   onSubmit,
 }: TeacherAttendanceContentProps) {
@@ -98,7 +96,6 @@ function TeacherAttendanceContent({
           hasUnsavedChanges={hasUnsavedChanges}
           isSaving={isSaving}
           isLoading={isLoading}
-          onMarkAll={onMarkAll}
           onStatusChange={onStatusChange}
           onSubmit={onSubmit}
         />
@@ -125,7 +122,6 @@ export default function TeacherAttendancePage() {
     loadAttendance,
     saveAttendance,
     updateAttendance,
-    markAllPresent,
   } = useAttendance(students, teacherClasses);
 
   // Load attendance for today when students are available
@@ -173,14 +169,6 @@ export default function TeacherAttendancePage() {
     [updateAttendance]
   );
 
-  // Handle mark all present
-  const handleMarkAllPresent = useCallback(
-    (classId?: string) => {
-      markAllPresent(classId);
-    },
-    [markAllPresent]
-  );
-
   const isPageLoading =
     loadingClasses || 
     loadingStudents || 
@@ -201,7 +189,6 @@ export default function TeacherAttendancePage() {
         hasUnsavedChanges={hasUnsavedChanges}
         isSaving={isSavingAttendance}
         isLoading={isPageLoading}
-        onMarkAll={handleMarkAllPresent}
         onStatusChange={handleStatusChange}
         onSubmit={handleSaveAttendance}
       />
@@ -222,7 +209,6 @@ interface AttendancePanelProps {
   hasUnsavedChanges: boolean;
   isSaving: boolean;
   isLoading: boolean;
-  onMarkAll: (classId?: string) => void;
   onStatusChange: (studentId: string, status: string) => void;
   onSubmit: () => void;
 }
@@ -238,7 +224,6 @@ const AttendancePanel = React.memo<AttendancePanelProps>(function AttendancePane
   hasUnsavedChanges,
   isSaving,
   isLoading,
-  onMarkAll,
   onStatusChange,
   onSubmit,
 }) {
@@ -263,14 +248,6 @@ const AttendancePanel = React.memo<AttendancePanelProps>(function AttendancePane
     setSelectedClassId(classId);
   }, []);
 
-  // Handle mark all
-  const handleMarkAll = useCallback(
-    (classId?: string) => {
-      onMarkAll(classId);
-    },
-    [onMarkAll]
-  );
-
     return (
       <div className="rounded-ds-lg border border-slate-200 bg-white p-3 sm:p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
         <div className="mb-3 sm:mb-4 flex flex-col gap-2 sm:gap-ds-sm sm:flex-row sm:items-center sm:justify-end">
@@ -279,7 +256,6 @@ const AttendancePanel = React.memo<AttendancePanelProps>(function AttendancePane
               classes={teacherClasses}
               selectedClassId={selectedClassId}
               onClassChange={handleClassChange}
-              onMarkAll={handleMarkAll}
               translations={t}
             />
             <AttendanceActions
