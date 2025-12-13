@@ -182,7 +182,10 @@ export default function TeacherAttendancePage() {
   );
 
   const isPageLoading =
-    !hasLoadedInitial || loadingClasses || loadingStudents || loadingAttendance;
+    loadingClasses || 
+    loadingStudents || 
+    (loadingAttendance && students.length > 0 && teacherClasses.length > 0) ||
+    (!hasLoadedInitial && students.length > 0 && teacherClasses.length > 0);
 
   return (
     <TeacherPageLayout attendanceBadge={kidsIn}>
