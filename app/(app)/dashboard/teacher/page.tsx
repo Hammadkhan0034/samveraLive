@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
-import { ClipboardCheck, Users, School, AlertCircle, LayoutDashboard, Baby, MessageSquare, Camera, Bell, Utensils, CalendarDays, Activity, Grid3x3 } from 'lucide-react';
-import { useRouter, useSearchParams, usePathname } from 'next/navigation';
+import { ClipboardCheck, Users, School, AlertCircle, Baby, MessageSquare, Camera, Bell, Utensils, CalendarDays, Activity, Grid3x3 } from 'lucide-react';
+import { useRouter, usePathname } from 'next/navigation';
 import { PageHeader } from '@/app/components/shared/PageHeader';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import KPICardSkeleton from '@/app/components/loading-skeletons/KPICardSkeleton';
@@ -41,17 +41,27 @@ function TeacherDashboardContent({
     return colorMap[borderColor] || 'group-hover:text-slate-600 dark:group-hover:text-slate-400';
   };
 
+  // Helper to get hover border color class
+  const getHoverBorderClass = (borderColor: string) => {
+    const colorMap: Record<string, string> = {
+      'border-blue-500': 'hover:border-blue-500',
+      'border-orange-500': 'hover:border-orange-500',
+      'border-green-500': 'hover:border-green-500',
+      'border-pink-500': 'hover:border-pink-500',
+      'border-purple-500': 'hover:border-purple-500',
+      'border-cyan-500': 'hover:border-cyan-500',
+      'border-mint-500': 'hover:border-mint-500',
+      'border-indigo-500': 'hover:border-indigo-500',
+      'border-teal-500': 'hover:border-teal-500',
+      'border-yellow-500': 'hover:border-yellow-500',
+      'border-red-500': 'hover:border-red-500',
+      'border-slate-500': 'hover:border-slate-500',
+    };
+    return colorMap[borderColor] || 'hover:border-slate-500';
+  };
+
   // Navigation tiles data with colored borders
   const navigationTiles = useMemo(() => [
-    {
-      id: 'dashboard',
-      title: t.teacher_dashboard || 'Dashboard',
-      desc: t.teacher_dashboard_subtitle || 'View dashboard overview',
-      Icon: LayoutDashboard,
-      route: '/dashboard/teacher',
-      borderColor: 'border-blue-500',
-      titleColor: 'text-slate-900 dark:text-slate-100',
-    },
     {
       id: 'diapers',
       title: t.tile_diaper || 'Diapers',
@@ -216,24 +226,6 @@ function TeacherDashboardContent({
             const active = isTileActive(tile.route);
             const borderColor = tile.borderColor || 'border-slate-500';
             const titleColor = tile.titleColor || 'text-slate-900 dark:text-slate-100';
-            // Get hover border color class
-            const getHoverBorderClass = (borderColor: string) => {
-              const colorMap: Record<string, string> = {
-                'border-blue-500': 'hover:border-blue-500',
-                'border-orange-500': 'hover:border-orange-500',
-                'border-green-500': 'hover:border-green-500',
-                'border-pink-500': 'hover:border-pink-500',
-                'border-purple-500': 'hover:border-purple-500',
-                'border-cyan-500': 'hover:border-cyan-500',
-                'border-mint-500': 'hover:border-mint-500',
-                'border-indigo-500': 'hover:border-indigo-500',
-                'border-teal-500': 'hover:border-teal-500',
-                'border-yellow-500': 'hover:border-yellow-500',
-                'border-red-500': 'hover:border-red-500',
-                'border-slate-500': 'hover:border-slate-500',
-              };
-              return colorMap[borderColor] || 'hover:border-slate-500';
-            };
 
             return (
               <button
@@ -275,29 +267,12 @@ function TeacherDashboardContent({
 function TeacherDashboardPageContent() {
   const { t } = useLanguage();
   const router = useRouter();
-  const searchParams = useSearchParams();
-
-  // Set active tab from query parameter
-  useEffect(() => {
-    const tabParam = searchParams?.get('tab');
-    // No tabs available in TeacherDashboard anymore
-    if (tabParam) {
-      // Redirect to appropriate page if needed
-      if (tabParam === 'students') {
-        router.replace('/dashboard/teacher/students');
-      } else if (tabParam === 'menus') {
-        router.replace('/dashboard/teacher/menus');
-      }
-    }
-  }, [searchParams, router]);
 
   // Prefetch routes for instant navigation
   useEffect(() => {
     try {
-      router.prefetch('/dashboard/teacher/attendance');
       router.prefetch('/dashboard/teacher/diapers');
       router.prefetch('/dashboard/teacher/media');
-      router.prefetch('/dashboard/teacher/stories');
       router.prefetch('/dashboard/teacher/announcements');
       router.prefetch('/dashboard/teacher/menus');
       router.prefetch('/dashboard/teacher/messages');
