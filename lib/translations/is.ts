@@ -641,6 +641,8 @@ export const isText = {
   attendance_subtitle: 'Fylgjast með og stjórna mætingu nemenda',
   att_mark_all_in: 'Skrá alla inn',
   save_attendance: 'Vista mæting',
+  error_saving_attendance: 'Villa við að vista mætingu. Vinsamlegast reyndu aftur.',
+  unsaved_changes_warning: 'Þú hefur óvistaðar breytingar. Smelltu á "Vista" til að vista.',
 
   // Activity Log
   activity_log: 'Aðgerðaskrá',

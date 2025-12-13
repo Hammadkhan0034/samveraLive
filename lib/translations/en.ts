@@ -639,6 +639,8 @@ export const enText = {
   attendance_subtitle: 'Track and manage student attendance',
   att_mark_all_in: 'Mark all present',
   save_attendance: 'Save Attendance',
+  error_saving_attendance: 'Error saving attendance. Please try again.',
+  unsaved_changes_warning: 'You have unsaved changes. Click "Save" to save.',
 
   // Activity Log
   activity_log: 'Activity Log',

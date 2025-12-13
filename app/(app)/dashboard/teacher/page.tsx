@@ -8,6 +8,7 @@ import { useLanguage } from '@/lib/contexts/LanguageContext';
 import KPICardSkeleton from '@/app/components/loading-skeletons/KPICardSkeleton';
 import type { KPICard, TeacherDashboardContentProps, TeacherMetrics } from '@/lib/types/dashboard';
 import StoryColumn from '@/app/components/shared/StoryColumn';
+import AttendancePanel from '@/app/components/attendance/AttendancePanel';
 
 function TeacherDashboardContent({
   t,
@@ -83,6 +84,11 @@ function TeacherDashboardContent({
             })}
           </div>
         )}
+      </section>
+
+      {/* Attendance Panel */}
+      <section className="mb-ds-md">
+        <AttendancePanel />
       </section>
     </>
   );

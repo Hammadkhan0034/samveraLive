@@ -60,9 +60,9 @@ export default function AttendancePanel() {
     try {
       await saveAttendance(attendance, leftAt);
     } catch (error: any) {
-      alert(error.message || 'Error saving attendance. Please try again.');
+      alert(error.message || t.error_saving_attendance || 'Error saving attendance. Please try again.');
     }
-  }, [attendance, leftAt, saveAttendance]);
+  }, [attendance, leftAt, saveAttendance, t]);
 
   // Handle status change
   const handleStatusChange = useCallback(
@@ -100,7 +100,11 @@ export default function AttendancePanel() {
 
   return (
     <div className="rounded-ds-lg border border-slate-200 bg-white p-3 sm:p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
-      <div className="mb-3 sm:mb-4 flex flex-col gap-2 sm:gap-ds-sm sm:flex-row sm:items-center sm:justify-end">
+      {/* Title and Actions Row */}
+      <div className="mb-3 sm:mb-4 flex flex-col gap-2 sm:gap-ds-sm sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">
+          {t.attendance_title || t.attendance || 'Attendance'}
+        </h2>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-ds-sm">
           <AttendanceFilters
             classes={teacherClasses}
@@ -127,8 +131,8 @@ export default function AttendancePanel() {
       ) : filteredStudents.length === 0 ? (
         <EmptyState
           icon={Users}
-          title={selectedClassId === 'all' ? t.no_students_found_title : t.no_students_assigned || 'No students assigned to this class'}
-          description={selectedClassId === 'all' ? t.no_students_found_description : t.no_students_assigned || 'No students assigned to this class'}
+          title={selectedClassId === 'all' ? t.no_students_found_title : t.no_students_assigned}
+          description={selectedClassId === 'all' ? t.no_students_found_description : t.no_students_assigned}
         />
       ) : (
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
