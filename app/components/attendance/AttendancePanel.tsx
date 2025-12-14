@@ -231,10 +231,11 @@ export default function AttendancePanel() {
 
                   // Get guardian info (use first guardian if available)
                   const guardian = student.guardians && student.guardians.length > 0 ? student.guardians[0] : null;
+                  const hasGuardian = guardian !== null;
                   const guardianUser = guardian?.users;
-                  const guardianPhone = guardianUser?.phone || (guardianUser as any)?.phone;
-                  const guardianEmail = guardianUser?.email;
-                  const guardianId = guardianUser?.id || guardian?.guardian_id;
+                  const guardianPhone = hasGuardian ? (guardianUser?.phone || (guardianUser as any)?.phone) : null;
+                  const guardianEmail = hasGuardian ? guardianUser?.email : null;
+                  const guardianId = hasGuardian ? (guardianUser?.id || guardian?.guardian_id) : null;
 
                   return (
                     <tr
@@ -267,7 +268,7 @@ export default function AttendancePanel() {
                       <td className="py-2 px-2 sm:px-4">
                         <div className="flex items-center gap-1 sm:gap-2">
                           {/* Call Parent Button */}
-                          {guardianPhone ? (
+                          {hasGuardian && guardianPhone ? (
                             <a
                               href={`tel:${guardianPhone}`}
                               onClick={(e) => e.stopPropagation()}
@@ -281,15 +282,15 @@ export default function AttendancePanel() {
                             <button
                               disabled
                               className="p-1.5 sm:p-2 rounded-ds-md border border-slate-200 bg-slate-50 text-slate-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-500 cursor-not-allowed flex-shrink-0"
-                              title={t.no_phone_number || 'No phone number'}
-                              aria-label={t.no_phone_number || 'No phone number'}
+                              title={hasGuardian ? (t.no_phone_number || 'No phone number') : (t.no_guardian_attached || 'No guardian attached')}
+                              aria-label={hasGuardian ? (t.no_phone_number || 'No phone number') : (t.no_guardian_attached || 'No guardian attached')}
                             >
                               <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             </button>
                           )}
 
                           {/* Send Email Button */}
-                          {guardianEmail ? (
+                          {hasGuardian && guardianEmail ? (
                             <a
                               href={`mailto:${guardianEmail}`}
                               onClick={(e) => e.stopPropagation()}
@@ -303,15 +304,15 @@ export default function AttendancePanel() {
                             <button
                               disabled
                               className="p-1.5 sm:p-2 rounded-ds-md border border-slate-200 bg-slate-50 text-slate-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-500 cursor-not-allowed flex-shrink-0"
-                              title={t.no_email_address || 'No email address'}
-                              aria-label={t.no_email_address || 'No email address'}
+                              title={hasGuardian ? (t.no_email_address || 'No email address') : (t.no_guardian_attached || 'No guardian attached')}
+                              aria-label={hasGuardian ? (t.no_email_address || 'No email address') : (t.no_guardian_attached || 'No guardian attached')}
                             >
                               <Mail className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             </button>
                           )}
 
                           {/* Send In-App Message Button */}
-                          {guardianId ? (
+                          {hasGuardian && guardianId ? (
                             <button
                               onClick={(e) => handleSendMessage(e, guardianId)}
                               className="p-1.5 sm:p-2 rounded-ds-md border border-mint-200 bg-mint-50 text-mint-600 hover:bg-mint-100 hover:border-mint-300 dark:border-mint-600 dark:bg-mint-900/20 dark:text-mint-300 dark:hover:bg-mint-900/40 transition-colors flex-shrink-0"
@@ -324,8 +325,8 @@ export default function AttendancePanel() {
                             <button
                               disabled
                               className="p-1.5 sm:p-2 rounded-ds-md border border-slate-200 bg-slate-50 text-slate-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-500 cursor-not-allowed flex-shrink-0"
-                              title={t.no_guardian || 'No guardian'}
-                              aria-label={t.no_guardian || 'No guardian'}
+                              title={hasGuardian ? (t.no_guardian || 'No guardian') : (t.no_guardian_attached || 'No guardian attached')}
+                              aria-label={hasGuardian ? (t.no_guardian || 'No guardian') : (t.no_guardian_attached || 'No guardian attached')}
                             >
                               <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             </button>

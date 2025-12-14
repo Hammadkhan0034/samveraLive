@@ -808,6 +808,13 @@ export const enText = {
   try_different_date: 'Try selecting a different date or clear the date filter to see all records.',
   unknown_student: 'Unknown Student',
   no_class: 'No Class',
+  call_parent: 'Call Parent',
+  send_email: 'Send Email',
+  upload_images: 'Upload Images',
+  no_phone_number: 'No phone number',
+  no_email_address: 'No email address',
+  no_guardian: 'No guardian',
+  no_guardian_attached: 'No guardian attached',
 
   // Admin Dashboard specific
   recentActivities: 'Recent Activities',

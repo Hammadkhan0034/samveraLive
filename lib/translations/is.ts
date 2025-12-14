@@ -811,6 +811,13 @@ export const isText = {
   try_different_date: 'Reyndu að velja aðra dagsetningu eða hreinsa dagsetningarsíu til að sjá allar skrár.',
   unknown_student: 'Óþekktur nemandi',
   no_class: 'Enginn hópur',
+  call_parent: 'Hringja í forráðamann',
+  send_email: 'Senda tölvupóst',
+  upload_images: 'Hlaða upp myndum',
+  no_phone_number: 'Engin símanúmer',
+  no_email_address: 'Engin netfang',
+  no_guardian: 'Enginn forráðamaður',
+  no_guardian_attached: 'Enginn forráðamaður tengdur',
 
   // Admin Dashboard specific
   recentActivities: 'Nýlegar aðgerðir',
