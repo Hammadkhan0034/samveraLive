@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Users, Phone, Mail, MessageSquare, Camera } from 'lucide-react';
+import { Users, Phone, Mail, MessageSquare, Camera, Heart } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useTeacherClasses } from '@/lib/hooks/useTeacherClasses';
 import { useTeacherStudents } from '@/lib/hooks/useTeacherStudents';
@@ -13,6 +13,7 @@ import { AttendanceActions } from '@/app/components/attendance/AttendanceActions
 import { UnsavedChangesWarning } from '@/app/components/attendance/UnsavedChangesWarning';
 import EmptyState from '@/app/components/EmptyState';
 import { PhotoUploadModal } from '@/app/components/shared/PhotoUploadModal';
+import { HealthLogFormModal } from '@/app/components/shared/HealthLogFormModal';
 import { getStudentName } from '@/lib/utils/studentUtils';
 import type { Student, TeacherClass } from '@/lib/types/attendance';
 
@@ -42,6 +43,11 @@ export default function AttendancePanel() {
   // State for photo upload modal
   const [photoUploadModalOpen, setPhotoUploadModalOpen] = useState(false);
   const [selectedStudentForUpload, setSelectedStudentForUpload] = useState<Student | null>(null);
+
+  // State for health log modal
+  const [healthLogModalOpen, setHealthLogModalOpen] = useState(false);
+  const [selectedStudentForHealthLog, setSelectedStudentForHealthLog] = useState<Student | null>(null);
+  const [isSubmittingHealthLog, setIsSubmittingHealthLog] = useState(false);
 
   // Load attendance for today when students are available
   useEffect(() => {
@@ -165,6 +171,56 @@ export default function AttendancePanel() {
     e.stopPropagation();
     router.push(`/dashboard/teacher/messages?recipientId=${encodeURIComponent(guardianId)}`);
   }, [router]);
+
+  // Handle health log button click
+  const handleHealthLogClick = useCallback((e: React.MouseEvent, student: Student) => {
+    e.stopPropagation();
+    setSelectedStudentForHealthLog(student);
+    setHealthLogModalOpen(true);
+  }, []);
+
+  // Handle health log modal close
+  const handleHealthLogClose = useCallback(() => {
+    setHealthLogModalOpen(false);
+    setSelectedStudentForHealthLog(null);
+    setIsSubmittingHealthLog(false);
+  }, []);
+
+  // Handle health log form submission
+  const handleHealthLogSubmit = useCallback(async (data: any) => {
+    setIsSubmittingHealthLog(true);
+    try {
+      const url = '/api/health-logs';
+      const payload = {
+        student_id: data.student_id,
+        type: data.type,
+        recorded_at: data.recorded_at,
+        temperature_celsius: data.temperature_celsius,
+        notes: data.notes,
+        severity: data.severity,
+        data: data.data || {},
+      };
+
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const json = await res.json();
+      if (!res.ok) {
+        throw new Error(json.error || `Failed with ${res.status}`);
+      }
+
+      // Success - close modal
+      handleHealthLogClose();
+    } catch (error) {
+      console.error('Error submitting health log:', error);
+      throw error; // Re-throw so modal can handle error display
+    } finally {
+      setIsSubmittingHealthLog(false);
+    }
+  }, [handleHealthLogClose]);
 
   return (
     <div className="rounded-ds-lg border border-slate-200 bg-white p-3 sm:p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
@@ -341,6 +397,16 @@ export default function AttendancePanel() {
                           >
                             <Camera className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           </button>
+
+                          {/* Health Log Button */}
+                          <button
+                            onClick={(e) => handleHealthLogClick(e, student)}
+                            className="p-1.5 sm:p-2 rounded-ds-md border border-mint-200 bg-mint-50 text-mint-600 hover:bg-mint-100 hover:border-mint-300 dark:border-mint-600 dark:bg-mint-900/20 dark:text-mint-300 dark:hover:bg-mint-900/40 transition-colors flex-shrink-0"
+                            title={t.health_log || t.diapers_subtitle || 'Diaper & Health Log'}
+                            aria-label={t.health_log || t.diapers_subtitle || 'Diaper & Health Log'}
+                          >
+                            <Heart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -363,6 +429,25 @@ export default function AttendancePanel() {
         initialClassId={selectedStudentForUpload?.class_id || null}
         disableDropdowns={!!(selectedStudentForUpload?.id && selectedStudentForUpload?.class_id)}
       />
+
+      {/* Health Log Modal */}
+      {selectedStudentForHealthLog && (
+        <HealthLogFormModal
+          isOpen={healthLogModalOpen}
+          onClose={handleHealthLogClose}
+          onSubmit={handleHealthLogSubmit}
+          loading={isSubmittingHealthLog}
+          initialStudentId={selectedStudentForHealthLog.id}
+          initialStudentName={getStudentName(selectedStudentForHealthLog)}
+          initialClassId={selectedStudentForHealthLog.class_id || null}
+          initialClassName={
+            selectedStudentForHealthLog.classes?.name ||
+            teacherClasses.find((c) => c.id === selectedStudentForHealthLog.class_id)?.name ||
+            null
+          }
+          disableDropdowns={true}
+        />
+      )}
     </div>
   );
 }

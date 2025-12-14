@@ -31,6 +31,8 @@ function StudentSearchDropdownWrapper({
   isLoading,
   placeholder,
   required = false,
+  disabled = false,
+  displayValue,
 }: {
   value: string | null;
   onChange: (studentId: string | null) => void;
@@ -38,6 +40,8 @@ function StudentSearchDropdownWrapper({
   isLoading: boolean;
   placeholder: string;
   required?: boolean;
+  disabled?: boolean;
+  displayValue?: string;
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
@@ -92,11 +96,22 @@ function StudentSearchDropdownWrapper({
     setIsOpen(false);
   };
 
+  // If disabled and displayValue is provided, show disabled display
+  if (disabled && displayValue) {
+    return (
+      <div className="mt-1 flex items-center gap-2 rounded-ds-md border border-slate-300 bg-slate-50 p-2 dark:border-slate-600 dark:bg-slate-700 opacity-60 cursor-not-allowed">
+        <span className="flex-1 text-ds-small text-slate-600 dark:text-slate-400">
+          {displayValue}
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div className="student-search-dropdown relative">
       <div className="relative">
         {selectedStudent ? (
-          <div className="mt-1 flex items-center gap-2 rounded-ds-md border border-slate-300 bg-white p-2 dark:border-slate-600 dark:bg-slate-700">
+          <div className={`mt-1 flex items-center gap-2 rounded-ds-md border border-slate-300 bg-white p-2 dark:border-slate-600 dark:bg-slate-700 ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}>
             <span className="flex-1 text-ds-small text-slate-900 dark:text-slate-200">
               {`${selectedStudent.users?.first_name || selectedStudent.first_name || ''} ${selectedStudent.users?.last_name || selectedStudent.last_name || ''}`.trim() ||
                 'Unknown Student'}
@@ -106,14 +121,16 @@ function StudentSearchDropdownWrapper({
                 </span>
               )}
             </span>
-            <button
-              type="button"
-              onClick={handleClear}
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-              aria-label="Clear selection"
-            >
-              <X className="h-4 w-4" />
-            </button>
+            {!disabled && (
+              <button
+                type="button"
+                onClick={handleClear}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                aria-label="Clear selection"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
           </div>
         ) : (
           <div className="relative">
@@ -125,7 +142,8 @@ function StudentSearchDropdownWrapper({
                 setIsOpen(true);
               }}
               onFocus={() => setIsOpen(true)}
-              className="mt-1 w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] p-2 pr-8 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400"
+              disabled={disabled}
+              className="mt-1 w-full rounded-ds-md border border-[#D8EBD8] bg-[#F5FFF7] p-2 pr-8 text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:placeholder-slate-400 disabled:opacity-60 disabled:cursor-not-allowed"
               placeholder={isLoading ? 'Loading students...' : placeholder}
               required={required}
             />
@@ -134,7 +152,7 @@ function StudentSearchDropdownWrapper({
         )}
       </div>
 
-      {isOpen && !selectedStudent && (
+      {isOpen && !selectedStudent && !disabled && (
         <div className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-ds-md border border-slate-200 bg-white shadow-ds-md dark:border-slate-700 dark:bg-slate-800">
           {isLoading && (
             <div className="p-3 text-ds-small text-slate-500 dark:text-slate-400">Loading students...</div>
@@ -187,6 +205,11 @@ export interface HealthLogFormModalProps {
   initialData?: HealthLog | null;
   loading?: boolean;
   error?: string | null;
+  initialStudentId?: string | null;
+  initialStudentName?: string | null;
+  initialClassId?: string | null;
+  initialClassName?: string | null;
+  disableDropdowns?: boolean;
 }
 
 const HEALTH_LOG_TYPES: { value: HealthLogType; label: { en: string; is: string } }[] = [
@@ -209,10 +232,22 @@ export function HealthLogFormModal({
   initialData,
   loading = false,
   error: externalError,
+  initialStudentId,
+  initialStudentName,
+  initialClassId,
+  initialClassName,
+  disableDropdowns = false,
 }: HealthLogFormModalProps) {
   const { t, lang } = useLanguage();
-  const { classes, isLoading: isLoadingClasses } = useTeacherClasses();
-  const { students, isLoading: isLoadingStudents } = useTeacherStudents(classes);
+  
+  // Always call hooks (React requirement), but use empty arrays when dropdowns are disabled
+  const { classes: fetchedClasses, isLoading: isLoadingClasses } = useTeacherClasses();
+  const { students: fetchedStudents, isLoading: isLoadingStudents } = useTeacherStudents(fetchedClasses);
+  
+  // Use empty arrays when dropdowns are disabled to avoid unnecessary data
+  const classes = disableDropdowns ? [] : fetchedClasses;
+  const students = disableDropdowns ? [] : fetchedStudents;
+  const isLoading = disableDropdowns ? false : (isLoadingClasses || isLoadingStudents);
 
   const [formData, setFormData] = useState<HealthLogFormData>({
     student_id: '',
@@ -245,9 +280,9 @@ export function HealthLogFormModal({
           data: initialData.data || {},
         });
       } else {
-        // Reset to defaults for new log
+        // Reset to defaults for new log, but use initialStudentId if provided
         setFormData({
-          student_id: '',
+          student_id: initialStudentId || '',
           type: 'diaper_wet',
           recorded_at: new Date().toISOString().slice(0, 16),
           temperature_celsius: null,
@@ -258,7 +293,7 @@ export function HealthLogFormModal({
       }
       setError(null);
     }
-  }, [isOpen, initialData]);
+  }, [isOpen, initialData, initialStudentId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -332,9 +367,17 @@ export function HealthLogFormModal({
               value={formData.student_id || null}
               onChange={(id) => setFormData({ ...formData, student_id: id || '' })}
               students={students}
-              isLoading={isLoadingClasses || isLoadingStudents}
+              isLoading={isLoading}
               placeholder={classes.length === 0 ? 'No classes assigned' : `${t.child} 1`}
               required
+              disabled={disableDropdowns}
+              displayValue={
+                disableDropdowns && initialStudentName
+                  ? initialClassName
+                    ? `${initialStudentName} (${initialClassName})`
+                    : initialStudentName
+                  : undefined
+              }
             />
           </div>
 
