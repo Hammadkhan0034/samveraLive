@@ -57,7 +57,7 @@ export default function TeacherPageLayout({
         {/* Right side: navbar + content column */}
         <div className="flex flex-col flex-1 overflow-hidden">
           {/* Navbar - positioned beside sidebar */}
-          <Navbar variant="static" />
+          <Navbar variant="static" hideLogo={true} />
           
           {/* Main content area - below navbar */}
           <main 

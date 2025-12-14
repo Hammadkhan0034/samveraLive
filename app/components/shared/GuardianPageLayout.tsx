@@ -55,7 +55,7 @@ export default function GuardianPageLayout({
         {/* Right side: navbar + content column */}
         <div className="flex flex-col flex-1 overflow-hidden">
           {/* Navbar - positioned beside sidebar */}
-          <Navbar variant="static" />
+          <Navbar variant="static" hideLogo={true} />
 
           {/* Main content area - mint green background with 32px padding */}
           <main

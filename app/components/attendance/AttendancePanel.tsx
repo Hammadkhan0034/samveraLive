@@ -239,7 +239,7 @@ export default function AttendancePanel() {
       {/* Title and Actions Row */}
       <div className="mb-3 sm:mb-4 flex flex-col gap-2 sm:gap-ds-sm sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">
-          {t.attendance_title || t.attendance}
+          {t['attendance_title'] || t['attendance'] || t['att_title']}
         </h2>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-ds-sm">
           <AttendanceFilters
@@ -303,8 +303,8 @@ export default function AttendancePanel() {
                   // Get guardian info (use first guardian if available)
                   const guardian = student.guardians && student.guardians.length > 0 ? student.guardians[0] : null;
                   const hasGuardian = guardian !== null;
-                  const guardianUser = guardian?.users;
-                  const guardianPhone = hasGuardian ? (guardianUser?.phone || (guardianUser as any)?.phone) : null;
+                  const guardianUser = guardian?.users as any;
+                  const guardianPhone = hasGuardian ? (guardianUser?.phone || null) : null;
                   const guardianEmail = hasGuardian ? guardianUser?.email : null;
                   const guardianId = hasGuardian ? (guardianUser?.id || guardian?.guardian_id) : null;
 
@@ -336,7 +336,7 @@ export default function AttendancePanel() {
                           </div>
                         ) : (
                           <div className="text-ds-tiny sm:text-ds-small text-slate-400 dark:text-slate-500 italic">
-                            {t.no_guardians_assigned || t.no_guardian_attached || t.no_guardians}
+                            {t['no_guardians_assigned'] || t['no_guardian_attached'] || t['no_guardians']}
                           </div>
                         )}
                       </td>
@@ -435,8 +435,8 @@ export default function AttendancePanel() {
                           <button
                             onClick={(e) => handleHealthLogClick(e, student)}
                             className="p-1.5 sm:p-2 rounded-ds-md border border-mint-200 bg-mint-50 text-mint-600 hover:bg-mint-100 hover:border-mint-300 dark:border-mint-600 dark:bg-mint-900/20 dark:text-mint-300 dark:hover:bg-mint-900/40 transition-colors flex-shrink-0"
-                            title={t.health_log || t.diapers_subtitle}
-                            aria-label={t.health_log || t.diapers_subtitle}
+                            title={t['health_log'] || t['diapers_subtitle']}
+                            aria-label={t['health_log'] || t['diapers_subtitle']}
                           >
                             <Heart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           </button>

@@ -12,9 +12,10 @@ import { useUserRole } from "@/lib/hooks/useAuth";
 
 interface NavbarProps {
   variant?: 'fixed' | 'static';
+  hideLogo?: boolean;
 }
 
-export default function Navbar({ variant = 'fixed' }: NavbarProps) {
+export default function Navbar({ variant = 'fixed', hideLogo = false }: NavbarProps) {
   const { isDark, theme, toggleTheme } = useTheme();
   const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -50,21 +51,24 @@ export default function Navbar({ variant = 'fixed' }: NavbarProps) {
   }, [isLangDropdownOpen]);
 
   const positionClass = variant === 'fixed' ? 'fixed top-0 left-0 w-full' : 'relative w-full';
+  const justifyClass = hideLogo ? 'justify-end' : 'justify-between';
 
   return (
     <nav className={`${positionClass} z-50 bg-white dark:bg-slate-900 shadow-ds-sm backdrop-blur dark:supports-[backdrop-filter]:bg-slate-900/80`}>
-      <div className="mx-auto max-w-7xl px-3 sm:px-4 lg:px-8 h-12 sm:h-14 flex items-center justify-between">
-        <div className="flex items-center gap-2 font-semibold text-slate-900 dark:text-slate-100">
-          <div className="relative w-24 sm:w-32 h-8 sm:h-10 flex-shrink-0">
-            <Image
-              src="/logo.png"
-              alt="Samvera Logo"
-              fill
-              className="object-contain rounded-lg"
-              priority
-            />
+      <div className={`mx-auto max-w-7xl px-3 sm:px-4 lg:px-8 h-12 sm:h-14 flex items-center ${justifyClass}`}>
+        {!hideLogo && (
+          <div className="flex items-center gap-2 font-semibold text-slate-900 dark:text-slate-100">
+            <div className="relative w-24 sm:w-32 h-8 sm:h-10 flex-shrink-0">
+              <Image
+                src="/logo.png"
+                alt="Samvera Logo"
+                fill
+                className="object-contain rounded-lg"
+                priority
+              />
+            </div>
           </div>
-        </div>
+        )}
         <div className="flex items-center gap-1.5 sm:gap-2">
           <button
             type="button"
