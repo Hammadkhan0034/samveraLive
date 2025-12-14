@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useEffect, type MouseEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { Users, Phone, Mail, MessageSquare, Camera, Heart } from 'lucide-react';
+import { Users, Phone, Mail, MessageSquare, Camera, Heart, X } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useTeacherClasses } from '@/lib/hooks/useTeacherClasses';
 import { useTeacherStudents } from '@/lib/hooks/useTeacherStudents';
@@ -14,6 +14,7 @@ import { UnsavedChangesWarning } from '@/app/components/attendance/UnsavedChange
 import EmptyState from '@/app/components/EmptyState';
 import { PhotoUploadModal } from '@/app/components/shared/PhotoUploadModal';
 import { HealthLogFormModal } from '@/app/components/shared/HealthLogFormModal';
+import StudentCard from '@/app/components/students/student_card';
 import { getStudentName } from '@/lib/utils/studentUtils';
 import type { Student } from '@/lib/types/attendance';
 
@@ -48,6 +49,10 @@ export default function AttendancePanel() {
   const [healthLogModalOpen, setHealthLogModalOpen] = useState(false);
   const [selectedStudentForHealthLog, setSelectedStudentForHealthLog] = useState<Student | null>(null);
   const [isSubmittingHealthLog, setIsSubmittingHealthLog] = useState(false);
+
+  // State for student card modal
+  const [studentCardModalOpen, setStudentCardModalOpen] = useState(false);
+  const [selectedStudentForCard, setSelectedStudentForCard] = useState<Student | null>(null);
 
   // Load attendance for today when students are available
   useEffect(() => {
@@ -141,11 +146,17 @@ export default function AttendancePanel() {
   }, [t]);
 
   // Handle student name click
-  const handleStudentNameClick = useCallback((e: MouseEvent, studentId: string) => {
+  const handleStudentNameClick = useCallback((e: MouseEvent, student: Student) => {
     e.stopPropagation();
-    const from = encodeURIComponent('/dashboard/teacher/attendance');
-    router.push(`/dashboard/teacher/students/${encodeURIComponent(studentId)}?from=${from}`);
-  }, [router]);
+    setSelectedStudentForCard(student);
+    setStudentCardModalOpen(true);
+  }, []);
+
+  // Handle student card modal close
+  const handleStudentCardClose = useCallback(() => {
+    setStudentCardModalOpen(false);
+    setSelectedStudentForCard(null);
+  }, []);
 
   // Handle photo upload button click
   const handleUploadImages = useCallback((e: MouseEvent, student: Student) => {
@@ -299,7 +310,7 @@ export default function AttendancePanel() {
                     >
                       <td className="py-2 px-2 sm:px-4">
                         <button
-                          onClick={(e) => handleStudentNameClick(e, student.id)}
+                          onClick={(e) => handleStudentNameClick(e, student)}
                           className="font-medium text-left hover:text-mint-600 dark:hover:text-mint-400 hover:underline transition-colors cursor-pointer focus:outline-none rounded px-1 -ml-1 text-ds-tiny text-ds-text-primary dark:text-slate-100"
                           type="button"
                         >
@@ -446,6 +457,29 @@ export default function AttendancePanel() {
           }
           disableDropdowns={true}
         />
+      )}
+
+      {/* Student Card Modal */}
+      {studentCardModalOpen && selectedStudentForCard && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3 sm:p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              handleStudentCardClose();
+            }
+          }}
+        >
+          <div className="w-full max-w-md rounded-ds-lg bg-white dark:bg-slate-800 p-4 sm:p-ds-md shadow-ds-lg max-h-[95vh] overflow-y-auto relative">
+            <button
+              onClick={handleStudentCardClose}
+              className="absolute top-4 right-4 rounded-ds-md p-1 hover:bg-mint-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 active:bg-mint-200 dark:active:bg-slate-600 transition-colors z-10"
+              aria-label="Close"
+            >
+              <X className="h-4 w-4 sm:h-5 sm:w-5" />
+            </button>
+            <StudentCard student={selectedStudentForCard} />
+          </div>
+        </div>
       )}
     </div>
   );
