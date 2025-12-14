@@ -47,7 +47,7 @@ const StudentCard = ({ student }: StudentCardProps) => {
   const guardians = student.guardians?.map((guardian) => {
     const guardianFirstName = guardian.users?.first_name || '';
     const guardianLastName = guardian.users?.last_name || '';
-    const guardianName = `${guardianFirstName} ${guardianLastName}`.trim() || 'Unknown';
+    const guardianName = `${guardianFirstName} ${guardianLastName}`.trim() || (t.student_card_unknown || 'Unknown');
     
     return {
       id: guardian.id,
@@ -100,13 +100,13 @@ const StudentCard = ({ student }: StudentCardProps) => {
           <div className="text-sm sm:text-base" style={{ color: '#6B6B6B' }}>
             {age !== null && (
               <div>
-                <span className="font-medium" style={{ color: '#2D7A5F' }}>Age: </span>
-                {age} years
+                <span className="font-medium" style={{ color: '#2D7A5F' }}>{t.student_card_age_label || 'Age: '}</span>
+                {age} {t.student_details_years_old || 'years old'}
               </div>
             )}
             {gender && (
               <div>
-                <span className="font-medium" style={{ color: '#2D7A5F' }}>Gender: </span>
+                <span className="font-medium" style={{ color: '#2D7A5F' }}>{t.student_card_gender_label || 'Gender: '}</span>
                 {gender}
               </div>
             )}
@@ -118,7 +118,7 @@ const StudentCard = ({ student }: StudentCardProps) => {
       {address && (
         <div className="mb-2">
           <p className="text-sm sm:text-base" style={{ color: '#4A4A4A' }}>
-            <span className="font-medium" style={{ color: '#2D7A5F' }}>Address: </span>
+            <span className="font-medium" style={{ color: '#2D7A5F' }}>{t.student_card_address_label || 'Address: '}</span>
             {address}
           </p>
         </div>
@@ -177,7 +177,7 @@ const StudentCard = ({ student }: StudentCardProps) => {
       {/* Guardians Section */}
       <div>
         <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4" style={{ color: '#2D7A5F' }}>
-          Parents & Guardians
+          {t.student_card_parents_guardians || 'Parents & Guardians'}
         </h3>
         
         <div className="space-y-3 sm:space-y-4">
@@ -191,7 +191,7 @@ const StudentCard = ({ student }: StudentCardProps) => {
                 .slice(0, 2);
 
               return (
-                <div key={guardian.id} className="p-3 sm:p-4 rounded-2xl dark:bg-slate-700" style={{ backgroundColor: '#F5F5F5' }}>
+                <div key={guardian.id} className="p-3 sm:p-4 rounded-2xl bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 shadow-sm">
                   {/* Guardian Header */}
                   <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
                     {guardian.imageUrl ? (
@@ -231,7 +231,7 @@ const StudentCard = ({ student }: StudentCardProps) => {
                         style={{ backgroundColor: '#B8E6D5', color: '#2D7A5F' }}
                       >
                         <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        <span className="hidden sm:inline">Call</span>
+                        <span className="hidden sm:inline">{t.student_card_call || 'Call'}</span>
                       </a>
                     ) : null}
                     {guardian.guardianId ? (
@@ -241,7 +241,7 @@ const StudentCard = ({ student }: StudentCardProps) => {
                         style={{ backgroundColor: '#B8E6D5', color: '#2D7A5F' }}
                       >
                         <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        <span className="hidden sm:inline">Message</span>
+                        <span className="hidden sm:inline">{t.student_card_message || 'Message'}</span>
                       </button>
                     ) : null}
                     {guardian.email ? (
@@ -251,7 +251,7 @@ const StudentCard = ({ student }: StudentCardProps) => {
                         style={{ backgroundColor: '#B8E6D5', color: '#2D7A5F' }}
                       >
                         <Mail className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                        <span className="hidden sm:inline">Email</span>
+                        <span className="hidden sm:inline">{t.student_card_email || 'Email'}</span>
                       </a>
                     ) : null}
                   </div>
@@ -260,7 +260,7 @@ const StudentCard = ({ student }: StudentCardProps) => {
             })
           ) : (
             <p className="text-xs sm:text-sm text-center" style={{ color: '#6B6B6B' }}>
-              No guardians assigned
+              {t.student_card_no_guardians_assigned || 'No guardians assigned'}
             </p>
           )}
         </div>

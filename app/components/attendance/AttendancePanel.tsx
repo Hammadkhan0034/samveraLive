@@ -219,7 +219,9 @@ export default function AttendancePanel() {
 
       const json = await res.json();
       if (!res.ok) {
-        throw new Error(json.error || `Failed with ${res.status}`);
+        const errorMessage = json.error || 
+          (t.failed_with_status ? t.failed_with_status.replace('{status}', String(res.status)) : `Failed with ${res.status}`);
+        throw new Error(errorMessage);
       }
 
       // Success - close modal
@@ -270,12 +272,15 @@ export default function AttendancePanel() {
         />
       ) : (
         <div className="overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-ds-lg">
-          <div className="min-w-[640px]">
+          <div className="min-w-[800px]">
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-mint-500">
                   <th className="text-left py-2 px-2 sm:px-4 text-ds-tiny sm:text-ds-small font-medium text-white dark:text-slate-300 rounded-tl-ds-lg">
                     {t.student_name}
+                  </th>
+                  <th className="text-left py-2 px-2 sm:px-4 text-ds-tiny sm:text-ds-small font-medium text-white dark:text-slate-300">
+                    {t.guardians}
                   </th>
                   <th className="text-left py-2 px-2 sm:px-4 text-ds-tiny sm:text-ds-small font-medium text-white dark:text-slate-300">
                     {t.attendance_status}
@@ -303,6 +308,13 @@ export default function AttendancePanel() {
                   const guardianEmail = hasGuardian ? guardianUser?.email : null;
                   const guardianId = hasGuardian ? (guardianUser?.id || guardian?.guardian_id) : null;
 
+                  // Get all guardian names
+                  const guardianNames = student.guardians?.map((guardian) => {
+                    const guardianFirstName = guardian.users?.first_name || '';
+                    const guardianLastName = guardian.users?.last_name || '';
+                    return `${guardianFirstName} ${guardianLastName}`.trim();
+                  }).filter(name => name.length > 0) || [];
+
                   return (
                     <tr
                       key={student.id}
@@ -316,6 +328,17 @@ export default function AttendancePanel() {
                         >
                           {studentName}
                         </button>
+                      </td>
+                      <td className="py-2 px-2 sm:px-4">
+                        {guardianNames.length > 0 ? (
+                          <div className="text-ds-tiny sm:text-ds-small text-slate-700 dark:text-slate-300">
+                            {guardianNames.join(', ')}
+                          </div>
+                        ) : (
+                          <div className="text-ds-tiny sm:text-ds-small text-slate-400 dark:text-slate-500 italic">
+                            {t.no_guardians_assigned || t.no_guardian_attached || t.no_guardians}
+                          </div>
+                        )}
                       </td>
                       <td className="py-2 px-2 sm:px-4">
                         <select
@@ -473,7 +496,7 @@ export default function AttendancePanel() {
             <button
               onClick={handleStudentCardClose}
               className="absolute top-4 right-4 rounded-ds-md p-1 hover:bg-mint-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 active:bg-mint-200 dark:active:bg-slate-600 transition-colors z-10"
-              aria-label="Close"
+              aria-label={t.close}
             >
               <X className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>

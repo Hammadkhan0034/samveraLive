@@ -550,6 +550,17 @@ export const isText = {
   student_details_not_found_description: 'Nemandinn sem þú leitar að er ekki til eða þú hefur ekki heimild til að skoða hann.',
   student_details_copy_name: 'Afrita nafn',
 
+  // Student Card translations
+  student_card_unknown: 'Óþekkt',
+  student_card_age_label: 'Aldur:',
+  student_card_gender_label: 'Kyn:',
+  student_card_address_label: 'Heimilisfang:',
+  student_card_parents_guardians: 'Foreldrar og forráðamenn',
+  student_card_call: 'Hringja',
+  student_card_message: 'Skilaboð',
+  student_card_email: 'Netfang',
+  student_card_no_guardians_assigned: 'Engir forráðamenn úthlutaðir',
+
   // Common form fields
   phone: 'Sími',
   role: 'Hlutverk',
@@ -819,6 +830,7 @@ export const isText = {
   no_email_address: 'Engin netfang',
   no_guardian: 'Enginn forráðamaður',
   no_guardian_attached: 'Enginn forráðamaður tengdur',
+  no_guardians_assigned: 'Engir forráðamenn skráðir',
 
   // Admin Dashboard specific
   recentActivities: 'Nýlegar aðgerðir',

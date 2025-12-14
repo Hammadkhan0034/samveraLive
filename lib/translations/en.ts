@@ -548,6 +548,17 @@ export const enText = {
   student_details_not_found_description: "The student you're looking for doesn't exist or you don't have permission to view it.",
   student_details_copy_name: 'Copy name',
 
+  // Student Card translations
+  student_card_unknown: 'Unknown',
+  student_card_age_label: 'Age:',
+  student_card_gender_label: 'Gender:',
+  student_card_address_label: 'Address:',
+  student_card_parents_guardians: 'Parents & Guardians',
+  student_card_call: 'Call',
+  student_card_message: 'Message',
+  student_card_email: 'Email',
+  student_card_no_guardians_assigned: 'No guardians assigned',
+
   // Common form fields
   email: 'Email',
   phone: 'Phone',
@@ -816,6 +827,7 @@ export const enText = {
   no_email_address: 'No email address',
   no_guardian: 'No guardian',
   no_guardian_attached: 'No guardian attached',
+  no_guardians_assigned: 'No guardians assigned',
 
   // Admin Dashboard specific
   recentActivities: 'Recent Activities',
