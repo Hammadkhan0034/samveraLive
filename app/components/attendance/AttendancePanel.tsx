@@ -54,6 +54,9 @@ export default function AttendancePanel() {
   const [studentCardModalOpen, setStudentCardModalOpen] = useState(false);
   const [selectedStudentForCard, setSelectedStudentForCard] = useState<Student | null>(null);
 
+  // Initial loading state to show skeleton immediately on mount
+  const [isInitialMount, setIsInitialMount] = useState(true);
+
   // Load attendance for today when students are available
   useEffect(() => {
     if (students.length > 0 && teacherClasses.length > 0) {
@@ -61,6 +64,21 @@ export default function AttendancePanel() {
       loadAttendance(today);
     }
   }, [students.length, teacherClasses.length, loadAttendance]);
+
+  // Clear initial mount state once hooks have started loading or data is available
+  useEffect(() => {
+    if (isInitialMount) {
+      // Clear initial mount if:
+      // 1. Any hook is actively loading, OR
+      // 2. We have data available (classes loaded, or students loaded, or attendance loaded)
+      const hasStartedLoading = loadingClasses || loadingStudents || loadingAttendance;
+      const hasData = teacherClasses.length > 0 || students.length > 0 || hasLoadedInitial;
+      
+      if (hasStartedLoading || hasData) {
+        setIsInitialMount(false);
+      }
+    }
+  }, [isInitialMount, loadingClasses, loadingStudents, loadingAttendance, teacherClasses.length, students.length, hasLoadedInitial]);
 
   // Check if there are unsaved changes
   const hasUnsavedChanges = useMemo(() => {
@@ -90,8 +108,9 @@ export default function AttendancePanel() {
     [updateAttendance]
   );
 
-  // Aggregate loading state
+  // Aggregate loading state - include initial mount to show skeleton immediately
   const isLoading =
+    isInitialMount ||
     loadingClasses ||
     loadingStudents ||
     (loadingAttendance && students.length > 0 && teacherClasses.length > 0) ||
