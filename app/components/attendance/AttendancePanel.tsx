@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, type MouseEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Users, Phone, Mail, MessageSquare, Camera, Heart } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
@@ -15,7 +15,7 @@ import EmptyState from '@/app/components/EmptyState';
 import { PhotoUploadModal } from '@/app/components/shared/PhotoUploadModal';
 import { HealthLogFormModal } from '@/app/components/shared/HealthLogFormModal';
 import { getStudentName } from '@/lib/utils/studentUtils';
-import type { Student, TeacherClass } from '@/lib/types/attendance';
+import type { Student } from '@/lib/types/attendance';
 
 export default function AttendancePanel() {
   const { t, lang } = useLanguage();
@@ -73,7 +73,7 @@ export default function AttendancePanel() {
     try {
       await saveAttendance(attendance, leftAt);
     } catch (error: any) {
-      alert(error.message || t.error_saving_attendance || 'Error saving attendance. Please try again.');
+      alert(error.message || t.error_saving_attendance);
     }
   }, [attendance, leftAt, saveAttendance, t]);
 
@@ -118,37 +118,37 @@ export default function AttendancePanel() {
     // If student has left (left_at is set), show option to unmark as gone
     if (isGone) {
       return [
-        { value: 'arrived', label: t.attendance_status_arrived || 'Arrived' },
-        { value: 'gone', label: t.attendance_status_gone || 'Marked as Gone' },
+        { value: 'arrived', label: t.attendance_status_arrived },
+        { value: 'gone', label: t.attendance_status_gone },
       ];
     }
     
     // If status is 'arrived' and not gone, show option to mark as gone
     if (currentStatus === 'arrived') {
       return [
-        { value: 'arrived', label: t.attendance_status_arrived || 'Arrived' },
-        { value: 'gone', label: t.attendance_mark_as_gone || 'Mark as Gone' },
+        { value: 'arrived', label: t.attendance_status_arrived },
+        { value: 'gone', label: t.attendance_mark_as_gone },
       ];
     }
     
     // Otherwise show the main status options
     return [
-      { value: '', label: t.attendance_not_recorded || 'Not Recorded' },
-      { value: 'arrived', label: t.attendance_status_arrived || 'Arrived' },
-      { value: 'away_holiday', label: t.attendance_status_away_holiday || 'Away – Holiday' },
-      { value: 'away_sick', label: t.attendance_status_away_sick || 'Away – Sick' },
+      { value: '', label: t.attendance_not_recorded },
+      { value: 'arrived', label: t.attendance_status_arrived },
+      { value: 'away_holiday', label: t.attendance_status_away_holiday },
+      { value: 'away_sick', label: t.attendance_status_away_sick },
     ];
   }, [t]);
 
   // Handle student name click
-  const handleStudentNameClick = useCallback((e: React.MouseEvent, studentId: string) => {
+  const handleStudentNameClick = useCallback((e: MouseEvent, studentId: string) => {
     e.stopPropagation();
     const from = encodeURIComponent('/dashboard/teacher/attendance');
     router.push(`/dashboard/teacher/students/${encodeURIComponent(studentId)}?from=${from}`);
   }, [router]);
 
   // Handle photo upload button click
-  const handleUploadImages = useCallback((e: React.MouseEvent, student: Student) => {
+  const handleUploadImages = useCallback((e: MouseEvent, student: Student) => {
     e.stopPropagation();
     setSelectedStudentForUpload(student);
     setPhotoUploadModalOpen(true);
@@ -162,18 +162,17 @@ export default function AttendancePanel() {
 
   // Handle photo upload success
   const handlePhotoUploadSuccess = useCallback(() => {
-    // Could refresh data here if needed
     handlePhotoUploadClose();
   }, [handlePhotoUploadClose]);
 
   // Handle send message button click
-  const handleSendMessage = useCallback((e: React.MouseEvent, guardianId: string) => {
+  const handleSendMessage = useCallback((e: MouseEvent, guardianId: string) => {
     e.stopPropagation();
     router.push(`/dashboard/teacher/messages?recipientId=${encodeURIComponent(guardianId)}`);
   }, [router]);
 
   // Handle health log button click
-  const handleHealthLogClick = useCallback((e: React.MouseEvent, student: Student) => {
+  const handleHealthLogClick = useCallback((e: MouseEvent, student: Student) => {
     e.stopPropagation();
     setSelectedStudentForHealthLog(student);
     setHealthLogModalOpen(true);
@@ -227,7 +226,7 @@ export default function AttendancePanel() {
       {/* Title and Actions Row */}
       <div className="mb-3 sm:mb-4 flex flex-col gap-2 sm:gap-ds-sm sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-ds-h3 font-semibold text-slate-900 dark:text-slate-100">
-          {t.attendance_title || t.attendance || 'Attendance'}
+          {t.attendance_title || t.attendance}
         </h2>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-ds-sm">
           <AttendanceFilters
@@ -265,13 +264,13 @@ export default function AttendancePanel() {
               <thead>
                 <tr className="bg-mint-500">
                   <th className="text-left py-2 px-2 sm:px-4 text-ds-tiny sm:text-ds-small font-medium text-white dark:text-slate-300 rounded-tl-ds-lg">
-                    {t.student_name || 'Student Name'}
+                    {t.student_name}
                   </th>
                   <th className="text-left py-2 px-2 sm:px-4 text-ds-tiny sm:text-ds-small font-medium text-white dark:text-slate-300">
-                    {t.attendance_status || 'Status'}
+                    {t.attendance_status}
                   </th>
                   <th className="text-left py-2 px-2 sm:px-4 text-ds-tiny sm:text-ds-small font-medium text-white dark:text-slate-300 rounded-tr-ds-lg">
-                    {t.actions || 'Actions'}
+                    {t.actions}
                   </th>
                 </tr>
               </thead>
@@ -329,8 +328,8 @@ export default function AttendancePanel() {
                               href={`tel:${guardianPhone}`}
                               onClick={(e) => e.stopPropagation()}
                               className="p-1.5 sm:p-2 rounded-ds-md border border-mint-200 bg-mint-50 text-mint-600 hover:bg-mint-100 hover:border-mint-300 dark:border-mint-600 dark:bg-mint-900/20 dark:text-mint-300 dark:hover:bg-mint-900/40 transition-colors flex-shrink-0"
-                              title={t.call_parent || 'Call Parent'}
-                              aria-label={t.call_parent || 'Call Parent'}
+                              title={t.call_parent}
+                              aria-label={t.call_parent}
                             >
                               <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             </a>
@@ -338,8 +337,8 @@ export default function AttendancePanel() {
                             <button
                               disabled
                               className="p-1.5 sm:p-2 rounded-ds-md border border-slate-200 bg-slate-50 text-slate-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-500 cursor-not-allowed flex-shrink-0"
-                              title={hasGuardian ? (t.no_phone_number || 'No phone number') : (t.no_guardian_attached || 'No guardian attached')}
-                              aria-label={hasGuardian ? (t.no_phone_number || 'No phone number') : (t.no_guardian_attached || 'No guardian attached')}
+                              title={hasGuardian ? t.no_phone_number : t.no_guardian_attached}
+                              aria-label={hasGuardian ? t.no_phone_number : t.no_guardian_attached}
                             >
                               <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             </button>
@@ -351,8 +350,8 @@ export default function AttendancePanel() {
                               href={`mailto:${guardianEmail}`}
                               onClick={(e) => e.stopPropagation()}
                               className="p-1.5 sm:p-2 rounded-ds-md border border-mint-200 bg-mint-50 text-mint-600 hover:bg-mint-100 hover:border-mint-300 dark:border-mint-600 dark:bg-mint-900/20 dark:text-mint-300 dark:hover:bg-mint-900/40 transition-colors flex-shrink-0"
-                              title={t.send_email || 'Send Email'}
-                              aria-label={t.send_email || 'Send Email'}
+                              title={t.send_email}
+                              aria-label={t.send_email}
                             >
                               <Mail className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             </a>
@@ -360,8 +359,8 @@ export default function AttendancePanel() {
                             <button
                               disabled
                               className="p-1.5 sm:p-2 rounded-ds-md border border-slate-200 bg-slate-50 text-slate-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-500 cursor-not-allowed flex-shrink-0"
-                              title={hasGuardian ? (t.no_email_address || 'No email address') : (t.no_guardian_attached || 'No guardian attached')}
-                              aria-label={hasGuardian ? (t.no_email_address || 'No email address') : (t.no_guardian_attached || 'No guardian attached')}
+                              title={hasGuardian ? t.no_email_address : t.no_guardian_attached}
+                              aria-label={hasGuardian ? t.no_email_address : t.no_guardian_attached}
                             >
                               <Mail className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             </button>
@@ -372,8 +371,8 @@ export default function AttendancePanel() {
                             <button
                               onClick={(e) => handleSendMessage(e, guardianId)}
                               className="p-1.5 sm:p-2 rounded-ds-md border border-mint-200 bg-mint-50 text-mint-600 hover:bg-mint-100 hover:border-mint-300 dark:border-mint-600 dark:bg-mint-900/20 dark:text-mint-300 dark:hover:bg-mint-900/40 transition-colors flex-shrink-0"
-                              title={t.send_message || 'Send Message'}
-                              aria-label={t.send_message || 'Send Message'}
+                              title={t.send_message}
+                              aria-label={t.send_message}
                             >
                               <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             </button>
@@ -381,8 +380,8 @@ export default function AttendancePanel() {
                             <button
                               disabled
                               className="p-1.5 sm:p-2 rounded-ds-md border border-slate-200 bg-slate-50 text-slate-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-500 cursor-not-allowed flex-shrink-0"
-                              title={hasGuardian ? (t.no_guardian || 'No guardian') : (t.no_guardian_attached || 'No guardian attached')}
-                              aria-label={hasGuardian ? (t.no_guardian || 'No guardian') : (t.no_guardian_attached || 'No guardian attached')}
+                              title={hasGuardian ? t.no_guardian : t.no_guardian_attached}
+                              aria-label={hasGuardian ? t.no_guardian : t.no_guardian_attached}
                             >
                               <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                             </button>
@@ -392,8 +391,8 @@ export default function AttendancePanel() {
                           <button
                             onClick={(e) => handleUploadImages(e, student)}
                             className="p-1.5 sm:p-2 rounded-ds-md border border-mint-200 bg-mint-50 text-mint-600 hover:bg-mint-100 hover:border-mint-300 dark:border-mint-600 dark:bg-mint-900/20 dark:text-mint-300 dark:hover:bg-mint-900/40 transition-colors flex-shrink-0"
-                            title={t.upload_images || 'Upload Images'}
-                            aria-label={t.upload_images || 'Upload Images'}
+                            title={t.upload_images}
+                            aria-label={t.upload_images}
                           >
                             <Camera className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           </button>
@@ -402,8 +401,8 @@ export default function AttendancePanel() {
                           <button
                             onClick={(e) => handleHealthLogClick(e, student)}
                             className="p-1.5 sm:p-2 rounded-ds-md border border-mint-200 bg-mint-50 text-mint-600 hover:bg-mint-100 hover:border-mint-300 dark:border-mint-600 dark:bg-mint-900/20 dark:text-mint-300 dark:hover:bg-mint-900/40 transition-colors flex-shrink-0"
-                            title={t.health_log || t.diapers_subtitle || 'Diaper & Health Log'}
-                            aria-label={t.health_log || t.diapers_subtitle || 'Diaper & Health Log'}
+                            title={t.health_log || t.diapers_subtitle}
+                            aria-label={t.health_log || t.diapers_subtitle}
                           >
                             <Heart className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           </button>

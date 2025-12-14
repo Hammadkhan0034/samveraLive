@@ -637,6 +637,7 @@ export const enText = {
   // Attendance
   att_title: 'Attendance & Check-in',
   attendance_subtitle: 'Track and manage student attendance',
+  attendance_status: 'Status',
   att_mark_all_in: 'Mark all present',
   save_attendance: 'Save Attendance',
   error_saving_attendance: 'Error saving attendance. Please try again.',

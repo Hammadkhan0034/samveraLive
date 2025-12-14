@@ -639,6 +639,7 @@ export const isText = {
   // Attendance
   att_title: 'Mæting & Inn-/útstimplun',
   attendance_subtitle: 'Fylgjast með og stjórna mætingu nemenda',
+  attendance_status: 'Staða',
   att_mark_all_in: 'Skrá alla inn',
   save_attendance: 'Vista mæting',
   error_saving_attendance: 'Villa við að vista mætingu. Vinsamlegast reyndu aftur.',
