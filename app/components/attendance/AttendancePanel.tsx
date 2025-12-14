@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Users } from 'lucide-react';
+import { Users, Phone, Mail, MessageSquare, Camera } from 'lucide-react';
 import { useLanguage } from '@/lib/contexts/LanguageContext';
 import { useTeacherClasses } from '@/lib/hooks/useTeacherClasses';
 import { useTeacherStudents } from '@/lib/hooks/useTeacherStudents';
@@ -12,6 +12,7 @@ import { AttendanceFilters } from '@/app/components/attendance/AttendanceFilters
 import { AttendanceActions } from '@/app/components/attendance/AttendanceActions';
 import { UnsavedChangesWarning } from '@/app/components/attendance/UnsavedChangesWarning';
 import EmptyState from '@/app/components/EmptyState';
+import { PhotoUploadModal } from '@/app/components/shared/PhotoUploadModal';
 import { getStudentName } from '@/lib/utils/studentUtils';
 import type { Student, TeacherClass } from '@/lib/types/attendance';
 
@@ -37,6 +38,10 @@ export default function AttendancePanel() {
 
   // Local state for class filter
   const [selectedClassId, setSelectedClassId] = useState<string>('all');
+  
+  // State for photo upload modal
+  const [photoUploadModalOpen, setPhotoUploadModalOpen] = useState(false);
+  const [selectedStudentForUpload, setSelectedStudentForUpload] = useState<Student | null>(null);
 
   // Load attendance for today when students are available
   useEffect(() => {
@@ -136,6 +141,31 @@ export default function AttendancePanel() {
     router.push(`/dashboard/teacher/students/${encodeURIComponent(studentId)}?from=${from}`);
   }, [router]);
 
+  // Handle photo upload button click
+  const handleUploadImages = useCallback((e: React.MouseEvent, student: Student) => {
+    e.stopPropagation();
+    setSelectedStudentForUpload(student);
+    setPhotoUploadModalOpen(true);
+  }, []);
+
+  // Handle photo upload modal close
+  const handlePhotoUploadClose = useCallback(() => {
+    setPhotoUploadModalOpen(false);
+    setSelectedStudentForUpload(null);
+  }, []);
+
+  // Handle photo upload success
+  const handlePhotoUploadSuccess = useCallback(() => {
+    // Could refresh data here if needed
+    handlePhotoUploadClose();
+  }, [handlePhotoUploadClose]);
+
+  // Handle send message button click
+  const handleSendMessage = useCallback((e: React.MouseEvent, guardianId: string) => {
+    e.stopPropagation();
+    router.push(`/dashboard/teacher/messages?recipientId=${encodeURIComponent(guardianId)}`);
+  }, [router]);
+
   return (
     <div className="rounded-ds-lg border border-slate-200 bg-white p-3 sm:p-ds-md shadow-ds-card dark:border-slate-700 dark:bg-slate-800">
       {/* Title and Actions Row */}
@@ -181,8 +211,11 @@ export default function AttendancePanel() {
                   <th className="text-left py-2 px-2 sm:px-4 text-ds-tiny sm:text-ds-small font-medium text-white dark:text-slate-300 rounded-tl-ds-lg">
                     {t.student_name || 'Student Name'}
                   </th>
-                  <th className="text-left py-2 px-2 sm:px-4 text-ds-tiny sm:text-ds-small font-medium text-white dark:text-slate-300 rounded-tr-ds-lg">
+                  <th className="text-left py-2 px-2 sm:px-4 text-ds-tiny sm:text-ds-small font-medium text-white dark:text-slate-300">
                     {t.attendance_status || 'Status'}
+                  </th>
+                  <th className="text-left py-2 px-2 sm:px-4 text-ds-tiny sm:text-ds-small font-medium text-white dark:text-slate-300 rounded-tr-ds-lg">
+                    {t.actions || 'Actions'}
                   </th>
                 </tr>
               </thead>
@@ -195,6 +228,13 @@ export default function AttendancePanel() {
                   const displayStatus = isGone ? 'gone' : status;
                   const options = getAvailableOptions(status, isGone);
                   const studentName = getStudentName(student);
+
+                  // Get guardian info (use first guardian if available)
+                  const guardian = student.guardians && student.guardians.length > 0 ? student.guardians[0] : null;
+                  const guardianUser = guardian?.users;
+                  const guardianPhone = guardianUser?.phone || (guardianUser as any)?.phone;
+                  const guardianEmail = guardianUser?.email;
+                  const guardianId = guardianUser?.id || guardian?.guardian_id;
 
                   return (
                     <tr
@@ -215,7 +255,7 @@ export default function AttendancePanel() {
                           value={displayStatus || ''}
                           onChange={(e) => handleStatusChange(student.id, e.target.value)}
                           disabled={isSavingAttendance || isLoading}
-                          className="w-full rounded-ds-md border border-slate-300 dark:border-slate-600 px-2 sm:px-3 py-1.5 sm:py-2 text-ds-tiny sm:text-ds-small bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-100 dark:disabled:bg-slate-800"
+                          className="w-auto min-w-[160px] max-w-[200px] rounded-ds-md border border-slate-300 dark:border-slate-600 px-2 sm:px-3 py-1.5 sm:py-2 text-ds-tiny sm:text-ds-small bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-slate-100 dark:disabled:bg-slate-800"
                         >
                           {options.map((option) => (
                             <option key={option.value} value={option.value}>
@@ -223,6 +263,84 @@ export default function AttendancePanel() {
                             </option>
                           ))}
                         </select>
+                      </td>
+                      <td className="py-2 px-2 sm:px-4">
+                        <div className="flex items-center gap-1 sm:gap-2">
+                          {/* Call Parent Button */}
+                          {guardianPhone ? (
+                            <a
+                              href={`tel:${guardianPhone}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="p-1.5 sm:p-2 rounded-ds-md border border-mint-200 bg-mint-50 text-mint-600 hover:bg-mint-100 hover:border-mint-300 dark:border-mint-600 dark:bg-mint-900/20 dark:text-mint-300 dark:hover:bg-mint-900/40 transition-colors flex-shrink-0"
+                              title={t.call_parent || 'Call Parent'}
+                              aria-label={t.call_parent || 'Call Parent'}
+                            >
+                              <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            </a>
+                          ) : (
+                            <button
+                              disabled
+                              className="p-1.5 sm:p-2 rounded-ds-md border border-slate-200 bg-slate-50 text-slate-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-500 cursor-not-allowed flex-shrink-0"
+                              title={t.no_phone_number || 'No phone number'}
+                              aria-label={t.no_phone_number || 'No phone number'}
+                            >
+                              <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            </button>
+                          )}
+
+                          {/* Send Email Button */}
+                          {guardianEmail ? (
+                            <a
+                              href={`mailto:${guardianEmail}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="p-1.5 sm:p-2 rounded-ds-md border border-mint-200 bg-mint-50 text-mint-600 hover:bg-mint-100 hover:border-mint-300 dark:border-mint-600 dark:bg-mint-900/20 dark:text-mint-300 dark:hover:bg-mint-900/40 transition-colors flex-shrink-0"
+                              title={t.send_email || 'Send Email'}
+                              aria-label={t.send_email || 'Send Email'}
+                            >
+                              <Mail className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            </a>
+                          ) : (
+                            <button
+                              disabled
+                              className="p-1.5 sm:p-2 rounded-ds-md border border-slate-200 bg-slate-50 text-slate-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-500 cursor-not-allowed flex-shrink-0"
+                              title={t.no_email_address || 'No email address'}
+                              aria-label={t.no_email_address || 'No email address'}
+                            >
+                              <Mail className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            </button>
+                          )}
+
+                          {/* Send In-App Message Button */}
+                          {guardianId ? (
+                            <button
+                              onClick={(e) => handleSendMessage(e, guardianId)}
+                              className="p-1.5 sm:p-2 rounded-ds-md border border-mint-200 bg-mint-50 text-mint-600 hover:bg-mint-100 hover:border-mint-300 dark:border-mint-600 dark:bg-mint-900/20 dark:text-mint-300 dark:hover:bg-mint-900/40 transition-colors flex-shrink-0"
+                              title={t.send_message || 'Send Message'}
+                              aria-label={t.send_message || 'Send Message'}
+                            >
+                              <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            </button>
+                          ) : (
+                            <button
+                              disabled
+                              className="p-1.5 sm:p-2 rounded-ds-md border border-slate-200 bg-slate-50 text-slate-400 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-500 cursor-not-allowed flex-shrink-0"
+                              title={t.no_guardian || 'No guardian'}
+                              aria-label={t.no_guardian || 'No guardian'}
+                            >
+                              <MessageSquare className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            </button>
+                          )}
+
+                          {/* Upload Images Button */}
+                          <button
+                            onClick={(e) => handleUploadImages(e, student)}
+                            className="p-1.5 sm:p-2 rounded-ds-md border border-mint-200 bg-mint-50 text-mint-600 hover:bg-mint-100 hover:border-mint-300 dark:border-mint-600 dark:bg-mint-900/20 dark:text-mint-300 dark:hover:bg-mint-900/40 transition-colors flex-shrink-0"
+                            title={t.upload_images || 'Upload Images'}
+                            aria-label={t.upload_images || 'Upload Images'}
+                          >
+                            <Camera className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -232,6 +350,17 @@ export default function AttendancePanel() {
           </div>
         </div>
       )}
+
+      {/* Photo Upload Modal */}
+      <PhotoUploadModal
+        isOpen={photoUploadModalOpen}
+        onClose={handlePhotoUploadClose}
+        onSuccess={handlePhotoUploadSuccess}
+        classes={teacherClasses}
+        students={students}
+        initialStudentId={selectedStudentForUpload?.id || null}
+        initialClassId={selectedStudentForUpload?.class_id || null}
+      />
     </div>
   );
 }

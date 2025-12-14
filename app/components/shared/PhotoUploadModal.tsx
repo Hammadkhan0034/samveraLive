@@ -13,6 +13,8 @@ export interface PhotoUploadModalProps {
   onSuccess?: () => void;
   classes: Array<{ id: string; name: string }>;
   students: Student[];
+  initialStudentId?: string | null;
+  initialClassId?: string | null;
 }
 
 interface PreviewFile {
@@ -27,6 +29,8 @@ export function PhotoUploadModal({
   onSuccess,
   classes,
   students,
+  initialStudentId,
+  initialClassId,
 }: PhotoUploadModalProps) {
   const { t } = useLanguage();
   const [uploadMode, setUploadMode] = useState<UploadMode>('org');
@@ -47,15 +51,26 @@ export function PhotoUploadModal({
   // Reset form when modal opens/closes
   useEffect(() => {
     if (isOpen) {
-      setUploadMode('org');
-      setSelectedClassId(null);
-      setSelectedStudentId(null);
+      // If initial values are provided, set up for student mode
+      if (initialStudentId && initialClassId) {
+        setUploadMode('student');
+        setSelectedClassId(initialClassId);
+        setSelectedStudentId(initialStudentId);
+      } else if (initialClassId) {
+        setUploadMode('class');
+        setSelectedClassId(initialClassId);
+        setSelectedStudentId(null);
+      } else {
+        setUploadMode('org');
+        setSelectedClassId(null);
+        setSelectedStudentId(null);
+      }
       setPreviewFiles([]);
       setCaption('');
       setIsPublic(false);
       setError(null);
     }
-  }, [isOpen]);
+  }, [isOpen, initialStudentId, initialClassId]);
 
   // Reset student selection when class changes
   useEffect(() => {
