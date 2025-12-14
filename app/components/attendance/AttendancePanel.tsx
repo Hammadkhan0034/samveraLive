@@ -361,6 +361,7 @@ export default function AttendancePanel() {
         students={students}
         initialStudentId={selectedStudentForUpload?.id || null}
         initialClassId={selectedStudentForUpload?.class_id || null}
+        disableDropdowns={!!(selectedStudentForUpload?.id && selectedStudentForUpload?.class_id)}
       />
     </div>
   );

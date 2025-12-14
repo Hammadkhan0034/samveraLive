@@ -15,6 +15,7 @@ export interface PhotoUploadModalProps {
   students: Student[];
   initialStudentId?: string | null;
   initialClassId?: string | null;
+  disableDropdowns?: boolean;
 }
 
 interface PreviewFile {
@@ -31,6 +32,7 @@ export function PhotoUploadModal({
   students,
   initialStudentId,
   initialClassId,
+  disableDropdowns = false,
 }: PhotoUploadModalProps) {
   const { t } = useLanguage();
   const [uploadMode, setUploadMode] = useState<UploadMode>('org');
@@ -41,6 +43,10 @@ export function PhotoUploadModal({
   const [isPublic, setIsPublic] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Determine if dropdowns should be disabled
+  // Disable when explicitly set or when both initial IDs are provided
+  const shouldDisableDropdowns = disableDropdowns || (!!initialStudentId && !!initialClassId);
 
   // Filter students by selected class
   const filteredStudents = useMemo(() => {
@@ -72,10 +78,12 @@ export function PhotoUploadModal({
     }
   }, [isOpen, initialStudentId, initialClassId]);
 
-  // Reset student selection when class changes
+  // Reset student selection when class changes (but not when dropdowns are disabled)
   useEffect(() => {
-    setSelectedStudentId(null);
-  }, [selectedClassId]);
+    if (!shouldDisableDropdowns) {
+      setSelectedStudentId(null);
+    }
+  }, [selectedClassId, shouldDisableDropdowns]);
 
   // Handle ESC key to close modal
   useEffect(() => {
@@ -276,9 +284,9 @@ export function PhotoUploadModal({
                   setSelectedStudentId(null);
                 }
               }}
-              className="w-full rounded-ds-md border border-slate-300 px-3 sm:px-4 py-2 text-ds-tiny sm:text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 mt-1"
+              className="w-full rounded-ds-md border border-slate-300 px-3 sm:px-4 py-2 text-ds-tiny sm:text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 mt-1 disabled:opacity-50 disabled:cursor-not-allowed"
               required
-              disabled={loading}
+              disabled={loading || shouldDisableDropdowns}
             >
               <option value="org">{t.org_base || 'Org Base'}</option>
               <option value="class">{t.class_base || 'Class Base'}</option>
@@ -295,8 +303,9 @@ export function PhotoUploadModal({
               <select
                 value={selectedClassId || ''}
                 onChange={(e) => setSelectedClassId(e.target.value || null)}
-                className="w-full rounded-ds-md border border-slate-300 px-3 sm:px-4 py-2 text-ds-tiny sm:text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                className="w-full rounded-ds-md border border-slate-300 px-3 sm:px-4 py-2 text-ds-tiny sm:text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 required={uploadMode === 'class' || uploadMode === 'student'}
+                disabled={shouldDisableDropdowns}
               >
                 <option value="">{t.select_class || 'Select a class'}</option>
                 {classes.map((cls) => (
@@ -317,9 +326,9 @@ export function PhotoUploadModal({
               <select
                 value={selectedStudentId || ''}
                 onChange={(e) => setSelectedStudentId(e.target.value || null)}
-                className="w-full rounded-ds-md border border-slate-300 px-3 sm:px-4 py-2 text-ds-tiny sm:text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200"
+                className="w-full rounded-ds-md border border-slate-300 px-3 sm:px-4 py-2 text-ds-tiny sm:text-ds-small focus:border-mint-500 focus:outline-none focus:ring-1 focus:ring-mint-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 required
-                disabled={!selectedClassId}
+                disabled={!selectedClassId || shouldDisableDropdowns}
               >
                 <option value="">
                   {selectedClassId ? (t.select_student || 'Select a student') : (t.select_class_first || 'Select a class first')}
