@@ -4,6 +4,7 @@ import React from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Phone, MessageCircle, Mail } from 'lucide-react';
+import { useLanguage } from '@/lib/contexts/LanguageContext';
 import type { Student } from '@/lib/types/attendance';
 import { getStudentName, calculateAge, getInitials } from '@/lib/utils/studentUtils';
 
@@ -13,6 +14,7 @@ interface StudentCardProps {
 
 const StudentCard = ({ student }: StudentCardProps) => {
   const router = useRouter();
+  const { t } = useLanguage();
 
   // Function to get initials from name
   const getInitialsFromName = (name: string) => {
@@ -66,60 +68,119 @@ const StudentCard = ({ student }: StudentCardProps) => {
   return (
     <div>
       {/* Student Header Section */}
-      <div className="flex gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4">
         {/* Avatar */}
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 flex justify-center sm:justify-start">
           {imageUrl ? (
             <Image
               src={imageUrl}
               alt={studentName}
               width={80}
               height={80}
-              className="w-20 h-20 rounded-full object-cover border-2 border-gray-100 dark:border-slate-700"
+              className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-gray-100 dark:border-slate-700"
             />
           ) : (
             <div
-              className="w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-semibold"
+              className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center text-white text-xl sm:text-2xl font-semibold"
               style={{ backgroundColor: getAvatarColor(studentName) }}
             >
-              {getInitials(student.first_name, student.last_name)}
+              {getInitials(
+                student.users?.first_name || student.first_name,
+                student.users?.last_name || student.last_name
+              )}
             </div>
           )}
         </div>
 
         {/* Student Info */}
-        <div className="flex-1">
-          <h2 className="text-2xl font-semibold mb-1" style={{ color: '#2D7A5F' }}>
+        <div className="flex-1 text-center sm:text-left">
+          <h2 className="text-xl sm:text-2xl font-semibold mb-1" style={{ color: '#2D7A5F' }}>
             {studentName}
           </h2>
-          <div className="flex gap-3 text-base" style={{ color: '#6B6B6B' }}>
-            {age !== null && <span>{age} years</span>}
-            {age !== null && gender && <span>•</span>}
-            {gender && <span>{gender}</span>}
+          <div className="text-sm sm:text-base" style={{ color: '#6B6B6B' }}>
+            {age !== null && (
+              <div>
+                <span className="font-medium" style={{ color: '#2D7A5F' }}>Age: </span>
+                {age} years
+              </div>
+            )}
+            {gender && (
+              <div>
+                <span className="font-medium" style={{ color: '#2D7A5F' }}>Gender: </span>
+                {gender}
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Address Section */}
       {address && (
-        <div className="mb-6">
-          <p className="text-base" style={{ color: '#4A4A4A' }}>
+        <div className="mb-2">
+          <p className="text-sm sm:text-base" style={{ color: '#4A4A4A' }}>
             <span className="font-medium" style={{ color: '#2D7A5F' }}>Address: </span>
             {address}
           </p>
         </div>
       )}
 
-      {/* Divider */}
-      <div className="border-t border-gray-200 my-6"></div>
+      {/* Barngildi Section */}
+      {student.barngildi !== null && student.barngildi !== undefined && (
+        <div className="mb-2">
+          <p className="text-sm sm:text-base" style={{ color: '#4A4A4A' }}>
+            <span className="font-medium" style={{ color: '#2D7A5F' }}>
+              {t.student_details_barngildi || 'Barngildi'}:{' '}
+            </span>
+            {student.barngildi.toFixed(1)}
+          </p>
+        </div>
+      )}
+
+      {/* Medical Notes */}
+      {student.medical_notes_encrypted && student.medical_notes_encrypted.trim() !== '' && (
+        <div className="mb-2">
+          <p className="text-sm sm:text-base" style={{ color: '#4A4A4A' }}>
+            <span className="font-medium" style={{ color: '#2D7A5F' }}>
+              {t.student_details_medical_notes || 'Medical Notes'}:{' '}
+            </span>
+            <span className="whitespace-pre-wrap">{student.medical_notes_encrypted}</span>
+          </p>
+        </div>
+      )}
+
+      {/* Allergies */}
+      {student.allergies_encrypted && student.allergies_encrypted.trim() !== '' && (
+        <div className="mb-2">
+          <p className="text-sm sm:text-base" style={{ color: '#4A4A4A' }}>
+            <span className="font-medium" style={{ color: '#2D7A5F' }}>
+              {t.student_details_allergies || 'Allergies'}:{' '}
+            </span>
+            <span className="font-medium whitespace-pre-wrap" style={{ color: '#DC2626' }}>
+              {student.allergies_encrypted}
+            </span>
+          </p>
+        </div>
+      )}
+
+      {/* Emergency Contact */}
+      {student.emergency_contact_encrypted && student.emergency_contact_encrypted.trim() !== '' && (
+        <div className="mb-2">
+          <p className="text-sm sm:text-base" style={{ color: '#4A4A4A' }}>
+            <span className="font-medium" style={{ color: '#2D7A5F' }}>
+              {t.student_details_emergency_contact || 'Emergency Contact'}:{' '}
+            </span>
+            <span className="whitespace-pre-wrap">{student.emergency_contact_encrypted}</span>
+          </p>
+        </div>
+      )}
 
       {/* Guardians Section */}
       <div>
-        <h3 className="text-lg font-semibold mb-4" style={{ color: '#2D7A5F' }}>
+        <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4" style={{ color: '#2D7A5F' }}>
           Parents & Guardians
         </h3>
         
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {guardians.length > 0 ? (
             guardians.map((guardian) => {
               const guardianInitials = guardian.name
@@ -130,31 +191,31 @@ const StudentCard = ({ student }: StudentCardProps) => {
                 .slice(0, 2);
 
               return (
-                <div key={guardian.id} className="p-4 rounded-2xl dark:bg-slate-700" style={{ backgroundColor: '#F5F5F5' }}>
+                <div key={guardian.id} className="p-3 sm:p-4 rounded-2xl dark:bg-slate-700" style={{ backgroundColor: '#F5F5F5' }}>
                   {/* Guardian Header */}
-                  <div className="flex items-center gap-3 mb-3">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
                     {guardian.imageUrl ? (
                       <Image
                         src={guardian.imageUrl}
                         alt={guardian.name}
                         width={48}
                         height={48}
-                        className="w-12 h-12 rounded-full object-cover"
+                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
                       />
                     ) : (
                       <div
-                        className="w-12 h-12 rounded-full flex items-center justify-center text-white text-sm font-semibold"
+                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center text-white text-xs sm:text-sm font-semibold"
                         style={{ backgroundColor: getAvatarColor(guardian.name) }}
                       >
                         {guardianInitials}
                       </div>
                     )}
-                    <div className="flex-1">
-                      <p className="font-semibold text-base" style={{ color: '#2D7A5F' }}>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm sm:text-base truncate" style={{ color: '#2D7A5F' }}>
                         {guardian.name}
                       </p>
                       {guardian.relationship && (
-                        <p className="text-sm" style={{ color: '#6B6B6B' }}>
+                        <p className="text-xs sm:text-sm truncate" style={{ color: '#6B6B6B' }}>
                           {guardian.relationship}
                         </p>
                       )}
@@ -162,35 +223,35 @@ const StudentCard = ({ student }: StudentCardProps) => {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex gap-2 flex-wrap">
+                  <div className="flex gap-1.5 sm:gap-2 flex-wrap">
                     {guardian.phone ? (
                       <a
                         href={`tel:${guardian.phone}`}
-                        className="flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-medium transition-all hover:opacity-80"
+                        className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-medium transition-all hover:opacity-80"
                         style={{ backgroundColor: '#B8E6D5', color: '#2D7A5F' }}
                       >
-                        <Phone size={18} />
-                        Call
+                        <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        <span className="hidden sm:inline">Call</span>
                       </a>
                     ) : null}
                     {guardian.guardianId ? (
                       <button
                         onClick={() => handleSendMessage(guardian.guardianId!)}
-                        className="flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-medium transition-all hover:opacity-80"
+                        className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-medium transition-all hover:opacity-80"
                         style={{ backgroundColor: '#B8E6D5', color: '#2D7A5F' }}
                       >
-                        <MessageCircle size={18} />
-                        Message
+                        <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        <span className="hidden sm:inline">Message</span>
                       </button>
                     ) : null}
                     {guardian.email ? (
                       <a
                         href={`mailto:${guardian.email}`}
-                        className="flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-medium transition-all hover:opacity-80"
+                        className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-medium transition-all hover:opacity-80"
                         style={{ backgroundColor: '#B8E6D5', color: '#2D7A5F' }}
                       >
-                        <Mail size={18} />
-                        Email
+                        <Mail className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        <span className="hidden sm:inline">Email</span>
                       </a>
                     ) : null}
                   </div>
@@ -198,7 +259,7 @@ const StudentCard = ({ student }: StudentCardProps) => {
               );
             })
           ) : (
-            <p className="text-sm" style={{ color: '#6B6B6B' }}>
+            <p className="text-xs sm:text-sm text-center" style={{ color: '#6B6B6B' }}>
               No guardians assigned
             </p>
           )}
